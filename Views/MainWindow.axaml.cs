@@ -348,9 +348,9 @@ public partial class MainWindow : Window
                     var current = Interlocked.Increment(ref runCounter);
                     if (current > totalRuns) break;
 
+                    var runLabel = $"[W{id}] Прогон {current}/{totalRuns}";
                     try
                     {
-                        var runLabel = $"[W{id}] Прогон {current}/{totalRuns}";
                         EnqueueLog($"{runLabel}: открываю страницу");
                         var page = await context.NewPageAsync();
                         page.SetDefaultTimeout(timeoutSeconds * 1000);
