@@ -70,11 +70,7 @@
 				<TextBlock Text="Нажатия CSS selector" Classes="h1"/>
 
 				<Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
-					<ListBox x:Name="SelectorsList">
-						<ListBoxItem>button.login</ListBoxItem>
-						<ListBoxItem>#submit</ListBoxItem>
-						<ListBoxItem>.menu &gt; .item:nth-child(2)</ListBoxItem>
-					</ListBox>
+					<ListBox x:Name="SelectorsList"/>
 				</Border>
 
 				<Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
@@ -153,11 +149,6 @@
 									<TextBlock Classes="logline" Text="{Binding}"/>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
-
-							<!-- демо строки (потом уберём, когда подключим логику) -->
-							<ListBoxItem>[12:00:01] Запуск приложения</ListBoxItem>
-							<ListBoxItem>[12:00:02] Готов к запуску</ListBoxItem>
-							<ListBoxItem>[12:00:03] Ожидание...</ListBoxItem>
 						</ListBox>
 					</ScrollViewer>
 				</Border>
