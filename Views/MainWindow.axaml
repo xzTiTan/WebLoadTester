@@ -50,6 +50,12 @@
 			<Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Menlo,Monospace"/>
 			<Setter Property="FontSize" Value="13"/>
 		</Style>
+
+		<!-- Чтобы ListBox в логе не рисовал свой фон -->
+		<Style Selector="ListBox.loglist">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+		</Style>
 	</Window.Styles>
 
 	<Grid Margin="12"
@@ -64,7 +70,7 @@
 				<TextBlock Text="Нажатия CSS selector" Classes="h1"/>
 
 				<Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
-					<ListBox>
+					<ListBox x:Name="SelectorsList">
 						<ListBoxItem>button.login</ListBoxItem>
 						<ListBoxItem>#submit</ListBoxItem>
 						<ListBoxItem>.menu &gt; .item:nth-child(2)</ListBoxItem>
@@ -72,59 +78,63 @@
 				</Border>
 
 				<Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-					<Button Grid.Column="0" Content="+ Add"/>
-					<Button Grid.Column="1" Content="Remove"/>
-					<Button Grid.Column="2" Content="Up"/>
-					<Button Grid.Column="3" Content="Down"/>
+					<Button x:Name="AddSelectorBtn" Grid.Column="0" Content="+ Add"/>
+					<Button x:Name="RemoveSelectorBtn" Grid.Column="1" Content="Remove"/>
+					<Button x:Name="UpSelectorBtn" Grid.Column="2" Content="Up"/>
+					<Button x:Name="DownSelectorBtn" Grid.Column="3" Content="Down"/>
 				</Grid>
 			</Grid>
 		</Border>
 
-		<!-- CENTER TOP: settings + controls (без наезда) -->
+		<!-- CENTER TOP: settings + controls -->
 		<Border Grid.Column="1" Grid.Row="0" Classes="panel">
 			<Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
 
-				<!-- Row 0: URL + Name + Version -->
-				<Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,180,Auto" ColumnSpacing="10">
+				<!-- Row 0: URL + Name -->
+				<Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,160" ColumnSpacing="10">
 					<TextBlock Grid.Column="0" Text="Ссылка:" Classes="label"/>
-					<TextBox Grid.Column="1" Watermark="https://example.com"/>
+					<TextBox Grid.Column="1" x:Name="UrlTextBox" Watermark="https://example.com"/>
 
 					<TextBlock Grid.Column="2" Text="Name:" Classes="label"/>
-					<TextBox Grid.Column="3" Watermark="PC-Name"/>
+					<TextBox Grid.Column="3" x:Name="NameTextBox" Watermark="PC-Name"/>
 				</Grid>
 
-				<!-- Row 1: numeric fields (WrapPanel сам переносит) -->
+				<!-- Row 1: numeric fields -->
 				<WrapPanel Grid.Row="1">
 					<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
 						<TextBlock Text="Всего прогонов:" Classes="label"/>
-						<TextBox Width="110" Watermark="50"/>
+						<TextBox x:Name="TotalRunsTextBox" Width="110" Watermark="50"/>
 					</StackPanel>
 
 					<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
 						<TextBlock Text="Параллельно (1–50):" Classes="label"/>
-						<TextBox Width="90" Watermark="10"/>
+						<TextBox x:Name="ConcurrencyTextBox" Width="90" Watermark="10"/>
 					</StackPanel>
 
 					<StackPanel Orientation="Horizontal" Spacing="8">
 						<TextBlock Text="Таймаут (сек):" Classes="label"/>
-						<TextBox Width="90" Watermark="30"/>
+						<TextBox x:Name="TimeoutTextBox" Width="90" Watermark="30"/>
 					</StackPanel>
 				</WrapPanel>
 
 				<!-- Row 2: checkboxes -->
 				<WrapPanel Grid.Row="2">
-					<CheckBox Content="Запуск браузера без UI" IsChecked="True" Margin="0,0,18,0"/>
-					<CheckBox Content="Скриншот после прогона"/>
+					<CheckBox x:Name="HeadlessCheckBox"
+							  Content="Запуск браузера без UI"
+							  IsChecked="True"
+							  Margin="0,0,18,0"/>
+					<CheckBox x:Name="ScreenshotCheckBox"
+							  Content="Скриншот после прогона"/>
 				</WrapPanel>
 
-
-				<!-- Row 3: buttons (тоже WrapPanel, чтобы не ломалось на узкой ширине) -->
+				<!-- Row 3: buttons (без Telegram Settings кнопки) -->
 				<WrapPanel Grid.Row="3">
-					<Button Content="Load scenario.json" Margin="0,0,10,0"/>
-					<Button Content="Save scenario.json" Margin="0,0,10,0"/>
-					<Button Content="Начать" Margin="0,0,10,0"/>
-					<Button Content="Перезапустить" Margin="0,0,10,0"/>
-					<Button Content="Стоп" Margin="0,0,10,0"/>
+					<Button x:Name="LoadScenarioBtn" Content="Load scenario.json" Margin="0,0,10,0"/>
+					<Button x:Name="SaveScenarioBtn" Content="Save scenario.json" Margin="0,0,10,0"/>
+
+					<Button x:Name="StartBtn" Content="Начать" Margin="0,0,10,0"/>
+					<Button x:Name="RestartBtn" Content="Перезапустить" Margin="0,0,10,0"/>
+					<Button x:Name="StopBtn" Content="Стоп" Margin="0,0,10,0"/>
 				</WrapPanel>
 
 			</Grid>
@@ -136,18 +146,25 @@
 				<TextBlock Text="Лог выполнения" Classes="h1"/>
 
 				<Border Grid.Row="1" Classes="logbox">
-					<ScrollViewer VerticalScrollBarVisibility="Auto">
-						<StackPanel Spacing="2">
-							<TextBlock Classes="logline" Text="[12:00:01] Запуск приложения"/>
-							<TextBlock Classes="logline" Text="[12:00:02] Готов к запуску"/>
-							<TextBlock Classes="logline" Text="[12:00:03] Ожидание..."/>
-						</StackPanel>
+					<ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto">
+						<ListBox x:Name="LogList" Classes="loglist">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Classes="logline" Text="{Binding}"/>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+
+							<!-- демо строки (потом уберём, когда подключим логику) -->
+							<ListBoxItem>[12:00:01] Запуск приложения</ListBoxItem>
+							<ListBoxItem>[12:00:02] Готов к запуску</ListBoxItem>
+							<ListBoxItem>[12:00:03] Ожидание...</ListBoxItem>
+						</ListBox>
 					</ScrollViewer>
 				</Border>
 			</Grid>
 		</Border>
 
-		<!-- RIGHT: Telegram Settings (без Test/Close) -->
+		<!-- RIGHT: Telegram Settings (вернули) -->
 		<Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Classes="panel">
 			<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
 				  ColumnDefinitions="Auto,*"
@@ -157,15 +174,20 @@
 				<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
 						   Text="Telegram Settings" Classes="h1"/>
 
-				<CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+				<CheckBox x:Name="TelegramEnabledCheckBox"
+						  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
 						  Content="Отправлять в Telegram"/>
 
-				<CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+				<CheckBox x:Name="TelegramSendScreensCheckBox"
+						  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
 						  Content="Отправлять Скриншоты"/>
 
 				<TextBlock Grid.Row="3" Grid.Column="0"
 						   Text="Режим:" Classes="label"/>
-				<ComboBox Grid.Row="3" Grid.Column="1" SelectedIndex="1" MinWidth="180">
+				<ComboBox x:Name="TelegramModeComboBox"
+						  Grid.Row="3" Grid.Column="1"
+						  SelectedIndex="1"
+						  MinWidth="180">
 					<ComboBoxItem>Каждый прогон</ComboBoxItem>
 					<ComboBoxItem>Только при ошибке</ComboBoxItem>
 					<ComboBoxItem>Только финальный</ComboBoxItem>
@@ -173,12 +195,14 @@
 
 				<TextBlock Grid.Row="4" Grid.Column="0"
 						   Text="Bot Token:" Classes="label"/>
-				<TextBox Grid.Row="4" Grid.Column="1"
+				<TextBox x:Name="TelegramTokenTextBox"
+						 Grid.Row="4" Grid.Column="1"
 						 Watermark="123456:ABC-DEF..."/>
 
 				<TextBlock Grid.Row="5" Grid.Column="0"
 						   Text="Chat ID:" Classes="label"/>
-				<TextBox Grid.Row="5" Grid.Column="1"
+				<TextBox x:Name="TelegramChatIdTextBox"
+						 Grid.Row="5" Grid.Column="1"
 						 Watermark="-1001234567890"/>
 
 				<TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
@@ -195,8 +219,8 @@
 				CornerRadius="6"
 				Padding="8">
 			<DockPanel>
-				<TextBlock Text="Status: Idle" Foreground="#333"/>
-				<TextBlock DockPanel.Dock="Right" Text="Progress: 0/0" Foreground="#333"/>
+				<TextBlock x:Name="StatusText" Text="Status: Idle" Foreground="#333"/>
+				<TextBlock x:Name="ProgressText" DockPanel.Dock="Right" Text="Progress: 0/0" Foreground="#333"/>
 			</DockPanel>
 		</Border>
 
