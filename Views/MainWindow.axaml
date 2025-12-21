@@ -59,7 +59,7 @@
 	</Window.Styles>
 
 	<Grid Margin="12"
-		  ColumnDefinitions="300,*,340"
+		  ColumnDefinitions="360,*,280"
 		  RowDefinitions="Auto,*,Auto"
 		  ColumnSpacing="12"
 		  RowSpacing="10">
@@ -86,7 +86,7 @@
 
 		<!-- CENTER TOP: settings + controls -->
 		<Border Grid.Column="1" Grid.Row="0" Classes="panel">
-			<Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
+			<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
 
 				<!-- Row 0: URL + Name -->
 				<Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,160" ColumnSpacing="10">
@@ -115,8 +115,18 @@
 					</StackPanel>
 				</WrapPanel>
 
-				<!-- Row 2: checkboxes -->
-				<WrapPanel Grid.Row="2">
+				<!-- Row 2: error policy -->
+				<Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+					<TextBlock Grid.Column="0" Text="Политика ошибки шага:" Classes="label" VerticalAlignment="Center"/>
+					<ComboBox Grid.Column="1" x:Name="ErrorPolicyComboBox" MinWidth="210">
+						<ComboBoxItem>Пропустить шаг и продолжить</ComboBoxItem>
+						<ComboBoxItem>Остановить текущий прогон (FAIL) и перейти к следующему прогону</ComboBoxItem>
+						<ComboBoxItem>Остановить весь тест</ComboBoxItem>
+					</ComboBox>
+				</Grid>
+
+				<!-- Row 3: checkboxes -->
+				<WrapPanel Grid.Row="3">
 					<CheckBox x:Name="HeadlessCheckBox"
 							  Content="Запуск браузера без UI"
 							  IsChecked="True"
@@ -124,18 +134,10 @@
 					<CheckBox x:Name="ScreenshotCheckBox"
 							  Content="Скриншот после прогона"/>
 
-					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-						<TextBlock Text="Политика ошибки шага:" Classes="label"/>
-						<ComboBox x:Name="ErrorPolicyComboBox" MinWidth="210">
-							<ComboBoxItem>Пропустить шаг и продолжить</ComboBoxItem>
-							<ComboBoxItem>Остановить текущий прогон (FAIL) и перейти к следующему прогону</ComboBoxItem>
-							<ComboBoxItem>Остановить весь тест</ComboBoxItem>
-						</ComboBox>
-					</StackPanel>
 				</WrapPanel>
 
-				<!-- Row 3: buttons (без Telegram Settings кнопки) -->
-				<WrapPanel Grid.Row="3">
+				<!-- Row 4: buttons (без Telegram Settings кнопки) -->
+				<WrapPanel Grid.Row="4">
 					<Button x:Name="LoadScenarioBtn" Content="Загрузить scenario.json" Margin="0,0,10,0"/>
 					<Button x:Name="SaveScenarioBtn" Content="Сохранить scenario.json" Margin="0,0,10,0"/>
 
@@ -168,26 +170,25 @@
 
 		<!-- RIGHT: Telegram Settings (вернули) -->
 		<Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Classes="panel">
-			<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
-				  ColumnDefinitions="Auto,*"
-				  ColumnSpacing="10"
+			<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+				  ColumnDefinitions="*"
 				  RowSpacing="10">
 
-				<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+				<TextBlock Grid.Row="0"
 						   Text="Настройки Telegram" Classes="h1"/>
 
 				<CheckBox x:Name="TelegramEnabledCheckBox"
-						  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+						  Grid.Row="1"
 						  Content="Отправлять в Telegram"/>
 
 				<CheckBox x:Name="TelegramSendScreensCheckBox"
-						  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+						  Grid.Row="2"
 						  Content="Отправлять Скриншоты"/>
 
-				<TextBlock Grid.Row="3" Grid.Column="0"
-						   Text="Режим:" Classes="label"/>
+				<TextBlock Grid.Row="3"
+						   Text="Режим отправки:" Classes="label"/>
 				<ComboBox x:Name="TelegramModeComboBox"
-						  Grid.Row="3" Grid.Column="1"
+						  Grid.Row="4"
 						  SelectedIndex="1"
 						  MinWidth="180">
 					<ComboBoxItem>Каждый прогон</ComboBoxItem>
@@ -195,19 +196,19 @@
 					<ComboBoxItem>Только финальный</ComboBoxItem>
 				</ComboBox>
 
-				<TextBlock Grid.Row="4" Grid.Column="0"
-						   Text="Токен бота:" Classes="label"/>
+				<TextBlock Grid.Row="5"
+						   Text="Bot Token:" Classes="label"/>
 				<TextBox x:Name="TelegramTokenTextBox"
-						 Grid.Row="4" Grid.Column="1"
+						 Grid.Row="6"
 						 Watermark="123456:ABC-DEF..."/>
 
-				<TextBlock Grid.Row="5" Grid.Column="0"
-						   Text="ID чата:" Classes="label"/>
+				<TextBlock Grid.Row="7"
+						   Text="Chat ID:" Classes="label"/>
 				<TextBox x:Name="TelegramChatIdTextBox"
-						 Grid.Row="5" Grid.Column="1"
+						 Grid.Row="8"
 						 Watermark="-1001234567890"/>
 
-				<TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
+				<TextBlock Grid.Row="9"
 						   Foreground="#666"
 						   Text="Настройки применятся после подключения логики (VM)."/>
 			</Grid>

@@ -341,6 +341,7 @@ public partial class MainWindow : Window
                     IgnoreHTTPSErrors = true
                 });
 
+                string runLabel;
                 while (true)
                 {
                     token.ThrowIfCancellationRequested();
@@ -348,7 +349,7 @@ public partial class MainWindow : Window
                     var current = Interlocked.Increment(ref runCounter);
                     if (current > totalRuns) break;
 
-                    var runLabel = $"[W{id}] Прогон {current}/{totalRuns}";
+                    runLabel = $"[W{id}] Прогон {current}/{totalRuns}";
                     try
                     {
                         EnqueueLog($"{runLabel}: открываю страницу");
