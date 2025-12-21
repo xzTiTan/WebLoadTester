@@ -116,7 +116,7 @@
 				</WrapPanel>
 
 				<!-- Row 2: checkboxes -->
-				<WrapPanel Grid.Row="2" Spacing="14">
+				<WrapPanel Grid.Row="2">
 					<CheckBox x:Name="HeadlessCheckBox"
 							  Content="Запуск браузера без UI"
 							  IsChecked="True"
