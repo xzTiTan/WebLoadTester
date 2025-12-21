@@ -70,14 +70,16 @@
 				<TextBlock Text="Нажатия CSS selector" Classes="h1"/>
 
 				<Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
-					<ListBox x:Name="SelectorsList"/>
+					<ListBox x:Name="SelectorsList"
+							 DoubleTapped="SelectorsList_OnDoubleTapped"
+							 KeyUp="SelectorsList_OnKeyUp"/>
 				</Border>
 
 				<Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-					<Button x:Name="AddSelectorBtn" Grid.Column="0" Content="+ Add"/>
-					<Button x:Name="RemoveSelectorBtn" Grid.Column="1" Content="Remove"/>
-					<Button x:Name="UpSelectorBtn" Grid.Column="2" Content="Up"/>
-					<Button x:Name="DownSelectorBtn" Grid.Column="3" Content="Down"/>
+					<Button x:Name="AddSelectorBtn" Grid.Column="0" Content="+ Добавить"/>
+					<Button x:Name="RemoveSelectorBtn" Grid.Column="1" Content="Удалить"/>
+					<Button x:Name="UpSelectorBtn" Grid.Column="2" Content="Вверх"/>
+					<Button x:Name="DownSelectorBtn" Grid.Column="3" Content="Вниз"/>
 				</Grid>
 			</Grid>
 		</Border>
@@ -91,7 +93,7 @@
 					<TextBlock Grid.Column="0" Text="Ссылка:" Classes="label"/>
 					<TextBox Grid.Column="1" x:Name="UrlTextBox" Watermark="https://example.com"/>
 
-					<TextBlock Grid.Column="2" Text="Name:" Classes="label"/>
+					<TextBlock Grid.Column="2" Text="Имя:" Classes="label"/>
 					<TextBox Grid.Column="3" x:Name="NameTextBox" Watermark="PC-Name"/>
 				</Grid>
 
@@ -114,19 +116,28 @@
 				</WrapPanel>
 
 				<!-- Row 2: checkboxes -->
-				<WrapPanel Grid.Row="2">
+				<WrapPanel Grid.Row="2" Spacing="14">
 					<CheckBox x:Name="HeadlessCheckBox"
 							  Content="Запуск браузера без UI"
 							  IsChecked="True"
-							  Margin="0,0,18,0"/>
+							  Margin="0,0,4,0"/>
 					<CheckBox x:Name="ScreenshotCheckBox"
 							  Content="Скриншот после прогона"/>
+
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<TextBlock Text="Политика ошибки шага:" Classes="label"/>
+						<ComboBox x:Name="ErrorPolicyComboBox" MinWidth="210">
+							<ComboBoxItem>Пропустить шаг и продолжить</ComboBoxItem>
+							<ComboBoxItem>Остановить текущий прогон (FAIL) и перейти к следующему прогону</ComboBoxItem>
+							<ComboBoxItem>Остановить весь тест</ComboBoxItem>
+						</ComboBox>
+					</StackPanel>
 				</WrapPanel>
 
 				<!-- Row 3: buttons (без Telegram Settings кнопки) -->
 				<WrapPanel Grid.Row="3">
-					<Button x:Name="LoadScenarioBtn" Content="Load scenario.json" Margin="0,0,10,0"/>
-					<Button x:Name="SaveScenarioBtn" Content="Save scenario.json" Margin="0,0,10,0"/>
+					<Button x:Name="LoadScenarioBtn" Content="Загрузить scenario.json" Margin="0,0,10,0"/>
+					<Button x:Name="SaveScenarioBtn" Content="Сохранить scenario.json" Margin="0,0,10,0"/>
 
 					<Button x:Name="StartBtn" Content="Начать" Margin="0,0,10,0"/>
 					<Button x:Name="RestartBtn" Content="Перезапустить" Margin="0,0,10,0"/>
@@ -163,7 +174,7 @@
 				  RowSpacing="10">
 
 				<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-						   Text="Telegram Settings" Classes="h1"/>
+						   Text="Настройки Telegram" Classes="h1"/>
 
 				<CheckBox x:Name="TelegramEnabledCheckBox"
 						  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
@@ -185,13 +196,13 @@
 				</ComboBox>
 
 				<TextBlock Grid.Row="4" Grid.Column="0"
-						   Text="Bot Token:" Classes="label"/>
+						   Text="Токен бота:" Classes="label"/>
 				<TextBox x:Name="TelegramTokenTextBox"
 						 Grid.Row="4" Grid.Column="1"
 						 Watermark="123456:ABC-DEF..."/>
 
 				<TextBlock Grid.Row="5" Grid.Column="0"
-						   Text="Chat ID:" Classes="label"/>
+						   Text="ID чата:" Classes="label"/>
 				<TextBox x:Name="TelegramChatIdTextBox"
 						 Grid.Row="5" Grid.Column="1"
 						 Watermark="-1001234567890"/>
@@ -210,8 +221,8 @@
 				CornerRadius="6"
 				Padding="8">
 			<DockPanel>
-				<TextBlock x:Name="StatusText" Text="Status: Idle" Foreground="#333"/>
-				<TextBlock x:Name="ProgressText" DockPanel.Dock="Right" Text="Progress: 0/0" Foreground="#333"/>
+				<TextBlock x:Name="StatusText" Text="Статус: Ожидание" Foreground="#333"/>
+				<TextBlock x:Name="ProgressText" DockPanel.Dock="Right" Text="Прогресс: 0/0" Foreground="#333"/>
 			</DockPanel>
 		</Border>
 
