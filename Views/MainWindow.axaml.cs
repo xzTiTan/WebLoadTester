@@ -15,6 +15,20 @@ namespace WebLoadTester.Views;
 
 public partial class MainWindow : Window
 {
+    private string ConfigureLocalPlaywrightBrowsersPath()
+    {
+        // Папка рядом с exe
+        var browsersPath = Path.Combine(AppContext.BaseDirectory, "browsers");
+
+        // Создаём папку (если её нет) — это не скачивает браузер, просто готовит место
+        Directory.CreateDirectory(browsersPath);
+
+        // Говорим Playwright искать браузеры ТОЛЬКО здесь
+        Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browsersPath);
+
+        return browsersPath;
+    }
+
     // ===== UI collections =====
     private readonly ObservableCollection<string> _selectors = new();
     private readonly ObservableCollection<string> _log = new();
@@ -239,8 +253,12 @@ public partial class MainWindow : Window
         int fail = 0;
 
         // Поднимем один браузер, а контексты/страницы — на воркерах
+        var browsersPath = ConfigureLocalPlaywrightBrowsersPath();
+        EnqueueLog($"Playwright browsers path: {browsersPath}");
+
         EnqueueLog("Playwright: CreateAsync()");
         using var playwright = await Playwright.CreateAsync();
+
 
         EnqueueLog("Playwright: Launch Chromium");
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
