@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Microsoft.Playwright;
@@ -15,15 +16,22 @@ namespace WebLoadTester.Views;
 
 public partial class MainWindow : Window
 {
+    private enum StepErrorPolicy
+    {
+        SkipStep,
+        StopRun,
+        StopAll
+    }
+
     private string ConfigureLocalPlaywrightBrowsersPath()
     {
-        // Папка рядом с exe
+        // РџР°РїРєР° СЂСЏРґРѕРј СЃ exe
         var browsersPath = Path.Combine(AppContext.BaseDirectory, "browsers");
 
-        // Создаём папку (если её нет) — это не скачивает браузер, просто готовит место
+        // РЎРѕР·РґР°С‘Рј РїР°РїРєСѓ (РµСЃР»Рё РµС‘ РЅРµС‚) вЂ” СЌС‚Рѕ РЅРµ СЃРєР°С‡РёРІР°РµС‚ Р±СЂР°СѓР·РµСЂ, РїСЂРѕСЃС‚Рѕ РіРѕС‚РѕРІРёС‚ РјРµСЃС‚Рѕ
         Directory.CreateDirectory(browsersPath);
 
-        // Говорим Playwright искать браузеры ТОЛЬКО здесь
+        // Р“РѕРІРѕСЂРёРј Playwright РёСЃРєР°С‚СЊ Р±СЂР°СѓР·РµСЂС‹ РўРћР›Р¬РљРћ Р·РґРµСЃСЊ
         Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browsersPath);
 
         return browsersPath;
@@ -48,7 +56,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Bind ItemsSource (перекрывает демо-элементы из XAML)
+        // Bind ItemsSource (РїРµСЂРµРєСЂС‹РІР°РµС‚ РґРµРјРѕ-СЌР»РµРјРµРЅС‚С‹ РёР· XAML)
         SelectorsList.ItemsSource = _selectors;
         LogList.ItemsSource = _log;
 
@@ -62,8 +70,9 @@ public partial class MainWindow : Window
 
         HeadlessCheckBox.IsChecked = true;
         ScreenshotCheckBox.IsChecked = true;
+        ErrorPolicyComboBox.SelectedIndex = 0;
 
-        // Put your requested selector as first step (если список пустой)
+        // Put your requested selector as first step (РµСЃР»Рё СЃРїРёСЃРѕРє РїСѓСЃС‚РѕР№)
         if (_selectors.Count == 0)
         {
             _selectors.Add("body > div.L3eUgb > div.o3j99.ikrT4e.om7nvf > form > div:nth-child(1) > div.A8SBwf > div.FPdoLc.lJ9FBc > center > input.RNmpXc");
@@ -79,15 +88,15 @@ public partial class MainWindow : Window
         RestartBtn.Click += RestartBtn_Click;
         StopBtn.Click += StopBtn_Click;
 
-        LoadScenarioBtn.Click += (_, __) => EnqueueLog("LOAD scenario.json — позже");
-        SaveScenarioBtn.Click += (_, __) => EnqueueLog("SAVE scenario.json — позже");
+        LoadScenarioBtn.Click += (_, __) => EnqueueLog("Р—Р°РіСЂСѓР·РєР° scenario.json вЂ” РїРѕР·Р¶Рµ");
+        SaveScenarioBtn.Click += (_, __) => EnqueueLog("РЎРѕС…СЂР°РЅРµРЅРёРµ scenario.json вЂ” РїРѕР·Р¶Рµ");
 
         // Start log reader loop
         _logCts = new CancellationTokenSource();
         _ = Task.Run(() => LogReaderLoopAsync(_logCts.Token));
 
-        SetStatus("Idle", "0/0");
-        EnqueueLog("Приложение запущено");
+        SetStatus("РћР¶РёРґР°РЅРёРµ", "0/0");
+        EnqueueLog("РџСЂРёР»РѕР¶РµРЅРёРµ Р·Р°РїСѓС‰РµРЅРѕ");
     }
 
     protected override void OnClosed(EventArgs e)
@@ -109,7 +118,7 @@ public partial class MainWindow : Window
     {
         _selectors.Add("css_selector_here");
         SelectorsList.SelectedIndex = _selectors.Count - 1;
-        EnqueueLog("Добавлен шаг: css_selector_here");
+        EnqueueLog("Р”РѕР±Р°РІР»РµРЅ С€Р°Рі: css_selector_here");
     }
 
     private void RemoveSelectorBtn_Click(object? sender, RoutedEventArgs e)
@@ -119,7 +128,38 @@ public partial class MainWindow : Window
 
         var removed = _selectors[i];
         _selectors.RemoveAt(i);
-        EnqueueLog($"Удалён шаг: {removed}");
+        EnqueueLog($"РЈРґР°Р»С‘РЅ С€Р°Рі: {removed}");
+    }
+
+    private async void SelectorsList_OnDoubleTapped(object? sender, RoutedEventArgs e)
+    {
+        await EditSelectedSelectorAsync();
+    }
+
+    private async void SelectorsList_OnKeyUp(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            await EditSelectedSelectorAsync();
+        }
+    }
+
+    private async Task EditSelectedSelectorAsync()
+    {
+        var i = SelectorsList.SelectedIndex;
+        if (i < 0 || i >= _selectors.Count) return;
+
+        var current = _selectors[i];
+        var dlg = new EditSelectorWindow(current);
+        var result = await dlg.ShowDialog<string?>(this);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            EnqueueLog("Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ: РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР° РёР»Рё РѕС‚РјРµРЅР° вЂ” Р±РµР· РёР·РјРµРЅРµРЅРёР№.");
+            return;
+        }
+
+        _selectors[i] = result;
+        EnqueueLog($"РћР±РЅРѕРІР»С‘РЅ С€Р°Рі: {Short(result)}");
     }
 
     private void UpSelectorBtn_Click(object? sender, RoutedEventArgs e)
@@ -129,7 +169,7 @@ public partial class MainWindow : Window
 
         (_selectors[i - 1], _selectors[i]) = (_selectors[i], _selectors[i - 1]);
         SelectorsList.SelectedIndex = i - 1;
-        EnqueueLog("Шаг перемещён вверх");
+        EnqueueLog("РЁР°Рі РїРµСЂРµРјРµС‰С‘РЅ РІРІРµСЂС…");
     }
 
     private void DownSelectorBtn_Click(object? sender, RoutedEventArgs e)
@@ -139,14 +179,14 @@ public partial class MainWindow : Window
 
         (_selectors[i + 1], _selectors[i]) = (_selectors[i], _selectors[i + 1]);
         SelectorsList.SelectedIndex = i + 1;
-        EnqueueLog("Шаг перемещён вниз");
+        EnqueueLog("РЁР°Рі РїРµСЂРµРјРµС‰С‘РЅ РІРЅРёР·");
     }
 
     private async void StartBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (_runCts != null)
         {
-            EnqueueLog("Уже запущено");
+            EnqueueLog("РЈР¶Рµ Р·Р°РїСѓС‰РµРЅРѕ");
             return;
         }
 
@@ -159,14 +199,14 @@ public partial class MainWindow : Window
             var url = (UrlTextBox.Text ?? "").Trim();
             if (string.IsNullOrWhiteSpace(url))
             {
-                EnqueueLog("URL пустой — запуск отменён");
+                EnqueueLog("URL РїСѓСЃС‚РѕР№ вЂ” Р·Р°РїСѓСЃРє РѕС‚РјРµРЅС‘РЅ");
                 return;
             }
 
             var selectors = _selectors.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
             if (selectors.Count == 0)
             {
-                EnqueueLog("Список селекторов пустой — запуск отменён");
+                EnqueueLog("РЎРїРёСЃРѕРє СЃРµР»РµРєС‚РѕСЂРѕРІ РїСѓСЃС‚РѕР№ вЂ” Р·Р°РїСѓСЃРє РѕС‚РјРµРЅС‘РЅ");
                 return;
             }
 
@@ -175,9 +215,10 @@ public partial class MainWindow : Window
             var timeoutSec = ParseIntOrDefault(TimeoutTextBox.Text, 15, 1, 600);
             var headless = HeadlessCheckBox.IsChecked ?? true;
             var screenshot = ScreenshotCheckBox.IsChecked ?? false;
+            var errorPolicy = GetSelectedPolicy();
 
-            SetStatus("Running", $"0/{totalRuns}");
-            EnqueueLog($"Старт: url={url}, totalRuns={totalRuns}, concurrency={concurrency}, timeout={timeoutSec}s, headless={headless}, screenshot={screenshot}");
+            SetStatus("Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ", $"0/{totalRuns}");
+            EnqueueLog($"РЎС‚Р°СЂС‚: url={url}, totalRuns={totalRuns}, concurrency={concurrency}, timeout={timeoutSec}s, headless={headless}, screenshot={screenshot}, policy={PolicyToString(errorPolicy)}");
 
             await RunWithPlaywrightAsync(
                 url: url,
@@ -187,20 +228,21 @@ public partial class MainWindow : Window
                 timeoutSeconds: timeoutSec,
                 headless: headless,
                 screenshotAfterRun: screenshot,
+                errorPolicy: errorPolicy,
                 token: _runCts.Token);
 
-            SetStatus("Done", $"{totalRuns}/{totalRuns}");
-            EnqueueLog("Готово");
+            SetStatus("Р“РѕС‚РѕРІРѕ", $"{totalRuns}/{totalRuns}");
+            EnqueueLog("Р“РѕС‚РѕРІРѕ");
         }
         catch (OperationCanceledException)
         {
-            SetStatus("Stopped", "—");
-            EnqueueLog("Остановлено пользователем");
+            SetStatus("РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ", "вЂ”");
+            EnqueueLog("РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј");
         }
         catch (Exception ex)
         {
-            SetStatus("Error", "—");
-            EnqueueLog($"Ошибка: {ex.GetType().Name}: {ex.Message}");
+            SetStatus("РћС€РёР±РєР°", "вЂ”");
+            EnqueueLog($"РћС€РёР±РєР°: {ex.GetType().Name}: {ex.Message}");
         }
         finally
         {
@@ -214,28 +256,47 @@ public partial class MainWindow : Window
     {
         if (_runCts == null) return;
 
-        EnqueueLog("Stop: запрос отмены");
-        SetStatus("Stopping", "…");
+        EnqueueLog("РЎС‚РѕРї: Р·Р°РїСЂРѕСЃ РѕС‚РјРµРЅС‹");
+        SetStatus("РћСЃС‚Р°РЅР°РІР»РёРІР°СЋ", "вЂ¦");
         _runCts.Cancel();
     }
 
     private void RestartBtn_Click(object? sender, RoutedEventArgs e)
     {
-        // Минимальный “restart”: если работает — остановить и попросить стартнуть заново
+        // РњРёРЅРёРјР°Р»СЊРЅС‹Р№ вЂњrestartвЂќ: РµСЃР»Рё СЂР°Р±РѕС‚Р°РµС‚ вЂ” РѕСЃС‚Р°РЅРѕРІРёС‚СЊ Рё РїРѕРїСЂРѕСЃРёС‚СЊ СЃС‚Р°СЂС‚РЅСѓС‚СЊ Р·Р°РЅРѕРІРѕ
         if (_runCts != null)
         {
             StopBtn_Click(sender, e);
-            EnqueueLog("Restart: остановка запущена (нажми Начать после остановки)");
+            EnqueueLog("Р РµСЃС‚Р°СЂС‚: РѕСЃС‚Р°РЅРѕРІРєР° Р·Р°РїСѓС‰РµРЅР° (РЅР°Р¶РјРё В«РќР°С‡Р°С‚СЊВ» РїРѕСЃР»Рµ РѕСЃС‚Р°РЅРѕРІРєРё)");
             return;
         }
 
-        // если не работает — просто старт
+        // РµСЃР»Рё РЅРµ СЂР°Р±РѕС‚Р°РµС‚ вЂ” РїСЂРѕСЃС‚Рѕ СЃС‚Р°СЂС‚
         StartBtn_Click(sender, e);
     }
 
     // ===========================
     // Playwright runner (TPL)
     // ===========================
+
+    private StepErrorPolicy GetSelectedPolicy()
+    {
+        return ErrorPolicyComboBox.SelectedIndex switch
+        {
+            0 => StepErrorPolicy.SkipStep,
+            1 => StepErrorPolicy.StopRun,
+            2 => StepErrorPolicy.StopAll,
+            _ => StepErrorPolicy.SkipStep
+        };
+    }
+
+    private static string PolicyToString(StepErrorPolicy policy) => policy switch
+    {
+        StepErrorPolicy.SkipStep => "РџСЂРѕРїСѓСЃС‚РёС‚СЊ С€Р°Рі Рё РїСЂРѕРґРѕР»Р¶РёС‚СЊ",
+        StepErrorPolicy.StopRun => "РћСЃС‚Р°РЅРѕРІРёС‚СЊ С‚РµРєСѓС‰РёР№ РїСЂРѕРіРѕРЅ (FAIL) Рё РїРµСЂРµР№С‚Рё Рє СЃР»РµРґСѓСЋС‰РµРјСѓ РїСЂРѕРіРѕРЅСѓ",
+        StepErrorPolicy.StopAll => "РћСЃС‚Р°РЅРѕРІРёС‚СЊ РІРµСЃСЊ С‚РµСЃС‚",
+        _ => policy.ToString()
+    };
 
     private async Task RunWithPlaywrightAsync(
         string url,
@@ -245,35 +306,36 @@ public partial class MainWindow : Window
         int timeoutSeconds,
         bool headless,
         bool screenshotAfterRun,
+        StepErrorPolicy errorPolicy,
         CancellationToken token)
     {
-        // Глобальные счётчики прогонов/успехов/ошибок
+        // Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ СЃС‡С‘С‚С‡РёРєРё РїСЂРѕРіРѕРЅРѕРІ/СѓСЃРїРµС…РѕРІ/РѕС€РёР±РѕРє
         int runCounter = 0;
         int ok = 0;
         int fail = 0;
 
-        // Поднимем один браузер, а контексты/страницы — на воркерах
+        // РџРѕРґРЅРёРјРµРј РѕРґРёРЅ Р±СЂР°СѓР·РµСЂ, Р° РєРѕРЅС‚РµРєСЃС‚С‹/СЃС‚СЂР°РЅРёС†С‹ вЂ” РЅР° РІРѕСЂРєРµСЂР°С…
         var browsersPath = ConfigureLocalPlaywrightBrowsersPath();
-        EnqueueLog($"Playwright browsers path: {browsersPath}");
+        EnqueueLog($"РљР°С‚Р°Р»РѕРі Р±СЂР°СѓР·РµСЂРѕРІ Playwright: {browsersPath}");
 
-        EnqueueLog("Playwright: CreateAsync()");
+        EnqueueLog("Playwright: РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ");
         using var playwright = await Playwright.CreateAsync();
 
 
-        EnqueueLog("Playwright: Launch Chromium");
+        EnqueueLog("Playwright: Р·Р°РїСѓСЃРє Chromium");
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = headless
         });
 
-        // Воркеры
+        // Р’РѕСЂРєРµСЂС‹
         var tasks = new List<Task>(concurrency);
         for (int workerId = 1; workerId <= concurrency; workerId++)
         {
             var id = workerId;
             tasks.Add(Task.Run(async () =>
             {
-                // отдельный контекст на воркер
+                // РѕС‚РґРµР»СЊРЅС‹Р№ РєРѕРЅС‚РµРєСЃС‚ РЅР° РІРѕСЂРєРµСЂ
                 await using var context = await browser.NewContextAsync(new BrowserNewContextOptions
                 {
                     IgnoreHTTPSErrors = true
@@ -288,48 +350,122 @@ public partial class MainWindow : Window
 
                     try
                     {
-                        EnqueueLog($"[W{id}] Run {current}/{totalRuns}: open page");
+                        var runLabel = $"[W{id}] РџСЂРѕРіРѕРЅ {current}/{totalRuns}";
+                        EnqueueLog($"{runLabel}: РѕС‚РєСЂС‹РІР°СЋ СЃС‚СЂР°РЅРёС†Сѓ");
                         var page = await context.NewPageAsync();
                         page.SetDefaultTimeout(timeoutSeconds * 1000);
 
-                        await page.GotoAsync(url, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
-                        await TryDismissGoogleConsentAsync(page);
+                        bool runFailed = false;
+                        string? failReason = null;
+                        string? finalUrl = null;
 
-                        // выполнить шаги
-                        foreach (var sel in selectors)
+                        try
                         {
-                            token.ThrowIfCancellationRequested();
+                            await page.GotoAsync(url, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+                            await TryDismissGoogleConsentAsync(page);
 
-                            EnqueueLog($"[W{id}] wait: {Short(sel)}");
-                            var loc = page.Locator(sel);
-                            await loc.WaitForAsync(new LocatorWaitForOptions
+                            // РІС‹РїРѕР»РЅРёС‚СЊ С€Р°РіРё
+                            foreach (var sel in selectors)
                             {
-                                State = WaitForSelectorState.Visible,
-                                Timeout = timeoutSeconds * 1000
-                            });
+                                token.ThrowIfCancellationRequested();
 
-                            EnqueueLog($"[W{id}] click: {Short(sel)}");
-                            await loc.ClickAsync();
-                            await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded, new PageWaitForLoadStateOptions
+                                try
+                                {
+                                    EnqueueLog($"{runLabel}: РћР¶РёРґР°СЋ СЃРµР»РµРєС‚РѕСЂ {Short(sel)}");
+                                    var loc = page.Locator(sel);
+                                    await loc.WaitForAsync(new LocatorWaitForOptions
+                                    {
+                                        State = WaitForSelectorState.Visible,
+                                        Timeout = timeoutSeconds * 1000
+                                    });
+
+                                    EnqueueLog($"{runLabel}: РљР»РёРєР°СЋ {Short(sel)}");
+                                    await loc.ClickAsync();
+                                    await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded, new PageWaitForLoadStateOptions
+                                    {
+                                        Timeout = timeoutSeconds * 1000
+                                    });
+                                    EnqueueLog($"{runLabel}: РЁР°Рі РІС‹РїРѕР»РЅРµРЅ {Short(sel)}");
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    throw;
+                                }
+                                catch (Exception ex)
+                                {
+                                    runFailed = true;
+                                    failReason = $"{ex.GetType().Name}: {ex.Message}";
+
+                                    if (errorPolicy == StepErrorPolicy.SkipStep)
+                                    {
+                                        EnqueueLog($"{runLabel}: РћС€РёР±РєР° С€Р°РіР° {Short(sel)} (РїСЂРѕРїСѓСЃРєР°СЋ). Р”РµС‚Р°Р»Рё: {failReason}");
+                                        continue;
+                                    }
+
+                                    if (errorPolicy == StepErrorPolicy.StopRun)
+                                    {
+                                        EnqueueLog($"{runLabel}: РћС€РёР±РєР° С€Р°РіР° {Short(sel)}. РћСЃС‚Р°РЅР°РІР»РёРІР°СЋ РїСЂРѕРіРѕРЅ Рё РїРµСЂРµС…РѕР¶Сѓ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ.");
+                                        break;
+                                    }
+
+                                    EnqueueLog($"{runLabel}: РћС€РёР±РєР° С€Р°РіР° {Short(sel)}. РћСЃС‚Р°РЅР°РІР»РёРІР°СЋ РІРµСЃСЊ С‚РµСЃС‚.");
+                                    _runCts?.Cancel();
+                                    throw new OperationCanceledException(token);
+                                }
+                            }
+
+                            finalUrl = page.Url;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            runFailed = true;
+                            failReason ??= $"{ex.GetType().Name}: {ex.Message}";
+                            EnqueueLog($"{runLabel}: РћС€РёР±РєР° РїСЂРѕРіРѕРЅР°: {failReason}");
+                        }
+                        finally
+                        {
+                            if (screenshotAfterRun)
                             {
-                                Timeout = timeoutSeconds * 1000
-                            });
+                                try
+                                {
+                                    Directory.CreateDirectory("screenshots");
+                                    var status = runFailed ? "fail" : "ok";
+                                    var file = Path.Combine("screenshots", $"run_{current:0000}_w{id}_{DateTime.Now:yyyyMMdd_HHmmss}_{status}.png");
+                                    await page.ScreenshotAsync(new PageScreenshotOptions { Path = file, FullPage = true });
+                                    EnqueueLog($"{runLabel}: РЎРєСЂРёРЅС€РѕС‚: {file}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    EnqueueLog($"{runLabel}: РћС€РёР±РєР° РїСЂРё СЃРєСЂРёРЅС€РѕС‚Рµ: {ex.Message}");
+                                }
+                            }
+
+                            try
+                            {
+                                await page.CloseAsync();
+                            }
+                            catch (Exception ex)
+                            {
+                                EnqueueLog($"{runLabel}: РћС€РёР±РєР° Р·Р°РєСЂС‹С‚РёСЏ СЃС‚СЂР°РЅРёС†С‹: {ex.Message}");
+                            }
                         }
 
-                        EnqueueLog($"[W{id}] done, url={page.Url}");
-
-                        if (screenshotAfterRun)
+                        if (runFailed)
                         {
-                            Directory.CreateDirectory("screenshots");
-                            var file = Path.Combine("screenshots", $"run_{current:0000}_w{id}_{DateTime.Now:yyyyMMdd_HHmmss}.png");
-                            await page.ScreenshotAsync(new PageScreenshotOptions { Path = file, FullPage = true });
-                            EnqueueLog($"[W{id}] screenshot: {file}");
+                            Interlocked.Increment(ref fail);
+                            UpdateProgress(ok + fail, totalRuns, ok, fail);
+                            EnqueueLog($"{runLabel}: РѕС€РёР±РєР°. {failReason ?? "РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°"}");
                         }
-
-                        await page.CloseAsync();
-
-                        Interlocked.Increment(ref ok);
-                        UpdateProgress(ok + fail, totalRuns, ok, fail);
+                        else
+                        {
+                            EnqueueLog($"{runLabel}: Р“РѕС‚РѕРІРѕ, url={finalUrl}");
+                            Interlocked.Increment(ref ok);
+                            UpdateProgress(ok + fail, totalRuns, ok, fail);
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -338,30 +474,30 @@ public partial class MainWindow : Window
                     catch (Exception ex)
                     {
                         Interlocked.Increment(ref fail);
-                        EnqueueLog($"[W{id}] FAIL run {current}: {ex.GetType().Name}: {ex.Message}");
+                        EnqueueLog($"{runLabel}: РѕС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅРёСЏ: {ex.GetType().Name}: {ex.Message}");
                         UpdateProgress(ok + fail, totalRuns, ok, fail);
                     }
                 }
 
-                EnqueueLog($"[W{id}] worker finished");
+                EnqueueLog($"[W{id}] РІРѕСЂРєРµСЂ Р·Р°РІРµСЂС€С‘РЅ");
             }, token));
         }
 
         await Task.WhenAll(tasks);
-        EnqueueLog($"Итог: OK={ok}, FAIL={fail}, TOTAL={totalRuns}");
+        EnqueueLog($"РС‚РѕРі: РћРљ={ok}, РћС€РёР±РѕРє={fail}, Р’СЃРµРіРѕ={totalRuns}");
     }
 
     private async Task TryDismissGoogleConsentAsync(IPage page)
     {
-        // Небольшая “помощь” для Google consent-баннера.
-        // Если его нет — просто тихо выходим.
+        // РќРµР±РѕР»СЊС€Р°СЏ вЂњРїРѕРјРѕС‰СЊвЂќ РґР»СЏ Google consent-Р±Р°РЅРЅРµСЂР°.
+        // Р•СЃР»Рё РµРіРѕ РЅРµС‚ вЂ” РїСЂРѕСЃС‚Рѕ С‚РёС…Рѕ РІС‹С…РѕРґРёРј.
         string[] candidates =
         {
             "button:has-text(\"Accept all\")",
             "button:has-text(\"I agree\")",
-            "button:has-text(\"Принять все\")",
-            "button:has-text(\"Согласен\")",
-            "button:has-text(\"Принять\")"
+            "button:has-text(\"РџСЂРёРЅСЏС‚СЊ РІСЃРµ\")",
+            "button:has-text(\"РЎРѕРіР»Р°СЃРµРЅ\")",
+            "button:has-text(\"РџСЂРёРЅСЏС‚СЊ\")"
         };
 
         foreach (var c in candidates)
@@ -372,7 +508,7 @@ public partial class MainWindow : Window
                 if (await loc.CountAsync() > 0)
                 {
                     await loc.First.ClickAsync(new LocatorClickOptions { Timeout = 2000 });
-                    EnqueueLog("Google consent закрыт");
+                    EnqueueLog("Google consent Р·Р°РєСЂС‹С‚");
                     break;
                 }
             }
@@ -405,11 +541,11 @@ public partial class MainWindow : Window
                     {
                         _log.Add(line);
 
-                        // Ограничим размер лога (чтобы UI не распухал)
+                        // РћРіСЂР°РЅРёС‡РёРј СЂР°Р·РјРµСЂ Р»РѕРіР° (С‡С‚РѕР±С‹ UI РЅРµ СЂР°СЃРїСѓС…Р°Р»)
                         if (_log.Count > 3000)
                             _log.RemoveAt(0);
 
-                        // Автоскролл вниз
+                        // РђРІС‚РѕСЃРєСЂРѕР»Р» РІРЅРёР·
                         if (_log.Count > 0)
                             LogList.ScrollIntoView(_log[^1]);
                     });
@@ -426,8 +562,8 @@ public partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
-            StatusText.Text = $"Status: {status}";
-            ProgressText.Text = $"Progress: {progress}";
+            StatusText.Text = $"РЎС‚Р°С‚СѓСЃ: {status}";
+            ProgressText.Text = $"РџСЂРѕРіСЂРµСЃСЃ: {progress}";
         });
     }
 
@@ -435,7 +571,7 @@ public partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
-            ProgressText.Text = $"Progress: {done}/{total}   OK: {ok}  FAIL: {fail}";
+            ProgressText.Text = $"РџСЂРѕРіСЂРµСЃСЃ: {done}/{total}   РћРљ: {ok}  РћС€РёР±РѕРє: {fail}";
         });
     }
 
@@ -444,7 +580,7 @@ public partial class MainWindow : Window
         Dispatcher.UIThread.Post(() =>
         {
             StartBtn.IsEnabled = !isRunning;
-            RestartBtn.IsEnabled = !isRunning; // на MVP пусть будет доступен только когда не идет
+            RestartBtn.IsEnabled = !isRunning; // РЅР° MVP РїСѓСЃС‚СЊ Р±СѓРґРµС‚ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РєРѕРіРґР° РЅРµ РёРґРµС‚
             StopBtn.IsEnabled = isRunning;
 
             LoadScenarioBtn.IsEnabled = !isRunning;
@@ -454,6 +590,7 @@ public partial class MainWindow : Window
             RemoveSelectorBtn.IsEnabled = !isRunning;
             UpSelectorBtn.IsEnabled = !isRunning;
             DownSelectorBtn.IsEnabled = !isRunning;
+            SelectorsList.IsEnabled = !isRunning;
         });
     }
 
