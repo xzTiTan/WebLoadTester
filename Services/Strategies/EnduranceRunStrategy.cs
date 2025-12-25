@@ -31,7 +31,16 @@ namespace WebLoadTester.Services.Strategies
                     {
                         ct.ThrowIfCancellationRequested();
                         var currentRun = Interlocked.Increment(ref runId);
-                        var res = await context.Runner.RunOnceAsync(context.Scenario, context.Settings, id, currentRun, context.Logger, ct, context.Cancellation);
+                        var res = await context.Runner.RunOnceAsync(new RunRequest
+                        {
+                            Scenario = context.Scenario,
+                            Settings = context.Settings,
+                            WorkerId = id,
+                            RunId = currentRun,
+                            Logger = context.Logger,
+                            CancelAll = context.Cancellation,
+                            PhaseName = "Endurance"
+                        }, ct);
                         lock (results)
                         {
                             results.Add(res);

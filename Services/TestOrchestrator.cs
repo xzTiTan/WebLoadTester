@@ -16,6 +16,7 @@ public class TestOrchestrator
 
     public async Task<TestRunResult> ExecuteAsync(RunContext context, TestPlan plan, CancellationToken ct)
     {
+        PlaywrightBootstrap.EnsureBrowsersPathAndReturn(AppContext.BaseDirectory);
         var started = DateTime.UtcNow;
         var totalRuns = plan.TotalRuns;
         var results = new List<RunResult>();
@@ -36,7 +37,7 @@ public class TestOrchestrator
         }
 
         var finished = DateTime.UtcNow;
-        var reportPath = await _reportWriter.WriteAsync(context.Settings, results, started, finished, ct);
+        var reportPath = await _reportWriter.WriteAsync(context.Settings, plan, context.Scenario, results, started, finished, ct);
 
         return new TestRunResult
         {
@@ -63,6 +64,7 @@ public class TestOrchestrator
                 {
                     var next = Interlocked.Increment(ref _globalRunId);
                     await runsChannel.Writer.WriteAsync(next, writerCts.Token);
+                    await Task.Delay(10, writerCts.Token);
                 }
 
                 runsChannel.Writer.TryComplete();
@@ -89,10 +91,25 @@ public class TestOrchestrator
         {
             await foreach (var runId in runsChannel.Reader.ReadAllAsync(ct))
             {
-                var res = await context.Runner.RunOnceAsync(context.Scenario, context.Settings, workerId, runId, context.Logger, ct, context.Cancellation);
+                var res = await context.Runner.RunOnceAsync(new RunRequest
+                {
+                    Scenario = context.Scenario,
+                    Settings = context.Settings,
+                    WorkerId = workerId,
+                    RunId = runId,
+                    Logger = context.Logger,
+                    CancelAll = context.Cancellation,
+                    PhaseName = phase.Name
+                }, ct);
                 lock (results)
                 {
                     results.Add(res);
+                }
+
+                if (res.StopAllRequested)
+                {
+                    context.Cancellation?.Cancel();
+                    break;
                 }
 
                 var done = Interlocked.Increment(ref completed);

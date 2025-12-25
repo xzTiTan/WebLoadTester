@@ -218,8 +218,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         var scenarioSteps = Steps.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         if (scenarioSteps.Count == 0)
         {
-            Log("Нужен хотя бы один шаг для выбранного режима");
-            return;
+            Log("Шаги отсутствуют, будет только открытие страницы (допустимо)");
         }
 
         IsRunning = true;

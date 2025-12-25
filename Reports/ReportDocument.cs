@@ -11,6 +11,8 @@ namespace WebLoadTester.Reports
         public RunSettings Settings { get; set; } = new();
         public ReportSummary Summary { get; set; } = new();
         public List<RunResult> Runs { get; set; } = new();
+        public List<TestPhase> Phases { get; set; } = new();
+        public List<string> ScenarioSelectors { get; set; } = new();
     }
 
     public class ReportMeta

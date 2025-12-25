@@ -15,6 +15,7 @@ namespace WebLoadTester.Domain
         public List<StepResult> Steps { get; set; } = new();
         public DateTime StartedAt { get; set; }
         public DateTime FinishedAt { get; set; }
+        public bool StopAllRequested { get; set; }
     }
 
     public class StepResult
