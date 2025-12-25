@@ -7,23 +7,42 @@ namespace WebLoadTester.Domain
     {
         public int WorkerId { get; set; }
         public int RunId { get; set; }
-        public bool Success { get; set; }
-        public string? ErrorMessage { get; set; }
-        public string? FinalUrl { get; set; }
-        public TimeSpan Duration { get; set; }
-        public string? ScreenshotPath { get; set; }
-        public List<StepResult> Steps { get; set; } = new();
+        public string PhaseName { get; set; } = string.Empty;
+
         public DateTime StartedAt { get; set; }
         public DateTime FinishedAt { get; set; }
+        public DateTime StartedAtUtc
+        {
+            get => StartedAt;
+            set => StartedAt = value;
+        }
+
+        public DateTime FinishedAtUtc
+        {
+            get => FinishedAt;
+            set => FinishedAt = value;
+        }
+
+        public TimeSpan Duration { get; set; }
+        public long DurationMs { get; set; }
+
+        public bool Success { get; set; }
+        public string? ErrorType { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? FinalUrl { get; set; }
+        public string? ScreenshotPath { get; set; }
         public bool StopAllRequested { get; set; }
-        public string PhaseName { get; set; } = string.Empty;
+
+        public List<StepResult> Steps { get; set; } = new();
     }
 
     public class StepResult
     {
         public string Selector { get; set; } = string.Empty;
         public bool Success { get; set; }
+        public string? ErrorType { get; set; }
         public string? ErrorMessage { get; set; }
         public TimeSpan Duration { get; set; }
+        public long DurationMs { get; set; }
     }
 }

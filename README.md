@@ -29,18 +29,18 @@
 - **Screenshot** – быстрые проверки доступности/визуальных изменений, основной результат – скриншот.
 
 ## Отчёты и артефакты
-- После каждого запуска сохраняется JSON в `reports/report_yyyy-MM-dd_HH-mm-ss.json` (summary + список прогонов).
-- Рядом создаётся HTML-отчёт `reports/report_yyyy-MM-dd_HH-mm-ss.html` с таблицами фаз и прогонов и ссылками на скриншоты.
+- После каждого запуска сохраняется JSON в `reports/report_yyyy-MM-dd_HH-mm-ss.json` (meta + настройки + фазовый план + все прогоны).
+- Рядом создаётся HTML-отчёт `reports/report_yyyy-MM-dd_HH-mm-ss.html` с таблицами фаз, перцентилями и ссылками на скриншоты.
 - Скриншоты пишутся в `screenshots/`.
 - Телеграм-настройки находятся в правой панели; отправка сообщений/скриншотов использует введённые токен и ChatId.
 
 ## Пример структуры отчёта
 ```json
 {
-  "meta": { "startedAt": "2024-01-01T12:00:00Z", "finishedAt": "2024-01-01T12:05:00Z" },
-  "testType": "Load",
-  "settings": { "targetUrl": "https://example.com", "totalRuns": 20, "concurrency": 5 },
-  "summary": { "totalRuns": 20, "ok": 18, "fail": 2, "avgDurationMs": 1234.5 },
-  "runs": [ { "workerId": 1, "runId": 1, "success": true, "duration": "00:00:01.23" } ]
+  "meta": { "status": "Completed", "startedAtUtc": "2024-01-01T12:00:00Z", "finishedAtUtc": "2024-01-01T12:05:00Z" },
+  "settings": { "targetUrl": "https://example.com", "totalRuns": 20, "concurrency": 5, "testType": "Load" },
+  "summary": { "totalRunsExecuted": 20, "ok": 18, "fail": 2, "avgMs": 1234.5, "p95": 1800 },
+  "phases": [ { "name": "Load", "concurrency": 5, "runs": 20 } ],
+  "runs": [ { "workerId": 1, "runId": 1, "success": true, "durationMs": 1200, "phaseName": "Load" } ]
 }
 ```

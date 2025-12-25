@@ -15,7 +15,9 @@ namespace WebLoadTester.Services
             {
                 WorkerId = request.WorkerId,
                 RunId = request.RunId,
-                StartedAt = DateTime.UtcNow
+                PhaseName = request.PhaseName,
+                StartedAt = DateTime.UtcNow,
+                StartedAtUtc = DateTime.UtcNow
             };
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -37,6 +39,7 @@ namespace WebLoadTester.Services
                         $"Playwright browsers not found. Run: powershell -ExecutionPolicy Bypass -File ./playwright.ps1 install chromium. Details: {ex.Message}";
                     request.Logger.Log(message);
                     result.ErrorMessage = message;
+                    result.ErrorType = nameof(PlaywrightException);
                     result.Success = false;
                     return result;
                 }
@@ -54,6 +57,7 @@ namespace WebLoadTester.Services
                         $"Не удалось запустить Chromium. Убедитесь, что браузеры установлены в ./browsers (playwright install chromium). Details: {ex.Message}";
                     request.Logger.Log(message);
                     result.ErrorMessage = message;
+                    result.ErrorType = nameof(PlaywrightException);
                     result.Success = false;
                     return result;
                 }
@@ -114,6 +118,7 @@ namespace WebLoadTester.Services
                     catch (Exception ex)
                     {
                         stepResult.Success = false;
+                        stepResult.ErrorType = ex.GetType().Name;
                         stepResult.ErrorMessage = ex.Message;
                         if (request.Settings.StepErrorPolicy == StepErrorPolicy.SkipStep)
                         {
@@ -124,6 +129,7 @@ namespace WebLoadTester.Services
                             request.Logger.Log($"[W{request.WorkerId}][Run {request.RunId}] Ошибка шага, завершаю прогон: {ex.Message}");
                             result.Steps.Add(stepResult);
                             result.Success = false;
+                            result.ErrorType = ex.GetType().Name;
                             result.ErrorMessage = ex.Message;
                             break;
                         }
@@ -133,6 +139,7 @@ namespace WebLoadTester.Services
                             result.Steps.Add(stepResult);
                             result.Success = false;
                             result.StopAllRequested = true;
+                            result.ErrorType = ex.GetType().Name;
                             result.ErrorMessage = ex.Message;
                             request.CancelAll?.Cancel();
                             break;
@@ -141,6 +148,7 @@ namespace WebLoadTester.Services
                     finally
                     {
                         stepResult.Duration = stepTimer.Elapsed;
+                        stepResult.DurationMs = stepTimer.ElapsedMilliseconds;
                         result.Steps.Add(stepResult);
                     }
                 }
@@ -171,6 +179,7 @@ namespace WebLoadTester.Services
             catch (Exception ex)
             {
                 result.Success = false;
+                result.ErrorType = ex.GetType().Name;
                 result.ErrorMessage = ex.Message;
             }
             finally
@@ -203,7 +212,9 @@ namespace WebLoadTester.Services
                 playwright?.Dispose();
                 stopwatch.Stop();
                 result.Duration = stopwatch.Elapsed;
+                result.DurationMs = stopwatch.ElapsedMilliseconds;
                 result.FinishedAt = DateTime.UtcNow;
+                result.FinishedAtUtc = result.FinishedAt;
             }
 
             return result;

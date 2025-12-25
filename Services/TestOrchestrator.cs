@@ -6,14 +6,16 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using WebLoadTester.Domain;
+using WebLoadTester.Domain.Reporting;
 using WebLoadTester.Reports;
+using WebLoadTester.Services.Reporting;
 
 namespace WebLoadTester.Services;
 
 public class TestOrchestrator
 {
     private int _globalRunId;
-    private readonly ReportWriter _reportWriter = new();
+    private readonly JsonReportWriter _jsonReportWriter = new();
     private readonly HtmlReportWriter _htmlReportWriter = new();
 
     public async Task<TestRunResult> ExecuteAsync(RunContext context, TestPlan plan, CancellationToken ct)
@@ -23,34 +25,71 @@ public class TestOrchestrator
         var totalRuns = plan.TotalRuns;
         var results = new List<RunResult>();
         _globalRunId = 0;
+        var status = "Completed";
+        string? reportPath = null;
+        string? htmlPath = null;
+        var finished = started;
 
-        foreach (var phase in plan.Phases)
+        try
         {
-            ct.ThrowIfCancellationRequested();
-            context.Logger.Log($"Фаза: {phase.Name}, Concurrency={phase.Concurrency}, Runs={(phase.Runs?.ToString() ?? "∞")}, Duration={(phase.Duration?.ToString() ?? "—")}, PauseAfter={phase.PauseAfterSeconds}s");
-            var phaseResults = await RunPhaseAsync(phase, context, totalRuns, ct);
-            results.AddRange(phaseResults);
-
-            if (phase.PauseAfterSeconds > 0)
+            foreach (var phase in plan.Phases)
             {
-                context.Logger.Log($"Пауза между фазами {phase.PauseAfterSeconds} сек.");
-                await Task.Delay(TimeSpan.FromSeconds(phase.PauseAfterSeconds), ct);
+                ct.ThrowIfCancellationRequested();
+                context.Logger.Log($"Фаза: {phase.Name}, Concurrency={phase.Concurrency}, Runs={(phase.Runs?.ToString() ?? "∞")}, Duration={(phase.Duration?.ToString() ?? "—")}, PauseAfter={phase.PauseAfterSeconds}s");
+                var phaseResults = await RunPhaseAsync(phase, context, totalRuns, ct);
+                results.AddRange(phaseResults);
+
+                if (phase.PauseAfterSeconds > 0)
+                {
+                    context.Logger.Log($"Пауза между фазами {phase.PauseAfterSeconds} сек.");
+                    await Task.Delay(TimeSpan.FromSeconds(phase.PauseAfterSeconds), ct);
+                }
             }
         }
+        catch (OperationCanceledException)
+        {
+            status = "Stopped";
+            context.Logger.Log("Тест остановлен пользователем или политикой.");
+        }
+        catch (Exception ex)
+        {
+            status = "Error";
+            context.Logger.Log($"Ошибка выполнения теста: {ex.Message}");
+        }
+        finally
+        {
+            finished = DateTime.UtcNow;
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            var selectors = context.Scenario.Steps.ConvertAll(s => s.Selector);
+            var report = TestMetricsCalculator.BuildReport(context.Settings, selectors, plan.Phases, results, started, finished, status, totalRuns);
 
-        var finished = DateTime.UtcNow;
-        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        var document = _reportWriter.BuildDocument(context.Settings, plan, context.Scenario, results, started, finished);
-        var reportPath = await _reportWriter.WriteAsync(document, timestamp, ct);
-        var htmlPath = Path.Combine("reports", $"report_{timestamp}.html");
-        await _htmlReportWriter.WriteAsync(document, htmlPath, ct);
-        context.Logger.Log($"HTML report saved: {htmlPath}");
+            try
+            {
+                reportPath = await _jsonReportWriter.WriteAsync(report, timestamp, CancellationToken.None);
+                context.Logger.Log($"Report saved: {reportPath}");
+            }
+            catch (Exception ex)
+            {
+                context.Logger.Log($"Не удалось сохранить JSON отчёт: {ex.Message}");
+            }
+
+            try
+            {
+                htmlPath = Path.Combine("reports", $"report_{timestamp}.html");
+                await _htmlReportWriter.WriteAsync(report, htmlPath, CancellationToken.None);
+                context.Logger.Log($"HTML report saved: {htmlPath}");
+            }
+            catch (Exception ex)
+            {
+                context.Logger.Log($"Не удалось сохранить HTML отчёт: {ex.Message}");
+            }
+        }
 
         return new TestRunResult
         {
             Runs = results,
-            ReportPath = reportPath,
-            HtmlReportPath = htmlPath,
+            ReportPath = reportPath ?? string.Empty,
+            HtmlReportPath = htmlPath ?? string.Empty,
             StartedAt = started,
             FinishedAt = finished
         };
