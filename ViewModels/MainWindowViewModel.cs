@@ -319,6 +319,11 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
 
     public void Log(string message)
     {
+        AppendLog(message);
+    }
+
+    private void AppendLog(string message)
+    {
         var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
         _logChannel.Writer.TryWrite(line);
     }

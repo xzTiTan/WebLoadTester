@@ -19,7 +19,13 @@
 
                 <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
                     <ListBox ItemsSource="{Binding Steps}"
-                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}"/>
+                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBox Text="{Binding ., Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Border>
 
                 <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
@@ -102,7 +108,7 @@
 
                 <Border Grid.Row="1" Classes="logbox">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ListBox ItemsSource="{Binding LogEntries}" Classes="loglist">
+                        <ListBox x:Name="LogListBox" ItemsSource="{Binding LogEntries}" Classes="loglist">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <TextBlock Classes="logline" Text="{Binding}"/>
