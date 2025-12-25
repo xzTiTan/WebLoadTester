@@ -75,16 +75,16 @@
 
                 <StackPanel Spacing="6" Orientation="Horizontal">
                     <TextBlock Text="Stress: шаг" Classes="label"/>
-                    <TextBox Width="70" Text="{Binding RampStep, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                    <TextBox Width="70" Text="{Binding RampStep, Mode=TwoWay}" IsEnabled="{Binding IsStressMode}"/>
                     <TextBlock Text="Пауза (сек)" Classes="label"/>
-                    <TextBox Width="70" Text="{Binding RampDelaySeconds, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                    <TextBox Width="70" Text="{Binding RampDelaySeconds, Mode=TwoWay}" IsEnabled="{Binding IsStressMode}"/>
                     <TextBlock Text="Runs/level" Classes="label"/>
-                    <TextBox Width="80" Text="{Binding RunsPerLevel, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                    <TextBox Width="80" Text="{Binding RunsPerLevel, Mode=TwoWay}" IsEnabled="{Binding IsStressMode}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Endurance: минут" Classes="label"/>
-                    <TextBox Width="90" Text="{Binding DurationMinutes, Mode=TwoWay}" IsEnabled="{Binding IsEndurance}"/>
+                    <TextBox Width="90" Text="{Binding DurationMinutes, Mode=TwoWay}" IsEnabled="{Binding IsEnduranceMode}"/>
                 </StackPanel>
 
                 <WrapPanel>

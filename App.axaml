@@ -79,6 +79,7 @@
             <Setter Property="Background" Value="#FFFFFF" />
             <Setter Property="Foreground" Value="#111" />
             <Setter Property="BorderBrush" Value="#D0D0D0" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ListBox.loglist">

@@ -49,7 +49,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     private bool headless = true;
 
     [ObservableProperty]
-    private bool screenshotAfterRun = true;
+    private bool screenshotAfterRun = false;
 
     [ObservableProperty]
     private StepErrorPolicy errorPolicy = StepErrorPolicy.SkipStep;
@@ -95,6 +95,8 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
 
     public bool IsStress => SelectedTestType == TestType.Stress;
     public bool IsEndurance => SelectedTestType == TestType.Endurance;
+    public bool IsStressMode => SelectedTestType == TestType.Stress;
+    public bool IsEnduranceMode => SelectedTestType == TestType.Endurance;
     public bool IsScreenshot => SelectedTestType == TestType.Screenshot;
 
     public bool CanStart => !IsRunning;
@@ -134,6 +136,8 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         OnPropertyChanged(nameof(IsStress));
         OnPropertyChanged(nameof(IsEndurance));
         OnPropertyChanged(nameof(IsScreenshot));
+        OnPropertyChanged(nameof(IsStressMode));
+        OnPropertyChanged(nameof(IsEnduranceMode));
     }
 
     partial void OnIsRunningChanged(bool value)
