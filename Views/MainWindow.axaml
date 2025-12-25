@@ -83,7 +83,7 @@
 
                     <TextBlock Grid.Column="2" Text="Вид тестирования:" Classes="label"/>
                     <ComboBox Grid.Column="3"
-                              Items="{Binding TestTypes}"
+                              ItemsSource="{Binding TestTypes}"
                               SelectedItem="{Binding SelectedTestType, Mode=TwoWay}"/>
                 </Grid>
 
@@ -110,7 +110,7 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBlock Text="Политика ошибки шага:" Classes="label"/>
-                        <ComboBox Items="{Binding StepErrorPolicies}"
+                        <ComboBox ItemsSource="{Binding StepErrorPolicies}"
                                   SelectedItem="{Binding ErrorPolicy, Mode=TwoWay}"
                                   MinWidth="210"/>
                     </StackPanel>
