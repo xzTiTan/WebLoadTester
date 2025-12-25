@@ -1,3 +1,4 @@
+using System;
 using WebLoadTester.Domain;
 
 namespace WebLoadTester.Services;
@@ -9,5 +10,4 @@ public class RunContext
     public ILogSink Logger { get; init; } = default!;
     public IWebUiRunner Runner { get; init; } = default!;
     public Action<int, int>? Progress { get; init; }
-        ;
 }

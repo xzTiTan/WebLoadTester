@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using WebLoadTester.Domain;
 using WebLoadTester.Reports;
 using WebLoadTester.Services.Strategies;
@@ -42,7 +46,5 @@ public class TestRunResult
     public List<RunResult> Runs { get; set; } = new();
     public string ReportPath { get; set; } = string.Empty;
     public DateTime StartedAt { get; set; }
-        ;
     public DateTime FinishedAt { get; set; }
-        ;
 }

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace WebLoadTester.Domain;
 
 public class RunResult

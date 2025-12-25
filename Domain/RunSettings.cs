@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace WebLoadTester.Domain;
 
 public class RunSettings
@@ -8,13 +10,13 @@ public class RunSettings
     public int TimeoutSeconds { get; set; } = 30;
     public bool Headless { get; set; } = true;
     public bool ScreenshotAfterRun { get; set; }
-        ;
     public StepErrorPolicy ErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
 
     public StressSettings Stress { get; set; } = new();
     public EnduranceSettings Endurance { get; set; } = new();
 
     public TelegramSettings Telegram { get; set; } = new();
+    public List<string> Assertions { get; set; } = new();
 }
 
 public class StressSettings
@@ -32,11 +34,8 @@ public class EnduranceSettings
 public class TelegramSettings
 {
     public bool Enabled { get; set; }
-        ;
     public bool SendScreenshots { get; set; }
-        ;
     public int Mode { get; set; }
-        ;
     public string Token { get; set; } = string.Empty;
     public string ChatId { get; set; } = string.Empty;
 }
