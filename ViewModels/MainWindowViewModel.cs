@@ -25,7 +25,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     private CancellationTokenSource? _logCts;
     private CancellationTokenSource? _runCts;
 
-    public ObservableCollection<string> Steps { get; } = new();
+    public ObservableCollection<SelectorItem> CssSelectors { get; } = new();
     public ObservableCollection<string> LogEntries { get; } = new();
 
     public IReadOnlyList<TestType> TestTypes { get; } = Enum.GetValues<TestType>();
@@ -77,7 +77,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     private bool isRunning;
 
     [ObservableProperty]
-    private string? selectedStep;
+    private SelectorItem? selectedSelector;
 
     [ObservableProperty]
     private bool telegramEnabled;
@@ -101,13 +101,13 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
 
     public bool CanStart => !IsRunning;
     public bool CanStop => IsRunning;
-    public bool HasSelectedStep => SelectedStep is not null;
+    public bool HasSelectedSelector => SelectedSelector is not null;
     public bool CanMoveUp
     {
         get
         {
-            if (SelectedStep is null) return false;
-            var index = Steps.IndexOf(SelectedStep);
+            if (SelectedSelector is null) return false;
+            var index = CssSelectors.IndexOf(SelectedSelector);
             return index > 0;
         }
     }
@@ -116,19 +116,22 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     {
         get
         {
-            if (SelectedStep is null) return false;
-            var index = Steps.IndexOf(SelectedStep);
-            return index >= 0 && index < Steps.Count - 1;
+            if (SelectedSelector is null) return false;
+            var index = CssSelectors.IndexOf(SelectedSelector);
+            return index >= 0 && index < CssSelectors.Count - 1;
         }
     }
 
     public MainWindowViewModel()
     {
-        Steps.Add("input[name='q']");
-        Steps.Add("input[type='submit']");
+        CssSelectors.Add(new SelectorItem { Text = "input[name='q']" });
+        CssSelectors.Add(new SelectorItem { Text = "input[type='submit']" });
+        SelectedSelector = CssSelectors.FirstOrDefault();
 
         _logCts = new CancellationTokenSource();
         _ = Task.Run(() => ConsumeLogAsync(_logCts.Token));
+
+        CssSelectors.CollectionChanged += (_, _) => UpdateSelectorCommandStates();
     }
 
     partial void OnSelectedTestTypeChanged(TestType value)
@@ -147,51 +150,69 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         StopCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnSelectedStepChanged(string? value)
+    partial void OnSelectedSelectorChanged(SelectorItem? value)
     {
-        OnPropertyChanged(nameof(HasSelectedStep));
+        OnPropertyChanged(nameof(HasSelectedSelector));
         OnPropertyChanged(nameof(CanMoveUp));
         OnPropertyChanged(nameof(CanMoveDown));
-        UpdateStepCommandStates();
+        UpdateSelectorCommandStates();
     }
+
+    public event Action<SelectorItem>? RequestFocusSelector;
 
     [RelayCommand]
-    private void AddStep()
+    private void AddSelector()
     {
-        Steps.Add("css_selector_here");
-        SelectedStep = Steps.Last();
-        UpdateStepCommandStates();
+        var item = new SelectorItem { Text = string.Empty };
+        CssSelectors.Add(item);
+        SelectedSelector = item;
+        RequestFocusSelector?.Invoke(item);
+        UpdateSelectorCommandStates();
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelectedStep))]
-    private void RemoveStep()
+    [RelayCommand(CanExecute = nameof(HasSelectedSelector))]
+    private void RemoveSelector(SelectorItem? selector)
     {
-        if (SelectedStep == null) return;
-        Steps.Remove(SelectedStep);
-        SelectedStep = Steps.FirstOrDefault();
-        UpdateStepCommandStates();
+        var target = selector ?? SelectedSelector;
+        if (target == null)
+        {
+            return;
+        }
+
+        var index = CssSelectors.IndexOf(target);
+        CssSelectors.Remove(target);
+
+        if (CssSelectors.Count == 0)
+        {
+            SelectedSelector = null;
+        }
+        else
+        {
+            var nextIndex = Math.Min(index, CssSelectors.Count - 1);
+            SelectedSelector = CssSelectors[nextIndex];
+        }
+
+        UpdateSelectorCommandStates();
     }
 
     [RelayCommand(CanExecute = nameof(CanMoveUp))]
     private void MoveUp()
     {
-        if (SelectedStep == null) return;
-        var index = Steps.IndexOf(SelectedStep);
+        if (SelectedSelector == null) return;
+        var index = CssSelectors.IndexOf(SelectedSelector);
         if (index <= 0) return;
-        Steps.RemoveAt(index);
-        Steps.Insert(index - 1, SelectedStep);
-        UpdateStepCommandStates();
+        CssSelectors.Move(index, index - 1);
+        UpdateSelectorCommandStates();
     }
 
     [RelayCommand(CanExecute = nameof(CanMoveDown))]
     private void MoveDown()
     {
-        if (SelectedStep == null) return;
-        var index = Steps.IndexOf(SelectedStep);
-        if (index < 0 || index >= Steps.Count - 1) return;
-        Steps.RemoveAt(index);
-        Steps.Insert(index + 1, SelectedStep);
-        UpdateStepCommandStates();
+        if (SelectedSelector == null) return;
+        var index = CssSelectors.IndexOf(SelectedSelector);
+        if (index < 0 || index >= CssSelectors.Count - 1) return;
+        CssSelectors.Move(index, index + 1);
+        UpdateSelectorCommandStates();
     }
 
     [RelayCommand]
@@ -215,7 +236,9 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
             return;
         }
 
-        var scenarioSteps = Steps.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+        var scenarioSteps = CssSelectors.Select(s => s.Text)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
         if (scenarioSteps.Count == 0)
         {
             Log("Шаги отсутствуют, будет только открытие страницы (допустимо)");
@@ -357,9 +380,9 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         ProgressText = $"Прогресс: {totalText}";
     }
 
-    private void UpdateStepCommandStates()
+    private void UpdateSelectorCommandStates()
     {
-        RemoveStepCommand.NotifyCanExecuteChanged();
+        RemoveSelectorCommand.NotifyCanExecuteChanged();
         MoveUpCommand.NotifyCanExecuteChanged();
         MoveDownCommand.NotifyCanExecuteChanged();
     }
