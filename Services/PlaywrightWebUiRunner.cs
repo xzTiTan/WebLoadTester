@@ -39,8 +39,18 @@ namespace WebLoadTester.Services
                 Directory.CreateDirectory(browsersPath);
                 Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browsersPath);
 
-                _playwright ??= await Playwright.CreateAsync();
-                _browser = await _playwright.Chromium.LaunchAsync(_launchOptions);
+                try
+                {
+                    _playwright ??= await Playwright.CreateAsync();
+                    _browser = await _playwright.Chromium.LaunchAsync(_launchOptions);
+                }
+                catch (PlaywrightException ex)
+                {
+                    var message =
+                        "Не удалось запустить Chromium. Убедитесь, что браузеры установлены в ./browsers (playwright install chromium). " +
+                        ex.Message;
+                    throw new InvalidOperationException(message, ex);
+                }
             }
             finally
             {
@@ -48,7 +58,7 @@ namespace WebLoadTester.Services
             }
         }
 
-        public async Task<RunResult> RunOnceAsync(Scenario scenario, RunSettings settings, int workerId, int runId, ILogSink log, CancellationToken ct)
+        public async Task<RunResult> RunOnceAsync(Scenario scenario, RunSettings settings, int workerId, int runId, ILogSink log, CancellationToken ct, CancellationTokenSource? cancelAll = null)
         {
             await InitializeAsync(settings.Headless);
 
@@ -124,6 +134,7 @@ namespace WebLoadTester.Services
 
                         log.Log($"[W{workerId}][Run {runId}] Ошибка шага, остановка всего теста: {ex.Message}");
                         result.Steps.Add(stepResult);
+                        cancelAll?.Cancel();
                         throw new OperationCanceledException(ex.Message, ex, ct);
                     }
                     finally
@@ -151,9 +162,10 @@ namespace WebLoadTester.Services
                 {
                     try
                     {
-                        Directory.CreateDirectory("screenshots");
+                        var screenshotRoot = settings.ScreenshotDirectory ?? "screenshots";
+                        Directory.CreateDirectory(screenshotRoot);
                         var status = result.Success ? "ok" : "fail";
-                        var file = Path.Combine("screenshots", $"run_{runId:0000}_w{workerId}_{DateTime.Now:yyyyMMdd_HHmmss}_{status}.png");
+                        var file = Path.Combine(screenshotRoot, $"run_{runId:0000}_w{workerId}_{DateTime.Now:yyyyMMdd_HHmmss}_{status}.png");
                         await page.ScreenshotAsync(new PageScreenshotOptions { Path = file, FullPage = true });
                         result.ScreenshotPath = file;
                     }

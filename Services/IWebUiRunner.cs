@@ -8,6 +8,6 @@ namespace WebLoadTester.Services
     public interface IWebUiRunner : IAsyncDisposable
     {
         Task InitializeAsync(bool headless);
-        Task<RunResult> RunOnceAsync(Scenario scenario, RunSettings settings, int workerId, int runId, ILogSink log, CancellationToken ct);
+        Task<RunResult> RunOnceAsync(Scenario scenario, RunSettings settings, int workerId, int runId, ILogSink log, CancellationToken ct, CancellationTokenSource? cancelAll = null);
     }
 }

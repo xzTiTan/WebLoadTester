@@ -10,6 +10,7 @@ namespace WebLoadTester.Domain
         public int TimeoutSeconds { get; set; } = 30;
         public bool Headless { get; set; } = true;
         public bool ScreenshotAfterRun { get; set; }
+        public string? ScreenshotDirectory { get; set; }
         public StepErrorPolicy ErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
 
         public StressSettings Stress { get; set; } = new();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -264,6 +265,12 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
                 Steps = scenarioSteps.Select(s => new ScenarioStep { Selector = s }).ToList()
             };
 
+            if (settings.ScreenshotAfterRun)
+            {
+                settings.ScreenshotDirectory = Path.Combine("screenshots", DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
+                Directory.CreateDirectory(settings.ScreenshotDirectory);
+            }
+
             await using var runner = new PlaywrightWebUiRunner();
             var orchestrator = new TestOrchestrator();
 
@@ -273,7 +280,8 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
                 Runner = runner,
                 Scenario = scenario,
                 Settings = settings,
-                Progress = UpdateProgress
+                Progress = UpdateProgress,
+                Cancellation = _runCts
             };
 
             Log($"Старт [{SelectedTestType}] url={TargetUrl}, runs={TotalRuns}, conc={Concurrency}");
@@ -306,6 +314,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     private void Stop()
     {
         _runCts?.Cancel();
+        Log("Остановлено пользователем");
     }
 
     public void Log(string message)

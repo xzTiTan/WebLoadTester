@@ -16,10 +16,24 @@ namespace WebLoadTester.Services.Strategies
             var runsPerLevel = Math.Max(1, context.Settings.Stress.RunsPerLevel);
             var delay = Math.Max(0, context.Settings.Stress.RampDelaySeconds);
 
+            var levels = (int)Math.Ceiling(max / (double)step);
+            var totalRuns = levels * runsPerLevel;
+            var aggregateDone = 0;
+
             for (var level = Math.Min(step, max); level <= max; level += step)
             {
                 context.Logger.Log($"[Stress] Уровень {level}: {runsPerLevel} прогонов");
-                var levelResults = await RunWithQueueAsync(context, runsPerLevel, level, ct);
+                var levelResults = await RunWithQueueAsync(
+                    context,
+                    runsPerLevel,
+                    level,
+                    ct,
+                    done =>
+                    {
+                        var current = Interlocked.Increment(ref aggregateDone);
+                        context.Progress?.Invoke(current, totalRuns);
+                    },
+                    totalRuns);
                 lock (results)
                 {
                     results.AddRange(levelResults);
