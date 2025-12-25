@@ -1,6 +1,7 @@
-namespace WebLoadTester.Services;
-
-public interface ILogSink
+namespace WebLoadTester.Services
 {
-    void Log(string message);
+    public interface ILogSink
+    {
+        void Log(string message);
+    }
 }

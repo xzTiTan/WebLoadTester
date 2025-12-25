@@ -1,13 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using WebLoadTester.Domain;
 
-namespace WebLoadTester.Services.Strategies;
-
-public class ScreenshotRunStrategy : BaseRunStrategy, IRunStrategy
+namespace WebLoadTester.Services.Strategies
 {
-    public Task<List<RunResult>> ExecuteAsync(RunContext context, CancellationToken ct)
+    public class ScreenshotRunStrategy : BaseRunStrategy, IRunStrategy
     {
-        var runs = Math.Max(1, context.Settings.TotalRuns);
-        context.Logger.Log($"[Screenshot] {runs} скриншотов");
-        return RunWithQueueAsync(context, runs, Math.Max(1, context.Settings.Concurrency), ct);
+        public Task<List<RunResult>> ExecuteAsync(RunContext context, CancellationToken ct)
+        {
+            var runs = Math.Max(1, context.Settings.TotalRuns);
+            var concurrency = Math.Max(1, context.Settings.Concurrency);
+            context.Logger.Log($"[Screenshot] {runs} скриншотов (conc={concurrency})");
+            return RunWithQueueAsync(context, runs, concurrency, ct);
+        }
     }
 }

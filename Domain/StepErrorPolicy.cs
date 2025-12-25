@@ -1,8 +1,9 @@
-namespace WebLoadTester.Domain;
-
-public enum StepErrorPolicy
+namespace WebLoadTester.Domain
 {
-    SkipStep,
-    StopRun,
-    StopAll
+    public enum StepErrorPolicy
+    {
+        SkipStep,
+        StopRun,
+        StopAll
+    }
 }

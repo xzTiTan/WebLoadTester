@@ -1,10 +1,12 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace WebLoadTester.ViewModels;
-
-public abstract class ViewModelBase : ObservableObject, IDisposable
+namespace WebLoadTester.ViewModels
 {
-    public virtual void Dispose()
+    public abstract class ViewModelBase : ObservableObject, IDisposable
     {
+        public virtual void Dispose()
+        {
+        }
     }
 }

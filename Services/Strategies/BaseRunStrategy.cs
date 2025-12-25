@@ -1,47 +1,51 @@
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using WebLoadTester.Domain;
 
-namespace WebLoadTester.Services.Strategies;
-
-public abstract class BaseRunStrategy
+namespace WebLoadTester.Services.Strategies
 {
-    protected async Task<List<RunResult>> RunWithQueueAsync(RunContext context, int totalRuns, int concurrency, CancellationToken ct)
+    public abstract class BaseRunStrategy
     {
-        var results = new List<RunResult>();
-        var runsChannel = Channel.CreateUnbounded<int>(new UnboundedChannelOptions
+        protected async Task<List<RunResult>> RunWithQueueAsync(RunContext context, int totalRuns, int concurrency, CancellationToken ct)
         {
-            SingleWriter = true,
-            SingleReader = false
-        });
-
-        for (var i = 1; i <= totalRuns; i++)
-        {
-            runsChannel.Writer.TryWrite(i);
-        }
-        runsChannel.Writer.Complete();
-
-        var tasks = new List<Task>();
-        int completed = 0;
-        for (var workerId = 1; workerId <= concurrency; workerId++)
-        {
-            var id = workerId;
-            tasks.Add(Task.Run(async () =>
+            var results = new List<RunResult>();
+            var runsChannel = Channel.CreateUnbounded<int>(new UnboundedChannelOptions
             {
-                await foreach (var runId in runsChannel.Reader.ReadAllAsync(ct))
+                SingleWriter = true,
+                SingleReader = false
+            });
+
+            for (var i = 1; i <= totalRuns; i++)
+            {
+                runsChannel.Writer.TryWrite(i);
+            }
+            runsChannel.Writer.Complete();
+
+            var tasks = new List<Task>();
+            int completed = 0;
+            for (var workerId = 1; workerId <= concurrency; workerId++)
+            {
+                var id = workerId;
+                tasks.Add(Task.Run(async () =>
                 {
-                    var res = await context.Runner.RunOnceAsync(context.Scenario, context.Settings, id, runId, context.Logger, ct);
-                    lock (results)
+                    await foreach (var runId in runsChannel.Reader.ReadAllAsync(ct))
                     {
-                        results.Add(res);
+                        var res = await context.Runner.RunOnceAsync(context.Scenario, context.Settings, id, runId, context.Logger, ct);
+                        lock (results)
+                        {
+                            results.Add(res);
+                        }
+
+                        var done = Interlocked.Increment(ref completed);
+                        context.Progress?.Invoke(done, totalRuns);
                     }
+                }, ct));
+            }
 
-                    var done = Interlocked.Increment(ref completed);
-                    context.Progress?.Invoke(done, totalRuns);
-                }
-            }, ct));
+            await Task.WhenAll(tasks);
+            return results;
         }
-
-        await Task.WhenAll(tasks);
-        return results;
     }
 }

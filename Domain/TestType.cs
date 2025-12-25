@@ -1,10 +1,11 @@
-namespace WebLoadTester.Domain;
-
-public enum TestType
+namespace WebLoadTester.Domain
 {
-    E2E,
-    Load,
-    Stress,
-    Endurance,
-    Screenshot
+    public enum TestType
+    {
+        E2E,
+        Load,
+        Stress,
+        Endurance,
+        Screenshot
+    }
 }
