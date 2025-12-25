@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -13,6 +14,7 @@ public class TestOrchestrator
 {
     private int _globalRunId;
     private readonly ReportWriter _reportWriter = new();
+    private readonly HtmlReportWriter _htmlReportWriter = new();
 
     public async Task<TestRunResult> ExecuteAsync(RunContext context, TestPlan plan, CancellationToken ct)
     {
@@ -37,12 +39,18 @@ public class TestOrchestrator
         }
 
         var finished = DateTime.UtcNow;
-        var reportPath = await _reportWriter.WriteAsync(context.Settings, plan, context.Scenario, results, started, finished, ct);
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        var document = _reportWriter.BuildDocument(context.Settings, plan, context.Scenario, results, started, finished);
+        var reportPath = await _reportWriter.WriteAsync(document, timestamp, ct);
+        var htmlPath = Path.Combine("reports", $"report_{timestamp}.html");
+        await _htmlReportWriter.WriteAsync(document, htmlPath, ct);
+        context.Logger.Log($"HTML report saved: {htmlPath}");
 
         return new TestRunResult
         {
             Runs = results,
             ReportPath = reportPath,
+            HtmlReportPath = htmlPath,
             StartedAt = started,
             FinishedAt = finished
         };
@@ -101,6 +109,7 @@ public class TestOrchestrator
                     CancelAll = context.Cancellation,
                     PhaseName = phase.Name
                 }, ct);
+                res.PhaseName = phase.Name;
                 lock (results)
                 {
                     results.Add(res);
@@ -142,6 +151,7 @@ public class TestRunResult
 {
     public List<RunResult> Runs { get; set; } = new();
     public string ReportPath { get; set; } = string.Empty;
+    public string HtmlReportPath { get; set; } = string.Empty;
     public DateTime StartedAt { get; set; }
     public DateTime FinishedAt { get; set; }
 }

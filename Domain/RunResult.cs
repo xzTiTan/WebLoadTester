@@ -16,6 +16,7 @@ namespace WebLoadTester.Domain
         public DateTime StartedAt { get; set; }
         public DateTime FinishedAt { get; set; }
         public bool StopAllRequested { get; set; }
+        public string PhaseName { get; set; } = string.Empty;
     }
 
     public class StepResult

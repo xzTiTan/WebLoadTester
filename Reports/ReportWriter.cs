@@ -12,9 +12,9 @@ namespace WebLoadTester.Reports
 {
     public class ReportWriter
     {
-        public async Task<string> WriteAsync(RunSettings settings, TestPlan plan, Scenario scenario, List<RunResult> runs, DateTime startedAt, DateTime finishedAt, CancellationToken ct)
+        public ReportDocument BuildDocument(RunSettings settings, TestPlan plan, Scenario scenario, List<RunResult> runs, DateTime startedAt, DateTime finishedAt)
         {
-            var doc = new ReportDocument
+            return new ReportDocument
             {
                 TestType = settings.TestType,
                 Settings = settings,
@@ -29,9 +29,14 @@ namespace WebLoadTester.Reports
                 },
                 Summary = BuildSummary(runs)
             };
+        }
+
+        public async Task<string> WriteAsync(ReportDocument doc, string? timestamp, CancellationToken ct)
+        {
+            var stamp = string.IsNullOrWhiteSpace(timestamp) ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : timestamp;
 
             Directory.CreateDirectory("reports");
-            var file = Path.Combine("reports", $"report_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.json");
+            var file = Path.Combine("reports", $"report_{stamp}.json");
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -43,7 +48,7 @@ namespace WebLoadTester.Reports
             return file;
         }
 
-        private ReportSummary BuildSummary(List<RunResult> runs)
+        public ReportSummary BuildSummary(List<RunResult> runs)
         {
             var durations = runs.Select(r => r.Duration.TotalMilliseconds).ToList();
             durations.Sort();
