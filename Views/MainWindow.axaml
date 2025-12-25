@@ -32,6 +32,7 @@
                                     <Button Grid.Column="1"
                                             Padding="8,4"
                                             Content="✕"
+                                            x:CompileBindings="False"
                                             Command="{Binding DataContext.RemoveSelectorCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"/>
                                 </Grid>
