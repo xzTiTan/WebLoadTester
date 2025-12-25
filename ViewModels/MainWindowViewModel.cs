@@ -97,6 +97,29 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     public bool IsEndurance => SelectedTestType == TestType.Endurance;
     public bool IsScreenshot => SelectedTestType == TestType.Screenshot;
 
+    public bool CanStart => !IsRunning;
+    public bool CanStop => IsRunning;
+    public bool HasSelectedStep => SelectedStep is not null;
+    public bool CanMoveUp
+    {
+        get
+        {
+            if (SelectedStep is null) return false;
+            var index = Steps.IndexOf(SelectedStep);
+            return index > 0;
+        }
+    }
+
+    public bool CanMoveDown
+    {
+        get
+        {
+            if (SelectedStep is null) return false;
+            var index = Steps.IndexOf(SelectedStep);
+            return index >= 0 && index < Steps.Count - 1;
+        }
+    }
+
     public MainWindowViewModel()
     {
         Steps.Add("input[name='q']");
@@ -113,20 +136,40 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         OnPropertyChanged(nameof(IsScreenshot));
     }
 
+    partial void OnIsRunningChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanStart));
+        OnPropertyChanged(nameof(CanStop));
+        StartCommand.NotifyCanExecuteChanged();
+        StopCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedStepChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedStep));
+        OnPropertyChanged(nameof(CanMoveUp));
+        OnPropertyChanged(nameof(CanMoveDown));
+        UpdateStepCommandStates();
+    }
+
     [RelayCommand]
     private void AddStep()
     {
         Steps.Add("css_selector_here");
+        SelectedStep = Steps.Last();
+        UpdateStepCommandStates();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelectedStep))]
     private void RemoveStep()
     {
         if (SelectedStep == null) return;
         Steps.Remove(SelectedStep);
+        SelectedStep = Steps.FirstOrDefault();
+        UpdateStepCommandStates();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMoveUp))]
     private void MoveUp()
     {
         if (SelectedStep == null) return;
@@ -134,9 +177,10 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         if (index <= 0) return;
         Steps.RemoveAt(index);
         Steps.Insert(index - 1, SelectedStep);
+        UpdateStepCommandStates();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMoveDown))]
     private void MoveDown()
     {
         if (SelectedStep == null) return;
@@ -144,6 +188,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         if (index < 0 || index >= Steps.Count - 1) return;
         Steps.RemoveAt(index);
         Steps.Insert(index + 1, SelectedStep);
+        UpdateStepCommandStates();
     }
 
     [RelayCommand]
@@ -152,8 +197,8 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         LogEntries.Clear();
     }
 
-    [RelayCommand]
-    private async Task StartAsync()
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private async Task Start()
     {
         if (IsRunning)
         {
@@ -253,7 +298,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
         _runCts?.Cancel();
@@ -293,6 +338,13 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     {
         var totalText = total > 0 ? $"{done}/{total}" : done.ToString();
         ProgressText = $"Прогресс: {totalText}";
+    }
+
+    private void UpdateStepCommandStates()
+    {
+        RemoveStepCommand.NotifyCanExecuteChanged();
+        MoveUpCommand.NotifyCanExecuteChanged();
+        MoveDownCommand.NotifyCanExecuteChanged();
     }
 
     public override void Dispose()
