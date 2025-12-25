@@ -11,6 +11,7 @@ namespace WebLoadTester.Services;
 
 public class TestOrchestrator
 {
+    private int _globalRunId;
     private readonly ReportWriter _reportWriter = new();
 
     public async Task<TestRunResult> ExecuteAsync(RunContext context, TestPlan plan, CancellationToken ct)
@@ -18,13 +19,13 @@ public class TestOrchestrator
         var started = DateTime.UtcNow;
         var totalRuns = plan.TotalRuns;
         var results = new List<RunResult>();
-        var globalRunId = 0;
+        _globalRunId = 0;
 
         foreach (var phase in plan.Phases)
         {
             ct.ThrowIfCancellationRequested();
             context.Logger.Log($"Фаза: {phase.Name}, Concurrency={phase.Concurrency}, Runs={(phase.Runs?.ToString() ?? "∞")}, Duration={(phase.Duration?.ToString() ?? "—")}, PauseAfter={phase.PauseAfterSeconds}s");
-            var phaseResults = await RunPhaseAsync(phase, context, totalRuns, ref globalRunId, ct);
+            var phaseResults = await RunPhaseAsync(phase, context, totalRuns, ct);
             results.AddRange(phaseResults);
 
             if (phase.PauseAfterSeconds > 0)
@@ -46,7 +47,7 @@ public class TestOrchestrator
         };
     }
 
-    private async Task<List<RunResult>> RunPhaseAsync(TestPhase phase, RunContext context, int totalRuns, ref int globalRunId, CancellationToken ct)
+    private async Task<List<RunResult>> RunPhaseAsync(TestPhase phase, RunContext context, int totalRuns, CancellationToken ct)
     {
         var results = new List<RunResult>();
         var runsChannel = Channel.CreateUnbounded<int>(new UnboundedChannelOptions { SingleReader = false, SingleWriter = false });
@@ -60,7 +61,7 @@ public class TestOrchestrator
                 var end = DateTime.UtcNow.Add(phase.Duration.Value);
                 while (!writerCts.IsCancellationRequested && DateTime.UtcNow < end)
                 {
-                    var next = Interlocked.Increment(ref globalRunId);
+                    var next = Interlocked.Increment(ref _globalRunId);
                     await runsChannel.Writer.WriteAsync(next, writerCts.Token);
                 }
 
@@ -74,7 +75,7 @@ public class TestOrchestrator
                 var runs = phase.Runs ?? 0;
                 for (var i = 0; i < runs; i++)
                 {
-                    var next = Interlocked.Increment(ref globalRunId);
+                    var next = Interlocked.Increment(ref _globalRunId);
                     runsChannel.Writer.TryWrite(next);
                 }
 

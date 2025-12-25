@@ -26,25 +26,8 @@ namespace WebLoadTester.Domain
         public int RunsPerLevel { get; set; } = 10;
         public int EnduranceMinutes { get; set; } = 10;
 
-        public StressSettings Stress { get; set; } = new();
-        public EnduranceSettings Endurance { get; set; } = new();
-
         public TelegramSettings Telegram { get; set; } = new();
         public List<string> Assertions { get; set; } = new();
-    }
-
-    [Obsolete("Use StepErrorPolicy instead")] 
-    public class StressSettings
-    {
-        public int RampStep { get; set; } = 5;
-        public int RampDelaySeconds { get; set; } = 10;
-        public int RunsPerLevel { get; set; } = 10;
-    }
-
-    [Obsolete("Use EnduranceMinutes instead")]
-    public class EnduranceSettings
-    {
-        public int DurationMinutes { get; set; } = 10;
     }
 
     public class TelegramSettings

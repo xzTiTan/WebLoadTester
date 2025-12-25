@@ -9,12 +9,15 @@ namespace WebLoadTester.Views;
 public partial class MainWindow : Window
 {
     private readonly MainWindowViewModel _viewModel;
+    private readonly ListBox? _logListBox;
 
     public MainWindow()
     {
         InitializeComponent();
         _viewModel = new MainWindowViewModel();
         DataContext = _viewModel;
+
+        _logListBox = this.FindControl<ListBox>("LogListBox");
 
         _viewModel.LogEntries.CollectionChanged += OnLogEntriesChanged;
     }
@@ -28,15 +31,15 @@ public partial class MainWindow : Window
 
     private void OnLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (LogListBox == null || LogListBox.ItemCount == 0)
+        if (_logListBox == null || _logListBox.ItemCount == 0)
         {
             return;
         }
 
         Dispatcher.UIThread.Post(() =>
         {
-            var lastIndex = LogListBox.ItemCount - 1;
-            LogListBox.ScrollIntoView(lastIndex);
+            var lastIndex = _logListBox.ItemCount - 1;
+            _logListBox.ScrollIntoView(lastIndex);
         });
     }
 }
