@@ -11,8 +11,14 @@ namespace WebLoadTester.Services.Strategies
         public async Task<List<RunResult>> ExecuteAsync(RunContext context, CancellationToken ct)
         {
             var results = new List<RunResult>();
-            var endAt = DateTime.UtcNow.AddMinutes(Math.Max(1, context.Settings.Endurance.DurationMinutes));
-            var concurrency = Math.Max(1, context.Settings.Concurrency);
+            var minutes = Math.Max(1, context.Settings.EnduranceMinutes);
+            if (context.Settings.EnduranceMinutes <= 0)
+            {
+                context.Logger.Log("[Endurance] Duration is 0; using 1 minute by default");
+            }
+
+            var endAt = DateTime.UtcNow.AddMinutes(minutes);
+            var concurrency = Math.Clamp(context.Settings.Concurrency, 1, 50);
             var runId = 0;
             var tasks = new List<Task>();
 
