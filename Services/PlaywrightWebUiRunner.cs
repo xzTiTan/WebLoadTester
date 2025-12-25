@@ -118,14 +118,14 @@ namespace WebLoadTester.Services
                         stepResult.Success = false;
                         stepResult.ErrorMessage = ex.Message;
 
-                        if (settings.ErrorPolicy == StepErrorPolicy.SkipStep)
+                        if (settings.StepErrorPolicy == StepErrorPolicy.SkipStep)
                         {
                             log.Log($"[W{workerId}][Run {runId}] Ошибка шага (skip): {ex.Message}");
                             result.Steps.Add(stepResult);
                             continue;
                         }
 
-                        if (settings.ErrorPolicy == StepErrorPolicy.StopRun)
+                        if (settings.StepErrorPolicy == StepErrorPolicy.StopRun)
                         {
                             log.Log($"[W{workerId}][Run {runId}] Ошибка шага, завершаю прогон: {ex.Message}");
                             result.Steps.Add(stepResult);

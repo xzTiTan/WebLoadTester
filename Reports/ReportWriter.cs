@@ -12,11 +12,11 @@ namespace WebLoadTester.Reports
 {
     public class ReportWriter
     {
-        public async Task<string> WriteAsync(TestType type, RunSettings settings, List<RunResult> runs, DateTime startedAt, DateTime finishedAt, CancellationToken ct)
+        public async Task<string> WriteAsync(RunSettings settings, List<RunResult> runs, DateTime startedAt, DateTime finishedAt, CancellationToken ct)
         {
             var doc = new ReportDocument
             {
-                TestType = type,
+                TestType = settings.TestType,
                 Settings = settings,
                 Runs = runs,
                 Meta = new ReportMeta

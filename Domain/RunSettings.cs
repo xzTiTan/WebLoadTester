@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace WebLoadTester.Domain
@@ -11,7 +12,19 @@ namespace WebLoadTester.Domain
         public bool Headless { get; set; } = true;
         public bool ScreenshotAfterRun { get; set; }
         public string? ScreenshotDirectory { get; set; }
-        public StepErrorPolicy ErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
+        public StepErrorPolicy StepErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
+        public StepErrorPolicy ErrorPolicy
+        {
+            get => StepErrorPolicy;
+            set => StepErrorPolicy = value;
+        }
+
+        public TestType TestType { get; set; } = TestType.E2E;
+
+        public int StressStep { get; set; } = 5;
+        public int StressPauseSeconds { get; set; } = 10;
+        public int RunsPerLevel { get; set; } = 10;
+        public int EnduranceMinutes { get; set; } = 10;
 
         public StressSettings Stress { get; set; } = new();
         public EnduranceSettings Endurance { get; set; } = new();
@@ -20,6 +33,7 @@ namespace WebLoadTester.Domain
         public List<string> Assertions { get; set; } = new();
     }
 
+    [Obsolete("Use StepErrorPolicy instead")] 
     public class StressSettings
     {
         public int RampStep { get; set; } = 5;
@@ -27,6 +41,7 @@ namespace WebLoadTester.Domain
         public int RunsPerLevel { get; set; } = 10;
     }
 
+    [Obsolete("Use EnduranceMinutes instead")]
     public class EnduranceSettings
     {
         public int DurationMinutes { get; set; } = 10;

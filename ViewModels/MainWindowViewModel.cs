@@ -98,7 +98,6 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     public bool IsEndurance => SelectedTestType == TestType.Endurance;
     public bool IsStressMode => SelectedTestType == TestType.Stress;
     public bool IsEnduranceMode => SelectedTestType == TestType.Endurance;
-    public bool IsScreenshot => SelectedTestType == TestType.Screenshot;
 
     public bool CanStart => !IsRunning;
     public bool CanStop => IsRunning;
@@ -136,7 +135,6 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
     {
         OnPropertyChanged(nameof(IsStress));
         OnPropertyChanged(nameof(IsEndurance));
-        OnPropertyChanged(nameof(IsScreenshot));
         OnPropertyChanged(nameof(IsStressMode));
         OnPropertyChanged(nameof(IsEnduranceMode));
     }
@@ -218,7 +216,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
         }
 
         var scenarioSteps = Steps.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-        if (SelectedTestType != TestType.Screenshot && scenarioSteps.Count == 0)
+        if (scenarioSteps.Count == 0)
         {
             Log("Нужен хотя бы один шаг для выбранного режима");
             return;
@@ -238,18 +236,13 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
                 Concurrency = Math.Clamp(Concurrency, 1, 50),
                 TimeoutSeconds = Math.Max(1, TimeoutSeconds),
                 Headless = Headless,
-                ScreenshotAfterRun = SelectedTestType == TestType.Screenshot || ScreenshotAfterRun,
-                ErrorPolicy = ErrorPolicy,
-                Stress = new StressSettings
-                {
-                    RampStep = Math.Max(1, RampStep),
-                    RampDelaySeconds = Math.Max(0, RampDelaySeconds),
-                    RunsPerLevel = Math.Max(1, RunsPerLevel)
-                },
-                Endurance = new EnduranceSettings
-                {
-                    DurationMinutes = Math.Max(1, DurationMinutes)
-                },
+                ScreenshotAfterRun = ScreenshotAfterRun,
+                StepErrorPolicy = ErrorPolicy,
+                TestType = SelectedTestType,
+                StressStep = Math.Max(1, RampStep),
+                StressPauseSeconds = Math.Max(0, RampDelaySeconds),
+                RunsPerLevel = Math.Max(1, RunsPerLevel),
+                EnduranceMinutes = Math.Max(1, DurationMinutes),
                 Telegram = new TelegramSettings
                 {
                     Enabled = TelegramEnabled,
@@ -271,6 +264,13 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
                 Directory.CreateDirectory(settings.ScreenshotDirectory);
             }
 
+            var planBuilder = new TestPlanBuilder();
+            var plan = planBuilder.Build(settings);
+            foreach (var phase in plan.Phases)
+            {
+                Log($"План: {phase.Name} | conc={phase.Concurrency} | runs={(phase.Runs?.ToString() ?? "∞")} | duration={(phase.Duration?.ToString() ?? "—")} | pause={phase.PauseAfterSeconds}s");
+            }
+
             await using var runner = new PlaywrightWebUiRunner();
             var orchestrator = new TestOrchestrator();
 
@@ -285,7 +285,7 @@ public partial class MainWindowViewModel : ViewModelBase, ILogSink
             };
 
             Log($"Старт [{SelectedTestType}] url={TargetUrl}, runs={TotalRuns}, conc={Concurrency}");
-            var result = await orchestrator.ExecuteAsync(SelectedTestType, context, _runCts.Token);
+            var result = await orchestrator.ExecuteAsync(context, plan, _runCts.Token);
             var ok = result.Runs.Count(r => r.Success);
             var fail = result.Runs.Count - ok;
             StatusText = "Статус: Готово";
