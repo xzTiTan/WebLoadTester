@@ -1,230 +1,201 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WebLoadTester.ViewModels"
         x:Class="WebLoadTester.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
         Title="WebLoadTester"
         Width="1250" Height="720"
         MinWidth="1100" MinHeight="650"
         Background="#E6E6E6">
+    <Window.Styles>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#222"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#222"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBox, ComboBox">
+            <Setter Property="MinHeight" Value="30"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="Padding" Value="12,6"/>
+        </Style>
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="#F2F2F2"/>
+            <Setter Property="BorderBrush" Value="#C8C8C8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10"/>
+        </Style>
+        <Style Selector="Border.logbox">
+            <Setter Property="Background" Value="#0B0B0B"/>
+            <Setter Property="BorderBrush" Value="#3A3A3A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <Style Selector="TextBlock.logline">
+            <Setter Property="Foreground" Value="#E6E6E6"/>
+            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Menlo,Monospace"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="ListBox.loglist">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Window.Styles>
 
-	<Window.Styles>
-		<Style Selector="TextBlock.h1">
-			<Setter Property="FontSize" Value="16"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="Foreground" Value="#222"/>
-		</Style>
+    <Grid Margin="12"
+          ColumnDefinitions="300,*,340"
+          RowDefinitions="Auto,*,Auto"
+          ColumnSpacing="12"
+          RowSpacing="10">
+        <!-- LEFT: selectors -->
+        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Classes="panel">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                <TextBlock Text="Нажатия CSS selector" Classes="h1"/>
 
-		<Style Selector="TextBlock.label">
-			<Setter Property="FontSize" Value="13"/>
-			<Setter Property="Foreground" Value="#222"/>
-			<Setter Property="VerticalAlignment" Value="Center"/>
-		</Style>
+                <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
+                    <ListBox ItemsSource="{Binding Steps}"
+                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}"/>
+                </Border>
 
-		<Style Selector="TextBox, ComboBox">
-			<Setter Property="MinHeight" Value="30"/>
-		</Style>
+                <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0" Content="+ Добавить" Command="{Binding AddStepCommand}"/>
+                    <Button Grid.Column="1" Content="Удалить" Command="{Binding RemoveStepCommand}"/>
+                    <Button Grid.Column="2" Content="Вверх" Command="{Binding MoveUpCommand}"/>
+                    <Button Grid.Column="3" Content="Вниз" Command="{Binding MoveDownCommand}"/>
+                </Grid>
+            </Grid>
+        </Border>
 
-		<Style Selector="Button">
-			<Setter Property="MinHeight" Value="30"/>
-			<Setter Property="Padding" Value="12,6"/>
-		</Style>
+        <!-- CENTER TOP: settings + controls -->
+        <Border Grid.Column="1" Grid.Row="0" Classes="panel">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto,160" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Text="Ссылка:" Classes="label"/>
+                    <TextBox Grid.Column="1" Text="{Binding TargetUrl, Mode=TwoWay}" Watermark="https://example.com"/>
 
-		<Style Selector="Border.panel">
-			<Setter Property="Background" Value="#F2F2F2"/>
-			<Setter Property="BorderBrush" Value="#C8C8C8"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Padding" Value="10"/>
-		</Style>
+                    <TextBlock Grid.Column="2" Text="Вид тестирования:" Classes="label"/>
+                    <ComboBox Grid.Column="3"
+                              Items="{Binding TestTypes}"
+                              SelectedItem="{Binding SelectedTestType, Mode=TwoWay}"/>
+                </Grid>
 
-		<!-- ЛОГ: чёрный фон и светлый моноширинный текст -->
-		<Style Selector="Border.logbox">
-			<Setter Property="Background" Value="#0B0B0B"/>
-			<Setter Property="BorderBrush" Value="#3A3A3A"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="CornerRadius" Value="4"/>
-			<Setter Property="Padding" Value="8"/>
-		</Style>
+                <WrapPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
+                        <TextBlock Text="Всего прогонов:" Classes="label"/>
+                        <TextBox Width="110" Text="{Binding TotalRuns, Mode=TwoWay}"/>
+                    </StackPanel>
 
-		<Style Selector="TextBlock.logline">
-			<Setter Property="Foreground" Value="#E6E6E6"/>
-			<Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Menlo,Monospace"/>
-			<Setter Property="FontSize" Value="13"/>
-		</Style>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
+                        <TextBlock Text="Параллельно (1–50):" Classes="label"/>
+                        <TextBox Width="90" Text="{Binding Concurrency, Mode=TwoWay}"/>
+                    </StackPanel>
 
-		<!-- Чтобы ListBox в логе не рисовал свой фон -->
-		<Style Selector="ListBox.loglist">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
-		</Style>
-	</Window.Styles>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Таймаут (сек):" Classes="label"/>
+                        <TextBox Width="90" Text="{Binding TimeoutSeconds, Mode=TwoWay}"/>
+                    </StackPanel>
+                </WrapPanel>
 
-	<Grid Margin="12"
-		  ColumnDefinitions="300,*,340"
-		  RowDefinitions="Auto,*,Auto"
-		  ColumnSpacing="12"
-		  RowSpacing="10">
+                <WrapPanel>
+                    <CheckBox Content="Запуск браузера без UI" IsChecked="{Binding Headless, Mode=TwoWay}" Margin="0,0,4,0"/>
+                    <CheckBox Content="Скриншот после прогона" IsChecked="{Binding ScreenshotAfterRun, Mode=TwoWay}"/>
 
-		<!-- LEFT: selectors -->
-		<Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Classes="panel">
-			<Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
-				<TextBlock Text="Нажатия CSS selector" Classes="h1"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Политика ошибки шага:" Classes="label"/>
+                        <ComboBox Items="{Binding StepErrorPolicies}"
+                                  SelectedItem="{Binding ErrorPolicy, Mode=TwoWay}"
+                                  MinWidth="210"/>
+                    </StackPanel>
+                </WrapPanel>
 
-				<Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Padding="6">
-					<ListBox x:Name="SelectorsList"
-							 DoubleTapped="SelectorsList_OnDoubleTapped"
-							 KeyUp="SelectorsList_OnKeyUp"/>
-				</Border>
+                <StackPanel Spacing="6" Orientation="Horizontal">
+                    <TextBlock Text="Stress: шаг" Classes="label"/>
+                    <TextBox Width="70" Text="{Binding RampStep, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                    <TextBlock Text="Пауза (сек)" Classes="label"/>
+                    <TextBox Width="70" Text="{Binding RampDelaySeconds, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                    <TextBlock Text="Runs/level" Classes="label"/>
+                    <TextBox Width="80" Text="{Binding RunsPerLevel, Mode=TwoWay}" IsEnabled="{Binding IsStress}"/>
+                </StackPanel>
 
-				<Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-					<Button x:Name="AddSelectorBtn" Grid.Column="0" Content="+ Добавить"/>
-					<Button x:Name="RemoveSelectorBtn" Grid.Column="1" Content="Удалить"/>
-					<Button x:Name="UpSelectorBtn" Grid.Column="2" Content="Вверх"/>
-					<Button x:Name="DownSelectorBtn" Grid.Column="3" Content="Вниз"/>
-				</Grid>
-			</Grid>
-		</Border>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Endurance: минут" Classes="label"/>
+                    <TextBox Width="90" Text="{Binding DurationMinutes, Mode=TwoWay}" IsEnabled="{Binding IsEndurance}"/>
+                </StackPanel>
 
-		<!-- CENTER TOP: settings + controls -->
-		<Border Grid.Column="1" Grid.Row="0" Classes="panel">
-			<Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
+                <WrapPanel>
+                    <Button Content="Начать" Command="{Binding StartCommand}" Margin="0,0,10,0"/>
+                    <Button Content="Стоп" Command="{Binding StopCommand}" Margin="0,0,10,0"/>
+                    <Button Content="Очистить лог" Command="{Binding ClearLogCommand}" Margin="0,0,10,0"/>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
 
-				<!-- Row 0: URL + Name -->
-				<Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,160" ColumnSpacing="10">
-					<TextBlock Grid.Column="0" Text="Ссылка:" Classes="label"/>
-					<TextBox Grid.Column="1" x:Name="UrlTextBox" Watermark="https://example.com"/>
+        <!-- CENTER: log -->
+        <Border Grid.Column="1" Grid.Row="1" Classes="panel">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <TextBlock Text="Лог выполнения" Classes="h1"/>
 
-					<TextBlock Grid.Column="2" Text="Имя:" Classes="label"/>
-					<TextBox Grid.Column="3" x:Name="NameTextBox" Watermark="PC-Name"/>
-				</Grid>
+                <Border Grid.Row="1" Classes="logbox">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ListBox ItemsSource="{Binding LogEntries}" Classes="loglist">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Classes="logline" Text="{Binding}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
 
-				<!-- Row 1: numeric fields -->
-				<WrapPanel Grid.Row="1">
-					<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
-						<TextBlock Text="Всего прогонов:" Classes="label"/>
-						<TextBox x:Name="TotalRunsTextBox" Width="110" Watermark="50"/>
-					</StackPanel>
+        <!-- RIGHT: Telegram Settings -->
+        <Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Classes="panel">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+                  ColumnDefinitions="Auto,*"
+                  ColumnSpacing="10"
+                  RowSpacing="10">
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Настройки Telegram" Classes="h1"/>
 
-					<StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,14,0">
-						<TextBlock Text="Параллельно (1–50):" Classes="label"/>
-						<TextBox x:Name="ConcurrencyTextBox" Width="90" Watermark="10"/>
-					</StackPanel>
+                <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="Отправлять в Telegram" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}"/>
+                <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="Отправлять Скриншоты" IsChecked="{Binding TelegramSendScreens, Mode=TwoWay}"/>
 
-					<StackPanel Orientation="Horizontal" Spacing="8">
-						<TextBlock Text="Таймаут (сек):" Classes="label"/>
-						<TextBox x:Name="TimeoutTextBox" Width="90" Watermark="30"/>
-					</StackPanel>
-				</WrapPanel>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Режим:" Classes="label"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" SelectedIndex="{Binding TelegramMode, Mode=TwoWay}" MinWidth="180">
+                    <ComboBoxItem>Каждый прогон</ComboBoxItem>
+                    <ComboBoxItem>Только при ошибке</ComboBoxItem>
+                    <ComboBoxItem>Только финальный</ComboBoxItem>
+                </ComboBox>
 
-				<!-- Row 2: checkboxes -->
-				<WrapPanel Grid.Row="2">
-					<CheckBox x:Name="HeadlessCheckBox"
-							  Content="Запуск браузера без UI"
-							  IsChecked="True"
-							  Margin="0,0,4,0"/>
-					<CheckBox x:Name="ScreenshotCheckBox"
-							  Content="Скриншот после прогона"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Токен бота:" Classes="label"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Watermark="123456:ABC-DEF..." Text="{Binding TelegramToken, Mode=TwoWay}"/>
 
-					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-						<TextBlock Text="Политика ошибки шага:" Classes="label"/>
-						<ComboBox x:Name="ErrorPolicyComboBox" MinWidth="210">
-							<ComboBoxItem>Пропустить шаг и продолжить</ComboBoxItem>
-							<ComboBoxItem>Остановить текущий прогон (FAIL) и перейти к следующему прогону</ComboBoxItem>
-							<ComboBoxItem>Остановить весь тест</ComboBoxItem>
-						</ComboBox>
-					</StackPanel>
-				</WrapPanel>
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="ID чата:" Classes="label"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Watermark="-1001234567890" Text="{Binding TelegramChatId, Mode=TwoWay}"/>
 
-				<!-- Row 3: buttons (без Telegram Settings кнопки) -->
-				<WrapPanel Grid.Row="3">
-					<Button x:Name="LoadScenarioBtn" Content="Загрузить scenario.json" Margin="0,0,10,0"/>
-					<Button x:Name="SaveScenarioBtn" Content="Сохранить scenario.json" Margin="0,0,10,0"/>
+                <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Foreground="#666" Text="Отправка сообщений добавляется через TelegramSettings."/>
+            </Grid>
+        </Border>
 
-					<Button x:Name="StartBtn" Content="Начать" Margin="0,0,10,0"/>
-					<Button x:Name="RestartBtn" Content="Перезапустить" Margin="0,0,10,0"/>
-					<Button x:Name="StopBtn" Content="Стоп" Margin="0,0,10,0"/>
-				</WrapPanel>
-
-			</Grid>
-		</Border>
-
-		<!-- CENTER: log -->
-		<Border Grid.Column="1" Grid.Row="1" Classes="panel">
-			<Grid RowDefinitions="Auto,*" RowSpacing="8">
-				<TextBlock Text="Лог выполнения" Classes="h1"/>
-
-				<Border Grid.Row="1" Classes="logbox">
-					<ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto">
-						<ListBox x:Name="LogList" Classes="loglist">
-							<ListBox.ItemTemplate>
-								<DataTemplate>
-									<TextBlock Classes="logline" Text="{Binding}"/>
-								</DataTemplate>
-							</ListBox.ItemTemplate>
-						</ListBox>
-					</ScrollViewer>
-				</Border>
-			</Grid>
-		</Border>
-
-		<!-- RIGHT: Telegram Settings (вернули) -->
-		<Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Classes="panel">
-			<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
-				  ColumnDefinitions="Auto,*"
-				  ColumnSpacing="10"
-				  RowSpacing="10">
-
-				<TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-						   Text="Настройки Telegram" Classes="h1"/>
-
-				<CheckBox x:Name="TelegramEnabledCheckBox"
-						  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-						  Content="Отправлять в Telegram"/>
-
-				<CheckBox x:Name="TelegramSendScreensCheckBox"
-						  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-						  Content="Отправлять Скриншоты"/>
-
-				<TextBlock Grid.Row="3" Grid.Column="0"
-						   Text="Режим:" Classes="label"/>
-				<ComboBox x:Name="TelegramModeComboBox"
-						  Grid.Row="3" Grid.Column="1"
-						  SelectedIndex="1"
-						  MinWidth="180">
-					<ComboBoxItem>Каждый прогон</ComboBoxItem>
-					<ComboBoxItem>Только при ошибке</ComboBoxItem>
-					<ComboBoxItem>Только финальный</ComboBoxItem>
-				</ComboBox>
-
-				<TextBlock Grid.Row="4" Grid.Column="0"
-						   Text="Токен бота:" Classes="label"/>
-				<TextBox x:Name="TelegramTokenTextBox"
-						 Grid.Row="4" Grid.Column="1"
-						 Watermark="123456:ABC-DEF..."/>
-
-				<TextBlock Grid.Row="5" Grid.Column="0"
-						   Text="ID чата:" Classes="label"/>
-				<TextBox x:Name="TelegramChatIdTextBox"
-						 Grid.Row="5" Grid.Column="1"
-						 Watermark="-1001234567890"/>
-
-				<TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
-						   Foreground="#666"
-						   Text="Настройки применятся после подключения логики (VM)."/>
-			</Grid>
-		</Border>
-
-		<!-- STATUS BAR -->
-		<Border Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
-				Background="#F2F2F2"
-				BorderBrush="#C8C8C8"
-				BorderThickness="1"
-				CornerRadius="6"
-				Padding="8">
-			<DockPanel>
-				<TextBlock x:Name="StatusText" Text="Статус: Ожидание" Foreground="#333"/>
-				<TextBlock x:Name="ProgressText" DockPanel.Dock="Right" Text="Прогресс: 0/0" Foreground="#333"/>
-			</DockPanel>
-		</Border>
-
-	</Grid>
+        <!-- STATUS BAR -->
+        <Border Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
+                Background="#F2F2F2"
+                BorderBrush="#C8C8C8"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="8">
+            <DockPanel>
+                <TextBlock Text="{Binding StatusText}" Foreground="#333"/>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ProgressText}" Foreground="#333"/>
+            </DockPanel>
+        </Border>
+    </Grid>
 </Window>
