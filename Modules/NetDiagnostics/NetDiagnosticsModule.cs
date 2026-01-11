@@ -8,6 +8,9 @@ using WebLoadTester.Infrastructure.Network;
 
 namespace WebLoadTester.Modules.NetDiagnostics;
 
+/// <summary>
+/// Модуль сетевой диагностики (DNS/TCP/TLS).
+/// </summary>
 public class NetDiagnosticsModule : ITestModule
 {
     public string Id => "net.diagnostics";
@@ -15,8 +18,14 @@ public class NetDiagnosticsModule : ITestModule
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(NetDiagnosticsSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings() => new NetDiagnosticsSettings();
 
+    /// <summary>
+    /// Проверяет корректность настроек диагностики.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -34,6 +43,9 @@ public class NetDiagnosticsModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет сетевые проверки и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (NetDiagnosticsSettings)settings;

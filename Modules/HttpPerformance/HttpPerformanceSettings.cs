@@ -2,6 +2,9 @@ using System.Net.Http;
 
 namespace WebLoadTester.Modules.HttpPerformance;
 
+/// <summary>
+/// Настройки нагрузочного теста HTTP.
+/// </summary>
 public class HttpPerformanceSettings
 {
     public string Url { get; set; } = "https://example.com";

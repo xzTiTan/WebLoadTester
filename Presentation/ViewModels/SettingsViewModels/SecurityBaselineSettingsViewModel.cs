@@ -3,10 +3,16 @@ using WebLoadTester.Modules.SecurityBaseline;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
+/// <summary>
+/// ViewModel настроек Security Baseline.
+/// </summary>
 public partial class SecurityBaselineSettingsViewModel : SettingsViewModelBase
 {
     private readonly SecurityBaselineSettings _settings;
 
+    /// <summary>
+    /// Инициализирует ViewModel и копирует настройки.
+    /// </summary>
     public SecurityBaselineSettingsViewModel(SecurityBaselineSettings settings)
     {
         _settings = settings;
@@ -31,8 +37,20 @@ public partial class SecurityBaselineSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private bool checkTlsExpiry;
 
+    /// <summary>
+    /// Синхронизирует URL проверки.
+    /// </summary>
     partial void OnUrlChanged(string value) => _settings.Url = value;
+    /// <summary>
+    /// Синхронизирует флаг проверки заголовков.
+    /// </summary>
     partial void OnCheckHeadersChanged(bool value) => _settings.CheckHeaders = value;
+    /// <summary>
+    /// Синхронизирует флаг проверки редиректа HTTP→HTTPS.
+    /// </summary>
     partial void OnCheckRedirectHttpToHttpsChanged(bool value) => _settings.CheckRedirectHttpToHttps = value;
+    /// <summary>
+    /// Синхронизирует флаг проверки срока TLS.
+    /// </summary>
     partial void OnCheckTlsExpiryChanged(bool value) => _settings.CheckTlsExpiry = value;
 }

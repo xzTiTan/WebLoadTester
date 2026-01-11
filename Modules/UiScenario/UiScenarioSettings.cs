@@ -3,6 +3,9 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Modules.UiScenario;
 
+/// <summary>
+/// Настройки сценарного UI-теста.
+/// </summary>
 public class UiScenarioSettings
 {
     public string TargetUrl { get; set; } = "https://example.com";
@@ -14,6 +17,9 @@ public class UiScenarioSettings
     public bool ScreenshotAfterScenario { get; set; } = true;
 }
 
+/// <summary>
+/// Описание одного шага UI-сценария.
+/// </summary>
 public class UiStep
 {
     public string Selector { get; set; } = string.Empty;
@@ -22,6 +28,9 @@ public class UiStep
     public int TimeoutMs { get; set; } = 5000;
 }
 
+/// <summary>
+/// Действия шага UI-сценария.
+/// </summary>
 public enum UiStepAction
 {
     WaitForVisible,

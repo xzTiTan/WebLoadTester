@@ -26,6 +26,9 @@ using WebLoadTester.Presentation.ViewModels.Tabs;
 
 namespace WebLoadTester.Presentation.ViewModels;
 
+/// <summary>
+/// Главная ViewModel приложения: управление запуском модулей и логами.
+/// </summary>
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly LogBus _logBus = new();
@@ -37,6 +40,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource? _runCts;
     private TelegramPolicy? _telegramPolicy;
 
+    /// <summary>
+    /// Инициализирует модули, вкладки и сервисы запуска.
+    /// </summary>
     public MainWindowViewModel()
     {
         var modules = new ITestModule[]
@@ -92,6 +98,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private int selectedTabIndex;
 
+    /// <summary>
+    /// Возвращает выбранный модуль в зависимости от активной вкладки.
+    /// </summary>
     private ModuleItemViewModel? GetSelectedModule()
     {
         return SelectedTabIndex switch
@@ -103,6 +112,9 @@ public partial class MainWindowViewModel : ViewModelBase
         };
     }
 
+    /// <summary>
+    /// Запускает выбранный модуль с учётом настроек и уведомлений.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
@@ -147,6 +159,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Останавливает текущий запуск.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
@@ -154,6 +169,9 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusText = "Status: Stopping";
     }
 
+    /// <summary>
+    /// Перезапускает выполнение выбранного модуля.
+    /// </summary>
     [RelayCommand]
     private async Task RestartAsync()
     {
@@ -161,21 +179,36 @@ public partial class MainWindowViewModel : ViewModelBase
         await StartAsync();
     }
 
+    /// <summary>
+    /// Очищает список отображаемых логов.
+    /// </summary>
     [RelayCommand]
     private void ClearLog()
     {
         LogEntries.Clear();
     }
 
+    /// <summary>
+    /// Проверяет, можно ли запускать модуль.
+    /// </summary>
     private bool CanStart() => !IsRunning;
+    /// <summary>
+    /// Проверяет, можно ли остановить выполнение.
+    /// </summary>
     private bool CanStop() => IsRunning;
 
+    /// <summary>
+    /// Обновляет доступность команд при смене состояния запуска.
+    /// </summary>
     partial void OnIsRunningChanged(bool value)
     {
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>
+    /// Считывает логи из шины и добавляет их в UI.
+    /// </summary>
     private async Task ReadLogAsync()
     {
         await foreach (var line in _logBus.ReadAllAsync())
@@ -184,6 +217,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Обновляет прогресс и отправляет уведомления о ходе выполнения.
+    /// </summary>
     private void OnProgressChanged(ProgressUpdate update)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -194,6 +230,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Создаёт уведомитель Telegram при наличии корректных настроек.
+    /// </summary>
     private ITelegramNotifier? CreateTelegramNotifier()
     {
         if (!TelegramSettings.Settings.Enabled)
@@ -210,6 +249,9 @@ public partial class MainWindowViewModel : ViewModelBase
         return new TelegramNotifier(TelegramSettings.Settings.BotToken, TelegramSettings.Settings.ChatId);
     }
 
+    /// <summary>
+    /// Создаёт ViewModel элемента модуля с соответствующими настройками.
+    /// </summary>
     private static ModuleItemViewModel CreateModuleItem(ITestModule module)
     {
         var settings = module.CreateDefaultSettings();

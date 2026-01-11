@@ -5,8 +5,14 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Core.Services.Metrics;
 
+/// <summary>
+/// Рассчитывает сводные метрики по результатам тестов.
+/// </summary>
 public static class MetricsCalculator
 {
+    /// <summary>
+    /// Вычисляет минимумы, перцентили и статистику ошибок.
+    /// </summary>
     public static MetricsSummary Calculate(IEnumerable<ResultBase> results)
     {
         var list = results.ToList();
@@ -36,6 +42,9 @@ public static class MetricsCalculator
         return summary;
     }
 
+    /// <summary>
+    /// Возвращает значение указанного перцентиля для отсортированного списка.
+    /// </summary>
     private static double Percentile(IReadOnlyList<double> sorted, double percentile)
     {
         if (sorted.Count == 0)

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace WebLoadTester.Modules.UiSnapshot;
 
+/// <summary>
+/// Настройки снятия скриншотов страниц.
+/// </summary>
 public class UiSnapshotSettings
 {
     public List<string> Urls { get; set; } = new();

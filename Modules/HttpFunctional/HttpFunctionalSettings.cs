@@ -3,12 +3,18 @@ using System.Net.Http;
 
 namespace WebLoadTester.Modules.HttpFunctional;
 
+/// <summary>
+/// Настройки функциональных HTTP-проверок.
+/// </summary>
 public class HttpFunctionalSettings
 {
     public List<HttpEndpoint> Endpoints { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 15;
 }
 
+/// <summary>
+/// Описание одного HTTP-эндпоинта и ожидаемых условий.
+/// </summary>
 public class HttpEndpoint
 {
     public string Name { get; set; } = string.Empty;

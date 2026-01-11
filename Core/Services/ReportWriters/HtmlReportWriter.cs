@@ -5,21 +5,33 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Core.Services.ReportWriters;
 
+/// <summary>
+/// Писатель HTML-отчётов через хранилище артефактов.
+/// </summary>
 public class HtmlReportWriter
 {
     private readonly IArtifactStore _artifactStore;
 
+    /// <summary>
+    /// Создаёт писатель с заданным хранилищем.
+    /// </summary>
     public HtmlReportWriter(IArtifactStore artifactStore)
     {
         _artifactStore = artifactStore;
     }
 
+    /// <summary>
+    /// Формирует HTML-отчёт и сохраняет его.
+    /// </summary>
     public Task<string> WriteAsync(TestReport report, string runFolder)
     {
         var html = BuildHtml(report);
         return _artifactStore.SaveHtmlAsync(report, runFolder, html);
     }
 
+    /// <summary>
+    /// Собирает HTML-разметку отчёта из результатов и метрик.
+    /// </summary>
     private static string BuildHtml(TestReport report)
     {
         var sb = new StringBuilder();

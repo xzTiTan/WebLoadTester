@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace WebLoadTester.Core.Domain;
 
+/// <summary>
+/// Итоговый отчёт о запуске тестового модуля.
+/// </summary>
 public class TestReport
 {
     public string ModuleId { get; set; } = string.Empty;
@@ -19,6 +22,9 @@ public class TestReport
     public ArtifactInfo Artifacts { get; set; } = new();
 }
 
+/// <summary>
+/// Сводные метрики по результатам теста.
+/// </summary>
 public class MetricsSummary
 {
     public double AverageMs { get; set; }
@@ -31,6 +37,9 @@ public class MetricsSummary
     public List<ResultBase> TopSlow { get; set; } = new();
 }
 
+/// <summary>
+/// Пути к сгенерированным артефактам отчёта.
+/// </summary>
 public class ArtifactInfo
 {
     public string JsonPath { get; set; } = string.Empty;

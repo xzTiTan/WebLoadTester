@@ -11,6 +11,9 @@ using WebLoadTester.Infrastructure.Http;
 
 namespace WebLoadTester.Modules.HttpPerformance;
 
+/// <summary>
+/// Модуль нагрузочного теста HTTP с конкуренцией и ограничением RPS.
+/// </summary>
 public class HttpPerformanceModule : ITestModule
 {
     public string Id => "http.performance";
@@ -18,11 +21,17 @@ public class HttpPerformanceModule : ITestModule
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpPerformanceSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new HttpPerformanceSettings();
     }
 
+    /// <summary>
+    /// Проверяет корректность параметров нагрузки.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -50,6 +59,9 @@ public class HttpPerformanceModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет серию HTTP-запросов и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpPerformanceSettings)settings;

@@ -12,8 +12,14 @@ namespace WebLoadTester;
 [RequiresUnreferencedCode(
     "Default implementation of ViewLocator involves reflection which may be trimmed away.",
     Url = "https://docs.avaloniaui.net/docs/concepts/view-locator")]
+/// <summary>
+/// Сопоставляет ViewModel с соответствующим View по имени типа.
+/// </summary>
 public class ViewLocator : IDataTemplate
 {
+    /// <summary>
+    /// Создаёт экземпляр View для переданной ViewModel.
+    /// </summary>
     public Control? Build(object? param)
     {
         if (param is null)
@@ -30,6 +36,9 @@ public class ViewLocator : IDataTemplate
         return new TextBlock { Text = "Not Found: " + name };
     }
 
+    /// <summary>
+    /// Проверяет, подходит ли объект для данного шаблона.
+    /// </summary>
     public bool Match(object? data)
     {
         return data is ViewModelBase;

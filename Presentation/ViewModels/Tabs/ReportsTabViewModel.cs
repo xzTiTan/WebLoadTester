@@ -6,8 +6,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace WebLoadTester.Presentation.ViewModels.Tabs;
 
+/// <summary>
+/// ViewModel вкладки отчётов.
+/// </summary>
 public partial class ReportsTabViewModel : ObservableObject
 {
+    /// <summary>
+    /// Инициализирует вкладку и сразу загружает список отчётов.
+    /// </summary>
     public ReportsTabViewModel(string reportsRoot)
     {
         ReportsRoot = reportsRoot;
@@ -20,11 +26,17 @@ public partial class ReportsTabViewModel : ObservableObject
     [ObservableProperty]
     private ReportItemViewModel? selectedReport;
 
+    /// <summary>
+    /// Обновляет доступность команды открытия при смене выбора.
+    /// </summary>
     partial void OnSelectedReportChanged(ReportItemViewModel? value)
     {
         OpenHtmlCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>
+    /// Перечитывает список HTML-отчётов из папки.
+    /// </summary>
     [RelayCommand]
     private void Refresh()
     {
@@ -40,6 +52,9 @@ public partial class ReportsTabViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Открывает выбранный HTML-отчёт в браузере.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanOpen))]
     private void OpenHtml()
     {
@@ -55,6 +70,9 @@ public partial class ReportsTabViewModel : ObservableObject
         });
     }
 
+    /// <summary>
+    /// Открывает папку отчётов в файловом менеджере.
+    /// </summary>
     [RelayCommand]
     private void OpenFolder()
     {
@@ -70,11 +88,20 @@ public partial class ReportsTabViewModel : ObservableObject
         });
     }
 
+    /// <summary>
+    /// Проверяет, выбран ли отчёт для открытия.
+    /// </summary>
     private bool CanOpen() => SelectedReport != null;
 }
 
+/// <summary>
+/// ViewModel элемента отчёта.
+/// </summary>
 public class ReportItemViewModel
 {
+    /// <summary>
+    /// Создаёт элемент отчёта по полному пути.
+    /// </summary>
     public ReportItemViewModel(string fullPath)
     {
         FullPath = fullPath;

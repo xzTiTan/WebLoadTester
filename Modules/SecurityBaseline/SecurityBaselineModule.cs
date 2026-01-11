@@ -10,6 +10,9 @@ using WebLoadTester.Infrastructure.Network;
 
 namespace WebLoadTester.Modules.SecurityBaseline;
 
+/// <summary>
+/// Модуль проверки базовых security-практик (заголовки, редирект, TLS).
+/// </summary>
 public class SecurityBaselineModule : ITestModule
 {
     public string Id => "net.security";
@@ -17,8 +20,14 @@ public class SecurityBaselineModule : ITestModule
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(SecurityBaselineSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings() => new SecurityBaselineSettings();
 
+    /// <summary>
+    /// Проверяет корректность настроек.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -36,6 +45,9 @@ public class SecurityBaselineModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет проверки безопасности и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (SecurityBaselineSettings)settings;

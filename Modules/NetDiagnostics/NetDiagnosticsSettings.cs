@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace WebLoadTester.Modules.NetDiagnostics;
 
+/// <summary>
+/// Настройки сетевой диагностики (DNS/TCP/TLS).
+/// </summary>
 public class NetDiagnosticsSettings
 {
     public string Hostname { get; set; } = "example.com";

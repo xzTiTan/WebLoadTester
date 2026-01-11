@@ -10,17 +10,26 @@ using WebLoadTester.Core.Services.ReportWriters;
 
 namespace WebLoadTester.Core.Services;
 
+/// <summary>
+/// Оркестратор: валидирует настройки, запускает модуль и сохраняет отчёты.
+/// </summary>
 public class TestOrchestrator
 {
     private readonly JsonReportWriter _jsonWriter;
     private readonly HtmlReportWriter _htmlWriter;
 
+    /// <summary>
+    /// Создаёт оркестратор с писателями отчётов.
+    /// </summary>
     public TestOrchestrator(JsonReportWriter jsonWriter, HtmlReportWriter htmlWriter)
     {
         _jsonWriter = jsonWriter;
         _htmlWriter = htmlWriter;
     }
 
+    /// <summary>
+    /// Запускает модуль, обрабатывает ошибки и возвращает итоговый отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(ITestModule module, object settings, RunContext context, CancellationToken ct)
     {
         var validation = module.Validate(settings);
@@ -77,6 +86,9 @@ public class TestOrchestrator
         return await FinalizeReportAsync(resultReport, context, ct);
     }
 
+    /// <summary>
+    /// Финализирует отчёт: сохраняет артефакты и обновляет прогресс.
+    /// </summary>
     private async Task<TestReport> FinalizeReportAsync(TestReport report, RunContext context, CancellationToken ct)
     {
         var runFolder = context.Artifacts.CreateRunFolder(report.StartedAt.ToString("yyyyMMdd_HHmmss"));
@@ -88,6 +100,9 @@ public class TestOrchestrator
         return report;
     }
 
+    /// <summary>
+    /// Создаёт базовый отчёт с метаданными и снимком настроек.
+    /// </summary>
     private static TestReport CreateBaseReport(ITestModule module, object settings, RunContext context)
     {
         return new TestReport

@@ -11,6 +11,9 @@ using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiSnapshot;
 
+/// <summary>
+/// Модуль массового снятия скриншотов UI.
+/// </summary>
 public class UiSnapshotModule : ITestModule
 {
     public string Id => "ui.snapshot";
@@ -18,6 +21,9 @@ public class UiSnapshotModule : ITestModule
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiSnapshotSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new UiSnapshotSettings
@@ -26,6 +32,9 @@ public class UiSnapshotModule : ITestModule
         };
     }
 
+    /// <summary>
+    /// Проверяет корректность параметров снимков.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -48,6 +57,9 @@ public class UiSnapshotModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Делает скриншоты указанных URL и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiSnapshotSettings)settings;
@@ -140,6 +152,9 @@ public class UiSnapshotModule : ITestModule
         return report;
     }
 
+    /// <summary>
+    /// Превращает URL в безопасное имя файла.
+    /// </summary>
     private static string Sanitize(string url)
     {
         foreach (var ch in System.IO.Path.GetInvalidFileNameChars())

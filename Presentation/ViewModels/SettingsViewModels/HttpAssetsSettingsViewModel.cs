@@ -5,10 +5,16 @@ using WebLoadTester.Modules.HttpAssets;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
+/// <summary>
+/// ViewModel настроек проверки HTTP-ассетов.
+/// </summary>
 public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
 {
     private readonly HttpAssetsSettings _settings;
 
+    /// <summary>
+    /// Инициализирует ViewModel и копирует настройки.
+    /// </summary>
     public HttpAssetsSettingsViewModel(HttpAssetsSettings settings)
     {
         _settings = settings;
@@ -25,5 +31,8 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private int timeoutSeconds;
 
+    /// <summary>
+    /// Синхронизирует таймаут запросов.
+    /// </summary>
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 }

@@ -11,6 +11,9 @@ using WebLoadTester.Infrastructure.Http;
 
 namespace WebLoadTester.Modules.Availability;
 
+/// <summary>
+/// Модуль периодической проверки доступности HTTP/TCP.
+/// </summary>
 public class AvailabilityModule : ITestModule
 {
     public string Id => "net.availability";
@@ -18,8 +21,14 @@ public class AvailabilityModule : ITestModule
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(AvailabilitySettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings() => new AvailabilitySettings();
 
+    /// <summary>
+    /// Проверяет корректность настроек доступности.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -42,6 +51,9 @@ public class AvailabilityModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Запускает цикл проверок доступности и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (AvailabilitySettings)settings;

@@ -11,6 +11,9 @@ using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiScenario;
 
+/// <summary>
+/// Модуль запуска UI-сценариев через Playwright.
+/// </summary>
 public class UiScenarioModule : ITestModule
 {
     public string Id => "ui.scenario";
@@ -18,6 +21,9 @@ public class UiScenarioModule : ITestModule
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiScenarioSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию со стартовым шагом.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new UiScenarioSettings
@@ -29,6 +35,9 @@ public class UiScenarioModule : ITestModule
         };
     }
 
+    /// <summary>
+    /// Проверяет корректность параметров сценария.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -56,6 +65,9 @@ public class UiScenarioModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Запускает сценарий в браузере и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiScenarioSettings)settings;

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace WebLoadTester.Modules.UiTiming;
 
+/// <summary>
+/// Настройки замеров времени загрузки страниц.
+/// </summary>
 public class UiTimingSettings
 {
     public List<string> Urls { get; set; } = new();

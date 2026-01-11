@@ -6,20 +6,32 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Infrastructure.Telegram;
 
+/// <summary>
+/// Политика отправки уведомлений в Telegram с учётом настроек.
+/// </summary>
 public class TelegramPolicy
 {
     private readonly ITelegramNotifier? _notifier;
     private readonly TelegramSettings _settings;
     private DateTimeOffset _lastSent = DateTimeOffset.MinValue;
 
+    /// <summary>
+    /// Инициализирует политику с уведомителем и настройками.
+    /// </summary>
     public TelegramPolicy(ITelegramNotifier? notifier, TelegramSettings settings)
     {
         _notifier = notifier;
         _settings = settings;
     }
 
+    /// <summary>
+    /// Показывает, можно ли отправлять уведомления.
+    /// </summary>
     public bool IsEnabled => _notifier != null && _settings.Enabled;
 
+    /// <summary>
+    /// Отправляет уведомление о старте, если это разрешено настройками.
+    /// </summary>
     public Task NotifyStartAsync(string moduleName, CancellationToken ct)
     {
         if (!IsEnabled || !_settings.NotifyOnStart)
@@ -30,6 +42,9 @@ public class TelegramPolicy
         return SendAsync($"Started: {moduleName}", ct);
     }
 
+    /// <summary>
+    /// Отправляет уведомление о прогрессе, если включено.
+    /// </summary>
     public Task NotifyProgressAsync(ProgressUpdate update, CancellationToken ct)
     {
         if (!IsEnabled || _settings.ProgressMode == ProgressNotifyMode.Off)
@@ -45,6 +60,9 @@ public class TelegramPolicy
         return SendAsync($"Progress: {update.Current}/{update.Total} {update.Message}", ct);
     }
 
+    /// <summary>
+    /// Отправляет уведомление о завершении.
+    /// </summary>
     public Task NotifyFinishAsync(string moduleName, TestStatus status, CancellationToken ct)
     {
         if (!IsEnabled || !_settings.NotifyOnFinish)
@@ -55,6 +73,9 @@ public class TelegramPolicy
         return SendAsync($"Finished: {moduleName} ({status})", ct);
     }
 
+    /// <summary>
+    /// Отправляет уведомление об ошибке.
+    /// </summary>
     public Task NotifyErrorAsync(string message, CancellationToken ct)
     {
         if (!IsEnabled || !_settings.NotifyOnError)
@@ -65,6 +86,9 @@ public class TelegramPolicy
         return SendAsync($"Error: {message}", ct);
     }
 
+    /// <summary>
+    /// Внутренняя отправка сообщения с учётом лимита частоты.
+    /// </summary>
     private Task SendAsync(string message, CancellationToken ct)
     {
         if (!IsEnabled)
@@ -82,6 +106,9 @@ public class TelegramPolicy
     }
 }
 
+/// <summary>
+/// Настройки Telegram-уведомлений.
+/// </summary>
 public class TelegramSettings
 {
     public bool Enabled { get; set; }
@@ -96,6 +123,9 @@ public class TelegramSettings
     public AttachmentsMode AttachmentsMode { get; set; } = AttachmentsMode.None;
 }
 
+/// <summary>
+/// Режимы отправки прогресса в Telegram.
+/// </summary>
 public enum ProgressNotifyMode
 {
     Off,

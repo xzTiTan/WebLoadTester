@@ -10,6 +10,9 @@ using WebLoadTester.Infrastructure.Http;
 
 namespace WebLoadTester.Modules.HttpFunctional;
 
+/// <summary>
+/// Модуль функциональных проверок HTTP-эндпоинтов.
+/// </summary>
 public class HttpFunctionalModule : ITestModule
 {
     public string Id => "http.functional";
@@ -17,6 +20,9 @@ public class HttpFunctionalModule : ITestModule
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpFunctionalSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию с примером эндпоинта.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new HttpFunctionalSettings
@@ -28,6 +34,9 @@ public class HttpFunctionalModule : ITestModule
         };
     }
 
+    /// <summary>
+    /// Проверяет корректность списка эндпоинтов.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -53,6 +62,9 @@ public class HttpFunctionalModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет функциональные проверки и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpFunctionalSettings)settings;

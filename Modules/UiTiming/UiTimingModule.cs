@@ -11,6 +11,9 @@ using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiTiming;
 
+/// <summary>
+/// Модуль замеров времени загрузки страниц через Playwright.
+/// </summary>
 public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
@@ -18,6 +21,9 @@ public class UiTimingModule : ITestModule
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new UiTimingSettings
@@ -26,6 +32,9 @@ public class UiTimingModule : ITestModule
         };
     }
 
+    /// <summary>
+    /// Проверяет корректность настроек замеров.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -48,6 +57,9 @@ public class UiTimingModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет замеры времени и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiTimingSettings)settings;

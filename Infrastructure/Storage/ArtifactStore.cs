@@ -7,8 +7,14 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Infrastructure.Storage;
 
+/// <summary>
+/// Реализация хранилища артефактов на файловой системе.
+/// </summary>
 public class ArtifactStore : IArtifactStore
 {
+    /// <summary>
+    /// Инициализирует папки для отчётов, скриншотов и профилей.
+    /// </summary>
     public ArtifactStore()
     {
         ReportsRoot = Path.Combine(AppContext.BaseDirectory, "reports");
@@ -23,6 +29,9 @@ public class ArtifactStore : IArtifactStore
     public string ScreenshotsRoot { get; }
     public string ProfilesRoot { get; }
 
+    /// <summary>
+    /// Создаёт папку для конкретного запуска и возвращает путь.
+    /// </summary>
     public string CreateRunFolder(string runId)
     {
         var folder = Path.Combine(ScreenshotsRoot, runId);
@@ -30,6 +39,9 @@ public class ArtifactStore : IArtifactStore
         return folder;
     }
 
+    /// <summary>
+    /// Сохраняет отчёт в JSON-файл.
+    /// </summary>
     public async Task<string> SaveJsonAsync(TestReport report, string runFolder)
     {
         Directory.CreateDirectory(ReportsRoot);
@@ -40,6 +52,9 @@ public class ArtifactStore : IArtifactStore
         return path;
     }
 
+    /// <summary>
+    /// Сохраняет отчёт в HTML-файл.
+    /// </summary>
     public async Task<string> SaveHtmlAsync(TestReport report, string runFolder, string html)
     {
         Directory.CreateDirectory(ReportsRoot);
@@ -49,6 +64,9 @@ public class ArtifactStore : IArtifactStore
         return path;
     }
 
+    /// <summary>
+    /// Сохраняет скриншот в указанную папку.
+    /// </summary>
     public async Task<string> SaveScreenshotAsync(byte[] bytes, string runFolder, string fileName)
     {
         var path = Path.Combine(runFolder, fileName);

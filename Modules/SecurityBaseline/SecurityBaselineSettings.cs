@@ -1,5 +1,8 @@
 namespace WebLoadTester.Modules.SecurityBaseline;
 
+/// <summary>
+/// Настройки проверки базовых требований безопасности.
+/// </summary>
 public class SecurityBaselineSettings
 {
     public string Url { get; set; } = "https://example.com";

@@ -5,10 +5,16 @@ using WebLoadTester.Modules.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
+/// <summary>
+/// ViewModel настроек UI-снимков.
+/// </summary>
 public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiSnapshotSettings _settings;
 
+    /// <summary>
+    /// Инициализирует ViewModel и копирует настройки.
+    /// </summary>
     public UiSnapshotSettingsViewModel(UiSnapshotSettings settings)
     {
         _settings = settings;
@@ -33,7 +39,16 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private int delayAfterLoadMs;
 
+    /// <summary>
+    /// Синхронизирует уровень конкурентности.
+    /// </summary>
     partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
+    /// <summary>
+    /// Синхронизирует режим ожидания загрузки.
+    /// </summary>
     partial void OnWaitModeChanged(string value) => _settings.WaitMode = value;
+    /// <summary>
+    /// Синхронизирует задержку после загрузки.
+    /// </summary>
     partial void OnDelayAfterLoadMsChanged(int value) => _settings.DelayAfterLoadMs = value;
 }

@@ -1,5 +1,8 @@
 namespace WebLoadTester.Modules.Availability;
 
+/// <summary>
+/// Настройки проверки доступности целевого ресурса.
+/// </summary>
 public class AvailabilitySettings
 {
     public string Target { get; set; } = "https://example.com";

@@ -3,16 +3,25 @@ using System;
 
 namespace WebLoadTester;
 
+/// <summary>
+/// Точка входа приложения: настраивает и запускает Avalonia.
+/// </summary>
 sealed class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
+    /// <summary>
+    /// Запускает приложение с классическим жизненным циклом окна.
+    /// </summary>
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp()
         .StartWithClassicDesktopLifetime(args);
 
     // Avalonia configuration, don't remove; also used by visual designer.
+    /// <summary>
+    /// Собирает конфигурацию Avalonia для запуска и дизайнера.
+    /// </summary>
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()

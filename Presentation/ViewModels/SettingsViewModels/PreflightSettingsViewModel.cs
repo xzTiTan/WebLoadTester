@@ -3,10 +3,16 @@ using WebLoadTester.Modules.Preflight;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
+/// <summary>
+/// ViewModel настроек preflight-проверок.
+/// </summary>
 public partial class PreflightSettingsViewModel : SettingsViewModelBase
 {
     private readonly PreflightSettings _settings;
 
+    /// <summary>
+    /// Инициализирует ViewModel и копирует настройки.
+    /// </summary>
     public PreflightSettingsViewModel(PreflightSettings settings)
     {
         _settings = settings;
@@ -35,9 +41,24 @@ public partial class PreflightSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private bool checkHttp;
 
+    /// <summary>
+    /// Синхронизирует цель проверок.
+    /// </summary>
     partial void OnTargetChanged(string value) => _settings.Target = value;
+    /// <summary>
+    /// Синхронизирует флаг DNS-проверки.
+    /// </summary>
     partial void OnCheckDnsChanged(bool value) => _settings.CheckDns = value;
+    /// <summary>
+    /// Синхронизирует флаг TCP-проверки.
+    /// </summary>
     partial void OnCheckTcpChanged(bool value) => _settings.CheckTcp = value;
+    /// <summary>
+    /// Синхронизирует флаг TLS-проверки.
+    /// </summary>
     partial void OnCheckTlsChanged(bool value) => _settings.CheckTls = value;
+    /// <summary>
+    /// Синхронизирует флаг HTTP-проверки.
+    /// </summary>
     partial void OnCheckHttpChanged(bool value) => _settings.CheckHttp = value;
 }

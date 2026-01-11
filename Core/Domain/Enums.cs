@@ -1,5 +1,8 @@
 namespace WebLoadTester.Core.Domain;
 
+/// <summary>
+/// Политика поведения при ошибке шага UI-сценария.
+/// </summary>
 public enum StepErrorPolicy
 {
     SkipStep,
@@ -7,6 +10,9 @@ public enum StepErrorPolicy
     StopAll
 }
 
+/// <summary>
+/// Режимы уведомлений Telegram.
+/// </summary>
 public enum TelegramNotifyMode
 {
     Off,
@@ -17,6 +23,9 @@ public enum TelegramNotifyMode
     All
 }
 
+/// <summary>
+/// Режимы прикрепления артефактов к уведомлениям.
+/// </summary>
 public enum AttachmentsMode
 {
     None,

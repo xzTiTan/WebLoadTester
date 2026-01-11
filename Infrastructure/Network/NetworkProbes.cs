@@ -10,8 +10,14 @@ using System.Threading.Tasks;
 
 namespace WebLoadTester.Infrastructure.Network;
 
+/// <summary>
+/// Набор сетевых зондов: DNS, TCP и TLS.
+/// </summary>
 public static class NetworkProbes
 {
+    /// <summary>
+    /// Проверяет DNS-разрешение хоста.
+    /// </summary>
     public static async Task<(bool success, double durationMs, string details)> DnsProbeAsync(string host, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
@@ -29,6 +35,9 @@ public static class NetworkProbes
         }
     }
 
+    /// <summary>
+    /// Проверяет TCP-подключение к хосту и порту.
+    /// </summary>
     public static async Task<(bool success, double durationMs, string details)> TcpProbeAsync(string host, int port, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
@@ -46,6 +55,9 @@ public static class NetworkProbes
         }
     }
 
+    /// <summary>
+    /// Проверяет TLS-соединение и срок действия сертификата.
+    /// </summary>
     public static async Task<(bool success, double durationMs, string details, int? daysToExpiry)> TlsProbeAsync(string host, int port, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();

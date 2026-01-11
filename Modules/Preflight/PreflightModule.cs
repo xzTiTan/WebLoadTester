@@ -10,6 +10,9 @@ using WebLoadTester.Infrastructure.Network;
 
 namespace WebLoadTester.Modules.Preflight;
 
+/// <summary>
+/// Модуль предварительных сетевых и HTTP-проверок.
+/// </summary>
 public class PreflightModule : ITestModule
 {
     public string Id => "net.preflight";
@@ -17,8 +20,14 @@ public class PreflightModule : ITestModule
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(PreflightSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию.
+    /// </summary>
     public object CreateDefaultSettings() => new PreflightSettings();
 
+    /// <summary>
+    /// Проверяет корректность настроек цели.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -36,6 +45,9 @@ public class PreflightModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет серию preflight-проверок и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (PreflightSettings)settings;

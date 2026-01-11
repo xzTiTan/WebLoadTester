@@ -5,10 +5,16 @@ using WebLoadTester.Modules.HttpFunctional;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
+/// <summary>
+/// ViewModel настроек функциональных HTTP-проверок.
+/// </summary>
 public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
 {
     private readonly HttpFunctionalSettings _settings;
 
+    /// <summary>
+    /// Инициализирует ViewModel и копирует настройки.
+    /// </summary>
     public HttpFunctionalSettingsViewModel(HttpFunctionalSettings settings)
     {
         _settings = settings;
@@ -25,5 +31,8 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private int timeoutSeconds;
 
+    /// <summary>
+    /// Синхронизирует таймаут запросов.
+    /// </summary>
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 }

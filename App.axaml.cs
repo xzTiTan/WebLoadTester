@@ -8,13 +8,22 @@ using WebLoadTester.Presentation.Views;
 
 namespace WebLoadTester;
 
+/// <summary>
+/// Корневое Avalonia-приложение: инициализирует XAML и главное окно.
+/// </summary>
 public partial class App : Application
 {
+    /// <summary>
+    /// Загружает XAML-ресурсы приложения.
+    /// </summary>
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
     }
 
+    /// <summary>
+    /// Завершает инициализацию фреймворка и создаёт главное окно.
+    /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -26,6 +35,9 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    /// <summary>
+    /// Отключает встроенную валидацию по DataAnnotations, чтобы избежать конфликтов с MVVM.
+    /// </summary>
     private void DisableAvaloniaDataAnnotationValidation()
     {
         var dataValidationPluginsToRemove =

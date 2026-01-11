@@ -10,6 +10,9 @@ using WebLoadTester.Infrastructure.Http;
 
 namespace WebLoadTester.Modules.HttpAssets;
 
+/// <summary>
+/// Модуль проверки ассетов по HTTP (тип, размер, латентность).
+/// </summary>
 public class HttpAssetsModule : ITestModule
 {
     public string Id => "http.assets";
@@ -17,6 +20,9 @@ public class HttpAssetsModule : ITestModule
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpAssetsSettings);
 
+    /// <summary>
+    /// Создаёт настройки по умолчанию с примером ассета.
+    /// </summary>
     public object CreateDefaultSettings()
     {
         return new HttpAssetsSettings
@@ -28,6 +34,9 @@ public class HttpAssetsModule : ITestModule
         };
     }
 
+    /// <summary>
+    /// Проверяет корректность списка ассетов.
+    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
@@ -45,6 +54,9 @@ public class HttpAssetsModule : ITestModule
         return errors;
     }
 
+    /// <summary>
+    /// Выполняет проверки ассетов и формирует отчёт.
+    /// </summary>
     public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpAssetsSettings)settings;
