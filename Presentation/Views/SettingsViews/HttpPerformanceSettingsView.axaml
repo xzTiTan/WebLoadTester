@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpPerformanceSettingsView"
+             x:DataType="vm:HttpPerformanceSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="HTTP Performance Settings" Classes="h1"/>
+        <TextBlock Text="URL" Classes="label"/>
+        <TextBox Text="{Binding Model.Url}"/>
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Total Requests" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.TotalRequests}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Concurrency" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.Concurrency}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="RPS Limit" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.RpsLimit}"/>
+            </StackPanel>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

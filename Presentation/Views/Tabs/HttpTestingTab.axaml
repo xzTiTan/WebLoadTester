@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+             x:Class="WebLoadTester.Presentation.Views.Tabs.HttpTestingTab"
+             x:DataType="vm:HttpTestingTabViewModel">
+    <Grid ColumnDefinitions="220,*" ColumnSpacing="10">
+        <ListBox ItemsSource="{Binding Modules}"
+                 DisplayMemberPath="DisplayName"
+                 SelectedItem="{Binding DataContext.SelectedModule, RelativeSource={RelativeSource AncestorType=Window}}"/>
+        <ContentControl Grid.Column="1"
+                        Content="{Binding DataContext.SelectedModule.SettingsViewModel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+    </Grid>
+</UserControl>

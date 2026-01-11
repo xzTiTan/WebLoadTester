@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
+             xmlns:ui="clr-namespace:WebLoadTester.Modules.UiScenario"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
+             x:DataType="vm:UiScenarioSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="UI Scenario Settings" Classes="h1"/>
+        <TextBlock Text="Target URL" Classes="label"/>
+        <TextBox Text="{Binding Model.TargetUrl}"/>
+
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Total Runs" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.TotalRuns}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Concurrency" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.Concurrency}"/>
+            </StackPanel>
+        </WrapPanel>
+
+        <CheckBox Content="Headless" IsChecked="{Binding Model.Headless}"/>
+        <CheckBox Content="Screenshot After Scenario" IsChecked="{Binding Model.ScreenshotAfterScenario}"/>
+
+        <TextBlock Text="Step Error Policy" Classes="label"/>
+        <ComboBox ItemsSource="{Binding Model.StepErrorPolicyValues}" SelectedItem="{Binding Model.StepErrorPolicy}"/>
+
+        <TextBlock Text="Steps (Selector / Action)" Classes="label"/>
+        <ItemsControl ItemsSource="{Binding Model.Steps}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="ui:UiStep">
+                    <Grid ColumnDefinitions="*,120" ColumnSpacing="8" Margin="0,2">
+                        <TextBox Grid.Column="0" Text="{Binding Selector}"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding ActionValues}" SelectedItem="{Binding Action}"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

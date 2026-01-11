@@ -1,0 +1,98 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
+        xmlns:tabs="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+        xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
+        x:Class="WebLoadTester.Presentation.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="WebLoadTester"
+        Width="1280" Height="760"
+        MinWidth="1100" MinHeight="650"
+        Background="#E6E6E6">
+    <Grid Margin="12"
+          ColumnDefinitions="*,320"
+          RowDefinitions="Auto,*,Auto"
+          ColumnSpacing="12"
+          RowSpacing="10">
+        <Border Grid.Column="0" Grid.Row="0" Classes="panel">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="10">
+                <Button Content="Start" Command="{Binding StartCommand}"/>
+                <Button Grid.Column="1" Content="Stop" Command="{Binding StopCommand}"/>
+                <Button Grid.Column="2" Content="Restart" Command="{Binding RestartCommand}"/>
+                <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding StatusText}"/>
+                <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{Binding ProgressText}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="0" Grid.Row="1" RowDefinitions="*,240" RowSpacing="10">
+            <Border Grid.Row="0" Classes="panel">
+                <TabControl>
+                    <TabItem Header="UI Testing">
+                        <ContentControl Content="{Binding UiTab}"/>
+                    </TabItem>
+                    <TabItem Header="HTTP Testing">
+                        <ContentControl Content="{Binding HttpTab}"/>
+                    </TabItem>
+                    <TabItem Header="Network &amp; Security">
+                        <ContentControl Content="{Binding NetTab}"/>
+                    </TabItem>
+                    <TabItem Header="Reports">
+                        <ContentControl Content="{Binding ReportsTab}"/>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <Border Grid.Row="1" Classes="panel">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                    <TextBlock Text="Live Log" Classes="h1"/>
+                    <Border Grid.Row="1" Classes="logbox">
+                        <ListBox ItemsSource="{Binding LogEntries}" behaviors:AutoScrollBehavior.IsEnabled="True" Classes="loglist">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Classes="logline" Text="{Binding}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Classes="panel">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="8" ColumnSpacing="8">
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Telegram" Classes="h1"/>
+                <CheckBox Grid.Row="1" Grid.ColumnSpan="2" Content="Enable" IsChecked="{Binding TelegramSettings.Enabled}"/>
+
+                <TextBlock Grid.Row="2" Text="Bot Token" Classes="label"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding TelegramSettings.BotToken}"/>
+
+                <TextBlock Grid.Row="3" Text="Chat Id" Classes="label"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding TelegramSettings.ChatId}"/>
+
+                <CheckBox Grid.Row="4" Grid.ColumnSpan="2" Content="Notify on Start" IsChecked="{Binding TelegramSettings.NotifyOnStart}"/>
+                <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Content="Notify on Finish" IsChecked="{Binding TelegramSettings.NotifyOnFinish}"/>
+                <CheckBox Grid.Row="6" Grid.ColumnSpan="2" Content="Notify on Error" IsChecked="{Binding TelegramSettings.NotifyOnError}"/>
+
+                <TextBlock Grid.Row="7" Text="Progress Mode" Classes="label"/>
+                <ComboBox Grid.Row="7" Grid.Column="1" ItemsSource="{Binding TelegramSettings.ProgressModeValues}" SelectedItem="{Binding TelegramSettings.ProgressMode}"/>
+
+                <TextBlock Grid.Row="8" Text="Attachments" Classes="label"/>
+                <ComboBox Grid.Row="8" Grid.Column="1" ItemsSource="{Binding TelegramSettings.AttachmentsModeValues}" SelectedItem="{Binding TelegramSettings.AttachmentsMode}"/>
+
+                <TextBlock Grid.Row="9" Text="Rate Limit (sec)" Classes="label"/>
+                <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding TelegramSettings.RateLimitSeconds}"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
+                Background="#F2F2F2"
+                BorderBrush="#C8C8C8"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="8">
+            <DockPanel>
+                <TextBlock Text="Use load testing only on systems you own or have permission to test." Foreground="#333"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

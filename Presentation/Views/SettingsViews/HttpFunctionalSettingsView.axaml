@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView"
+             x:DataType="vm:HttpFunctionalSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="HTTP Functional Settings" Classes="h1"/>
+        <TextBlock Text="Endpoints" Classes="label"/>
+        <ItemsControl ItemsSource="{Binding Model.Endpoints}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+                        <TextBox Grid.Column="0" Text="{Binding Url}"/>
+                        <TextBox Grid.Column="1" Text="{Binding Method}"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Timeout (sec)" Classes="label"/>
+        <TextBox Width="120" Text="{Binding Model.TimeoutSeconds}"/>
+    </StackPanel>
+</UserControl>
