@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.SecurityBaselineSettingsView">
+    <ScrollViewer>
+        <StackPanel Spacing="8">
+            <TextBlock Text="Security Baseline Settings" Classes="h1" />
+            <TextBlock Text="URL" Classes="label" />
+            <TextBox Text="{Binding Url}" />
+            <CheckBox Content="Check Headers" IsChecked="{Binding CheckHeaders}" />
+            <CheckBox Content="Check HTTP->HTTPS Redirect" IsChecked="{Binding CheckRedirectHttpToHttps}" />
+            <CheckBox Content="Check TLS Expiry" IsChecked="{Binding CheckTlsExpiry}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

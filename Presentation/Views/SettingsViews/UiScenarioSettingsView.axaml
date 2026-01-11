@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView">
+    <ScrollViewer>
+        <StackPanel Spacing="8">
+            <TextBlock Text="UI Scenario Settings" Classes="h1" />
+            <TextBlock Text="Target URL" Classes="label" />
+            <TextBox Text="{Binding TargetUrl}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel>
+                    <TextBlock Text="Total Runs" Classes="label" />
+                    <TextBox Text="{Binding TotalRuns}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Concurrency" Classes="label" />
+                    <TextBox Text="{Binding Concurrency}" />
+                </StackPanel>
+            </StackPanel>
+            <CheckBox Content="Headless" IsChecked="{Binding Headless}" />
+            <CheckBox Content="Screenshot after scenario" IsChecked="{Binding ScreenshotAfterScenario}" />
+            <TextBlock Text="Steps" Classes="label" />
+            <ItemsControl ItemsSource="{Binding Steps}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ComboBox SelectedItem="{Binding Action}" Width="140">
+                                <ComboBoxItem Content="WaitForVisible" />
+                                <ComboBoxItem Content="Click" />
+                                <ComboBoxItem Content="FillText" />
+                            </ComboBox>
+                            <TextBox Text="{Binding Selector}" Width="240" />
+                            <TextBox Text="{Binding Text}" Width="200" Watermark="Text" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

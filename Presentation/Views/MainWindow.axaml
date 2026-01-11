@@ -1,0 +1,101 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WebLoadTester.Presentation.ViewModels"
+        xmlns:svm="using:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+        xmlns:views="using:WebLoadTester.Presentation.Views"
+        xmlns:settings="using:WebLoadTester.Presentation.Views.SettingsViews"
+        xmlns:behaviors="using:WebLoadTester.Presentation.Common.Behaviors"
+        x:Class="WebLoadTester.Presentation.Views.MainWindow"
+        Width="1200"
+        Height="800"
+        Title="WebLoadTester">
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:ModuleEntry}">
+            <TextBlock Text="{Binding DisplayName}" />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TelegramSettingsViewModel}">
+            <views:TelegramPanel />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:UiScenarioSettingsViewModel}">
+            <settings:UiScenarioSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:UiSnapshotSettingsViewModel}">
+            <settings:UiSnapshotSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:UiTimingSettingsViewModel}">
+            <settings:UiTimingSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:HttpFunctionalSettingsViewModel}">
+            <settings:HttpFunctionalSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:HttpPerformanceSettingsViewModel}">
+            <settings:HttpPerformanceSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:HttpAssetsSettingsViewModel}">
+            <settings:HttpAssetsSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:NetDiagnosticsSettingsViewModel}">
+            <settings:NetDiagnosticsSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:AvailabilitySettingsViewModel}">
+            <settings:AvailabilitySettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:SecurityBaselineSettingsViewModel}">
+            <settings:SecurityBaselineSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type svm:PreflightSettingsViewModel}">
+            <settings:PreflightSettingsView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,200" ColumnDefinitions="*,300">
+        <Border Grid.ColumnSpan="2" Classes="panel" Margin="12" Padding="12">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Button Content="Start" Command="{Binding StartCommand}" />
+                <Button Content="Stop" Command="{Binding StopCommand}" />
+                <Button Content="Clear Log" Command="{Binding ClearLogCommand}" />
+                <TextBlock Text="{Binding StatusText}" Margin="12,0,0,0" />
+                <TextBlock Text="{Binding ProgressText}" Margin="12,0,0,0" />
+            </StackPanel>
+        </Border>
+
+        <TabControl Grid.Row="1" Grid.Column="0" Margin="12" SelectedIndex="{Binding SelectedTabIndex}">
+            <TabItem Header="UI Testing">
+                <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                    <ListBox ItemsSource="{Binding UiModules}" SelectedItem="{Binding SelectedUiModule}" />
+                    <ContentControl Grid.Column="1" Content="{Binding SelectedUiModule.SettingsViewModel}" Margin="12,0,0,0" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="HTTP Testing">
+                <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                    <ListBox ItemsSource="{Binding HttpModules}" SelectedItem="{Binding SelectedHttpModule}" />
+                    <ContentControl Grid.Column="1" Content="{Binding SelectedHttpModule.SettingsViewModel}" Margin="12,0,0,0" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Network &amp; Security">
+                <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                    <ListBox ItemsSource="{Binding NetModules}" SelectedItem="{Binding SelectedNetModule}" />
+                    <ContentControl Grid.Column="1" Content="{Binding SelectedNetModule.SettingsViewModel}" Margin="12,0,0,0" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="panel" Margin="12" Padding="12">
+            <ContentControl Content="{Binding TelegramSettings}" />
+        </Border>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="logbox" Margin="12">
+            <ListBox ItemsSource="{Binding LogEntries}" Classes="loglist" behaviors:AutoScrollBehavior.IsEnabled="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" Classes="logline" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</Window>

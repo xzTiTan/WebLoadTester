@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.PreflightSettingsView">
+    <ScrollViewer>
+        <StackPanel Spacing="8">
+            <TextBlock Text="Preflight Settings" Classes="h1" />
+            <TextBlock Text="Target" Classes="label" />
+            <TextBox Text="{Binding Target}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Content="DNS" IsChecked="{Binding CheckDns}" />
+                <CheckBox Content="TCP" IsChecked="{Binding CheckTcp}" />
+                <CheckBox Content="TLS" IsChecked="{Binding CheckTls}" />
+                <CheckBox Content="HTTP" IsChecked="{Binding CheckHttp}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

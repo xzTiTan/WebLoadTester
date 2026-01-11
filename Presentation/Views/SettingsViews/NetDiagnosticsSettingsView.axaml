@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.NetDiagnosticsSettingsView">
+    <ScrollViewer>
+        <StackPanel Spacing="8">
+            <TextBlock Text="Network Diagnostics Settings" Classes="h1" />
+            <TextBlock Text="Hostname" Classes="label" />
+            <TextBox Text="{Binding Hostname}" />
+            <TextBlock Text="Ports" Classes="label" />
+            <ItemsControl ItemsSource="{Binding Ports}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBox Text="{Binding .}" Width="80" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Content="DNS" IsChecked="{Binding EnableDns}" />
+                <CheckBox Content="TCP" IsChecked="{Binding EnableTcp}" />
+                <CheckBox Content="TLS" IsChecked="{Binding EnableTls}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

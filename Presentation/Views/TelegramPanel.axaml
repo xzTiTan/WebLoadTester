@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.TelegramPanel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Telegram" Classes="h1" />
+        <CheckBox Content="Enabled" IsChecked="{Binding Enabled}" />
+        <TextBlock Text="Bot Token" Classes="label" />
+        <TextBox Text="{Binding BotToken}" />
+        <TextBlock Text="Chat Id" Classes="label" />
+        <TextBox Text="{Binding ChatId}" />
+        <TextBlock Text="Notify Mode" Classes="label" />
+        <ComboBox ItemsSource="{Binding NotifyModes}" SelectedItem="{Binding NotifyMode}" />
+        <TextBlock Text="Rate Limit (sec)" Classes="label" />
+        <TextBox Text="{Binding RateLimitSeconds}" />
+    </StackPanel>
+</UserControl>
