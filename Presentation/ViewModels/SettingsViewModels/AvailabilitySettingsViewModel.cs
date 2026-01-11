@@ -25,7 +25,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Availability";
+    public override string Title => "Доступность";
 
     [ObservableProperty]
     private string target = string.Empty;

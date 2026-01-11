@@ -16,7 +16,7 @@ namespace WebLoadTester.Modules.SecurityBaseline;
 public class SecurityBaselineModule : ITestModule
 {
     public string Id => "net.security";
-    public string DisplayName => "Security Baseline";
+    public string DisplayName => "Базовая безопасность";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(SecurityBaselineSettings);
 

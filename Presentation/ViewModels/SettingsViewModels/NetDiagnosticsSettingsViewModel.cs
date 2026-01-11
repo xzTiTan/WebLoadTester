@@ -27,7 +27,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Network Diagnostics";
+    public override string Title => "Сетевая диагностика";
 
     public ObservableCollection<int> Ports { get; }
 

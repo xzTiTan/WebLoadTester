@@ -17,7 +17,7 @@ namespace WebLoadTester.Modules.HttpPerformance;
 public class HttpPerformanceModule : ITestModule
 {
     public string Id => "http.performance";
-    public string DisplayName => "HTTP Performance";
+    public string DisplayName => "HTTP производительность";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpPerformanceSettings);
 

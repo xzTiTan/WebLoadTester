@@ -16,7 +16,7 @@ namespace WebLoadTester.Modules.Preflight;
 public class PreflightModule : ITestModule
 {
     public string Id => "net.preflight";
-    public string DisplayName => "Preflight";
+    public string DisplayName => "Предварительные проверки";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(PreflightSettings);
 

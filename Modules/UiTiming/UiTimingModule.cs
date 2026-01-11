@@ -17,7 +17,7 @@ namespace WebLoadTester.Modules.UiTiming;
 public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
-    public string DisplayName => "UI Timing";
+    public string DisplayName => "UI тайминги";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 

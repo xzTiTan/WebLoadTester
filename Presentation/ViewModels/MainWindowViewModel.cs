@@ -81,11 +81,11 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         Registry = new ModuleRegistry(modules);
-        UiFamily = new ModuleFamilyViewModel("UI Testing", new ObservableCollection<ModuleItemViewModel>(
+        UiFamily = new ModuleFamilyViewModel("UI тестирование", new ObservableCollection<ModuleItemViewModel>(
             Registry.GetByFamily(TestFamily.UiTesting).Select(CreateModuleItem)));
-        HttpFamily = new ModuleFamilyViewModel("HTTP Testing", new ObservableCollection<ModuleItemViewModel>(
+        HttpFamily = new ModuleFamilyViewModel("HTTP тестирование", new ObservableCollection<ModuleItemViewModel>(
             Registry.GetByFamily(TestFamily.HttpTesting).Select(CreateModuleItem)));
-        NetFamily = new ModuleFamilyViewModel("Network & Security", new ObservableCollection<ModuleItemViewModel>(
+        NetFamily = new ModuleFamilyViewModel("Сеть и безопасность", new ObservableCollection<ModuleItemViewModel>(
             Registry.GetByFamily(TestFamily.NetSec).Select(CreateModuleItem)));
 
         ReportsTab = new ReportsTabViewModel(_artifactStore.ReportsRoot);
@@ -108,10 +108,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<string> LogEntries { get; } = new();
 
     [ObservableProperty]
-    private string statusText = "Status: Idle";
+    private string statusText = "Статус: ожидание";
 
     [ObservableProperty]
-    private string progressText = "Progress: 0/0";
+    private string progressText = "Прогресс: 0/0";
 
     [ObservableProperty]
     private bool isRunning;
@@ -146,8 +146,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsRunning = true;
-        StatusText = $"Status: Running {moduleItem.DisplayName}";
-        ProgressText = "Progress: 0/0";
+        StatusText = $"Статус: выполняется {moduleItem.DisplayName}";
+        ProgressText = "Прогресс: 0/0";
 
         _runCts = new CancellationTokenSource();
         var notifier = CreateTelegramNotifier();
@@ -174,7 +174,7 @@ public partial class MainWindowViewModel : ViewModelBase
         finally
         {
             IsRunning = false;
-            StatusText = "Status: Idle";
+            StatusText = "Статус: ожидание";
             ReportsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
         }
@@ -187,7 +187,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Stop()
     {
         _runCts?.Cancel();
-        StatusText = "Status: Stopping";
+        StatusText = "Статус: остановка";
     }
 
     /// <summary>
@@ -244,7 +244,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnProgressChanged(ProgressUpdate update)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            ProgressText = $"Progress: {update.Current}/{update.Total} {update.Message}");
+            ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}");
         if (_runCts != null && _telegramPolicy != null)
         {
             _ = _telegramPolicy.NotifyProgressAsync(update, _runCts.Token);

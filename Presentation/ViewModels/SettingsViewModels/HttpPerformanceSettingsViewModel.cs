@@ -24,7 +24,7 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "HTTP Performance";
+    public override string Title => "HTTP производительность";
 
     [ObservableProperty]
     private string url = string.Empty;

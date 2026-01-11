@@ -24,7 +24,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "HTTP Assets";
+    public override string Title => "HTTP ассеты";
 
     public ObservableCollection<AssetItem> Assets { get; }
 

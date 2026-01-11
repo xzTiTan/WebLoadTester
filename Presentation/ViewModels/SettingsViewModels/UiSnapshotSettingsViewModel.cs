@@ -26,7 +26,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI Snapshot";
+    public override string Title => "UI снимки";
 
     public ObservableCollection<string> Urls { get; }
 

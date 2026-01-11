@@ -16,7 +16,7 @@ namespace WebLoadTester.Modules.HttpFunctional;
 public class HttpFunctionalModule : ITestModule
 {
     public string Id => "http.functional";
-    public string DisplayName => "HTTP Functional";
+    public string DisplayName => "HTTP функциональные проверки";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpFunctionalSettings);
 

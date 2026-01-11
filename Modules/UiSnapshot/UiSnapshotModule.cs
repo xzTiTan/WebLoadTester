@@ -17,7 +17,7 @@ namespace WebLoadTester.Modules.UiSnapshot;
 public class UiSnapshotModule : ITestModule
 {
     public string Id => "ui.snapshot";
-    public string DisplayName => "UI Snapshot";
+    public string DisplayName => "UI снимки";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiSnapshotSettings);
 

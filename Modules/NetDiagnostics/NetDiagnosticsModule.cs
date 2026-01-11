@@ -14,7 +14,7 @@ namespace WebLoadTester.Modules.NetDiagnostics;
 public class NetDiagnosticsModule : ITestModule
 {
     public string Id => "net.diagnostics";
-    public string DisplayName => "Network Diagnostics";
+    public string DisplayName => "Сетевая диагностика";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(NetDiagnosticsSettings);
 

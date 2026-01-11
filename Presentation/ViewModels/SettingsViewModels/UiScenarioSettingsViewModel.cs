@@ -28,7 +28,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI Scenario";
+    public override string Title => "UI сценарий";
 
     public ObservableCollection<UiStep> Steps { get; }
 

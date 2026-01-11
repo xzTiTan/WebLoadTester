@@ -24,7 +24,7 @@ public partial class PreflightSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Preflight";
+    public override string Title => "Предварительные проверки";
 
     [ObservableProperty]
     private string target = string.Empty;

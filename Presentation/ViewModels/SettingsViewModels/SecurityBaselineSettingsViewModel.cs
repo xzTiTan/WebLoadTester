@@ -23,7 +23,7 @@ public partial class SecurityBaselineSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Security Baseline";
+    public override string Title => "Базовая безопасность";
 
     [ObservableProperty]
     private string url = string.Empty;

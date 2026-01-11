@@ -17,7 +17,7 @@ namespace WebLoadTester.Modules.UiScenario;
 public class UiScenarioModule : ITestModule
 {
     public string Id => "ui.scenario";
-    public string DisplayName => "UI Scenario";
+    public string DisplayName => "UI сценарий";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiScenarioSettings);
 

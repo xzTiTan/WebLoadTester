@@ -26,7 +26,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI Timing";
+    public override string Title => "UI тайминги";
 
     public ObservableCollection<string> Urls { get; }
 
