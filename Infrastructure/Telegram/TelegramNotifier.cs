@@ -1,9 +1,6 @@
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.InputFiles;
 using WebLoadTester.Core.Contracts;
 
 namespace WebLoadTester.Infrastructure.Telegram;
@@ -27,14 +24,14 @@ public class TelegramNotifier : ITelegramNotifier
     public async Task SendPhotoAsync(string caption, string filePath, CancellationToken ct)
     {
         await using var stream = File.OpenRead(filePath);
-        var file = new InputOnlineFile(stream, Path.GetFileName(filePath));
+        var file = InputFile.FromStream(stream, Path.GetFileName(filePath));
         await _client.SendPhotoAsync(_chatId, file, caption: caption, cancellationToken: ct);
     }
 
     public async Task SendDocumentAsync(string caption, string filePath, CancellationToken ct)
     {
         await using var stream = File.OpenRead(filePath);
-        var file = new InputOnlineFile(stream, Path.GetFileName(filePath));
+        var file = InputFile.FromStream(stream, Path.GetFileName(filePath));
         await _client.SendDocumentAsync(_chatId, file, caption: caption, cancellationToken: ct);
     }
 }
