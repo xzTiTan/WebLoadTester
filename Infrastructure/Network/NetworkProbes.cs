@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Net;
@@ -18,7 +19,8 @@ public static class NetworkProbes
         {
             var addresses = await Dns.GetHostAddressesAsync(host, ct);
             sw.Stop();
-            return (addresses.Length > 0, sw.Elapsed.TotalMilliseconds, string.Join(", ", addresses));
+            var detail = string.Join(", ", addresses.Select(address => address.ToString()));
+            return (addresses.Length > 0, sw.Elapsed.TotalMilliseconds, detail);
         }
         catch (Exception ex)
         {
@@ -52,8 +54,16 @@ public static class NetworkProbes
             using var client = new TcpClient();
             await client.ConnectAsync(host, port, ct);
             await using var stream = new SslStream(client.GetStream(), false, (_, _, _, _) => true);
-            await stream.AuthenticateAsClientAsync(host, cancellationToken: ct);
+            await stream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+            {
+                TargetHost = host
+            }, ct);
             sw.Stop();
+            if (stream.RemoteCertificate == null)
+            {
+                return (false, sw.Elapsed.TotalMilliseconds, "No certificate", null);
+            }
+
             var cert = new X509Certificate2(stream.RemoteCertificate);
             var daysToExpiry = (int)(cert.NotAfter - DateTime.UtcNow).TotalDays;
             return (true, sw.Elapsed.TotalMilliseconds, cert.Subject, daysToExpiry);

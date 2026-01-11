@@ -94,7 +94,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private ModuleItemViewModel? GetSelectedModule()
     {
-        return selectedTabIndex switch
+        return SelectedTabIndex switch
         {
             0 => UiFamily.SelectedModule,
             1 => HttpFamily.SelectedModule,
@@ -213,7 +213,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private static ModuleItemViewModel CreateModuleItem(ITestModule module)
     {
         var settings = module.CreateDefaultSettings();
-        var settingsVm = module switch
+        SettingsViewModelBase settingsVm = module switch
         {
             UiScenarioModule => new UiScenarioSettingsViewModel((UiScenarioSettings)settings),
             UiSnapshotModule => new UiSnapshotSettingsViewModel((UiSnapshotSettings)settings),

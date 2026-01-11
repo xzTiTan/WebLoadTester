@@ -7,7 +7,7 @@ namespace WebLoadTester.Infrastructure.Telegram;
 
 public class TelegramNotifier : ITelegramNotifier
 {
-    private readonly ITelegramBotClient _client;
+    private readonly TelegramBotClient _client;
     private readonly ChatId _chatId;
 
     public TelegramNotifier(string token, string chatId)
@@ -18,20 +18,20 @@ public class TelegramNotifier : ITelegramNotifier
 
     public Task SendTextAsync(string text, CancellationToken ct)
     {
-        return TelegramBotClientExtensions.SendTextMessageAsync(_client, _chatId, text, cancellationToken: ct);
+        return _client.SendTextMessageAsync(_chatId, text, cancellationToken: ct);
     }
 
     public async Task SendPhotoAsync(string caption, string filePath, CancellationToken ct)
     {
         await using var stream = File.OpenRead(filePath);
         var file = InputFile.FromStream(stream, Path.GetFileName(filePath));
-        await TelegramBotClientExtensions.SendPhotoAsync(_client, _chatId, file, caption: caption, cancellationToken: ct);
+        await _client.SendPhotoAsync(_chatId, file, caption: caption, cancellationToken: ct);
     }
 
     public async Task SendDocumentAsync(string caption, string filePath, CancellationToken ct)
     {
         await using var stream = File.OpenRead(filePath);
         var file = InputFile.FromStream(stream, Path.GetFileName(filePath));
-        await TelegramBotClientExtensions.SendDocumentAsync(_client, _chatId, file, caption: caption, cancellationToken: ct);
+        await _client.SendDocumentAsync(_chatId, file, caption: caption, cancellationToken: ct);
     }
 }
