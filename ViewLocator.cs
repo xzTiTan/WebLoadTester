@@ -2,9 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using WebLoadTester.ViewModels;
-
-namespace WebLoadTester;
+namespace WebLoadTester.Presentation;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.
@@ -30,8 +28,5 @@ public class ViewLocator : IDataTemplate
         return new TextBlock { Text = "Not Found: " + name };
     }
 
-    public bool Match(object? data)
-    {
-        return data is ViewModelBase;
-    }
+    public bool Match(object? data) => data is not null;
 }
