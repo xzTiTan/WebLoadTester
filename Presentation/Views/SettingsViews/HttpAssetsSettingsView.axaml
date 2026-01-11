@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
+             x:DataType="vm:HttpAssetsSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="HTTP Assets Settings" Classes="h1"/>
+        <TextBlock Text="Assets" Classes="label"/>
+        <ItemsControl ItemsSource="{Binding Model.Assets}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding Url}"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Expected Content-Type" Classes="label"/>
+                <TextBox Width="160" Text="{Binding Model.ExpectedContentType}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Max Size (bytes)" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.MaxSizeBytes}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Max Latency (ms)" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.MaxLatencyMs}"/>
+            </StackPanel>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

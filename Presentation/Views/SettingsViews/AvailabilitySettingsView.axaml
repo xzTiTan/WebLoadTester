@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.AvailabilitySettingsView"
+             x:DataType="vm:AvailabilitySettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Availability Settings" Classes="h1"/>
+        <TextBlock Text="Target Type" Classes="label"/>
+        <ComboBox ItemsSource="{Binding Model.TargetTypeValues}" SelectedItem="{Binding Model.TargetType}"/>
+        <TextBlock Text="Target" Classes="label"/>
+        <TextBox Text="{Binding Model.Target}"/>
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Interval (sec)" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.IntervalSeconds}"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Duration (min)" Classes="label"/>
+                <TextBox Width="120" Text="{Binding Model.DurationMinutes}"/>
+            </StackPanel>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>
