@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView">
+    <StackPanel Spacing="6" Margin="12">
+        <TextBlock Text="Assets (one URL per line)" />
+        <TextBox Text="{Binding AssetsText}" AcceptsReturn="True" Height="80" />
+        <TextBlock Text="Expected Content-Type" />
+        <TextBox Text="{Binding ExpectedContentType}" />
+        <TextBlock Text="Max Size (bytes)" />
+        <TextBox Text="{Binding MaxSizeBytes}" />
+        <TextBlock Text="Max Latency (ms)" />
+        <TextBox Text="{Binding MaxLatencyMs}" />
+    </StackPanel>
+</UserControl>

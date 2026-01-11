@@ -2,10 +2,10 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Styling;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using WebLoadTester.ViewModels;
-using WebLoadTester.Views;
+using WebLoadTester.Presentation.Views;
 
 namespace WebLoadTester;
 
@@ -14,6 +14,7 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
     }
 
     public override void OnFrameworkInitializationCompleted()

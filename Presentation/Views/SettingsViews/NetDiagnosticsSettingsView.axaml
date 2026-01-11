@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.NetDiagnosticsSettingsView">
+    <StackPanel Spacing="6" Margin="12">
+        <TextBlock Text="Hostname" />
+        <TextBox Text="{Binding Hostname}" />
+        <TextBlock Text="Ports (comma separated)" />
+        <TextBox Text="{Binding PortsText}" />
+        <CheckBox Content="DNS" IsChecked="{Binding EnableDns}" />
+        <CheckBox Content="TCP" IsChecked="{Binding EnableTcp}" />
+        <CheckBox Content="TLS" IsChecked="{Binding EnableTls}" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.AvailabilitySettingsView">
+    <StackPanel Spacing="6" Margin="12">
+        <TextBlock Text="Target" />
+        <TextBox Text="{Binding Target}" />
+        <TextBlock Text="Interval Seconds" />
+        <TextBox Text="{Binding IntervalSeconds}" />
+        <TextBlock Text="Duration Minutes" />
+        <TextBox Text="{Binding DurationMinutes}" />
+        <TextBlock Text="Timeout (ms)" />
+        <TextBox Text="{Binding TimeoutMs}" />
+    </StackPanel>
+</UserControl>

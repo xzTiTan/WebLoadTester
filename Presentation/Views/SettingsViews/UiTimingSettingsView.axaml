@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiTimingSettingsView">
+    <StackPanel Spacing="6" Margin="12">
+        <TextBlock Text="Urls (one per line)" />
+        <TextBox Text="{Binding UrlsText}" AcceptsReturn="True" Height="80" />
+        <TextBlock Text="Repeats Per Url" />
+        <TextBox Text="{Binding RepeatsPerUrl}" />
+        <TextBlock Text="Concurrency" />
+        <TextBox Text="{Binding Concurrency}" />
+    </StackPanel>
+</UserControl>

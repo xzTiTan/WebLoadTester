@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView">
+    <StackPanel Spacing="6" Margin="12">
+        <TextBlock Text="Endpoints (one URL per line)" />
+        <TextBox Text="{Binding EndpointsText}" AcceptsReturn="True" Height="80" />
+    </StackPanel>
+</UserControl>

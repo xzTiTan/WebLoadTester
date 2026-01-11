@@ -1,0 +1,151 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
+        xmlns:settings="clr-namespace:WebLoadTester.Modules.UiScenario"
+        xmlns:uiSnapshot="clr-namespace:WebLoadTester.Modules.UiSnapshot"
+        xmlns:uiTiming="clr-namespace:WebLoadTester.Modules.UiTiming"
+        xmlns:httpFunc="clr-namespace:WebLoadTester.Modules.HttpFunctional"
+        xmlns:httpPerf="clr-namespace:WebLoadTester.Modules.HttpPerformance"
+        xmlns:httpAssets="clr-namespace:WebLoadTester.Modules.HttpAssets"
+        xmlns:netDiag="clr-namespace:WebLoadTester.Modules.NetDiagnostics"
+        xmlns:availability="clr-namespace:WebLoadTester.Modules.Availability"
+        xmlns:security="clr-namespace:WebLoadTester.Modules.SecurityBaseline"
+        xmlns:preflight="clr-namespace:WebLoadTester.Modules.Preflight"
+        xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.SettingsViews"
+        xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
+        x:Class="WebLoadTester.Presentation.Views.MainWindow"
+        Width="1200" Height="800"
+        Title="WebLoadTester">
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type settings:UiScenarioSettings}">
+            <views:UiScenarioSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type uiSnapshot:UiSnapshotSettings}">
+            <views:UiSnapshotSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type uiTiming:UiTimingSettings}">
+            <views:UiTimingSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type httpFunc:HttpFunctionalSettings}">
+            <views:HttpFunctionalSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type httpPerf:HttpPerformanceSettings}">
+            <views:HttpPerformanceSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type httpAssets:HttpAssetsSettings}">
+            <views:HttpAssetsSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type netDiag:NetDiagnosticsSettings}">
+            <views:NetDiagnosticsSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type availability:AvailabilitySettings}">
+            <views:AvailabilitySettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type security:SecurityBaselineSettings}">
+            <views:SecurityBaselineSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type preflight:PreflightSettings}">
+            <views:PreflightSettingsView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel Margin="12">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10">
+            <Button Content="Start" Command="{Binding StartCommand}" />
+            <Button Content="Stop" Command="{Binding StopCommand}" />
+            <Button Content="Restart" Command="{Binding RestartCommand}" />
+            <TextBlock Text="Status:" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" />
+            <TextBlock Text="Progress:" VerticalAlignment="Center" Margin="20,0,0,0" />
+            <TextBlock Text="{Binding ProgressText}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top" Margin="0,12,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <TabControl Grid.Column="0" SelectedIndex="{Binding SelectedTabIndex}">
+                <TabItem Header="UI Testing">
+                    <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                        <ListBox ItemsSource="{Binding UiModules}" SelectedItem="{Binding SelectedUiModule}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ContentControl Grid.Column="1" Content="{Binding SelectedUiModule.Settings}" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="HTTP Testing">
+                    <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                        <ListBox ItemsSource="{Binding HttpModules}" SelectedItem="{Binding SelectedHttpModule}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ContentControl Grid.Column="1" Content="{Binding SelectedHttpModule.Settings}" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Network &amp; Security">
+                    <Grid ColumnDefinitions="200,*" RowDefinitions="*">
+                        <ListBox ItemsSource="{Binding NetModules}" SelectedItem="{Binding SelectedNetModule}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ContentControl Grid.Column="1" Content="{Binding SelectedNetModule.Settings}" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Reports">
+                    <TextBlock Text="Reports are saved in the reports/ folder." Margin="12" />
+                </TabItem>
+            </TabControl>
+
+            <Border Grid.Column="1" Classes="panel" Margin="12,0,0,0">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Telegram" Classes="h1" />
+                    <CheckBox Content="Enabled" IsChecked="{Binding TelegramSettings.Enabled}" />
+                    <TextBlock Text="Bot Token" />
+                    <TextBox Text="{Binding TelegramSettings.BotToken}" />
+                    <TextBlock Text="Chat Id" />
+                    <TextBox Text="{Binding TelegramSettings.ChatId}" />
+                    <CheckBox Content="Notify on Start" IsChecked="{Binding TelegramSettings.NotifyOnStart}" />
+                    <CheckBox Content="Notify on Finish" IsChecked="{Binding TelegramSettings.NotifyOnFinish}" />
+                    <CheckBox Content="Notify on Error" IsChecked="{Binding TelegramSettings.NotifyOnError}" />
+                    <TextBlock Text="Progress Mode" />
+                    <ComboBox ItemsSource="{Binding TelegramSettings.ProgressModes}" SelectedItem="{Binding TelegramSettings.ProgressMode}" />
+                    <TextBlock Text="Progress Every N" />
+                    <TextBox Text="{Binding TelegramSettings.ProgressEveryN}" />
+                    <TextBlock Text="Progress Every Seconds" />
+                    <TextBox Text="{Binding TelegramSettings.ProgressEverySeconds}" />
+                    <TextBlock Text="Attachments Mode" />
+                    <ComboBox ItemsSource="{Binding TelegramSettings.AttachmentModes}" SelectedItem="{Binding TelegramSettings.AttachmentsMode}" />
+                    <TextBlock Text="Attachments Every N" />
+                    <TextBox Text="{Binding TelegramSettings.AttachmentsEveryN}" />
+                    <TextBlock Text="Rate Limit (sec)" />
+                    <TextBox Text="{Binding TelegramSettings.RateLimitSeconds}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Classes="logbox" DockPanel.Dock="Bottom" Height="220">
+            <ListBox ItemsSource="{Binding Logs}" Classes="loglist" behaviors:AutoScrollBehavior.IsEnabled="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" Classes="logline" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </DockPanel>
+</Window>
