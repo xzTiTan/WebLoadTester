@@ -12,20 +12,20 @@
             <ComboBoxItem>Http</ComboBoxItem>
             <ComboBoxItem>Tcp</ComboBoxItem>
         </ComboBox>
-        <WrapPanel Spacing="8">
-            <StackPanel>
+        <WrapPanel>
+            <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Интервал (сек)" Classes="label" />
                 <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Длительность (мин)" Classes="label" />
                 <TextBox Width="120" Text="{Binding DurationMinutes, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Таймаут (мс)" Classes="label" />
                 <TextBox Width="120" Text="{Binding TimeoutMs, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Порог ошибок" Classes="label" />
                 <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay}" />
             </StackPanel>

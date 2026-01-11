@@ -14,19 +14,19 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel Spacing="8">
-            <StackPanel Width="150">
+        <WrapPanel>
+            <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="170">
+            <StackPanel Width="170" Margin="0,0,8,8">
                 <TextBlock Text="Режим ожидания" Classes="label" />
                 <ComboBox Width="140" SelectedItem="{Binding WaitMode, Mode=TwoWay}">
                     <ComboBoxItem>load</ComboBoxItem>
                     <ComboBoxItem>domcontentloaded</ComboBoxItem>
                 </ComboBox>
             </StackPanel>
-            <StackPanel Width="150">
+            <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Задержка (мс)" Classes="label" />
                 <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay}" />
             </StackPanel>

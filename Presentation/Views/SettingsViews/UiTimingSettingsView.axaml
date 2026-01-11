@@ -14,16 +14,16 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel Spacing="8">
-            <StackPanel Width="150">
+        <WrapPanel>
+            <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Повторы" Classes="label" />
                 <TextBox Width="120" Text="{Binding RepeatsPerUrl, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="150">
+            <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="170">
+            <StackPanel Width="170" Margin="0,0,8,8">
                 <TextBlock Text="Ожидать до" Classes="label" />
                 <ComboBox Width="140" SelectedItem="{Binding WaitUntil, Mode=TwoWay}">
                     <ComboBoxItem>load</ComboBoxItem>
