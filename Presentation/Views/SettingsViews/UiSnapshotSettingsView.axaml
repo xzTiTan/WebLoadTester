@@ -14,7 +14,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
                 <TextBlock Text="Concurrency" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
@@ -30,6 +30,6 @@
                 <TextBlock Text="Delay (ms)" Classes="label" />
                 <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay}" />
             </StackPanel>
-        </WrapPanel>
+        </StackPanel>
     </StackPanel>
 </UserControl>

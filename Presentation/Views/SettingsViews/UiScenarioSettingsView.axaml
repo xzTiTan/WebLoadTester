@@ -9,7 +9,7 @@
         <TextBlock Text="Target URL" Classes="label" />
         <TextBox Text="{Binding TargetUrl, Mode=TwoWay}" />
 
-        <WrapPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
                 <TextBlock Text="Total Runs" Classes="label" />
                 <TextBox Width="120" Text="{Binding TotalRuns, Mode=TwoWay}" />
@@ -18,7 +18,7 @@
                 <TextBlock Text="Concurrency" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
-        </WrapPanel>
+        </StackPanel>
 
         <CheckBox Content="Headless" IsChecked="{Binding Headless, Mode=TwoWay}" />
         <CheckBox Content="Screenshot After Scenario" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />

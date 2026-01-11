@@ -14,7 +14,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
                 <TextBlock Text="Repeats" Classes="label" />
                 <TextBox Width="120" Text="{Binding RepeatsPerUrl, Mode=TwoWay}" />
@@ -30,6 +30,6 @@
                     <ComboBoxItem>domcontentloaded</ComboBoxItem>
                 </ComboBox>
             </StackPanel>
-        </WrapPanel>
+        </StackPanel>
     </StackPanel>
 </UserControl>

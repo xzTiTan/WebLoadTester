@@ -7,7 +7,7 @@
         <TextBlock Text="HTTP Performance Settings" Classes="h1" />
         <TextBlock Text="URL" Classes="label" />
         <TextBox Text="{Binding Url, Mode=TwoWay}" />
-        <WrapPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
                 <TextBlock Text="Total Requests" Classes="label" />
                 <TextBox Width="120" Text="{Binding TotalRequests, Mode=TwoWay}" />
@@ -24,6 +24,6 @@
                 <TextBlock Text="Timeout (sec)" Classes="label" />
                 <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
             </StackPanel>
-        </WrapPanel>
+        </StackPanel>
     </StackPanel>
 </UserControl>
