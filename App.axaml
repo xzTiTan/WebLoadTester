@@ -2,9 +2,41 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               x:Class="WebLoadTester.App"
               xmlns:local="using:WebLoadTester"
+              xmlns:settings="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+              xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.SettingsViews"
               RequestedThemeVariant="Light">
     <Application.DataTemplates>
         <local:ViewLocator/>
+        <DataTemplate DataType="{x:Type settings:UiScenarioSettingsViewModel}">
+            <views:UiScenarioSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:UiSnapshotSettingsViewModel}">
+            <views:UiSnapshotSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:UiTimingSettingsViewModel}">
+            <views:UiTimingSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:HttpFunctionalSettingsViewModel}">
+            <views:HttpFunctionalSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:HttpPerformanceSettingsViewModel}">
+            <views:HttpPerformanceSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:HttpAssetsSettingsViewModel}">
+            <views:HttpAssetsSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:NetDiagnosticsSettingsViewModel}">
+            <views:NetDiagnosticsSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:AvailabilitySettingsViewModel}">
+            <views:AvailabilitySettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:SecurityBaselineSettingsViewModel}">
+            <views:SecurityBaselineSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:PreflightSettingsViewModel}">
+            <views:PreflightSettingsView/>
+        </DataTemplate>
     </Application.DataTemplates>
 
     <Application.Styles>

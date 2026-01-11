@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:domain="clr-namespace:WebLoadTester.Modules.HttpAssets"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
+             x:DataType="vm:HttpAssetsSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="HTTP Assets Settings" Classes="h1" />
+        <TextBlock Text="Assets" Classes="label" />
+        <ItemsControl ItemsSource="{Binding Assets}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="domain:AssetItem">
+                    <TextBlock Text="{Binding Url}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Timeout (sec)" Classes="label" />
+        <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
+    </StackPanel>
+</UserControl>

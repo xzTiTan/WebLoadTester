@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+             x:Class="WebLoadTester.Presentation.Views.Tabs.HttpTestingTab"
+             x:DataType="vm:ModuleFamilyViewModel">
+    <Grid ColumnDefinitions="220,*" RowDefinitions="*" ColumnSpacing="12">
+        <Border Classes="panel" Padding="8" Grid.Column="0">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Modules" Classes="h1" />
+                <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="panel" Grid.Column="1">
+            <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+        </Border>
+    </Grid>
+</UserControl>

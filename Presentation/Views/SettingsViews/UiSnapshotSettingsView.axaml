@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiSnapshotSettingsView"
+             x:DataType="vm:UiSnapshotSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="UI Snapshot Settings" Classes="h1" />
+        <TextBlock Text="URLs" Classes="label" />
+        <ItemsControl ItemsSource="{Binding Urls}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Concurrency" Classes="label" />
+                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Wait Mode" Classes="label" />
+                <ComboBox Width="140" SelectedItem="{Binding WaitMode, Mode=TwoWay}">
+                    <ComboBoxItem>load</ComboBoxItem>
+                    <ComboBoxItem>domcontentloaded</ComboBoxItem>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Delay (ms)" Classes="label" />
+                <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay}" />
+            </StackPanel>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

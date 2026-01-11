@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.AvailabilitySettingsView"
+             x:DataType="vm:AvailabilitySettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Availability" Classes="h1" />
+        <TextBlock Text="Target" Classes="label" />
+        <TextBox Text="{Binding Target, Mode=TwoWay}" />
+        <TextBlock Text="Target Type" Classes="label" />
+        <ComboBox SelectedItem="{Binding TargetType, Mode=TwoWay}">
+            <ComboBoxItem>Http</ComboBoxItem>
+            <ComboBoxItem>Tcp</ComboBoxItem>
+        </ComboBox>
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Interval (sec)" Classes="label" />
+                <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Duration (min)" Classes="label" />
+                <TextBox Width="120" Text="{Binding DurationMinutes, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Timeout (ms)" Classes="label" />
+                <TextBox Width="120" Text="{Binding TimeoutMs, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Fail Threshold" Classes="label" />
+                <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay}" />
+            </StackPanel>
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

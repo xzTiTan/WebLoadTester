@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:domain="clr-namespace:WebLoadTester.Modules.UiScenario"
+             x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
+             x:DataType="vm:UiScenarioSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="UI Scenario Settings" Classes="h1" />
+        <TextBlock Text="Target URL" Classes="label" />
+        <TextBox Text="{Binding TargetUrl, Mode=TwoWay}" />
+
+        <WrapPanel Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Total Runs" Classes="label" />
+                <TextBox Width="120" Text="{Binding TotalRuns, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Concurrency" Classes="label" />
+                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
+            </StackPanel>
+        </WrapPanel>
+
+        <CheckBox Content="Headless" IsChecked="{Binding Headless, Mode=TwoWay}" />
+        <CheckBox Content="Screenshot After Scenario" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
+
+        <TextBlock Text="Steps" Classes="label" />
+        <ItemsControl ItemsSource="{Binding Steps}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="domain:UiStep">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Action}" />
+                        <TextBlock Text="{Binding Selector}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

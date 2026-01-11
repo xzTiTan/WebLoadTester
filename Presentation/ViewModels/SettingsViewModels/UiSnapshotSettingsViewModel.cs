@@ -1,0 +1,39 @@
+using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using WebLoadTester.Modules.UiSnapshot;
+
+namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
+
+public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
+{
+    private readonly UiSnapshotSettings _settings;
+
+    public UiSnapshotSettingsViewModel(UiSnapshotSettings settings)
+    {
+        _settings = settings;
+        Urls = new ObservableCollection<string>(settings.Urls);
+        concurrency = settings.Concurrency;
+        waitMode = settings.WaitMode;
+        delayAfterLoadMs = settings.DelayAfterLoadMs;
+        Urls.CollectionChanged += (_, _) => _settings.Urls = Urls.ToList();
+    }
+
+    public override object Settings => _settings;
+    public override string Title => "UI Snapshot";
+
+    public ObservableCollection<string> Urls { get; }
+
+    [ObservableProperty]
+    private int concurrency;
+
+    [ObservableProperty]
+    private string waitMode = "load";
+
+    [ObservableProperty]
+    private int delayAfterLoadMs;
+
+    partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
+    partial void OnWaitModeChanged(string value) => _settings.WaitMode = value;
+    partial void OnDelayAfterLoadMsChanged(int value) => _settings.DelayAfterLoadMs = value;
+}
