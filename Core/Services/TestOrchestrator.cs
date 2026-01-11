@@ -15,7 +15,13 @@ namespace WebLoadTester.Core.Services;
 /// </summary>
 public class TestOrchestrator
 {
+    /// <summary>
+    /// Писатель JSON-отчётов.
+    /// </summary>
     private readonly JsonReportWriter _jsonWriter;
+    /// <summary>
+    /// Писатель HTML-отчётов.
+    /// </summary>
     private readonly HtmlReportWriter _htmlWriter;
 
     /// <summary>

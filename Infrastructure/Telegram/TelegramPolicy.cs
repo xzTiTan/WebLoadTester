@@ -11,8 +11,17 @@ namespace WebLoadTester.Infrastructure.Telegram;
 /// </summary>
 public class TelegramPolicy
 {
+    /// <summary>
+    /// Конкретный отправитель сообщений в Telegram (может отсутствовать).
+    /// </summary>
     private readonly ITelegramNotifier? _notifier;
+    /// <summary>
+    /// Настройки политики уведомлений.
+    /// </summary>
     private readonly TelegramSettings _settings;
+    /// <summary>
+    /// Время последней отправки для ограничения частоты.
+    /// </summary>
     private DateTimeOffset _lastSent = DateTimeOffset.MinValue;
 
     /// <summary>

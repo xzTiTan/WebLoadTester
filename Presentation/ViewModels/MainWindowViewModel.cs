@@ -31,13 +31,34 @@ namespace WebLoadTester.Presentation.ViewModels;
 /// </summary>
 public partial class MainWindowViewModel : ViewModelBase
 {
+    /// <summary>
+    /// Шина логов для отображения в UI.
+    /// </summary>
     private readonly LogBus _logBus = new();
+    /// <summary>
+    /// Шина прогресса выполнения для обновления статуса.
+    /// </summary>
     private readonly ProgressBus _progressBus = new();
+    /// <summary>
+    /// Хранилище артефактов запусков (отчёты, скриншоты).
+    /// </summary>
     private readonly ArtifactStore _artifactStore = new();
+    /// <summary>
+    /// Лимиты на выполнение тестов, применяемые при запуске.
+    /// </summary>
     private readonly Limits _limits = new();
+    /// <summary>
+    /// Оркестратор запуска модулей и формирования отчётов.
+    /// </summary>
     private readonly TestOrchestrator _orchestrator;
 
+    /// <summary>
+    /// Токен отмены текущего запуска.
+    /// </summary>
     private CancellationTokenSource? _runCts;
+    /// <summary>
+    /// Политика Telegram-уведомлений для текущего запуска.
+    /// </summary>
     private TelegramPolicy? _telegramPolicy;
 
     /// <summary>
