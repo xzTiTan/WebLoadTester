@@ -10,9 +10,9 @@
         <ItemsControl ItemsSource="{Binding Endpoints}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="domain:HttpEndpoint">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{Binding Name}" />
-                        <TextBlock Text="{Binding Url}" />
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Url}" TextWrapping="Wrap" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

@@ -3,14 +3,15 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
              x:Class="WebLoadTester.Presentation.Views.Tabs.NetSecTab"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid ColumnDefinitions="220,*" RowDefinitions="*" ColumnSpacing="12">
+    <Grid ColumnDefinitions="260,*" RowDefinitions="*" ColumnSpacing="12">
         <Border Classes="panel" Padding="8" Grid.Column="0">
             <StackPanel Spacing="6">
                 <TextBlock Text="Модули" Classes="h1" />
-                <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
+                         HorizontalContentAlignment="Stretch">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

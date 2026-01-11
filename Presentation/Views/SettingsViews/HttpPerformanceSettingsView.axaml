@@ -7,23 +7,23 @@
         <TextBlock Text="Настройки HTTP производительности" Classes="h1" />
         <TextBlock Text="URL" Classes="label" />
         <TextBox Text="{Binding Url, Mode=TwoWay}" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <StackPanel>
+        <WrapPanel Spacing="8">
+            <StackPanel Width="150">
                 <TextBlock Text="Всего запросов" Classes="label" />
                 <TextBox Width="120" Text="{Binding TotalRequests, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Width="150">
                 <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Width="150">
                 <TextBlock Text="Ограничение RPS" Classes="label" />
                 <TextBox Width="120" Text="{Binding RpsLimit, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
+            <StackPanel Width="150">
                 <TextBlock Text="Таймаут (сек)" Classes="label" />
                 <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
             </StackPanel>
-        </StackPanel>
+        </WrapPanel>
     </StackPanel>
 </UserControl>

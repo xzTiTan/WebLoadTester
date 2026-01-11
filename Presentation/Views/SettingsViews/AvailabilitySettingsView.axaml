@@ -12,7 +12,7 @@
             <ComboBoxItem>Http</ComboBoxItem>
             <ComboBoxItem>Tcp</ComboBoxItem>
         </ComboBox>
-        <StackPanel Orientation="Horizontal" Spacing="8">
+        <WrapPanel Spacing="8">
             <StackPanel>
                 <TextBlock Text="Интервал (сек)" Classes="label" />
                 <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
@@ -29,6 +29,6 @@
                 <TextBlock Text="Порог ошибок" Classes="label" />
                 <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay}" />
             </StackPanel>
-        </StackPanel>
+        </WrapPanel>
     </StackPanel>
 </UserControl>

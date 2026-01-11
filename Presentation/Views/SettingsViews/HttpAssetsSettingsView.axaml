@@ -10,7 +10,7 @@
         <ItemsControl ItemsSource="{Binding Assets}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="domain:AssetItem">
-                    <TextBlock Text="{Binding Url}" />
+                    <TextBlock Text="{Binding Url}" TextWrapping="Wrap" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
