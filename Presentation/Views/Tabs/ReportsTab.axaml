@@ -5,7 +5,7 @@
              x:DataType="vm:ReportsTabViewModel">
     <Border Classes="panel" Padding="8">
         <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
-            <TextBlock Text="Reports" Classes="h1" />
+            <TextBlock Text="Отчёты" Classes="h1" />
 
             <ListBox Grid.Row="1" ItemsSource="{Binding Reports}" SelectedItem="{Binding SelectedReport, Mode=TwoWay}">
                 <ListBox.ItemTemplate>
@@ -16,9 +16,9 @@
             </ListBox>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
-                <Button Content="Refresh" Command="{Binding RefreshCommand}" />
-                <Button Content="Open HTML" Command="{Binding OpenHtmlCommand}" />
-                <Button Content="Open Folder" Command="{Binding OpenFolderCommand}" />
+                <Button Content="Обновить" Command="{Binding RefreshCommand}" />
+                <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" />
+                <Button Content="Открыть папку" Command="{Binding OpenFolderCommand}" />
             </StackPanel>
         </Grid>
     </Border>

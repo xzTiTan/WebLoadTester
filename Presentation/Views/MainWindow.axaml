@@ -12,46 +12,46 @@
         <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="panel">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Start" Command="{Binding StartCommand}" />
-                    <Button Content="Stop" Command="{Binding StopCommand}" />
-                    <Button Content="Restart" Command="{Binding RestartCommand}" />
+                    <Button Content="Старт" Command="{Binding StartCommand}" />
+                    <Button Content="Стоп" Command="{Binding StopCommand}" />
+                    <Button Content="Перезапуск" Command="{Binding RestartCommand}" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" />
             </DockPanel>
         </Border>
 
         <TabControl Grid.Row="1" Grid.Column="0" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-            <TabItem Header="UI Testing">
+            <TabItem Header="UI тестирование">
                 <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
             </TabItem>
-            <TabItem Header="HTTP Testing">
+            <TabItem Header="HTTP тестирование">
                 <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
             </TabItem>
-            <TabItem Header="Network &amp; Security">
+            <TabItem Header="Сеть и безопасность">
                 <tabs:NetSecTab DataContext="{Binding NetFamily}" />
             </TabItem>
-            <TabItem Header="Reports">
+            <TabItem Header="Отчёты">
                 <tabs:ReportsTab DataContext="{Binding ReportsTab}" />
             </TabItem>
         </TabControl>
 
         <Border Grid.Row="1" Grid.Column="1" Classes="panel">
             <StackPanel Spacing="8">
-                <TextBlock Text="Telegram Settings" Classes="h1" />
-                <CheckBox Content="Enabled" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
-                <TextBlock Text="Bot Token" Classes="label" />
+                <TextBlock Text="Настройки Telegram" Classes="h1" />
+                <CheckBox Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
+                <TextBlock Text="Токен бота" Classes="label" />
                 <TextBox Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" />
-                <TextBlock Text="Chat Id" Classes="label" />
+                <TextBlock Text="Идентификатор чата" Classes="label" />
                 <TextBox Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
-                <CheckBox Content="Notify on start" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
-                <CheckBox Content="Notify on finish" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
-                <CheckBox Content="Notify on error" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
-                <TextBlock Text="Progress Mode" Classes="label" />
+                <CheckBox Content="Уведомлять о старте" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
+                <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
+                <CheckBox Content="Уведомлять об ошибке" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
+                <TextBlock Text="Режим прогресса" Classes="label" />
                 <ComboBox ItemsSource="{Binding TelegramSettings.ProgressModes}"
                           SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
-                <TextBlock Text="Progress Every N" Classes="label" />
+                <TextBlock Text="Прогресс каждые N" Classes="label" />
                 <TextBox Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
-                <TextBlock Text="Rate Limit (sec)" Classes="label" />
+                <TextBlock Text="Ограничение частоты (сек)" Classes="label" />
                 <TextBox Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
             </StackPanel>
         </Border>
@@ -59,7 +59,7 @@
         <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="panel">
             <Grid RowDefinitions="Auto,*" RowSpacing="6">
                 <DockPanel Grid.Row="0">
-                    <TextBlock Text="Live Log" Classes="h1" />
+                    <TextBlock Text="Живой лог" Classes="h1" />
                     <TextBlock DockPanel.Dock="Right" Text="{Binding ProgressText}" />
                 </DockPanel>
                 <Border Grid.Row="1" Classes="logbox">

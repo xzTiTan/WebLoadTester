@@ -134,7 +134,7 @@ public class UiTimingModule : ITestModule
                     finally
                     {
                         var done = Interlocked.Increment(ref completed);
-                        ctx.Progress.Report(new ProgressUpdate(done, total, "UI Timing"));
+                        ctx.Progress.Report(new ProgressUpdate(done, total, "UI тайминги"));
                     }
                 }
                 finally

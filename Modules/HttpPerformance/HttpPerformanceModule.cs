@@ -126,7 +126,7 @@ public class HttpPerformanceModule : ITestModule
                     finally
                     {
                         var done = Interlocked.Increment(ref completed);
-                        ctx.Progress.Report(new ProgressUpdate(done, s.TotalRequests, "HTTP Performance"));
+                        ctx.Progress.Report(new ProgressUpdate(done, s.TotalRequests, "HTTP производительность"));
                     }
                 }
                 finally

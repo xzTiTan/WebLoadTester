@@ -157,7 +157,7 @@ public class HttpFunctionalModule : ITestModule
             finally
             {
                 current++;
-                ctx.Progress.Report(new ProgressUpdate(current, s.Endpoints.Count, "HTTP Functional"));
+                ctx.Progress.Report(new ProgressUpdate(current, s.Endpoints.Count, "HTTP функциональные проверки"));
             }
         }
 

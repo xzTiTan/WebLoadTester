@@ -129,7 +129,7 @@ public class HttpAssetsModule : ITestModule
             finally
             {
                 current++;
-                ctx.Progress.Report(new ProgressUpdate(current, s.Assets.Count, "HTTP Assets"));
+                ctx.Progress.Report(new ProgressUpdate(current, s.Assets.Count, "HTTP ассеты"));
             }
         }
 

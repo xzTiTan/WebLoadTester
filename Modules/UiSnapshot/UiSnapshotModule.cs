@@ -137,7 +137,7 @@ public class UiSnapshotModule : ITestModule
                 finally
                 {
                     var done = Interlocked.Increment(ref completed);
-                    ctx.Progress.Report(new ProgressUpdate(done, s.Urls.Count, "UI Snapshot"));
+                    ctx.Progress.Report(new ProgressUpdate(done, s.Urls.Count, "UI снимки"));
                 }
             }
             finally

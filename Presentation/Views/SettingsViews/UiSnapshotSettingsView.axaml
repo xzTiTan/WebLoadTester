@@ -4,8 +4,8 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiSnapshotSettingsView"
              x:DataType="vm:UiSnapshotSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="UI Snapshot Settings" Classes="h1" />
-        <TextBlock Text="URLs" Classes="label" />
+        <TextBlock Text="Настройки UI снимков" Classes="h1" />
+        <TextBlock Text="URL-адреса" Classes="label" />
         <ItemsControl ItemsSource="{Binding Urls}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -16,18 +16,18 @@
 
         <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
-                <TextBlock Text="Concurrency" Classes="label" />
+                <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Wait Mode" Classes="label" />
+                <TextBlock Text="Режим ожидания" Classes="label" />
                 <ComboBox Width="140" SelectedItem="{Binding WaitMode, Mode=TwoWay}">
                     <ComboBoxItem>load</ComboBoxItem>
                     <ComboBoxItem>domcontentloaded</ComboBoxItem>
                 </ComboBox>
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Delay (ms)" Classes="label" />
+                <TextBlock Text="Задержка (мс)" Classes="label" />
                 <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay}" />
             </StackPanel>
         </StackPanel>

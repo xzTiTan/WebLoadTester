@@ -125,7 +125,7 @@ public class AvailabilityModule : ITestModule
                 Details = consecutiveFails >= s.FailThreshold ? "Downtime window" : ""
             });
 
-            ctx.Progress.Report(new ProgressUpdate(i + 1, totalChecks, "Availability"));
+            ctx.Progress.Report(new ProgressUpdate(i + 1, totalChecks, "Доступность"));
             await Task.Delay(TimeSpan.FromSeconds(s.IntervalSeconds), ct);
         }
 

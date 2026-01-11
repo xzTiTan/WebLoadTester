@@ -169,7 +169,7 @@ public class UiScenarioModule : ITestModule
                 finally
                 {
                     var done = Interlocked.Increment(ref completed);
-                    ctx.Progress.Report(new ProgressUpdate(done, s.TotalRuns, "UI Scenario"));
+                    ctx.Progress.Report(new ProgressUpdate(done, s.TotalRuns, "UI сценарий"));
                 }
             }
             finally

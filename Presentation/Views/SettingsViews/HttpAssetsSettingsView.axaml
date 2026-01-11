@@ -5,8 +5,8 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
              x:DataType="vm:HttpAssetsSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="HTTP Assets Settings" Classes="h1" />
-        <TextBlock Text="Assets" Classes="label" />
+        <TextBlock Text="Настройки HTTP ассетов" Classes="h1" />
+        <TextBlock Text="Ассеты" Classes="label" />
         <ItemsControl ItemsSource="{Binding Assets}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="domain:AssetItem">
@@ -14,7 +14,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Text="Timeout (sec)" Classes="label" />
+        <TextBlock Text="Таймаут (сек)" Classes="label" />
         <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>

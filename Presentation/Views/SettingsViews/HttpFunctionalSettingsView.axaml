@@ -5,8 +5,8 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView"
              x:DataType="vm:HttpFunctionalSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="HTTP Functional Settings" Classes="h1" />
-        <TextBlock Text="Endpoints" Classes="label" />
+        <TextBlock Text="Настройки HTTP функциональных проверок" Classes="h1" />
+        <TextBlock Text="Эндпоинты" Classes="label" />
         <ItemsControl ItemsSource="{Binding Endpoints}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="domain:HttpEndpoint">
@@ -17,7 +17,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Text="Timeout (sec)" Classes="label" />
+        <TextBlock Text="Таймаут (сек)" Classes="label" />
         <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>

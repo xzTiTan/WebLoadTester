@@ -5,25 +5,25 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="UI Scenario Settings" Classes="h1" />
-        <TextBlock Text="Target URL" Classes="label" />
+        <TextBlock Text="Настройки UI сценария" Classes="h1" />
+        <TextBlock Text="Целевой URL" Classes="label" />
         <TextBox Text="{Binding TargetUrl, Mode=TwoWay}" />
 
         <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
-                <TextBlock Text="Total Runs" Classes="label" />
+                <TextBlock Text="Всего прогонов" Classes="label" />
                 <TextBox Width="120" Text="{Binding TotalRuns, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Concurrency" Classes="label" />
+                <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
         </StackPanel>
 
-        <CheckBox Content="Headless" IsChecked="{Binding Headless, Mode=TwoWay}" />
-        <CheckBox Content="Screenshot After Scenario" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
+        <CheckBox Content="Без интерфейса (headless)" IsChecked="{Binding Headless, Mode=TwoWay}" />
+        <CheckBox Content="Скриншот после сценария" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
 
-        <TextBlock Text="Steps" Classes="label" />
+        <TextBlock Text="Шаги" Classes="label" />
         <ItemsControl ItemsSource="{Binding Steps}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="domain:UiStep">

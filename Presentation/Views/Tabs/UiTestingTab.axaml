@@ -7,7 +7,7 @@
     <Grid ColumnDefinitions="220,*" RowDefinitions="*" ColumnSpacing="12">
         <Border Classes="panel" Padding="8" Grid.Column="0">
             <StackPanel Spacing="6">
-                <TextBlock Text="Modules" Classes="h1" />
+                <TextBlock Text="Модули" Classes="h1" />
                 <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

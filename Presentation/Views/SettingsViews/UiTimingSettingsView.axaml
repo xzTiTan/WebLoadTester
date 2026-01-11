@@ -4,8 +4,8 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiTimingSettingsView"
              x:DataType="vm:UiTimingSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="UI Timing Settings" Classes="h1" />
-        <TextBlock Text="URLs" Classes="label" />
+        <TextBlock Text="Настройки UI таймингов" Classes="h1" />
+        <TextBlock Text="URL-адреса" Classes="label" />
         <ItemsControl ItemsSource="{Binding Urls}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -16,15 +16,15 @@
 
         <StackPanel Orientation="Horizontal" Spacing="8">
             <StackPanel>
-                <TextBlock Text="Repeats" Classes="label" />
+                <TextBlock Text="Повторы" Classes="label" />
                 <TextBox Width="120" Text="{Binding RepeatsPerUrl, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Concurrency" Classes="label" />
+                <TextBlock Text="Параллельность" Classes="label" />
                 <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Wait Until" Classes="label" />
+                <TextBlock Text="Ожидать до" Classes="label" />
                 <ComboBox Width="140" SelectedItem="{Binding WaitUntil, Mode=TwoWay}">
                     <ComboBoxItem>load</ComboBoxItem>
                     <ComboBoxItem>domcontentloaded</ComboBoxItem>

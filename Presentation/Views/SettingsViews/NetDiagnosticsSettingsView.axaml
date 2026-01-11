@@ -4,15 +4,15 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.NetDiagnosticsSettingsView"
              x:DataType="vm:NetDiagnosticsSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="Network Diagnostics" Classes="h1" />
-        <TextBlock Text="Hostname" Classes="label" />
+        <TextBlock Text="Сетевая диагностика" Classes="h1" />
+        <TextBlock Text="Имя хоста" Classes="label" />
         <TextBox Text="{Binding Hostname, Mode=TwoWay}" />
         <StackPanel Orientation="Horizontal" Spacing="8">
             <CheckBox Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
             <CheckBox Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
             <CheckBox Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
         </StackPanel>
-        <TextBlock Text="Ports" Classes="label" />
+        <TextBlock Text="Порты" Classes="label" />
         <ItemsControl ItemsSource="{Binding Ports}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
