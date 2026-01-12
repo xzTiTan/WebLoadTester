@@ -22,7 +22,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox ItemsSource="{Binding DataContext.MethodOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            <ComboBox ItemsSource="{Binding DataContext.MethodOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                       SelectedItem="{Binding Method, Mode=TwoWay}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>

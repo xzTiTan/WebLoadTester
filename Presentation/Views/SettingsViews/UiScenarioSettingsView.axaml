@@ -36,7 +36,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            <ComboBox ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                       SelectedItem="{Binding Action, Mode=TwoWay}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
