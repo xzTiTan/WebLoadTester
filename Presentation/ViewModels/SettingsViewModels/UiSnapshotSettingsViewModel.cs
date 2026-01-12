@@ -3,6 +3,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiSnapshot;
+using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
