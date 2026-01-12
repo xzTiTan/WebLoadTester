@@ -1,4 +1,4 @@
-namespace WebLoadTester.Core.Domain;
+namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 /// <summary>
 /// Политика поведения при ошибке шага UI-сценария.

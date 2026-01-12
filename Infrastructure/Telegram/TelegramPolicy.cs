@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 namespace WebLoadTester.Infrastructure.Telegram;
 

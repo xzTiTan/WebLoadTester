@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 namespace WebLoadTester.Modules.UiScenario;
 

@@ -8,6 +8,7 @@ using Microsoft.Playwright;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Infrastructure.Playwright;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 namespace WebLoadTester.Modules.UiScenario;
 
