@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:domain="clr-namespace:WebLoadTester.Modules.UiScenario"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel">
     <StackPanel Spacing="8">
@@ -24,15 +23,25 @@
         <CheckBox Content="Скриншот после сценария" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
 
         <TextBlock Text="Шаги" Classes="label" />
-        <ItemsControl ItemsSource="{Binding Steps}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="domain:UiStep">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{Binding Action}" />
-                        <TextBlock Text="{Binding Selector}" />
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <DataGrid ItemsSource="{Binding Steps}"
+                  SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  Height="200">
+            <DataGrid.Columns>
+                <DataGridComboBoxColumn Header="Type"
+                                        SelectedItemBinding="{Binding Action}"
+                                        ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        Width="160" />
+                <DataGridTextColumn Header="Selector/Url" Binding="{Binding Selector}" Width="2*" />
+                <DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="2*" />
+                <DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddStepCommand}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
+            <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
+            <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiScenario;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -31,6 +33,11 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     public override string Title => "UI сценарий";
 
     public ObservableCollection<UiStep> Steps { get; }
+
+    public UiStepAction[] ActionOptions { get; } = Enum.GetValues<UiStepAction>();
+
+    [ObservableProperty]
+    private UiStep? selectedStep;
 
     [ObservableProperty]
     private string targetUrl = "https://example.com";
@@ -67,4 +74,57 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     /// Синхронизирует флаг сохранения скриншота после сценария.
     /// </summary>
     partial void OnScreenshotAfterScenarioChanged(bool value) => _settings.ScreenshotAfterScenario = value;
+
+    [RelayCommand]
+    private void AddStep()
+    {
+        var step = new UiStep
+        {
+            Action = UiStepAction.WaitForVisible,
+            Selector = string.Empty,
+            Text = string.Empty,
+            TimeoutMs = 5000
+        };
+        Steps.Add(step);
+        SelectedStep = step;
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedStep()
+    {
+        if (SelectedStep != null)
+        {
+            Steps.Remove(SelectedStep);
+        }
+    }
+
+    [RelayCommand]
+    private void MoveStepUp()
+    {
+        if (SelectedStep == null)
+        {
+            return;
+        }
+
+        var index = Steps.IndexOf(SelectedStep);
+        if (index > 0)
+        {
+            Steps.Move(index, index - 1);
+        }
+    }
+
+    [RelayCommand]
+    private void MoveStepDown()
+    {
+        if (SelectedStep == null)
+        {
+            return;
+        }
+
+        var index = Steps.IndexOf(SelectedStep);
+        if (index >= 0 && index < Steps.Count - 1)
+        {
+            Steps.Move(index, index + 1);
+        }
+    }
 }

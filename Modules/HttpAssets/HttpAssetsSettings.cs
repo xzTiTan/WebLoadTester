@@ -7,6 +7,7 @@ namespace WebLoadTester.Modules.HttpAssets;
 /// </summary>
 public class HttpAssetsSettings
 {
+    public string BaseUrl { get; set; } = "https://example.com";
     public List<AssetItem> Assets { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 10;
 }
@@ -16,7 +17,7 @@ public class HttpAssetsSettings
 /// </summary>
 public class AssetItem
 {
-    public string Url { get; set; } = string.Empty;
+    public string Path { get; set; } = "/";
     public string? ExpectedContentType { get; set; }
     public int? MaxSizeBytes { get; set; }
     public int? MaxLatencyMs { get; set; }

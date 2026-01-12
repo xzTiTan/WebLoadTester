@@ -29,7 +29,7 @@ public class HttpFunctionalModule : ITestModule
         {
             Endpoints = new List<HttpEndpoint>
             {
-                new() { Name = "Example", Url = "https://example.com" }
+                new() { Name = "Example", Path = "/" }
             }
         };
     }
@@ -51,11 +51,20 @@ public class HttpFunctionalModule : ITestModule
             errors.Add("At least one endpoint required");
         }
 
+        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        {
+            errors.Add("BaseUrl is required");
+        }
+
         foreach (var endpoint in s.Endpoints)
         {
-            if (string.IsNullOrWhiteSpace(endpoint.Url))
+            if (string.IsNullOrWhiteSpace(endpoint.Path))
             {
-                errors.Add("Endpoint URL is required");
+                errors.Add("Endpoint path is required");
+            }
+            if (string.IsNullOrWhiteSpace(endpoint.Method))
+            {
+                errors.Add("Endpoint method is required");
             }
         }
 
@@ -91,7 +100,9 @@ public class HttpFunctionalModule : ITestModule
             string? error = null;
             try
             {
-                var request = new HttpRequestMessage(endpoint.Method, endpoint.Url);
+                var request = new HttpRequestMessage(
+                    new HttpMethod(endpoint.Method),
+                    ResolveUrl(s.BaseUrl, endpoint.Path));
                 foreach (var header in endpoint.Headers)
                 {
                     request.Headers.TryAddWithoutValidation(header.Key, header.Value);
@@ -164,5 +175,16 @@ public class HttpFunctionalModule : ITestModule
         report.Results = results;
         report.FinishedAt = ctx.Now;
         return report;
+    }
+
+    private static string ResolveUrl(string baseUrl, string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        var root = new Uri(baseUrl, UriKind.Absolute);
+        return new Uri(root, path).ToString();
     }
 }

@@ -8,6 +8,7 @@ namespace WebLoadTester.Modules.HttpFunctional;
 /// </summary>
 public class HttpFunctionalSettings
 {
+    public string BaseUrl { get; set; } = "https://example.com";
     public List<HttpEndpoint> Endpoints { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 15;
 }
@@ -18,8 +19,8 @@ public class HttpFunctionalSettings
 public class HttpEndpoint
 {
     public string Name { get; set; } = string.Empty;
-    public string Url { get; set; } = string.Empty;
-    public HttpMethod Method { get; set; } = HttpMethod.Get;
+    public string Path { get; set; } = "/";
+    public string Method { get; set; } = HttpMethod.Get.Method;
     public Dictionary<string, string> Headers { get; set; } = new();
     public string? Body { get; set; }
     public int? StatusCodeEquals { get; set; }

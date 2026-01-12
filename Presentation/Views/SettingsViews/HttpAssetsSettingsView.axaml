@@ -1,19 +1,28 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:domain="clr-namespace:WebLoadTester.Modules.HttpAssets"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
              x:DataType="vm:HttpAssetsSettingsViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки HTTP ассетов" Classes="h1" />
-        <TextBlock Text="Ассеты" Classes="label" />
-        <ItemsControl ItemsSource="{Binding Assets}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="domain:AssetItem">
-                    <TextBlock Text="{Binding Url}" TextWrapping="Wrap" />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <TextBlock Text="Base URL" Classes="label" />
+        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
+        <TextBlock Text="Ассеты (пути относительно Base URL)" Classes="label" />
+        <DataGrid ItemsSource="{Binding Assets}"
+                  SelectedItem="{Binding SelectedAsset, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  Height="200">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
+                <DataGridTextColumn Header="ContentType" Binding="{Binding ExpectedContentType}" Width="*" />
+                <DataGridTextColumn Header="MaxSizeBytes" Binding="{Binding MaxSizeBytes}" Width="*" />
+                <DataGridTextColumn Header="MaxLatencyMs" Binding="{Binding MaxLatencyMs}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
+        </StackPanel>
         <TextBlock Text="Таймаут (сек)" Classes="label" />
         <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
     </StackPanel>

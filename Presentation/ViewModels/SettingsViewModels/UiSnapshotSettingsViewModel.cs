@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -18,17 +19,24 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     public UiSnapshotSettingsViewModel(UiSnapshotSettings settings)
     {
         _settings = settings;
-        Urls = new ObservableCollection<string>(settings.Urls);
+        baseUrl = settings.BaseUrl;
+        Paths = new ObservableCollection<string>(settings.Paths);
         concurrency = settings.Concurrency;
         waitMode = settings.WaitMode;
         delayAfterLoadMs = settings.DelayAfterLoadMs;
-        Urls.CollectionChanged += (_, _) => _settings.Urls = Urls.ToList();
+        Paths.CollectionChanged += (_, _) => _settings.Paths = Paths.ToList();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI снимки";
 
-    public ObservableCollection<string> Urls { get; }
+    public ObservableCollection<string> Paths { get; }
+
+    [ObservableProperty]
+    private string baseUrl = string.Empty;
+
+    [ObservableProperty]
+    private string? selectedPath;
 
     [ObservableProperty]
     private int concurrency;
@@ -39,6 +47,10 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private int delayAfterLoadMs;
 
+    /// <summary>
+    /// Синхронизирует базовый URL.
+    /// </summary>
+    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
     /// <summary>
     /// Синхронизирует уровень конкурентности.
     /// </summary>
@@ -51,4 +63,19 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     /// Синхронизирует задержку после загрузки.
     /// </summary>
     partial void OnDelayAfterLoadMsChanged(int value) => _settings.DelayAfterLoadMs = value;
+
+    [RelayCommand]
+    private void AddPath()
+    {
+        Paths.Add("/");
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedPath()
+    {
+        if (SelectedPath != null)
+        {
+            Paths.Remove(SelectedPath);
+        }
+    }
 }

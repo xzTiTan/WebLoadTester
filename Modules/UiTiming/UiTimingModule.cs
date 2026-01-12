@@ -28,7 +28,7 @@ public class UiTimingModule : ITestModule
     {
         return new UiTimingSettings
         {
-            Urls = new List<string> { "https://example.com" }
+            Paths = new List<string> { "/" }
         };
     }
 
@@ -44,9 +44,19 @@ public class UiTimingModule : ITestModule
             return errors;
         }
 
-        if (s.Urls.Count == 0)
+        if (s.Paths.Count == 0)
         {
             errors.Add("At least one URL is required");
+        }
+
+        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        {
+            errors.Add("BaseUrl is required");
+        }
+
+        if (s.Paths.Any(path => string.IsNullOrWhiteSpace(path)))
+        {
+            errors.Add("Path is required");
         }
 
         if (s.RepeatsPerUrl <= 0)
@@ -94,10 +104,11 @@ public class UiTimingModule : ITestModule
         var waitUntil = s.WaitUntil == "domcontentloaded" ? WaitUntilState.DOMContentLoaded : WaitUntilState.Load;
         var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
-        var total = s.Urls.Count * s.RepeatsPerUrl;
+        var urls = s.Paths.Select(path => ResolveUrl(s.BaseUrl, path)).ToList();
+        var total = urls.Count * s.RepeatsPerUrl;
         var completed = 0;
 
-        var tasks = s.Urls.SelectMany(url => Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (url, iteration)))
+        var tasks = urls.SelectMany(url => Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (url, iteration)))
             .Select(async item =>
             {
                 await semaphore.WaitAsync(ct);
@@ -147,5 +158,16 @@ public class UiTimingModule : ITestModule
         report.Results = results;
         report.FinishedAt = ctx.Now;
         return report;
+    }
+
+    private static string ResolveUrl(string baseUrl, string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        var root = new Uri(baseUrl, UriKind.Absolute);
+        return new Uri(root, path).ToString();
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiTiming;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -18,17 +19,24 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     public UiTimingSettingsViewModel(UiTimingSettings settings)
     {
         _settings = settings;
-        Urls = new ObservableCollection<string>(settings.Urls);
+        baseUrl = settings.BaseUrl;
+        Paths = new ObservableCollection<string>(settings.Paths);
         repeatsPerUrl = settings.RepeatsPerUrl;
         concurrency = settings.Concurrency;
         waitUntil = settings.WaitUntil;
-        Urls.CollectionChanged += (_, _) => _settings.Urls = Urls.ToList();
+        Paths.CollectionChanged += (_, _) => _settings.Paths = Paths.ToList();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI тайминги";
 
-    public ObservableCollection<string> Urls { get; }
+    public ObservableCollection<string> Paths { get; }
+
+    [ObservableProperty]
+    private string baseUrl = string.Empty;
+
+    [ObservableProperty]
+    private string? selectedPath;
 
     [ObservableProperty]
     private int repeatsPerUrl;
@@ -39,6 +47,10 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private string waitUntil = "load";
 
+    /// <summary>
+    /// Синхронизирует базовый URL.
+    /// </summary>
+    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
     /// <summary>
     /// Синхронизирует количество повторов на URL.
     /// </summary>
@@ -51,4 +63,19 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
     partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
+
+    [RelayCommand]
+    private void AddPath()
+    {
+        Paths.Add("/");
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedPath()
+    {
+        if (SelectedPath != null)
+        {
+            Paths.Remove(SelectedPath);
+        }
+    }
 }

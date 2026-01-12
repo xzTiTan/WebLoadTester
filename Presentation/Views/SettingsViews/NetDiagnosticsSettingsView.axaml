@@ -13,12 +13,22 @@
             <CheckBox Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
         </StackPanel>
         <TextBlock Text="Порты" Classes="label" />
-        <ItemsControl ItemsSource="{Binding Ports}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <CheckBox Content="Авто-порты по схеме URL (http→80, https→443)"
+                  IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
+        <DataGrid ItemsSource="{Binding Ports}"
+                  SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  Height="140"
+                  IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Port" Binding="{Binding Value}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddPortCommand}"
+                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
+                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

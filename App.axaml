@@ -3,8 +3,12 @@
               x:Class="WebLoadTester.App"
               xmlns:local="using:WebLoadTester"
               xmlns:settings="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+              xmlns:conv="clr-namespace:WebLoadTester.Presentation.Converters"
               xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.SettingsViews"
               RequestedThemeVariant="Light">
+    <Application.Resources>
+        <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
+    </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
         <DataTemplate DataType="{x:Type settings:UiScenarioSettingsViewModel}">

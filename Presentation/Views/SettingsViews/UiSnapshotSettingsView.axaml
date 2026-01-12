@@ -5,14 +5,21 @@
              x:DataType="vm:UiSnapshotSettingsViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки UI снимков" Classes="h1" />
-        <TextBlock Text="URL-адреса" Classes="label" />
-        <ItemsControl ItemsSource="{Binding Urls}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <TextBlock Text="Base URL" Classes="label" />
+        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
+        <TextBlock Text="Пути (относительно Base URL)" Classes="label" />
+        <DataGrid ItemsSource="{Binding Paths}"
+                  SelectedItem="{Binding SelectedPath, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  Height="160">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Path" Binding="{Binding}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddPathCommand}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedPathCommand}" />
+        </StackPanel>
 
         <WrapPanel>
             <StackPanel Width="150" Margin="0,0,8,8">

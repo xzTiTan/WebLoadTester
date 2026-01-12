@@ -29,7 +29,7 @@ public class HttpAssetsModule : ITestModule
         {
             Assets = new List<AssetItem>
             {
-                new() { Url = "https://example.com" }
+                new() { Path = "/" }
             }
         };
     }
@@ -49,6 +49,19 @@ public class HttpAssetsModule : ITestModule
         if (s.Assets.Count == 0)
         {
             errors.Add("At least one asset required");
+        }
+
+        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        {
+            errors.Add("BaseUrl is required");
+        }
+
+        foreach (var asset in s.Assets)
+        {
+            if (string.IsNullOrWhiteSpace(asset.Path))
+            {
+                errors.Add("Asset path is required");
+            }
         }
 
         return errors;
@@ -79,9 +92,10 @@ public class HttpAssetsModule : ITestModule
         foreach (var asset in s.Assets)
         {
             var sw = Stopwatch.StartNew();
+            var url = ResolveUrl(s.BaseUrl, asset.Path);
             try
             {
-                var response = await client.GetAsync(asset.Url, ct);
+                var response = await client.GetAsync(url, ct);
                 var bytes = await response.Content.ReadAsByteArrayAsync(ct);
                 sw.Stop();
                 var success = response.IsSuccessStatusCode;
@@ -106,7 +120,7 @@ public class HttpAssetsModule : ITestModule
                     error = "Latency exceeded";
                 }
 
-                results.Add(new CheckResult(asset.Url)
+                results.Add(new CheckResult(url)
                 {
                     Success = success,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -118,7 +132,7 @@ public class HttpAssetsModule : ITestModule
             catch (Exception ex)
             {
                 sw.Stop();
-                results.Add(new CheckResult(asset.Url)
+                results.Add(new CheckResult(url)
                 {
                     Success = false,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -136,5 +150,16 @@ public class HttpAssetsModule : ITestModule
         report.Results = results;
         report.FinishedAt = ctx.Now;
         return report;
+    }
+
+    private static string ResolveUrl(string baseUrl, string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        var root = new Uri(baseUrl, UriKind.Absolute);
+        return new Uri(root, path).ToString();
     }
 }

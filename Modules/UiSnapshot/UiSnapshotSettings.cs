@@ -7,7 +7,8 @@ namespace WebLoadTester.Modules.UiSnapshot;
 /// </summary>
 public class UiSnapshotSettings
 {
-    public List<string> Urls { get; set; } = new();
+    public string BaseUrl { get; set; } = "https://example.com";
+    public List<string> Paths { get; set; } = new();
     public int Concurrency { get; set; } = 2;
     public string WaitMode { get; set; } = "load";
     public int DelayAfterLoadMs { get; set; } = 0;

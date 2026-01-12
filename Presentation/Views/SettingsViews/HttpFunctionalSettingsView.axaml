@@ -1,22 +1,32 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:domain="clr-namespace:WebLoadTester.Modules.HttpFunctional"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView"
              x:DataType="vm:HttpFunctionalSettingsViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки HTTP функциональных проверок" Classes="h1" />
-        <TextBlock Text="Эндпоинты" Classes="label" />
-        <ItemsControl ItemsSource="{Binding Endpoints}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="domain:HttpEndpoint">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Url}" TextWrapping="Wrap" />
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <TextBlock Text="Base URL" Classes="label" />
+        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
+        <TextBlock Text="Эндпоинты (пути относительно Base URL)" Classes="label" />
+        <DataGrid ItemsSource="{Binding Endpoints}"
+                  SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  Height="200">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                <DataGridComboBoxColumn Header="Method"
+                                        SelectedItemBinding="{Binding Method}"
+                                        ItemsSource="{Binding DataContext.MethodOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        Width="120" />
+                <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
+                <DataGridTextColumn Header="ExpectedStatus" Binding="{Binding StatusCodeEquals}" Width="150" />
+                <DataGridTextColumn Header="AssertContains" Binding="{Binding BodyContains}" Width="2*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+        </StackPanel>
         <TextBlock Text="Таймаут (сек)" Classes="label" />
         <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
     </StackPanel>

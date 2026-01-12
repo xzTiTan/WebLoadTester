@@ -28,7 +28,7 @@ public class UiSnapshotModule : ITestModule
     {
         return new UiSnapshotSettings
         {
-            Urls = new List<string> { "https://example.com" }
+            Paths = new List<string> { "/" }
         };
     }
 
@@ -44,9 +44,19 @@ public class UiSnapshotModule : ITestModule
             return errors;
         }
 
-        if (s.Urls.Count == 0)
+        if (s.Paths.Count == 0)
         {
             errors.Add("At least one URL is required");
+        }
+
+        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        {
+            errors.Add("BaseUrl is required");
+        }
+
+        if (s.Paths.Any(path => string.IsNullOrWhiteSpace(path)))
+        {
+            errors.Add("Path is required");
         }
 
         if (s.Concurrency <= 0)
@@ -97,7 +107,8 @@ public class UiSnapshotModule : ITestModule
         var completed = 0;
         var runFolder = ctx.Artifacts.CreateRunFolder(report.StartedAt.ToString("yyyyMMdd_HHmmss"));
 
-        var tasks = s.Urls.Select(async url =>
+        var urls = s.Paths.Select(path => ResolveUrl(s.BaseUrl, path)).ToList();
+        var tasks = urls.Select(async url =>
         {
             await semaphore.WaitAsync(ct);
             try
@@ -137,7 +148,7 @@ public class UiSnapshotModule : ITestModule
                 finally
                 {
                     var done = Interlocked.Increment(ref completed);
-                    ctx.Progress.Report(new ProgressUpdate(done, s.Urls.Count, "UI снимки"));
+                    ctx.Progress.Report(new ProgressUpdate(done, urls.Count, "UI снимки"));
                 }
             }
             finally
@@ -162,5 +173,16 @@ public class UiSnapshotModule : ITestModule
             url = url.Replace(ch, '_');
         }
         return url.Replace("https://", string.Empty).Replace("http://", string.Empty).Replace("/", "_");
+    }
+
+    private static string ResolveUrl(string baseUrl, string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        var root = new Uri(baseUrl, UriKind.Absolute);
+        return new Uri(root, path).ToString();
     }
 }
