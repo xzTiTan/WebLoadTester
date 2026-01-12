@@ -1,8 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
-             x:DataType="vm:UiScenarioSettingsViewModel">
+             x:DataType="vm:UiScenarioSettingsViewModel"
+             x:Name="Root">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки UI сценария" Classes="h1" />
         <TextBlock Text="Целевой URL" Classes="label" />
@@ -23,29 +25,29 @@
         <CheckBox Content="Скриншот после сценария" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
 
         <TextBlock Text="Шаги" Classes="label" />
-        <DataGrid ItemsSource="{Binding Steps}"
-                  SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
-                  AutoGenerateColumns="False"
-                  Height="200">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Type" Width="160">
-                    <DataGridTemplateColumn.CellTemplate>
+        <dg:DataGrid ItemsSource="{Binding Steps}"
+                     SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
+                     AutoGenerateColumns="False"
+                     Height="200">
+            <dg:DataGrid.Columns>
+                <dg:DataGridTemplateColumn Header="Type" Width="160">
+                    <dg:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Action}" />
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <ComboBox ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    </dg:DataGridTemplateColumn.CellTemplate>
+                    <dg:DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate x:DataType="{x:Null}">
+                            <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
                                       SelectedItem="{Binding Action, Mode=TwoWay}" />
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellEditingTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Selector/Url" Binding="{Binding Selector}" Width="2*" />
-                <DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="2*" />
-                <DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
-            </DataGrid.Columns>
-        </DataGrid>
+                    </dg:DataGridTemplateColumn.CellEditingTemplate>
+                </dg:DataGridTemplateColumn>
+                <dg:DataGridTextColumn Header="Selector/Url" Binding="{Binding Selector}" Width="2*" />
+                <dg:DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="2*" />
+                <dg:DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
+            </dg:DataGrid.Columns>
+        </dg:DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="Добавить" Command="{Binding AddStepCommand}" />
             <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />

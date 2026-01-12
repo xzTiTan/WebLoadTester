@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiSnapshotSettingsView"
              x:DataType="vm:UiSnapshotSettingsViewModel">
     <StackPanel Spacing="8">
@@ -8,14 +9,14 @@
         <TextBlock Text="Base URL" Classes="label" />
         <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
         <TextBlock Text="Пути (относительно Base URL)" Classes="label" />
-        <DataGrid ItemsSource="{Binding Paths}"
-                  SelectedItem="{Binding SelectedPath, Mode=TwoWay}"
-                  AutoGenerateColumns="False"
-                  Height="160">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Path" Binding="{Binding}" Width="*" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <dg:DataGrid ItemsSource="{Binding Paths}"
+                     SelectedItem="{Binding SelectedPath, Mode=TwoWay}"
+                     AutoGenerateColumns="False"
+                     Height="160">
+            <dg:DataGrid.Columns>
+                <dg:DataGridTextColumn Header="Path" Binding="{Binding}" Width="*" />
+            </dg:DataGrid.Columns>
+        </dg:DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="Добавить" Command="{Binding AddPathCommand}" />
             <Button Content="Удалить" Command="{Binding RemoveSelectedPathCommand}" />
