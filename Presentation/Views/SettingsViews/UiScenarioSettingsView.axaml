@@ -7,22 +7,37 @@
              x:Name="Root">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки UI сценария" Classes="h1" />
-        <TextBlock Text="Целевой URL" Classes="label" />
+        <TextBlock Text="Start URL" Classes="label" />
         <TextBox Text="{Binding TargetUrl, Mode=TwoWay}" />
 
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <StackPanel>
-                <TextBlock Text="Всего прогонов" Classes="label" />
-                <TextBox Width="120" Text="{Binding TotalRuns, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+        <TextBlock Text="Параметры запуска" Classes="label" />
+        <WrapPanel>
+            <StackPanel Width="160" Margin="0,0,8,8">
+                <TextBlock Text="Concurrency/VUs" Classes="label" />
+                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel>
-                <TextBlock Text="Параллельность" Classes="label" />
-                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+            <StackPanel Width="160" Margin="0,0,8,8">
+                <TextBlock Text="Iterations" Classes="label" />
+                <NumericUpDown Minimum="1" Value="{Binding TotalRuns, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel Width="160" Margin="0,0,8,8">
+                <TextBlock Text="Timeout (ms)" Classes="label" />
+                <NumericUpDown Minimum="100" Increment="100" Value="{Binding TimeoutMs, Mode=TwoWay}" />
+            </StackPanel>
+        </WrapPanel>
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <CheckBox Content="Headless" IsChecked="{Binding Headless, Mode=TwoWay}" />
+            <StackPanel Width="200">
+                <TextBlock Text="Скриншоты" Classes="label" />
+                <ComboBox ItemsSource="{Binding ScreenshotModeOptions}"
+                          SelectedItem="{Binding ScreenshotMode, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel Width="200">
+                <TextBlock Text="Политика ошибок шага" Classes="label" />
+                <ComboBox ItemsSource="{Binding ErrorPolicyOptions}"
+                          SelectedItem="{Binding ErrorPolicy, Mode=TwoWay}" />
             </StackPanel>
         </StackPanel>
-
-        <CheckBox Content="Без интерфейса (headless)" IsChecked="{Binding Headless, Mode=TwoWay}" />
-        <CheckBox Content="Скриншот после сценария" IsChecked="{Binding ScreenshotAfterScenario, Mode=TwoWay}" />
 
         <TextBlock Text="Шаги" Classes="label" />
         <dg:DataGrid ItemsSource="{Binding Steps}"
@@ -43,9 +58,10 @@
                         </DataTemplate>
                     </dg:DataGridTemplateColumn.CellEditingTemplate>
                 </dg:DataGridTemplateColumn>
-                <dg:DataGridTextColumn Header="Selector/Url" Binding="{Binding Selector}" Width="2*" />
-                <dg:DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="2*" />
+                <dg:DataGridTextColumn Header="Selector" Binding="{Binding Selector}" Width="2*" />
+                <dg:DataGridTextColumn Header="Value" Binding="{Binding Text}" Width="2*" />
                 <dg:DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
+                <dg:DataGridTextColumn Header="DelayMs" Binding="{Binding DelayMs}" Width="120" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="6">

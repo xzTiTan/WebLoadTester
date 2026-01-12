@@ -30,7 +30,7 @@ public class UiScenarioModule : ITestModule
         {
             Steps = new List<UiStep>
             {
-                new() { Selector = "body", Action = UiStepAction.WaitForVisible }
+                new() { Selector = "body", Action = UiStepAction.WaitForSelector }
             }
         };
     }
@@ -60,6 +60,11 @@ public class UiScenarioModule : ITestModule
         if (s.Concurrency <= 0)
         {
             errors.Add("Concurrency must be positive");
+        }
+
+        if (s.TimeoutMs <= 0)
+        {
+            errors.Add("Timeout must be positive");
         }
 
         return errors;
@@ -110,49 +115,84 @@ public class UiScenarioModule : ITestModule
             {
                 var sw = Stopwatch.StartNew();
                 string? screenshotPath = null;
+                IPage? page = null;
+                string? failureMessage = null;
                 try
                 {
                     await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
                     {
                         Headless = s.Headless
                     });
-                    var page = await browser.NewPageAsync();
+                    page = await browser.NewPageAsync();
                     await page.GotoAsync(s.TargetUrl, new PageGotoOptions { WaitUntil = WaitUntilState.Load });
 
                     foreach (var step in s.Steps)
                     {
-                        await page.WaitForSelectorAsync(step.Selector, new PageWaitForSelectorOptions
+                        try
                         {
-                            Timeout = step.TimeoutMs
-                        });
-                        if (step.Action == UiStepAction.Click)
-                        {
-                            await page.ClickAsync(step.Selector);
+                            var timeout = step.TimeoutMs > 0 ? step.TimeoutMs : s.TimeoutMs;
+                            switch (step.Action)
+                            {
+                                case UiStepAction.Delay:
+                                    if (step.DelayMs > 0)
+                                    {
+                                        await Task.Delay(step.DelayMs, ct);
+                                    }
+                                    break;
+                                case UiStepAction.WaitForSelector:
+                                    await page.WaitForSelectorAsync(step.Selector, new PageWaitForSelectorOptions
+                                    {
+                                        Timeout = timeout
+                                    });
+                                    break;
+                                case UiStepAction.Click:
+                                    await page.ClickAsync(step.Selector, new PageClickOptions
+                                    {
+                                        Timeout = timeout
+                                    });
+                                    break;
+                                case UiStepAction.Fill:
+                                    if (!string.IsNullOrWhiteSpace(step.Text))
+                                    {
+                                        await page.FillAsync(step.Selector, step.Text, new PageFillOptions
+                                        {
+                                            Timeout = timeout
+                                        });
+                                    }
+                                    break;
+                            }
                         }
-                        else if (step.Action == UiStepAction.FillText && !string.IsNullOrWhiteSpace(step.Text))
+                        catch (Exception) when (s.ErrorPolicy == StepErrorPolicy.SkipStep)
                         {
-                            await page.FillAsync(step.Selector, step.Text);
+                            continue;
+                        }
+                        catch (Exception) when (s.ErrorPolicy == StepErrorPolicy.StopRun)
+                        {
+                            failureMessage = "Step error: stopped current run";
+                            break;
                         }
                     }
 
-                    if (s.ScreenshotAfterScenario)
+                    if (s.ScreenshotMode == ScreenshotMode.Always && page != null)
                     {
-                        var bytes = await page.ScreenshotAsync();
-                        var fileName = $"run_{index}.png";
-                        var runFolder = ctx.Artifacts.CreateRunFolder(report.StartedAt.ToString("yyyyMMdd_HHmmss"));
-                        screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(bytes, runFolder, fileName);
+                        screenshotPath = await SaveScreenshotAsync(ctx, report.StartedAt, page, $"run_{index}.png");
                     }
 
                     sw.Stop();
                     results.Add(new RunResult($"Run {index}")
                     {
-                        Success = true,
+                        Success = failureMessage == null,
                         DurationMs = sw.Elapsed.TotalMilliseconds,
-                        ScreenshotPath = screenshotPath
+                        ScreenshotPath = screenshotPath,
+                        ErrorMessage = failureMessage
                     });
                 }
                 catch (Exception ex)
                 {
+                    if (s.ScreenshotMode == ScreenshotMode.OnFailure && page != null)
+                    {
+                        screenshotPath = await SaveScreenshotAsync(ctx, report.StartedAt, page, $"run_{index}_error.png");
+                    }
                     sw.Stop();
                     results.Add(new RunResult($"Run {index}")
                     {
@@ -183,5 +223,12 @@ public class UiScenarioModule : ITestModule
         report.Results = results;
         report.FinishedAt = ctx.Now;
         return report;
+    }
+
+    private static async Task<string?> SaveScreenshotAsync(IRunContext ctx, DateTimeOffset startedAt, IPage page, string fileName)
+    {
+        var bytes = await page.ScreenshotAsync();
+        var runFolder = ctx.Artifacts.CreateRunFolder(startedAt.ToString("yyyyMMdd_HHmmss"));
+        return await ctx.Artifacts.SaveScreenshotAsync(bytes, runFolder, fileName);
     }
 }

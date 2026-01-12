@@ -28,7 +28,10 @@ public class UiTimingModule : ITestModule
     {
         return new UiTimingSettings
         {
-            Paths = new List<string> { "/" }
+            Targets = new List<TimingTarget>
+            {
+                new() { Url = "https://example.com", Tag = "Example" }
+            }
         };
     }
 
@@ -44,24 +47,24 @@ public class UiTimingModule : ITestModule
             return errors;
         }
 
-        if (s.Paths.Count == 0)
+        if (s.Targets.Count == 0)
         {
             errors.Add("At least one URL is required");
         }
 
-        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        if (s.Targets.Any(target => !Uri.TryCreate(target.Url, UriKind.Absolute, out _)))
         {
-            errors.Add("BaseUrl is required");
-        }
-
-        if (s.Paths.Any(path => string.IsNullOrWhiteSpace(path)))
-        {
-            errors.Add("Path is required");
+            errors.Add("Each URL must be absolute");
         }
 
         if (s.RepeatsPerUrl <= 0)
         {
             errors.Add("RepeatsPerUrl must be positive");
+        }
+
+        if (s.TimeoutMs <= 0)
+        {
+            errors.Add("Timeout must be positive");
         }
 
         return errors;
@@ -101,15 +104,20 @@ public class UiTimingModule : ITestModule
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var waitUntil = s.WaitUntil == "domcontentloaded" ? WaitUntilState.DOMContentLoaded : WaitUntilState.Load;
+        var waitUntil = s.WaitUntil switch
+        {
+            "domcontentloaded" => WaitUntilState.DOMContentLoaded,
+            "networkidle" => WaitUntilState.NetworkIdle,
+            _ => WaitUntilState.Load
+        };
         var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
-        var urls = s.Paths.Select(path => ResolveUrl(s.BaseUrl, path)).ToList();
-        var total = urls.Count * s.RepeatsPerUrl;
+        var runs = s.Targets.SelectMany(target =>
+            Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();
+        var total = runs.Count;
         var completed = 0;
 
-        var tasks = urls.SelectMany(url => Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (url, iteration)))
-            .Select(async item =>
+        var tasks = runs.Select(async run =>
             {
                 await semaphore.WaitAsync(ct);
                 try
@@ -117,14 +125,18 @@ public class UiTimingModule : ITestModule
                     var sw = Stopwatch.StartNew();
                     try
                     {
-                        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+                        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = s.Headless });
                         var page = await browser.NewPageAsync();
-                        await page.GotoAsync(item.url, new PageGotoOptions { WaitUntil = waitUntil });
-                        sw.Stop();
-                        results.Add(new TimingResult($"{item.url}")
+                        await page.GotoAsync(run.target.Url, new PageGotoOptions
                         {
-                            Url = item.url,
-                            Iteration = item.iteration,
+                            WaitUntil = waitUntil,
+                            Timeout = s.TimeoutMs
+                        });
+                        sw.Stop();
+                        results.Add(new TimingResult(run.target.Tag ?? run.target.Url)
+                        {
+                            Url = run.target.Url,
+                            Iteration = run.iteration,
                             Success = true,
                             DurationMs = sw.Elapsed.TotalMilliseconds
                         });
@@ -132,10 +144,10 @@ public class UiTimingModule : ITestModule
                     catch (Exception ex)
                     {
                         sw.Stop();
-                        results.Add(new TimingResult($"{item.url}")
+                        results.Add(new TimingResult(run.target.Tag ?? run.target.Url)
                         {
-                            Url = item.url,
-                            Iteration = item.iteration,
+                            Url = run.target.Url,
+                            Iteration = run.iteration,
                             Success = false,
                             DurationMs = sw.Elapsed.TotalMilliseconds,
                             ErrorType = ex.GetType().Name,
@@ -155,19 +167,49 @@ public class UiTimingModule : ITestModule
             });
 
         await Task.WhenAll(tasks);
+        report.Metrics = BuildMetrics(results);
         report.Results = results;
         report.FinishedAt = ctx.Now;
         return report;
     }
 
-    private static string ResolveUrl(string baseUrl, string path)
+    private static MetricsSummary BuildMetrics(IEnumerable<ResultBase> results)
     {
-        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        var timings = results.OfType<TimingResult>().Where(r => r.Success).ToList();
+        if (timings.Count == 0)
         {
-            return absolute.ToString();
+            return new MetricsSummary();
         }
 
-        var root = new Uri(baseUrl, UriKind.Absolute);
-        return new Uri(root, path).ToString();
+        var durations = timings.Select(r => r.DurationMs).OrderBy(ms => ms).ToList();
+        return new MetricsSummary
+        {
+            AverageMs = durations.Average(),
+            MinMs = durations.First(),
+            MaxMs = durations.Last(),
+            P50Ms = Percentile(durations, 0.50),
+            P95Ms = Percentile(durations, 0.95),
+            P99Ms = Percentile(durations, 0.99),
+            TopSlow = timings.OrderByDescending(r => r.DurationMs).Take(5).Cast<ResultBase>().ToList()
+        };
+    }
+
+    private static double Percentile(IReadOnlyList<double> sorted, double percentile)
+    {
+        if (sorted.Count == 0)
+        {
+            return 0;
+        }
+
+        var position = (sorted.Count - 1) * percentile;
+        var lowerIndex = (int)Math.Floor(position);
+        var upperIndex = (int)Math.Ceiling(position);
+        if (lowerIndex == upperIndex)
+        {
+            return sorted[lowerIndex];
+        }
+
+        var weight = position - lowerIndex;
+        return sorted[lowerIndex] + (sorted[upperIndex] - sorted[lowerIndex]) * weight;
     }
 }

@@ -25,7 +25,9 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         totalRuns = settings.TotalRuns;
         concurrency = settings.Concurrency;
         headless = settings.Headless;
-        screenshotAfterScenario = settings.ScreenshotAfterScenario;
+        timeoutMs = settings.TimeoutMs;
+        errorPolicy = settings.ErrorPolicy;
+        screenshotMode = settings.ScreenshotMode;
         Steps.CollectionChanged += (_, _) => _settings.Steps = Steps.ToList();
     }
 
@@ -35,6 +37,8 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     public ObservableCollection<UiStep> Steps { get; }
 
     public UiStepAction[] ActionOptions { get; } = Enum.GetValues<UiStepAction>();
+    public StepErrorPolicy[] ErrorPolicyOptions { get; } = Enum.GetValues<StepErrorPolicy>();
+    public ScreenshotMode[] ScreenshotModeOptions { get; } = Enum.GetValues<ScreenshotMode>();
 
     [ObservableProperty]
     private UiStep? selectedStep;
@@ -52,7 +56,13 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     private bool headless = true;
 
     [ObservableProperty]
-    private bool screenshotAfterScenario = true;
+    private int timeoutMs = 10000;
+
+    [ObservableProperty]
+    private StepErrorPolicy errorPolicy;
+
+    [ObservableProperty]
+    private ScreenshotMode screenshotMode;
 
     /// <summary>
     /// Синхронизирует URL сценария.
@@ -71,19 +81,28 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     /// </summary>
     partial void OnHeadlessChanged(bool value) => _settings.Headless = value;
     /// <summary>
-    /// Синхронизирует флаг сохранения скриншота после сценария.
+    /// Синхронизирует таймаут сценария.
     /// </summary>
-    partial void OnScreenshotAfterScenarioChanged(bool value) => _settings.ScreenshotAfterScenario = value;
+    partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
+    /// <summary>
+    /// Синхронизирует политику ошибок шага.
+    /// </summary>
+    partial void OnErrorPolicyChanged(StepErrorPolicy value) => _settings.ErrorPolicy = value;
+    /// <summary>
+    /// Синхронизирует режим снятия скриншотов.
+    /// </summary>
+    partial void OnScreenshotModeChanged(ScreenshotMode value) => _settings.ScreenshotMode = value;
 
     [RelayCommand]
     private void AddStep()
     {
         var step = new UiStep
         {
-            Action = UiStepAction.WaitForVisible,
+            Action = UiStepAction.WaitForSelector,
             Selector = string.Empty,
             Text = string.Empty,
-            TimeoutMs = 5000
+            TimeoutMs = 0,
+            DelayMs = 0
         };
         Steps.Add(step);
         SelectedStep = step;

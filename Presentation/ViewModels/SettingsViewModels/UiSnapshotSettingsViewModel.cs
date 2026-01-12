@@ -19,63 +19,81 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     public UiSnapshotSettingsViewModel(UiSnapshotSettings settings)
     {
         _settings = settings;
-        baseUrl = settings.BaseUrl;
-        Paths = new ObservableCollection<string>(settings.Paths);
+        Targets = new ObservableCollection<SnapshotTarget>(settings.Targets);
         concurrency = settings.Concurrency;
-        waitMode = settings.WaitMode;
-        delayAfterLoadMs = settings.DelayAfterLoadMs;
-        Paths.CollectionChanged += (_, _) => _settings.Paths = Paths.ToList();
+        repeatsPerUrl = settings.RepeatsPerUrl;
+        waitUntil = settings.WaitUntil;
+        extraDelayMs = settings.ExtraDelayMs;
+        fullPage = settings.FullPage;
+        Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI снимки";
 
-    public ObservableCollection<string> Paths { get; }
+    public ObservableCollection<SnapshotTarget> Targets { get; }
+
+    public string[] WaitUntilOptions { get; } = { "load", "domcontentloaded", "networkidle" };
 
     [ObservableProperty]
-    private string baseUrl = string.Empty;
-
-    [ObservableProperty]
-    private string? selectedPath;
+    private SnapshotTarget? selectedTarget;
 
     [ObservableProperty]
     private int concurrency;
 
     [ObservableProperty]
-    private string waitMode = "load";
+    private int repeatsPerUrl = 1;
 
     [ObservableProperty]
-    private int delayAfterLoadMs;
+    private string waitUntil = "load";
 
-    /// <summary>
-    /// Синхронизирует базовый URL.
-    /// </summary>
-    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
+    [ObservableProperty]
+    private int extraDelayMs;
+
+    [ObservableProperty]
+    private bool fullPage = true;
+
     /// <summary>
     /// Синхронизирует уровень конкурентности.
     /// </summary>
     partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
     /// <summary>
+    /// Синхронизирует количество повторов на URL.
+    /// </summary>
+    partial void OnRepeatsPerUrlChanged(int value) => _settings.RepeatsPerUrl = value;
+    /// <summary>
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
-    partial void OnWaitModeChanged(string value) => _settings.WaitMode = value;
+    partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
     /// <summary>
-    /// Синхронизирует задержку после загрузки.
+    /// Синхронизирует дополнительную задержку.
     /// </summary>
-    partial void OnDelayAfterLoadMsChanged(int value) => _settings.DelayAfterLoadMs = value;
+    partial void OnExtraDelayMsChanged(int value) => _settings.ExtraDelayMs = value;
+    /// <summary>
+    /// Синхронизирует флаг полного снимка страницы.
+    /// </summary>
+    partial void OnFullPageChanged(bool value) => _settings.FullPage = value;
 
     [RelayCommand]
-    private void AddPath()
+    private void AddTarget()
     {
-        Paths.Add("/");
+        var target = new SnapshotTarget { Url = "https://example.com" };
+        Targets.Add(target);
+        SelectedTarget = target;
     }
 
     [RelayCommand]
-    private void RemoveSelectedPath()
+    private void RemoveSelectedTarget()
     {
-        if (SelectedPath != null)
+        if (SelectedTarget != null)
         {
-            Paths.Remove(SelectedPath);
+            Targets.Remove(SelectedTarget);
         }
+    }
+
+    [RelayCommand]
+    private void ClearTargets()
+    {
+        Targets.Clear();
     }
 }

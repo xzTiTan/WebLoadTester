@@ -6,37 +6,44 @@
              x:DataType="vm:UiTimingSettingsViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Настройки UI таймингов" Classes="h1" />
-        <TextBlock Text="Base URL" Classes="label" />
-        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
-        <TextBlock Text="Пути (относительно Base URL)" Classes="label" />
-        <dg:DataGrid ItemsSource="{Binding Paths}"
-                     SelectedItem="{Binding SelectedPath, Mode=TwoWay}"
+        <TextBlock Text="URL-адреса" Classes="label" />
+        <dg:DataGrid ItemsSource="{Binding Targets}"
+                     SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
                      AutoGenerateColumns="False"
                      Height="160">
             <dg:DataGrid.Columns>
-                <dg:DataGridTextColumn Header="Path" Binding="{Binding}" Width="*" />
+                <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
+                <dg:DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="*" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
         <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Content="Добавить" Command="{Binding AddPathCommand}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedPathCommand}" />
+            <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
+            <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
         </StackPanel>
 
+        <TextBlock Text="Параметры тайминга" Classes="label" />
         <WrapPanel>
-            <StackPanel Width="150" Margin="0,0,8,8">
-                <TextBlock Text="Повторы" Classes="label" />
-                <TextBox Width="120" Text="{Binding RepeatsPerUrl, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+            <StackPanel Width="170" Margin="0,0,8,8">
+                <TextBlock Text="WaitUntil" Classes="label" />
+                <ComboBox ItemsSource="{Binding WaitUntilOptions}"
+                          SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
-                <TextBlock Text="Параллельность" Classes="label" />
-                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                <TextBlock Text="RepeatsPerUrl" Classes="label" />
+                <NumericUpDown Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel Width="150" Margin="0,0,8,8">
+                <TextBlock Text="Concurrency" Classes="label" />
+                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel Width="150" Margin="0,0,8,8">
+                <TextBlock Text="Headless" Classes="label" />
+                <CheckBox Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Width="170" Margin="0,0,8,8">
-                <TextBlock Text="Ожидать до" Classes="label" />
-                <ComboBox Width="140" SelectedItem="{Binding WaitUntil, Mode=TwoWay}">
-                    <ComboBoxItem>load</ComboBoxItem>
-                    <ComboBoxItem>domcontentloaded</ComboBoxItem>
-                </ComboBox>
+                <TextBlock Text="Timeout (ms)" Classes="label" />
+                <NumericUpDown Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>

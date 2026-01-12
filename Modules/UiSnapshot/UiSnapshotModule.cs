@@ -28,7 +28,10 @@ public class UiSnapshotModule : ITestModule
     {
         return new UiSnapshotSettings
         {
-            Paths = new List<string> { "/" }
+            Targets = new List<SnapshotTarget>
+            {
+                new() { Url = "https://example.com", Tag = "Example" }
+            }
         };
     }
 
@@ -44,24 +47,24 @@ public class UiSnapshotModule : ITestModule
             return errors;
         }
 
-        if (s.Paths.Count == 0)
+        if (s.Targets.Count == 0)
         {
             errors.Add("At least one URL is required");
         }
 
-        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
+        if (s.Targets.Any(target => !Uri.TryCreate(target.Url, UriKind.Absolute, out _)))
         {
-            errors.Add("BaseUrl is required");
-        }
-
-        if (s.Paths.Any(path => string.IsNullOrWhiteSpace(path)))
-        {
-            errors.Add("Path is required");
+            errors.Add("Each URL must be absolute");
         }
 
         if (s.Concurrency <= 0)
         {
             errors.Add("Concurrency must be positive");
+        }
+
+        if (s.RepeatsPerUrl <= 0)
+        {
+            errors.Add("RepeatsPerUrl must be positive");
         }
 
         return errors;
@@ -101,14 +104,20 @@ public class UiSnapshotModule : ITestModule
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var waitUntil = s.WaitMode == "domcontentloaded" ? WaitUntilState.DOMContentLoaded : WaitUntilState.Load;
+        var waitUntil = s.WaitUntil switch
+        {
+            "domcontentloaded" => WaitUntilState.DOMContentLoaded,
+            "networkidle" => WaitUntilState.NetworkIdle,
+            _ => WaitUntilState.Load
+        };
         var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
         var completed = 0;
         var runFolder = ctx.Artifacts.CreateRunFolder(report.StartedAt.ToString("yyyyMMdd_HHmmss"));
 
-        var urls = s.Paths.Select(path => ResolveUrl(s.BaseUrl, path)).ToList();
-        var tasks = urls.Select(async url =>
+        var runs = s.Targets.SelectMany(target =>
+            Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();
+        var tasks = runs.Select(async run =>
         {
             await semaphore.WaitAsync(ct);
             try
@@ -118,16 +127,20 @@ public class UiSnapshotModule : ITestModule
                 {
                     await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
                     var page = await browser.NewPageAsync();
-                    await page.GotoAsync(url, new PageGotoOptions { WaitUntil = waitUntil });
-                    if (s.DelayAfterLoadMs > 0)
+                    await page.GotoAsync(run.target.Url, new PageGotoOptions
                     {
-                        await Task.Delay(s.DelayAfterLoadMs, ct);
+                        WaitUntil = waitUntil,
+                        Timeout = s.ExtraDelayMs > 0 ? s.ExtraDelayMs + 30000 : 30000
+                    });
+                    if (s.ExtraDelayMs > 0)
+                    {
+                        await Task.Delay(s.ExtraDelayMs, ct);
                     }
-                    var bytes = await page.ScreenshotAsync();
-                    var fileName = $"snapshot_{Sanitize(url)}.png";
+                    var bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = s.FullPage });
+                    var fileName = $"snapshot_{Sanitize(run.target.Url)}_{run.iteration}.png";
                     var path = await ctx.Artifacts.SaveScreenshotAsync(bytes, runFolder, fileName);
                     sw.Stop();
-                    results.Add(new RunResult(url)
+                    results.Add(new RunResult(run.target.Tag ?? run.target.Url)
                     {
                         Success = true,
                         DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -137,7 +150,7 @@ public class UiSnapshotModule : ITestModule
                 catch (Exception ex)
                 {
                     sw.Stop();
-                    results.Add(new RunResult(url)
+                    results.Add(new RunResult(run.target.Tag ?? run.target.Url)
                     {
                         Success = false,
                         DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -148,7 +161,7 @@ public class UiSnapshotModule : ITestModule
                 finally
                 {
                     var done = Interlocked.Increment(ref completed);
-                    ctx.Progress.Report(new ProgressUpdate(done, urls.Count, "UI снимки"));
+                    ctx.Progress.Report(new ProgressUpdate(done, runs.Count, "UI снимки"));
                 }
             }
             finally
@@ -175,14 +188,4 @@ public class UiSnapshotModule : ITestModule
         return url.Replace("https://", string.Empty).Replace("http://", string.Empty).Replace("/", "_");
     }
 
-    private static string ResolveUrl(string baseUrl, string path)
-    {
-        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
-        {
-            return absolute.ToString();
-        }
-
-        var root = new Uri(baseUrl, UriKind.Absolute);
-        return new Uri(root, path).ToString();
-    }
 }

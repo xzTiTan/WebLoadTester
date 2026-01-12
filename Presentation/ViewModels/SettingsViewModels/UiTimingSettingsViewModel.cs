@@ -19,24 +19,24 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     public UiTimingSettingsViewModel(UiTimingSettings settings)
     {
         _settings = settings;
-        baseUrl = settings.BaseUrl;
-        Paths = new ObservableCollection<string>(settings.Paths);
+        Targets = new ObservableCollection<TimingTarget>(settings.Targets);
         repeatsPerUrl = settings.RepeatsPerUrl;
         concurrency = settings.Concurrency;
         waitUntil = settings.WaitUntil;
-        Paths.CollectionChanged += (_, _) => _settings.Paths = Paths.ToList();
+        headless = settings.Headless;
+        timeoutMs = settings.TimeoutMs;
+        Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI тайминги";
 
-    public ObservableCollection<string> Paths { get; }
+    public ObservableCollection<TimingTarget> Targets { get; }
+
+    public string[] WaitUntilOptions { get; } = { "load", "domcontentloaded", "networkidle" };
 
     [ObservableProperty]
-    private string baseUrl = string.Empty;
-
-    [ObservableProperty]
-    private string? selectedPath;
+    private TimingTarget? selectedTarget;
 
     [ObservableProperty]
     private int repeatsPerUrl;
@@ -47,10 +47,12 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private string waitUntil = "load";
 
-    /// <summary>
-    /// Синхронизирует базовый URL.
-    /// </summary>
-    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
+    [ObservableProperty]
+    private bool headless = true;
+
+    [ObservableProperty]
+    private int timeoutMs = 30000;
+
     /// <summary>
     /// Синхронизирует количество повторов на URL.
     /// </summary>
@@ -63,19 +65,35 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
     partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
+    /// <summary>
+    /// Синхронизирует режим headless.
+    /// </summary>
+    partial void OnHeadlessChanged(bool value) => _settings.Headless = value;
+    /// <summary>
+    /// Синхронизирует таймаут навигации.
+    /// </summary>
+    partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
 
     [RelayCommand]
-    private void AddPath()
+    private void AddTarget()
     {
-        Paths.Add("/");
+        var target = new TimingTarget { Url = "https://example.com" };
+        Targets.Add(target);
+        SelectedTarget = target;
     }
 
     [RelayCommand]
-    private void RemoveSelectedPath()
+    private void RemoveSelectedTarget()
     {
-        if (SelectedPath != null)
+        if (SelectedTarget != null)
         {
-            Paths.Remove(SelectedPath);
+            Targets.Remove(SelectedTarget);
         }
+    }
+
+    [RelayCommand]
+    private void ClearTargets()
+    {
+        Targets.Clear();
     }
 }
