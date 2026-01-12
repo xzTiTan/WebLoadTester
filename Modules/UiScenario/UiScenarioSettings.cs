@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
@@ -22,13 +26,61 @@ public class UiScenarioSettings
 /// <summary>
 /// Описание одного шага UI-сценария.
 /// </summary>
-public class UiStep
+public partial class UiStep : ObservableObject
 {
-    public string Selector { get; set; } = string.Empty;
-    public UiStepAction Action { get; set; } = UiStepAction.WaitForSelector;
-    public string? Text { get; set; }
-    public int TimeoutMs { get; set; } = 0;
-    public int DelayMs { get; set; } = 0;
+    [ObservableProperty]
+    private string selector = string.Empty;
+
+    [ObservableProperty]
+    private UiStepAction action = UiStepAction.WaitForSelector;
+
+    [ObservableProperty]
+    private string? text;
+
+    [ObservableProperty]
+    private int timeoutMs;
+
+    [ObservableProperty]
+    private int delayMs;
+
+    [ObservableProperty]
+    private ObservableCollection<string> clickSelectors = new();
+
+    public void MigrateSelectorToClickSelectors()
+    {
+        if (!string.IsNullOrWhiteSpace(Selector) && ClickSelectors.Count == 0)
+        {
+            ClickSelectors.Add(Selector.Trim());
+        }
+    }
+
+    public IReadOnlyList<string> GetClickSelectors()
+    {
+        var selectors = ClickSelectors
+            .Select(s => s?.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
+        if (selectors.Count > 0)
+        {
+            return selectors;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Selector))
+        {
+            return new[] { Selector.Trim() };
+        }
+
+        return Array.Empty<string>();
+    }
+
+    partial void OnActionChanged(UiStepAction value)
+    {
+        if (value == UiStepAction.Click)
+        {
+            MigrateSelectorToClickSelectors();
+        }
+    }
 }
 
 /// <summary>

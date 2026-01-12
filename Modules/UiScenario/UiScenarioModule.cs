@@ -68,6 +68,15 @@ public class UiScenarioModule : ITestModule
             errors.Add("Timeout must be positive");
         }
 
+        for (var i = 0; i < s.Steps.Count; i++)
+        {
+            var step = s.Steps[i];
+            if (step.Action == UiStepAction.Click && step.GetClickSelectors().Count == 0)
+            {
+                errors.Add($"Step {i + 1}: Click action requires at least one selector.");
+            }
+        }
+
         return errors;
     }
 
@@ -147,10 +156,52 @@ public class UiScenarioModule : ITestModule
                                     });
                                     break;
                                 case UiStepAction.Click:
-                                    await page.ClickAsync(step.Selector, new PageClickOptions
+                                    var selectors = step.GetClickSelectors();
+                                    if (selectors.Count == 0)
                                     {
-                                        Timeout = timeout
-                                    });
+                                        throw new InvalidOperationException("Click: не задан ни один селектор.");
+                                    }
+
+                                    var clicked = false;
+                                    for (var selectorIndex = 0; selectorIndex < selectors.Count; selectorIndex++)
+                                    {
+                                        var selector = selectors[selectorIndex];
+                                        ctx.Log.Info($"Click: пробую селектор #{selectorIndex + 1} \"{selector}\"");
+                                        try
+                                        {
+                                            var handle = await page.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
+                                            {
+                                                Timeout = timeout
+                                            });
+                                            if (handle == null)
+                                            {
+                                                ctx.Log.Warn($"Click: селектор #{selectorIndex + 1} не найден");
+                                                continue;
+                                            }
+
+                                            await handle.ClickAsync(new ElementHandleClickOptions
+                                            {
+                                                Timeout = timeout
+                                            });
+                                            ctx.Log.Info($"Click: селектор #{selectorIndex + 1} найден, клик выполнен");
+                                            clicked = true;
+                                            break;
+                                        }
+                                        catch (TimeoutException)
+                                        {
+                                            ctx.Log.Warn($"Click: селектор #{selectorIndex + 1} не найден");
+                                        }
+                                        catch (PlaywrightException ex)
+                                        {
+                                            ctx.Log.Warn($"Click: селектор #{selectorIndex + 1} не найден ({ex.Message})");
+                                        }
+                                    }
+
+                                    if (!clicked)
+                                    {
+                                        throw new InvalidOperationException(
+                                            $"Click: не найден ни один селектор. Пробовали: {string.Join(", ", selectors)}");
+                                    }
                                     break;
                                 case UiStepAction.Fill:
                                     if (!string.IsNullOrWhiteSpace(step.Text))

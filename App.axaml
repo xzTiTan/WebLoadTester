@@ -8,6 +8,7 @@
               RequestedThemeVariant="Light">
     <Application.Resources>
         <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
+        <conv:EnumEqualsConverter x:Key="EnumEqualsConverter" />
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>

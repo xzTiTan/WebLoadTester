@@ -70,5 +70,41 @@
             <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
             <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
         </StackPanel>
+
+        <Border Classes="panel"
+                IsVisible="{Binding SelectedStep.Action, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=Click}">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Селекторы для клика (CSS)" Classes="label" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBox Width="320"
+                             Text="{Binding NewClickSelectorText, Mode=TwoWay}"
+                             Watermark="например: button.submit" />
+                    <Button Content="Добавить" Command="{Binding AddClickSelectorCommand}" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding SelectedStep.ClickSelectors}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel LastChildFill="True" Margin="4,2">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                                    <Button Content="Вверх"
+                                            Command="{Binding DataContext.MoveClickSelectorUpCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Вниз"
+                                            Command="{Binding DataContext.MoveClickSelectorDownCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Удалить"
+                                            Command="{Binding DataContext.RemoveClickSelectorCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="Селекторы проверяются по порядку сверху вниз. Первый найденный будет использован для клика."
+                           FontSize="12"
+                           Foreground="#666666" />
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

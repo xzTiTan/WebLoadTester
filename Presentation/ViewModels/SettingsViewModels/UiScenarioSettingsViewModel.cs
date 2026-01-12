@@ -21,6 +21,10 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     {
         _settings = settings;
         Steps = new ObservableCollection<UiStep>(settings.Steps);
+        foreach (var step in Steps)
+        {
+            step.MigrateSelectorToClickSelectors();
+        }
         targetUrl = settings.TargetUrl;
         totalRuns = settings.TotalRuns;
         concurrency = settings.Concurrency;
@@ -63,6 +67,9 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
     [ObservableProperty]
     private ScreenshotMode screenshotMode;
+
+    [ObservableProperty]
+    private string newClickSelectorText = string.Empty;
 
     /// <summary>
     /// Синхронизирует URL сценария.
@@ -144,6 +151,72 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         if (index >= 0 && index < Steps.Count - 1)
         {
             Steps.Move(index, index + 1);
+        }
+    }
+
+    [RelayCommand]
+    private void AddClickSelector()
+    {
+        if (SelectedStep == null || SelectedStep.Action != UiStepAction.Click)
+        {
+            return;
+        }
+
+        var selector = (NewClickSelectorText ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(selector))
+        {
+            return;
+        }
+
+        if (SelectedStep.ClickSelectors.Any(existing =>
+                string.Equals(existing, selector, StringComparison.OrdinalIgnoreCase)))
+        {
+            NewClickSelectorText = string.Empty;
+            return;
+        }
+
+        SelectedStep.ClickSelectors.Add(selector);
+        NewClickSelectorText = string.Empty;
+    }
+
+    [RelayCommand]
+    private void RemoveClickSelector(string? selector)
+    {
+        if (SelectedStep == null || string.IsNullOrWhiteSpace(selector))
+        {
+            return;
+        }
+
+        SelectedStep.ClickSelectors.Remove(selector);
+    }
+
+    [RelayCommand]
+    private void MoveClickSelectorUp(string? selector)
+    {
+        if (SelectedStep == null || string.IsNullOrWhiteSpace(selector))
+        {
+            return;
+        }
+
+        var index = SelectedStep.ClickSelectors.IndexOf(selector);
+        if (index > 0)
+        {
+            SelectedStep.ClickSelectors.Move(index, index - 1);
+        }
+    }
+
+    [RelayCommand]
+    private void MoveClickSelectorDown(string? selector)
+    {
+        if (SelectedStep == null || string.IsNullOrWhiteSpace(selector))
+        {
+            return;
+        }
+
+        var index = SelectedStep.ClickSelectors.IndexOf(selector);
+        if (index >= 0 && index < SelectedStep.ClickSelectors.Count - 1)
+        {
+            SelectedStep.ClickSelectors.Move(index, index + 1);
         }
     }
 }
