@@ -15,19 +15,19 @@
         <WrapPanel>
             <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Интервал (сек)" Classes="label" />
-                <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Длительность (мин)" Classes="label" />
-                <TextBox Width="120" Text="{Binding DurationMinutes, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Таймаут (мс)" Classes="label" />
-                <TextBox Width="120" Text="{Binding TimeoutMs, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Margin="0,0,8,8">
                 <TextBlock Text="Порог ошибок" Classes="label" />
-                <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>

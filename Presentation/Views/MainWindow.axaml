@@ -50,9 +50,9 @@
                 <ComboBox ItemsSource="{Binding TelegramSettings.ProgressModes}"
                           SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
                 <TextBlock Text="Прогресс каждые N" Classes="label" />
-                <TextBox Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
+                <TextBox Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 <TextBlock Text="Ограничение частоты (сек)" Classes="label" />
-                <TextBox Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                <TextBox Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
         </Border>
 

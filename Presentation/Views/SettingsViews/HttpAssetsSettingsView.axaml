@@ -15,6 +15,6 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
         <TextBlock Text="Таймаут (сек)" Classes="label" />
-        <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
+        <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
     </StackPanel>
 </UserControl>

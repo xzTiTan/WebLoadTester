@@ -10,19 +10,19 @@
         <WrapPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Всего запросов" Classes="label" />
-                <TextBox Width="120" Text="{Binding TotalRequests, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding TotalRequests, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Параллельность" Classes="label" />
-                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Ограничение RPS" Classes="label" />
-                <TextBox Width="120" Text="{Binding RpsLimit, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding RpsLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Таймаут (сек)" Classes="label" />
-                <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>

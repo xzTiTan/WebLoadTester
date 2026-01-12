@@ -17,7 +17,7 @@
         <WrapPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Параллельность" Classes="label" />
-                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
             <StackPanel Width="170" Margin="0,0,8,8">
                 <TextBlock Text="Режим ожидания" Classes="label" />
@@ -28,7 +28,7 @@
             </StackPanel>
             <StackPanel Width="150" Margin="0,0,8,8">
                 <TextBlock Text="Задержка (мс)" Classes="label" />
-                <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay}" />
+                <TextBox Width="120" Text="{Binding DelayAfterLoadMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>
