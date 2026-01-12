@@ -28,10 +28,19 @@
                   AutoGenerateColumns="False"
                   Height="200">
             <DataGrid.Columns>
-                <DataGridComboBoxColumn Header="Type"
-                                        SelectedItemBinding="{Binding Action}"
-                                        ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        Width="160" />
+                <DataGridTemplateColumn Header="Type" Width="160">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Action}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DataContext.ActionOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                      SelectedItem="{Binding Action, Mode=TwoWay}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Selector/Url" Binding="{Binding Selector}" Width="2*" />
                 <DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="2*" />
                 <DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
