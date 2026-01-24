@@ -69,12 +69,22 @@ public partial class RunsTabViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        var previousRunId = SelectedRun?.RunId;
+        var fromDate = NormalizeDate(FromDate);
+        var toDate = NormalizeDate(ToDate);
+        if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
+        {
+            (fromDate, toDate) = (toDate, fromDate);
+            FromDate = fromDate?.DateTime;
+            ToDate = toDate?.DateTime;
+        }
+
         var query = new RunQuery
         {
             ModuleType = SelectedModuleType,
             Status = SelectedStatus,
-            From = FromDate.HasValue ? new DateTimeOffset(FromDate.Value) : null,
-            To = ToDate.HasValue ? new DateTimeOffset(ToDate.Value) : null,
+            From = fromDate,
+            To = toDate,
             Search = SearchText
         };
 
@@ -83,6 +93,11 @@ public partial class RunsTabViewModel : ObservableObject
         foreach (var item in items)
         {
             Runs.Add(item);
+        }
+
+        if (Runs.Count > 0)
+        {
+            SelectedRun = Runs.FirstOrDefault(run => run.RunId == previousRunId) ?? Runs[0];
         }
     }
 
@@ -161,5 +176,16 @@ public partial class RunsTabViewModel : ObservableObject
             UseShellExecute = true
         };
         Process.Start(psi);
+    }
+
+    private static DateTimeOffset? NormalizeDate(DateTime? value)
+    {
+        if (!value.HasValue || value.Value == DateTime.MinValue)
+        {
+            return null;
+        }
+
+        var date = DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc);
+        return new DateTimeOffset(date);
     }
 }

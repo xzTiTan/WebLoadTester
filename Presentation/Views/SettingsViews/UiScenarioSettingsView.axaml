@@ -39,7 +39,15 @@
             </StackPanel>
         </StackPanel>
 
-        <TextBlock Text="Шаги" Classes="label" />
+        <StackPanel Spacing="4">
+            <TextBlock Text="Шаги" Classes="label" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Content="Добавить" Command="{Binding AddStepCommand}" />
+                <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
+                <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
+                <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
+            </StackPanel>
+        </StackPanel>
         <dg:DataGrid ItemsSource="{Binding Steps}"
                      SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
                      AutoGenerateColumns="False"
@@ -64,11 +72,5 @@
                 <dg:DataGridTextColumn Header="DelayMs" Binding="{Binding DelayMs}" Width="120" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Content="Добавить" Command="{Binding AddStepCommand}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
-            <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
-            <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
-        </StackPanel>
     </StackPanel>
 </UserControl>

@@ -26,7 +26,16 @@
 
             <Border Classes="panel">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Прогоны" Classes="h1" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Прогоны" Classes="h1" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" />
+                            <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" />
+                            <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" />
+                            <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}" />
+                            <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}" />
+                        </StackPanel>
+                    </Grid>
                     <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Height="300">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="DateTime" Binding="{Binding StartedAt}" Width="2*" />
@@ -39,13 +48,6 @@
                             <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
                         </DataGrid.Columns>
                     </DataGrid>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" />
-                        <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" />
-                        <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" />
-                        <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}" />
-                        <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}" />
-                    </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -31,4 +31,11 @@ public partial class ModuleItemViewModel : ObservableObject
 
     [ObservableProperty]
     private TestReport? lastReport;
+
+    public bool HasReport => LastReport != null;
+
+    partial void OnLastReportChanged(TestReport? value)
+    {
+        OnPropertyChanged(nameof(HasReport));
+    }
 }

@@ -9,7 +9,13 @@
         <TextBlock Text="Настройки HTTP функциональных проверок" Classes="h1" />
         <TextBlock Text="Base URL" Classes="label" />
         <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
-        <TextBlock Text="Эндпоинты (пути относительно Base URL)" Classes="label" />
+        <StackPanel Spacing="4">
+            <TextBlock Text="Эндпоинты (пути относительно Base URL)" Classes="label" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
+                <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+            </StackPanel>
+        </StackPanel>
         <dg:DataGrid ItemsSource="{Binding Endpoints}"
                      SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
                      AutoGenerateColumns="False"
@@ -34,11 +40,13 @@
                 <dg:DataGridTextColumn Header="AssertContains" Binding="{Binding BodyContains}" Width="2*" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
-        </StackPanel>
-        <TextBlock Text="Таймаут (сек)" Classes="label" />
-        <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+            <TextBlock Text="Таймаут (сек)" Classes="label" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1"
+                     Width="120"
+                     HorizontalAlignment="Left"
+                     Margin="8,0,0,0"
+                     Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+        </Grid>
     </StackPanel>
 </UserControl>

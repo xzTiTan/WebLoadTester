@@ -16,6 +16,12 @@
         <TextBlock Text="Порты" Classes="label" />
         <CheckBox Content="Авто-порты по схеме URL (http→80, https→443)"
                   IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Добавить" Command="{Binding AddPortCommand}"
+                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+            <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
+                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+        </StackPanel>
         <dg:DataGrid ItemsSource="{Binding Ports}"
                      SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
                      AutoGenerateColumns="False"
@@ -25,11 +31,5 @@
                 <dg:DataGridTextColumn Header="Port" Binding="{Binding Value}" Width="*" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Content="Добавить" Command="{Binding AddPortCommand}"
-                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
-                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-        </StackPanel>
     </StackPanel>
 </UserControl>
