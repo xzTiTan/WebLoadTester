@@ -256,6 +256,26 @@ public class SqliteRunStore : IRunStore
         return testCase;
     }
 
+    public async Task DeleteTestCaseAsync(Guid testCaseId, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct);
+
+        var deleteVersions = connection.CreateCommand();
+        deleteVersions.CommandText = @"DELETE FROM TestCaseVersions WHERE TestCaseId = $id";
+        deleteVersions.Parameters.AddWithValue("$id", testCaseId.ToString());
+        deleteVersions.Transaction = transaction;
+        await deleteVersions.ExecuteNonQueryAsync(ct);
+
+        var deleteCase = connection.CreateCommand();
+        deleteCase.CommandText = @"DELETE FROM TestCases WHERE Id = $id";
+        deleteCase.Parameters.AddWithValue("$id", testCaseId.ToString());
+        deleteCase.Transaction = transaction;
+        await deleteCase.ExecuteNonQueryAsync(ct);
+
+        await transaction.CommitAsync(ct);
+    }
+
     public async Task<IReadOnlyList<RunProfile>> GetRunProfilesAsync(CancellationToken ct)
     {
         var result = new List<RunProfile>();
@@ -289,9 +309,43 @@ public class SqliteRunStore : IRunStore
 
     public async Task<RunProfile> SaveRunProfileAsync(RunProfile profile, CancellationToken ct)
     {
-        var stored = new RunProfile
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        var storedId = profile.Id == Guid.Empty ? Guid.NewGuid() : profile.Id;
+        if (profile.Id == Guid.Empty)
         {
-            Id = Guid.NewGuid(),
+            command.CommandText = @"INSERT INTO RunProfiles (Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
+                                       Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled)
+                                VALUES ($id, $name, $parallelism, $mode, $iterations, $duration, $timeout,
+                                        $headless, $screenshotsPolicy, $html, $telegram, $preflight)";
+        }
+        else
+        {
+            command.CommandText = @"UPDATE RunProfiles
+                                    SET Name = $name, Parallelism = $parallelism, Mode = $mode, Iterations = $iterations,
+                                        DurationSeconds = $duration, TimeoutSeconds = $timeout, Headless = $headless,
+                                        ScreenshotsPolicy = $screenshotsPolicy, HtmlReportEnabled = $html,
+                                        TelegramEnabled = $telegram, PreflightEnabled = $preflight
+                                    WHERE Id = $id";
+        }
+
+        command.Parameters.AddWithValue("$id", storedId.ToString());
+        command.Parameters.AddWithValue("$name", profile.Name);
+        command.Parameters.AddWithValue("$parallelism", profile.Parallelism);
+        command.Parameters.AddWithValue("$mode", profile.Mode.ToString());
+        command.Parameters.AddWithValue("$iterations", profile.Iterations);
+        command.Parameters.AddWithValue("$duration", profile.DurationSeconds);
+        command.Parameters.AddWithValue("$timeout", profile.TimeoutSeconds);
+        command.Parameters.AddWithValue("$headless", profile.Headless ? 1 : 0);
+        command.Parameters.AddWithValue("$screenshotsPolicy", profile.ScreenshotsPolicy.ToString());
+        command.Parameters.AddWithValue("$html", profile.HtmlReportEnabled ? 1 : 0);
+        command.Parameters.AddWithValue("$telegram", profile.TelegramEnabled ? 1 : 0);
+        command.Parameters.AddWithValue("$preflight", profile.PreflightEnabled ? 1 : 0);
+        await command.ExecuteNonQueryAsync(ct);
+
+        return new RunProfile
+        {
+            Id = storedId,
             Name = profile.Name,
             Parallelism = profile.Parallelism,
             Mode = profile.Mode,
@@ -304,28 +358,15 @@ public class SqliteRunStore : IRunStore
             TelegramEnabled = profile.TelegramEnabled,
             PreflightEnabled = profile.PreflightEnabled
         };
+    }
 
+    public async Task DeleteRunProfileAsync(Guid profileId, CancellationToken ct)
+    {
         await using var connection = CreateConnection();
         await using var command = connection.CreateCommand();
-        command.CommandText = @"INSERT INTO RunProfiles (Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
-                                       Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled)
-                                VALUES ($id, $name, $parallelism, $mode, $iterations, $duration, $timeout,
-                                        $headless, $screenshotsPolicy, $html, $telegram, $preflight)";
-        command.Parameters.AddWithValue("$id", stored.Id.ToString());
-        command.Parameters.AddWithValue("$name", stored.Name);
-        command.Parameters.AddWithValue("$parallelism", stored.Parallelism);
-        command.Parameters.AddWithValue("$mode", stored.Mode.ToString());
-        command.Parameters.AddWithValue("$iterations", stored.Iterations);
-        command.Parameters.AddWithValue("$duration", stored.DurationSeconds);
-        command.Parameters.AddWithValue("$timeout", stored.TimeoutSeconds);
-        command.Parameters.AddWithValue("$headless", stored.Headless ? 1 : 0);
-        command.Parameters.AddWithValue("$screenshotsPolicy", stored.ScreenshotsPolicy.ToString());
-        command.Parameters.AddWithValue("$html", stored.HtmlReportEnabled ? 1 : 0);
-        command.Parameters.AddWithValue("$telegram", stored.TelegramEnabled ? 1 : 0);
-        command.Parameters.AddWithValue("$preflight", stored.PreflightEnabled ? 1 : 0);
+        command.CommandText = @"DELETE FROM RunProfiles WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", profileId.ToString());
         await command.ExecuteNonQueryAsync(ct);
-
-        return stored;
     }
 
     public async Task CreateRunAsync(TestRun run, CancellationToken ct)
@@ -565,6 +606,38 @@ public class SqliteRunStore : IRunStore
             Items = items,
             Artifacts = artifacts
         };
+    }
+
+    public async Task DeleteRunAsync(string runId, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct);
+
+        var deleteItems = connection.CreateCommand();
+        deleteItems.CommandText = @"DELETE FROM RunItems WHERE RunId = $runId";
+        deleteItems.Parameters.AddWithValue("$runId", runId);
+        deleteItems.Transaction = transaction;
+        await deleteItems.ExecuteNonQueryAsync(ct);
+
+        var deleteArtifacts = connection.CreateCommand();
+        deleteArtifacts.CommandText = @"DELETE FROM Artifacts WHERE RunId = $runId";
+        deleteArtifacts.Parameters.AddWithValue("$runId", runId);
+        deleteArtifacts.Transaction = transaction;
+        await deleteArtifacts.ExecuteNonQueryAsync(ct);
+
+        var deleteNotifications = connection.CreateCommand();
+        deleteNotifications.CommandText = @"DELETE FROM TelegramNotifications WHERE RunId = $runId";
+        deleteNotifications.Parameters.AddWithValue("$runId", runId);
+        deleteNotifications.Transaction = transaction;
+        await deleteNotifications.ExecuteNonQueryAsync(ct);
+
+        var deleteRun = connection.CreateCommand();
+        deleteRun.CommandText = @"DELETE FROM TestRuns WHERE RunId = $runId";
+        deleteRun.Parameters.AddWithValue("$runId", runId);
+        deleteRun.Transaction = transaction;
+        await deleteRun.ExecuteNonQueryAsync(ct);
+
+        await transaction.CommitAsync(ct);
     }
 
     private SqliteConnection CreateConnection()

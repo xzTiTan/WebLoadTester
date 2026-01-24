@@ -57,6 +57,14 @@ public partial class RunsTabViewModel : ObservableObject
     [ObservableProperty]
     private string? searchText;
 
+    [ObservableProperty]
+    private string userMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isDeleteConfirmVisible;
+
+    private string? pendingDeleteRunId;
+
     public void SetModuleOptions(IEnumerable<string> moduleTypes)
     {
         ModuleFilterOptions.Clear();
@@ -88,6 +96,7 @@ public partial class RunsTabViewModel : ObservableObject
             Search = SearchText
         };
 
+        IsDeleteConfirmVisible = false;
         Runs.Clear();
         var items = await _runStore.QueryRunsAsync(query, CancellationToken.None);
         foreach (var item in items)
@@ -99,6 +108,8 @@ public partial class RunsTabViewModel : ObservableObject
         {
             SelectedRun = Runs.FirstOrDefault(run => run.RunId == previousRunId) ?? Runs[0];
         }
+
+        UserMessage = string.Empty;
     }
 
     [RelayCommand]
@@ -110,7 +121,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         var path = Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
-        OpenPath(path);
+        OpenPath(path, "Файл JSON отчёта не найден.");
     }
 
     [RelayCommand]
@@ -122,7 +133,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         var path = Path.Combine(_runsRoot, SelectedRun.RunId, "report.html");
-        OpenPath(path);
+        OpenPath(path, "HTML отчёт не найден.");
     }
 
     [RelayCommand]
@@ -134,7 +145,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         var path = Path.Combine(_runsRoot, SelectedRun.RunId);
-        OpenPath(path);
+        OpenPath(path, "Папка прогона не найдена.");
     }
 
     [RelayCommand]
@@ -149,6 +160,24 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
+            UserMessage = "RunId скопирован в буфер обмена.";
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyRunPathAsync()
+    {
+        if (SelectedRun == null)
+        {
+            return;
+        }
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.Clipboard is IClipboard clipboard)
+        {
+            var path = Path.Combine(_runsRoot, SelectedRun.RunId);
+            await clipboard.SetTextAsync(path);
+            UserMessage = "Путь прогона скопирован в буфер обмена.";
         }
     }
 
@@ -163,10 +192,60 @@ public partial class RunsTabViewModel : ObservableObject
         await _repeatRun(SelectedRun.RunId);
     }
 
-    private static void OpenPath(string path)
+    [RelayCommand]
+    private void RequestDeleteRun()
+    {
+        if (SelectedRun == null)
+        {
+            return;
+        }
+
+        pendingDeleteRunId = SelectedRun.RunId;
+        IsDeleteConfirmVisible = true;
+        UserMessage = $"Удалить прогон {SelectedRun.RunId}?";
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDeleteRunAsync()
+    {
+        if (pendingDeleteRunId == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _runStore.DeleteRunAsync(pendingDeleteRunId, CancellationToken.None);
+            var runFolder = Path.Combine(_runsRoot, pendingDeleteRunId);
+            if (Directory.Exists(runFolder))
+            {
+                Directory.Delete(runFolder, recursive: true);
+            }
+
+            IsDeleteConfirmVisible = false;
+            pendingDeleteRunId = null;
+            UserMessage = "Прогон удалён.";
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            UserMessage = $"Не удалось удалить прогон: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDeleteRun()
+    {
+        IsDeleteConfirmVisible = false;
+        pendingDeleteRunId = null;
+        UserMessage = string.Empty;
+    }
+
+    private void OpenPath(string path, string notFoundMessage)
     {
         if (!File.Exists(path) && !Directory.Exists(path))
         {
+            UserMessage = notFoundMessage;
             return;
         }
 
@@ -176,6 +255,7 @@ public partial class RunsTabViewModel : ObservableObject
             UseShellExecute = true
         };
         Process.Start(psi);
+        UserMessage = string.Empty;
     }
 
     private static DateTimeOffset? NormalizeDate(DateTime? value)

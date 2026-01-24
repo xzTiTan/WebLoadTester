@@ -28,12 +28,14 @@
                 <StackPanel Spacing="6">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Прогоны" Classes="h1" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <StackPanel Grid.Column="1" Classes="section-actions">
                             <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" />
                             <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" />
                             <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" />
+                            <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}" />
                             <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}" />
                             <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}" />
+                            <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}" />
                         </StackPanel>
                     </Grid>
                     <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Height="300">
@@ -48,6 +50,16 @@
                             <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
                         </DataGrid.Columns>
                     </DataGrid>
+                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="4">
+                        <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                        <StackPanel Classes="section-actions">
+                            <Button Content="Подтвердить удаление"
+                                    Command="{Binding ConfirmDeleteRunCommand}" />
+                            <Button Content="Отмена"
+                                    Command="{Binding CancelDeleteRunCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="{Binding UserMessage}" Foreground="Gray" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
         </StackPanel>

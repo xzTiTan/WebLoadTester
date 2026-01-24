@@ -20,11 +20,11 @@
                 <dg:DataGridTextColumn Header="MaxLatencyMs" Binding="{Binding MaxLatencyMs}" Width="*" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="6">
+        <StackPanel Classes="section-actions">
             <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
             <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
         </StackPanel>
         <TextBlock Text="Таймаут (сек)" Classes="label" />
-        <TextBox Width="120" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+        <TextBox Classes="compact" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
     </StackPanel>
 </UserControl>

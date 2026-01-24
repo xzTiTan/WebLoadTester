@@ -16,9 +16,11 @@ public interface IRunStore
     Task<IReadOnlyList<TestCase>> GetTestCasesAsync(string moduleType, CancellationToken ct);
     Task<TestCaseVersion?> GetTestCaseVersionAsync(Guid testCaseId, int version, CancellationToken ct);
     Task<TestCase> SaveTestCaseAsync(string name, string description, string moduleType, string payloadJson, string changeNote, CancellationToken ct);
+    Task DeleteTestCaseAsync(Guid testCaseId, CancellationToken ct);
 
     Task<IReadOnlyList<RunProfile>> GetRunProfilesAsync(CancellationToken ct);
     Task<RunProfile> SaveRunProfileAsync(RunProfile profile, CancellationToken ct);
+    Task DeleteRunProfileAsync(Guid profileId, CancellationToken ct);
 
     Task CreateRunAsync(TestRun run, CancellationToken ct);
     Task UpdateRunAsync(TestRun run, CancellationToken ct);
@@ -28,6 +30,7 @@ public interface IRunStore
 
     Task<IReadOnlyList<TestRunSummary>> QueryRunsAsync(RunQuery query, CancellationToken ct);
     Task<TestRunDetail?> GetRunDetailAsync(string runId, CancellationToken ct);
+    Task DeleteRunAsync(string runId, CancellationToken ct);
 }
 
 /// <summary>

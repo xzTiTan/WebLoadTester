@@ -16,7 +16,7 @@
                 <dg:DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="*" />
             </dg:DataGrid.Columns>
         </dg:DataGrid>
-        <StackPanel Orientation="Horizontal" Spacing="6">
+        <StackPanel Classes="section-actions">
             <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
             <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
             <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
@@ -24,26 +24,26 @@
 
         <TextBlock Text="Параметры тайминга" Classes="label" />
         <WrapPanel>
-            <StackPanel Width="170" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="WaitUntil" Classes="label" />
                 <ComboBox ItemsSource="{Binding WaitUntilOptions}"
                           SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="150" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="RepeatsPerUrl" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
+                <NumericUpDown Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
-            <StackPanel Width="150" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Concurrency" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
+                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
-            <StackPanel Width="150" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Headless" Classes="label" />
                 <CheckBox Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="170" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Timeout (ms)" Classes="label" />
-                <NumericUpDown Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
+                <NumericUpDown Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>

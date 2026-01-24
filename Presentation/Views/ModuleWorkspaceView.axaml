@@ -24,13 +24,28 @@
             <Border Classes="panel">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Тесты (Test Library)" Classes="h1" />
-                    <ComboBox ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
-                              SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Classes="section-actions">
+                        <Button Content="Обновить"
+                                Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
                         <Button Content="Загрузить"
                                 Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
                         <Button Content="Сохранить"
                                 Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
+                        <Button Content="Сохранить как"
+                                Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
+                        <Button Content="Удалить"
+                                Command="{Binding SelectedModule.TestLibrary.DeleteSelectedCommand}" />
+                    </StackPanel>
+                    <ComboBox ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
+                              SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
+                    <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="4">
+                        <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                        <StackPanel Classes="section-actions">
+                            <Button Content="Подтвердить удаление"
+                                    Command="{Binding SelectedModule.TestLibrary.ConfirmDeleteSelectedCommand}" />
+                            <Button Content="Отмена"
+                                    Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
+                        </StackPanel>
                     </StackPanel>
                     <TextBlock Text="Название теста" Classes="label" />
                     <TextBox Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
@@ -38,6 +53,9 @@
                     <TextBox Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
                     <TextBlock Text="Комментарий к версии" Classes="label" />
                     <TextBox Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
+                    <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}"
+                               Foreground="Gray"
+                               TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
@@ -52,6 +70,14 @@
                 <StackPanel Spacing="6"
                             DataContext="{Binding DataContext.RunProfile, RelativeSource={RelativeSource AncestorType=Window}}">
                     <TextBlock Text="Профиль запуска (RunProfile)" Classes="h1" />
+                    <StackPanel Classes="section-actions">
+                        <Button Content="Сохранить профиль"
+                                Command="{Binding SaveProfileCommand}" />
+                        <Button Content="Сохранить как"
+                                Command="{Binding SaveAsProfileCommand}" />
+                        <Button Content="Удалить"
+                                Command="{Binding RequestDeleteProfileCommand}" />
+                    </StackPanel>
                     <ComboBox ItemsSource="{Binding Profiles}"
                               SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
@@ -60,8 +86,15 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <Button Content="Сохранить профиль"
-                            Command="{Binding SaveProfileCommand}" />
+                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="4">
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                        <StackPanel Classes="section-actions">
+                            <Button Content="Подтвердить удаление"
+                                    Command="{Binding ConfirmDeleteProfileCommand}" />
+                            <Button Content="Отмена"
+                                    Command="{Binding CancelDeleteProfileCommand}" />
+                        </StackPanel>
+                    </StackPanel>
                     <TextBlock Text="Название профиля" Classes="label" />
                     <TextBox Text="{Binding ProfileName, Mode=TwoWay}" />
                     <TextBlock Text="Parallelism" Classes="label" />
@@ -90,13 +123,14 @@
                     <CheckBox Content="Отправить статус в Telegram" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
                     <CheckBox Content="Выполнить предпроверку (Preflight)" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
                     <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
             <Border Classes="panel">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Управление запуском" Classes="h1" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Classes="section-actions">
                         <Button Content="Start"
                                 Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                         <Button Content="Stop"
@@ -152,7 +186,7 @@
             <Border Classes="panel">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Артефакты" Classes="h1" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Classes="section-actions">
                         <Button Content="Открыть JSON"
                                 Command="{Binding DataContext.OpenLatestJsonCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                         <Button Content="Открыть HTML"

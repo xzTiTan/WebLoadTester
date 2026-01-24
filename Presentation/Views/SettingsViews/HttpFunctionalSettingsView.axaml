@@ -11,7 +11,7 @@
         <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
         <StackPanel Spacing="4">
             <TextBlock Text="Эндпоинты (пути относительно Base URL)" Classes="label" />
-            <StackPanel Orientation="Horizontal" Spacing="6">
+            <StackPanel Classes="section-actions">
                 <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
                 <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
             </StackPanel>
@@ -43,8 +43,7 @@
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
             <TextBlock Text="Таймаут (сек)" Classes="label" VerticalAlignment="Center" />
             <TextBox Grid.Column="1"
-                     Width="120"
-                     HorizontalAlignment="Left"
+                     Classes="compact"
                      Margin="8,0,0,0"
                      Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
         </Grid>

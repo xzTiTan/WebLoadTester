@@ -45,6 +45,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://WebLoadTester/Presentation/Styles/Workspace.axaml" />
 
         <Style Selector="TextBlock.h1">
             <Setter Property="FontSize" Value="16" />

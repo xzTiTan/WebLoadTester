@@ -12,27 +12,27 @@
 
         <TextBlock Text="Параметры запуска" Classes="label" />
         <WrapPanel>
-            <StackPanel Width="160" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Concurrency/VUs" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
+                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
-            <StackPanel Width="160" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Iterations" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding TotalRuns, Mode=TwoWay}" />
+                <NumericUpDown Minimum="1" Value="{Binding TotalRuns, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
-            <StackPanel Width="160" Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Timeout (ms)" Classes="label" />
-                <NumericUpDown Minimum="100" Increment="100" Value="{Binding TimeoutMs, Mode=TwoWay}" />
+                <NumericUpDown Minimum="100" Increment="100" Value="{Binding TimeoutMs, Mode=TwoWay}" Classes="compact" />
             </StackPanel>
         </WrapPanel>
         <StackPanel Orientation="Horizontal" Spacing="12">
             <CheckBox Content="Headless" IsChecked="{Binding Headless, Mode=TwoWay}" />
-            <StackPanel Width="200">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Скриншоты" Classes="label" />
                 <ComboBox ItemsSource="{Binding ScreenshotModeOptions}"
                           SelectedItem="{Binding ScreenshotMode, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Width="200">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Политика ошибок шага" Classes="label" />
                 <ComboBox ItemsSource="{Binding ErrorPolicyOptions}"
                           SelectedItem="{Binding ErrorPolicy, Mode=TwoWay}" />
@@ -41,7 +41,7 @@
 
         <StackPanel Spacing="4">
             <TextBlock Text="Шаги" Classes="label" />
-            <StackPanel Orientation="Horizontal" Spacing="6">
+            <StackPanel Classes="section-actions">
                 <Button Content="Добавить" Command="{Binding AddStepCommand}" />
                 <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
                 <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />

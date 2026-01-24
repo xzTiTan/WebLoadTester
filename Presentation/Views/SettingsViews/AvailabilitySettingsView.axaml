@@ -13,21 +13,21 @@
             <ComboBoxItem>Tcp</ComboBoxItem>
         </ComboBox>
         <WrapPanel>
-            <StackPanel Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Интервал (сек)" Classes="label" />
-                <TextBox Width="120" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                <TextBox Classes="compact" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
-            <StackPanel Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Длительность (мин)" Classes="label" />
-                <TextBox Width="120" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                <TextBox Classes="compact" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
-            <StackPanel Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Таймаут (мс)" Classes="label" />
-                <TextBox Width="120" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                <TextBox Classes="compact" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
-            <StackPanel Margin="0,0,8,8">
+            <StackPanel Classes="field-block">
                 <TextBlock Text="Порог ошибок" Classes="label" />
-                <TextBox Width="120" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                <TextBox Classes="compact" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </StackPanel>
         </WrapPanel>
     </StackPanel>

@@ -182,7 +182,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RunStage = "Running";
 
         _runCts = new CancellationTokenSource();
-        var profile = RunProfile.BuildProfileSnapshot();
+        var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
         var runId = Guid.NewGuid().ToString("N");
         var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
         _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);

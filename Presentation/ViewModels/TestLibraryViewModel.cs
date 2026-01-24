@@ -47,6 +47,14 @@ public partial class TestLibraryViewModel : ObservableObject
     [ObservableProperty]
     private bool isBusy;
 
+    [ObservableProperty]
+    private bool isDeleteConfirmVisible;
+
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
+    private TestCaseEntry? pendingDelete;
+
     partial void OnSelectedTestCaseChanged(TestCaseEntry? value)
     {
         if (value == null)
@@ -64,11 +72,18 @@ public partial class TestLibraryViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            IsDeleteConfirmVisible = false;
+            pendingDelete = null;
             TestCases.Clear();
             var cases = await _runStore.GetTestCasesAsync(_module.Id, CancellationToken.None);
             foreach (var testCase in cases)
             {
                 TestCases.Add(new TestCaseEntry(testCase));
+            }
+
+            if (SelectedTestCase == null && TestCases.Count > 0)
+            {
+                SelectedTestCase = TestCases[0];
             }
         }
         finally
@@ -82,12 +97,14 @@ public partial class TestLibraryViewModel : ObservableObject
     {
         if (SelectedTestCase == null)
         {
+            StatusMessage = "Выберите тест для загрузки.";
             return;
         }
 
         var version = await _runStore.GetTestCaseVersionAsync(SelectedTestCase.Id, SelectedTestCase.CurrentVersion, CancellationToken.None);
         if (version == null)
         {
+            StatusMessage = "Не удалось загрузить выбранную версию теста.";
             return;
         }
 
@@ -95,6 +112,7 @@ public partial class TestLibraryViewModel : ObservableObject
         if (settings != null)
         {
             _settings.UpdateFrom(settings);
+            StatusMessage = "Тест загружен.";
         }
     }
 
@@ -104,6 +122,57 @@ public partial class TestLibraryViewModel : ObservableObject
         await EnsureTestCaseAsync(CancellationToken.None);
     }
 
+    [RelayCommand]
+    private async Task SaveAsAsync()
+    {
+        var name = string.IsNullOrWhiteSpace(TestName) ? _module.DisplayName : TestName;
+        if (TestCases.Any(tc => string.Equals(tc.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            StatusMessage = "Тест с таким именем уже существует. Укажите новое имя для сохранения.";
+            return;
+        }
+
+        await EnsureTestCaseAsync(CancellationToken.None);
+        StatusMessage = "Тест сохранён как новый.";
+    }
+
+    [RelayCommand]
+    private void RequestDeleteSelected()
+    {
+        if (SelectedTestCase == null)
+        {
+            return;
+        }
+
+        pendingDelete = SelectedTestCase;
+        IsDeleteConfirmVisible = true;
+        StatusMessage = $"Удалить тест \"{SelectedTestCase.Name}\"?";
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDeleteSelectedAsync()
+    {
+        if (pendingDelete == null)
+        {
+            return;
+        }
+
+        await _runStore.DeleteTestCaseAsync(pendingDelete.Id, CancellationToken.None);
+        IsDeleteConfirmVisible = false;
+        StatusMessage = "Тест удалён.";
+        pendingDelete = null;
+        SelectedTestCase = null;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void CancelDeleteSelected()
+    {
+        IsDeleteConfirmVisible = false;
+        pendingDelete = null;
+        StatusMessage = string.Empty;
+    }
+
     public async Task<TestCase> EnsureTestCaseAsync(CancellationToken ct)
     {
         var name = string.IsNullOrWhiteSpace(TestName) ? _module.DisplayName : TestName;
@@ -111,6 +180,7 @@ public partial class TestLibraryViewModel : ObservableObject
         var saved = await _runStore.SaveTestCaseAsync(name, TestDescription, _module.Id, payloadJson, ChangeNote, ct);
         await RefreshAsync();
         SelectedTestCase = TestCases.FirstOrDefault(tc => tc.Id == saved.Id) ?? new TestCaseEntry(saved);
+        StatusMessage = "Тест сохранён.";
         return saved;
     }
 

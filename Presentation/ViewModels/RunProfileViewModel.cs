@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -62,6 +63,12 @@ public partial class RunProfileViewModel : ObservableObject
     [ObservableProperty]
     private bool preflightEnabled;
 
+    [ObservableProperty]
+    private bool isDeleteConfirmVisible;
+
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
     public string WarningMessage =>
         Parallelism > 10 || DurationSeconds > 300
             ? "Высокая нагрузка: Parallelism > 10 или Duration > 5 минут."
@@ -93,6 +100,7 @@ public partial class RunProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        IsDeleteConfirmVisible = false;
         Profiles.Clear();
         var profiles = await _runStore.GetRunProfilesAsync(CancellationToken.None);
         foreach (var profile in profiles)
@@ -104,18 +112,71 @@ public partial class RunProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveProfileAsync()
     {
-        var profile = BuildProfileSnapshot();
+        var profile = BuildProfileSnapshot(SelectedProfile?.Id ?? Guid.Empty);
         profile.Name = string.IsNullOrWhiteSpace(ProfileName) ? "Profile" : ProfileName;
         var saved = await _runStore.SaveRunProfileAsync(profile, CancellationToken.None);
-        Profiles.Add(saved);
-        SelectedProfile = saved;
+        await RefreshAsync();
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Id == saved.Id) ?? saved;
+        StatusMessage = "Профиль сохранён.";
     }
 
-    public RunProfile BuildProfileSnapshot()
+    [RelayCommand]
+    private async Task SaveAsProfileAsync()
+    {
+        var name = string.IsNullOrWhiteSpace(ProfileName) ? "Profile" : ProfileName;
+        if (Profiles.Any(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            StatusMessage = "Профиль с таким именем уже существует. Укажите новое имя для сохранения.";
+            return;
+        }
+
+        var profile = BuildProfileSnapshot(Guid.Empty);
+        profile.Name = name;
+        var saved = await _runStore.SaveRunProfileAsync(profile, CancellationToken.None);
+        await RefreshAsync();
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Id == saved.Id) ?? saved;
+        StatusMessage = "Профиль сохранён как новый.";
+    }
+
+    [RelayCommand]
+    private void RequestDeleteProfile()
+    {
+        if (SelectedProfile == null)
+        {
+            return;
+        }
+
+        IsDeleteConfirmVisible = true;
+        StatusMessage = $"Удалить профиль \"{SelectedProfile.Name}\"?";
+    }
+
+    [RelayCommand]
+    private async Task ConfirmDeleteProfileAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            return;
+        }
+
+        await _runStore.DeleteRunProfileAsync(SelectedProfile.Id, CancellationToken.None);
+        IsDeleteConfirmVisible = false;
+        StatusMessage = "Профиль удалён.";
+        SelectedProfile = null;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void CancelDeleteProfile()
+    {
+        IsDeleteConfirmVisible = false;
+        StatusMessage = string.Empty;
+    }
+
+    public RunProfile BuildProfileSnapshot(Guid id)
     {
         return new RunProfile
         {
-            Id = Guid.Empty,
+            Id = id,
             Name = ProfileName,
             Parallelism = Parallelism,
             Mode = Mode,

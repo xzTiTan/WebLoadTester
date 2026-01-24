@@ -16,7 +16,7 @@
         <TextBlock Text="Порты" Classes="label" />
         <CheckBox Content="Авто-порты по схеме URL (http→80, https→443)"
                   IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
-        <StackPanel Orientation="Horizontal" Spacing="6">
+        <StackPanel Classes="section-actions">
             <Button Content="Добавить" Command="{Binding AddPortCommand}"
                     IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
             <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"

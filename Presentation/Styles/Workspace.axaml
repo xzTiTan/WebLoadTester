@@ -1,0 +1,22 @@
+<Styles xmlns="https://github.com/avaloniaui">
+    <Style Selector="StackPanel.section-actions">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+
+    <Style Selector="StackPanel.field-block">
+        <Setter Property="MinWidth" Value="160" />
+        <Setter Property="Margin" Value="0,0,12,8" />
+    </Style>
+
+    <Style Selector="TextBox.compact">
+        <Setter Property="MinWidth" Value="120" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="NumericUpDown.compact">
+        <Setter Property="MinWidth" Value="120" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+</Styles>
