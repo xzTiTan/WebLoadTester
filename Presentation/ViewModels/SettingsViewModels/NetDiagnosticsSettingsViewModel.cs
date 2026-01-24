@@ -43,6 +43,28 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "Сетевая диагностика";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not NetDiagnosticsSettings s)
+        {
+            return;
+        }
+
+        Hostname = s.Hostname;
+        AutoPortsByScheme = s.AutoPortsByScheme;
+        EnableDns = s.EnableDns;
+        EnableTcp = s.EnableTcp;
+        EnableTls = s.EnableTls;
+
+        Ports.Clear();
+        foreach (var port in s.Ports.Select(p => new PortItem(p)))
+        {
+            port.PropertyChanged += OnPortItemChanged;
+            Ports.Add(port);
+        }
+
+        UpdatePortsSettings();
+    }
 
     public ObservableCollection<PortItem> Ports { get; }
 

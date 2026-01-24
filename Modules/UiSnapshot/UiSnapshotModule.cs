@@ -18,6 +18,7 @@ public class UiSnapshotModule : ITestModule
 {
     public string Id => "ui.snapshot";
     public string DisplayName => "UI снимки";
+    public string Description => "Создаёт скриншоты страниц для фиксации доступности и визуального состояния.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiSnapshotSettings);
 
@@ -78,12 +79,17 @@ public class UiSnapshotModule : ITestModule
         var s = (UiSnapshotSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(UiSnapshotModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };
@@ -91,7 +97,7 @@ public class UiSnapshotModule : ITestModule
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
-            report.Status = TestStatus.Error;
+            report.Status = TestStatus.Failed;
             report.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
@@ -113,7 +119,7 @@ public class UiSnapshotModule : ITestModule
         var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
         var completed = 0;
-        var runFolder = ctx.Artifacts.CreateRunFolder(report.StartedAt.ToString("yyyyMMdd_HHmmss"));
+        var runFolder = ctx.RunFolder;
 
         var runs = s.Targets.SelectMany(target =>
             Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();

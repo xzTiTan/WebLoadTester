@@ -15,6 +15,7 @@ public class NetDiagnosticsModule : ITestModule
 {
     public string Id => "net.diagnostics";
     public string DisplayName => "Сетевая диагностика";
+    public string Description => "Диагностика DNS/TCP/TLS для локализации сетевых проблем.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(NetDiagnosticsSettings);
 
@@ -51,12 +52,17 @@ public class NetDiagnosticsModule : ITestModule
         var s = (NetDiagnosticsSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(NetDiagnosticsModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

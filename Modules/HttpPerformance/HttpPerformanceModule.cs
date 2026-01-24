@@ -18,6 +18,7 @@ public class HttpPerformanceModule : ITestModule
 {
     public string Id => "http.performance";
     public string DisplayName => "HTTP производительность";
+    public string Description => "Оценивает задержки и устойчивость HTTP при контролируемой параллельности.";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpPerformanceSettings);
 
@@ -67,12 +68,17 @@ public class HttpPerformanceModule : ITestModule
         var s = (HttpPerformanceSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(HttpPerformanceModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

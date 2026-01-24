@@ -25,6 +25,19 @@ public partial class PreflightSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "Предварительные проверки";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not PreflightSettings s)
+        {
+            return;
+        }
+
+        Target = s.Target;
+        CheckDns = s.CheckDns;
+        CheckTcp = s.CheckTcp;
+        CheckTls = s.CheckTls;
+        CheckHttp = s.CheckHttp;
+    }
 
     [ObservableProperty]
     private string target = string.Empty;

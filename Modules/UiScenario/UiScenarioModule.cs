@@ -19,6 +19,7 @@ public class UiScenarioModule : ITestModule
 {
     public string Id => "ui.scenario";
     public string DisplayName => "UI сценарий";
+    public string Description => "Выполняет UI-сценарии с кликами и вводом текста, фиксируя шаги и скриншоты.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiScenarioSettings);
 
@@ -79,12 +80,17 @@ public class UiScenarioModule : ITestModule
         var s = (UiScenarioSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(UiScenarioModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };
@@ -92,7 +98,7 @@ public class UiScenarioModule : ITestModule
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
-            report.Status = TestStatus.Error;
+            report.Status = TestStatus.Failed;
             report.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
@@ -176,7 +182,7 @@ public class UiScenarioModule : ITestModule
 
                     if (s.ScreenshotMode == ScreenshotMode.Always && page != null)
                     {
-                        screenshotPath = await SaveScreenshotAsync(ctx, report.StartedAt, page, $"run_{index}.png");
+                        screenshotPath = await SaveScreenshotAsync(ctx, page, $"run_{index}.png");
                     }
 
                     sw.Stop();
@@ -192,7 +198,7 @@ public class UiScenarioModule : ITestModule
                 {
                     if (s.ScreenshotMode == ScreenshotMode.OnFailure && page != null)
                     {
-                        screenshotPath = await SaveScreenshotAsync(ctx, report.StartedAt, page, $"run_{index}_error.png");
+                        screenshotPath = await SaveScreenshotAsync(ctx, page, $"run_{index}_error.png");
                     }
                     sw.Stop();
                     results.Add(new RunResult($"Run {index}")
@@ -226,10 +232,9 @@ public class UiScenarioModule : ITestModule
         return report;
     }
 
-    private static async Task<string?> SaveScreenshotAsync(IRunContext ctx, DateTimeOffset startedAt, IPage page, string fileName)
+    private static async Task<string?> SaveScreenshotAsync(IRunContext ctx, IPage page, string fileName)
     {
         var bytes = await page.ScreenshotAsync();
-        var runFolder = ctx.Artifacts.CreateRunFolder(startedAt.ToString("yyyyMMdd_HHmmss"));
-        return await ctx.Artifacts.SaveScreenshotAsync(bytes, runFolder, fileName);
+        return await ctx.Artifacts.SaveScreenshotAsync(bytes, ctx.RunFolder, fileName);
     }
 }

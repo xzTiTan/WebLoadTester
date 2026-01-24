@@ -1,11 +1,12 @@
 namespace WebLoadTester.Core.Domain;
 
 /// <summary>
-/// Статус выполнения теста.
+/// Итоговый статус выполнения прогона.
 /// </summary>
 public enum TestStatus
 {
-    Completed,
-    Stopped,
-    Error
+    Success,
+    Failed,
+    Partial,
+    Cancelled
 }

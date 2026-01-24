@@ -25,6 +25,30 @@ public interface IRunContext
     /// </summary>
     Limits Limits { get; }
     /// <summary>
+    /// Идентификатор прогона.
+    /// </summary>
+    string RunId { get; }
+    /// <summary>
+    /// Профиль запуска (снимок).
+    /// </summary>
+    RunProfile Profile { get; }
+    /// <summary>
+    /// Имя теста для отчётности.
+    /// </summary>
+    string TestName { get; }
+    /// <summary>
+    /// Идентификатор теста в библиотеке.
+    /// </summary>
+    Guid TestCaseId { get; }
+    /// <summary>
+    /// Версия теста в библиотеке.
+    /// </summary>
+    int TestCaseVersion { get; }
+    /// <summary>
+    /// Папка прогона с артефактами.
+    /// </summary>
+    string RunFolder { get; }
+    /// <summary>
     /// Опциональный Telegram-уведомитель.
     /// </summary>
     ITelegramNotifier? Telegram { get; }

@@ -30,6 +30,26 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "UI тайминги";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not UiTimingSettings s)
+        {
+            return;
+        }
+
+        Targets.Clear();
+        foreach (var target in s.Targets)
+        {
+            Targets.Add(target);
+        }
+
+        RepeatsPerUrl = s.RepeatsPerUrl;
+        Concurrency = s.Concurrency;
+        WaitUntil = s.WaitUntil;
+        Headless = s.Headless;
+        TimeoutMs = s.TimeoutMs;
+        _settings.Targets = Targets.ToList();
+    }
 
     public ObservableCollection<TimingTarget> Targets { get; }
 

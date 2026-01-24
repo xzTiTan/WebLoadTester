@@ -26,6 +26,20 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "Доступность";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not AvailabilitySettings s)
+        {
+            return;
+        }
+
+        Target = s.Target;
+        TargetType = s.TargetType;
+        IntervalSeconds = s.IntervalSeconds;
+        DurationMinutes = s.DurationMinutes;
+        TimeoutMs = s.TimeoutMs;
+        FailThreshold = s.FailThreshold;
+    }
 
     [ObservableProperty]
     private string target = string.Empty;

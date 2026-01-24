@@ -41,9 +41,30 @@ public class HtmlReportWriter
         sb.AppendLine($"<h2>{report.ModuleName}</h2>");
         sb.AppendLine($"<p>Status: <strong>{report.Status}</strong></p>");
         sb.AppendLine($"<p>Started: {report.StartedAt:O}<br/>Finished: {report.FinishedAt:O}</p>");
-        sb.AppendLine("<h3>Metrics</h3>");
-        sb.AppendLine("<table><tr><th>Avg</th><th>Min</th><th>Max</th><th>P50</th><th>P95</th><th>P99</th></tr>");
-        sb.AppendLine($"<tr><td>{report.Metrics.AverageMs:F2}</td><td>{report.Metrics.MinMs:F2}</td><td>{report.Metrics.MaxMs:F2}</td><td>{report.Metrics.P50Ms:F2}</td><td>{report.Metrics.P95Ms:F2}</td><td>{report.Metrics.P99Ms:F2}</td></tr></table>");
+        sb.AppendLine("<h3>Summary</h3>");
+        sb.AppendLine("<table><tr><th>Total Items</th><th>Failed Items</th><th>Total Duration (ms)</th><th>Avg</th><th>P95</th><th>P99</th></tr>");
+        sb.AppendLine($"<tr><td>{report.Metrics.TotalItems}</td><td>{report.Metrics.FailedItems}</td><td>{report.Metrics.TotalDurationMs:F2}</td><td>{report.Metrics.AverageMs:F2}</td><td>{report.Metrics.P95Ms:F2}</td><td>{report.Metrics.P99Ms:F2}</td></tr></table>");
+        sb.AppendLine("<h3>Problems</h3>");
+        sb.AppendLine("<table><tr><th>Kind</th><th>Name</th><th>Duration (ms)</th><th>Error</th></tr>");
+        foreach (var result in report.Results)
+        {
+            if (result.Success)
+            {
+                continue;
+            }
+
+            var name = result switch
+            {
+                RunResult run => run.Name,
+                CheckResult check => check.Name,
+                ProbeResult probe => probe.Name,
+                TimingResult timing => timing.Name,
+                _ => ""
+            };
+            var error = string.IsNullOrWhiteSpace(result.ErrorMessage) ? "" : result.ErrorMessage;
+            sb.AppendLine($"<tr class='fail'><td>{result.Kind}</td><td>{name}</td><td>{result.DurationMs:F2}</td><td>{error}</td></tr>");
+        }
+        sb.AppendLine("</table>");
         sb.AppendLine("<h3>Results</h3>");
         sb.AppendLine("<table><tr><th>Kind</th><th>Name</th><th>Success</th><th>Duration (ms)</th><th>Error</th></tr>");
         foreach (var result in report.Results)
@@ -61,6 +82,15 @@ public class HtmlReportWriter
             sb.AppendLine($"<tr{css}><td>{result.Kind}</td><td>{name}</td><td>{result.Success}</td><td>{result.DurationMs:F2}</td><td>{error}</td></tr>");
         }
         sb.AppendLine("</table>");
+        sb.AppendLine("<h3>Artifacts</h3>");
+        sb.AppendLine("<ul>");
+        sb.AppendLine("<li>report.json</li>");
+        if (!string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        {
+            sb.AppendLine("<li>report.html</li>");
+        }
+        sb.AppendLine("<li>logs/run.log</li>");
+        sb.AppendLine("</ul>");
         sb.AppendLine("</body></html>");
         return sb.ToString();
     }

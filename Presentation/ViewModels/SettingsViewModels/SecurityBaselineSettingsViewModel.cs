@@ -24,6 +24,18 @@ public partial class SecurityBaselineSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "Базовая безопасность";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not SecurityBaselineSettings s)
+        {
+            return;
+        }
+
+        Url = s.Url;
+        CheckHeaders = s.CheckHeaders;
+        CheckRedirectHttpToHttps = s.CheckRedirectHttpToHttps;
+        CheckTlsExpiry = s.CheckTlsExpiry;
+    }
 
     [ObservableProperty]
     private string url = string.Empty;

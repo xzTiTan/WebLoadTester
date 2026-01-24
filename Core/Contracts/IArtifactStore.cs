@@ -9,13 +9,9 @@ namespace WebLoadTester.Core.Contracts;
 public interface IArtifactStore
 {
     /// <summary>
-    /// Корневая папка отчётов.
+    /// Корневая папка прогонов.
     /// </summary>
-    string ReportsRoot { get; }
-    /// <summary>
-    /// Корневая папка скриншотов.
-    /// </summary>
-    string ScreenshotsRoot { get; }
+    string RunsRoot { get; }
     /// <summary>
     /// Корневая папка профилей.
     /// </summary>
@@ -25,9 +21,13 @@ public interface IArtifactStore
     /// </summary>
     string CreateRunFolder(string runId);
     /// <summary>
+    /// Возвращает путь к файлу лога для прогона.
+    /// </summary>
+    string GetLogPath(string runId);
+    /// <summary>
     /// Сохраняет отчёт в формате JSON.
     /// </summary>
-    Task<string> SaveJsonAsync(TestReport report, string runFolder);
+    Task<string> SaveJsonAsync(string json, string runFolder);
     /// <summary>
     /// Сохраняет отчёт в формате HTML.
     /// </summary>

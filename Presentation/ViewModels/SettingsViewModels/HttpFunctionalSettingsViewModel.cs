@@ -27,6 +27,22 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "HTTP функциональные проверки";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not HttpFunctionalSettings s)
+        {
+            return;
+        }
+
+        BaseUrl = s.BaseUrl;
+        TimeoutSeconds = s.TimeoutSeconds;
+        Endpoints.Clear();
+        foreach (var endpoint in s.Endpoints)
+        {
+            Endpoints.Add(endpoint);
+        }
+        _settings.Endpoints = Endpoints.ToList();
+    }
 
     public ObservableCollection<HttpEndpoint> Endpoints { get; }
 

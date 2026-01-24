@@ -17,6 +17,7 @@ public class HttpFunctionalModule : ITestModule
 {
     public string Id => "http.functional";
     public string DisplayName => "HTTP функциональные проверки";
+    public string Description => "Проверяет HTTP-эндпоинты на ожидаемые статусы и базовые условия.";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpFunctionalSettings);
 
@@ -79,12 +80,17 @@ public class HttpFunctionalModule : ITestModule
         var s = (HttpFunctionalSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(HttpFunctionalModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

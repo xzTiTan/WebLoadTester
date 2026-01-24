@@ -25,6 +25,19 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "HTTP производительность";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not HttpPerformanceSettings s)
+        {
+            return;
+        }
+
+        Url = s.Url;
+        TotalRequests = s.TotalRequests;
+        Concurrency = s.Concurrency;
+        RpsLimit = s.RpsLimit ?? 0;
+        TimeoutSeconds = s.TimeoutSeconds;
+    }
 
     [ObservableProperty]
     private string url = string.Empty;

@@ -33,6 +33,28 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "UI сценарий";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not UiScenarioSettings s)
+        {
+            return;
+        }
+
+        Steps.Clear();
+        foreach (var step in s.Steps)
+        {
+            Steps.Add(step);
+        }
+
+        TargetUrl = s.TargetUrl;
+        TotalRuns = s.TotalRuns;
+        Concurrency = s.Concurrency;
+        Headless = s.Headless;
+        TimeoutMs = s.TimeoutMs;
+        ErrorPolicy = s.ErrorPolicy;
+        ScreenshotMode = s.ScreenshotMode;
+        _settings.Steps = Steps.ToList();
+    }
 
     public ObservableCollection<UiStep> Steps { get; }
 

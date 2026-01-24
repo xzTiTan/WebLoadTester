@@ -1,0 +1,173 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+             x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
+             x:DataType="vm:ModuleFamilyViewModel"
+             x:CompileBindings="False">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Выбор модуля" Classes="h1" />
+                    <ComboBox ItemsSource="{Binding Modules}"
+                              SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="{Binding SelectedModule.Description}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Тесты (Test Library)" Classes="h1" />
+                    <ComboBox ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
+                              SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Загрузить"
+                                Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
+                        <Button Content="Сохранить"
+                                Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="Название теста" Classes="label" />
+                    <TextBox Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
+                    <TextBlock Text="Описание" Classes="label" />
+                    <TextBox Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
+                    <TextBlock Text="Комментарий к версии" Classes="label" />
+                    <TextBox Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Настройки модуля" Classes="h1" />
+                    <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6"
+                            DataContext="{Binding DataContext.RunProfile, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <TextBlock Text="Профиль запуска (RunProfile)" Classes="h1" />
+                    <ComboBox ItemsSource="{Binding Profiles}"
+                              SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Content="Сохранить профиль"
+                            Command="{Binding SaveProfileCommand}" />
+                    <TextBlock Text="Название профиля" Classes="label" />
+                    <TextBox Text="{Binding ProfileName, Mode=TwoWay}" />
+                    <TextBlock Text="Parallelism" Classes="label" />
+                    <NumericUpDown Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+                    <TextBlock Text="Режим" Classes="label" />
+                    <ComboBox ItemsSource="{Binding ModeOptions}"
+                              SelectedItem="{Binding Mode, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel>
+                            <TextBlock Text="Iterations" Classes="label" />
+                            <NumericUpDown Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Duration (sec)" Classes="label" />
+                            <NumericUpDown Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="Timeout (sec)" Classes="label" />
+                    <NumericUpDown Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                    <TextBlock Text="Headless" Classes="label" />
+                    <CheckBox Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                    <TextBlock Text="Screenshots policy" Classes="label" />
+                    <ComboBox ItemsSource="{Binding ScreenshotsPolicyOptions}"
+                              SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
+                    <CheckBox Content="HTML отчёт" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
+                    <CheckBox Content="Отправить статус в Telegram" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
+                    <CheckBox Content="Выполнить предпроверку (Preflight)" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                    <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Управление запуском" Classes="h1" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Start"
+                                Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <Button Content="Stop"
+                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <Button Content="Cancel"
+                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding DataContext.RunStage, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <ProgressBar Minimum="0" Maximum="100" Height="10"
+                                 IsIndeterminate="{Binding DataContext.IsRunning, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <TextBlock Text="{Binding DataContext.ProgressText, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Итоговая сводка" Classes="h1" />
+                    <StackPanel DataContext="{Binding SelectedModule.LastReport}">
+                        <TextBlock Text="{Binding Status}" />
+                        <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
+                        <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
+                        <TextBlock Text="{Binding Metrics.AverageMs, StringFormat='Avg: {0:F1} ms'}" />
+                        <TextBlock Text="{Binding Metrics.P95Ms, StringFormat='P95: {0:F1} ms'}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Детальные результаты" Classes="h1" />
+                    <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}" Height="240" x:CompileBindings="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
+                            <DataGridTextColumn Header="Success" Binding="{Binding Success}" Width="*" />
+                            <DataGridTextColumn Header="Duration (ms)" Binding="{Binding DurationMs}" Width="*" />
+                            <DataGridTextColumn Header="Error" Binding="{Binding ErrorMessage}" Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Артефакты" Classes="h1" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Открыть JSON"
+                                Command="{Binding DataContext.OpenLatestJsonCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <Button Content="Открыть HTML"
+                                Command="{Binding DataContext.OpenLatestHtmlCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <Button Content="Открыть папку прогона"
+                                Command="{Binding DataContext.OpenLatestRunFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Лог выполнения" Classes="h1" />
+                    <Border Classes="logbox" Height="220">
+                        <ListBox ItemsSource="{Binding DataContext.LogEntries, RelativeSource={RelativeSource AncestorType=Window}}"
+                                 Classes="loglist">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Classes="logline" Text="{Binding}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

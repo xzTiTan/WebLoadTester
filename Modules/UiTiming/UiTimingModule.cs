@@ -18,6 +18,7 @@ public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
     public string DisplayName => "UI тайминги";
+    public string Description => "Измеряет скорость загрузки UI и вычисляет агрегаты (avg, p95/p99 при достаточном N).";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 
@@ -78,12 +79,17 @@ public class UiTimingModule : ITestModule
         var s = (UiTimingSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(UiTimingModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };
@@ -91,7 +97,7 @@ public class UiTimingModule : ITestModule
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
-            report.Status = TestStatus.Error;
+            report.Status = TestStatus.Failed;
             report.Results.Add(new RunResult("Playwright")
             {
                 Success = false,

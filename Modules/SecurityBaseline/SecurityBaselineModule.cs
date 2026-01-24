@@ -17,6 +17,7 @@ public class SecurityBaselineModule : ITestModule
 {
     public string Id => "net.security";
     public string DisplayName => "Базовая безопасность";
+    public string Description => "Проверяет базовые security-настройки без атакующих действий.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(SecurityBaselineSettings);
 
@@ -53,12 +54,17 @@ public class SecurityBaselineModule : ITestModule
         var s = (SecurityBaselineSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(SecurityBaselineModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

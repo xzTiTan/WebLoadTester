@@ -1,15 +1,15 @@
-v1.0 24.01.2026
+v1.1 24.01.2026
 
 # WebLoadTester — инструкция для код-агента
 
 ## Project snapshot
-WebLoadTester — кроссплатформенное настольное приложение на .NET 8 + Avalonia для запуска 10 модулей UI/HTTP/сетевых проверок с отчётами (JSON + HTML), скриншотами и опциональными Telegram-уведомлениями. Архитектура модульная (Core + Infrastructure + Modules + Presentation), UI построен по MVVM, отчёты сохраняются рядом с бинарником в папках `reports/` и `screenshots/`.
+WebLoadTester — кроссплатформенное настольное приложение на .NET 8 + Avalonia для запуска 10 модулей UI/HTTP/сетевых проверок с отчётами (JSON всегда, HTML опционально), артефактами и опциональными Telegram-уведомлениями. Архитектура модульная (Core + Infrastructure + Modules + Presentation), UI построен по MVVM, артефакты сохраняются в структуре `runs/{RunId}/`.
 
 ## Hard constraints / non-goals
 - Использовать только на ресурсах заказчика или при наличии явного разрешения владельца. Не реализовывать атакующие функции. (docs/02, docs/04, docs/08)
 - Сохранять безопасные значения по умолчанию и не блокировать UI на длительных операциях. (docs/02, docs/06)
 - Модули должны уважать `CancellationToken`, публиковать прогресс через `IProgressSink`, логировать через `ILogSink`. (Core/Contracts, Core/Services)
-- Отчёты формируются автоматически: JSON и HTML всегда сохраняются через `IArtifactStore`. (Core/Services, Infrastructure/Storage)
+- Отчёты формируются автоматически: JSON сохраняется всегда, HTML — по настройке профиля запуска. (Core/Services, Infrastructure/Storage)
 - Новые функции не должны нарушать разделение слоёв (UI без бизнес-логики, оркестратор в Core, интеграции в Infrastructure). (docs/03, docs/08)
 
 ## Repo map (Core / Infrastructure / Modules / Presentation + entry points)
@@ -48,9 +48,10 @@ WebLoadTester — кроссплатформенное настольное пр
 - Не обходить существующие механизмы логов/прогресса.
 
 ## Reporting & artifacts
-- **Отчёты**: сохраняются в `reports/` рядом с бинарником, имена `report_yyyyMMdd_HHmmss.json/html`.
-- **Скриншоты**: сохраняются в `screenshots/<yyyyMMdd_HHmmss>/`.
-- **Профили**: папка `profiles/` создаётся, но пока не используется в коде.
+- **Отчёты**: сохраняются в `runs/{RunId}/report.json` (всегда) и `runs/{RunId}/report.html` (опционально).
+- **Скриншоты**: сохраняются в `runs/{RunId}/screenshots/`.
+- **Логи**: сохраняются в `runs/{RunId}/logs/run.log`.
+- **Профили**: папка `profiles/` создаётся для будущих расширений (профили сейчас хранятся в SQLite).
 
 ## Playwright / browsers
 - Приложение ожидает браузеры в `AppContext.BaseDirectory/browsers` (то есть рядом с бинарником).
@@ -84,6 +85,4 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 Использовать приложение только с разрешения владельца системы и для легитимных целей. Не применять для атакующих сценариев.
 
 ## Несоответствия (требует актуализации)
-- docs/03 и docs/05 описывают SQLite и RunId/runs/{RunId}, но в коде БД отсутствует, а артефакты пишутся в `reports/` и `screenshots/<timestamp>`.
-- docs/06 и docs/03 описывают вкладку «Прогоны» и управление профилями/историей, но в UI реализована вкладка «Отчёты» со списком HTML-файлов без истории прогонов.
-- docs/03 и docs/07 указывают HTML отчёт как опциональный, но в коде HTML сохраняется всегда.
+- Нет актуальных несоответствий.

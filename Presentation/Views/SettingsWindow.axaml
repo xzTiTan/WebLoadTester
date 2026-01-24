@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
+        x:Class="WebLoadTester.Presentation.Views.SettingsWindow"
+        x:DataType="vm:SettingsWindowViewModel"
+        Title="Настройки"
+        Width="720" Height="640"
+        WindowStartupLocation="CenterOwner">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12" Spacing="12">
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Хранилище данных" Classes="h1" />
+                    <TextBlock Text="Data directory" Classes="label" />
+                    <TextBox Text="{Binding DataDirectory, Mode=TwoWay}" />
+                    <TextBlock Text="Runs directory" Classes="label" />
+                    <TextBox Text="{Binding RunsDirectory, Mode=TwoWay}" />
+                    <TextBlock Text="Profiles directory" Classes="label" />
+                    <TextBox Text="{Binding ProfilesDirectory, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="panel">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Настройки Telegram" Classes="h1" />
+                    <CheckBox Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
+                    <TextBlock Text="Токен бота" Classes="label" />
+                    <TextBox Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" />
+                    <TextBlock Text="Идентификатор чата" Classes="label" />
+                    <TextBox Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
+                    <CheckBox Content="Уведомлять о старте" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
+                    <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
+                    <CheckBox Content="Уведомлять об ошибке" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
+                    <TextBlock Text="Режим прогресса" Classes="label" />
+                    <ComboBox ItemsSource="{Binding TelegramSettings.ProgressModes}"
+                              SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
+                    <TextBlock Text="Прогресс каждые N" Classes="label" />
+                    <TextBox Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
+                    <TextBlock Text="Ограничение частоты (сек)" Classes="label" />
+                    <TextBox Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>

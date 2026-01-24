@@ -17,6 +17,7 @@ public class PreflightModule : ITestModule
 {
     public string Id => "net.preflight";
     public string DisplayName => "Предварительные проверки";
+    public string Description => "Быстро проверяет готовность цели (DNS/TCP/TLS/HTTP) перед основным запуском.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(PreflightSettings);
 
@@ -53,12 +54,17 @@ public class PreflightModule : ITestModule
         var s = (PreflightSettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(PreflightModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

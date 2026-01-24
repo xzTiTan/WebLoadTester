@@ -42,14 +42,14 @@ public class TelegramPolicy
     /// <summary>
     /// Отправляет уведомление о старте, если это разрешено настройками.
     /// </summary>
-    public Task NotifyStartAsync(string moduleName, CancellationToken ct)
+    public Task NotifyStartAsync(string moduleName, string runId, CancellationToken ct)
     {
         if (!IsEnabled || !_settings.NotifyOnStart)
         {
             return Task.CompletedTask;
         }
 
-        return SendAsync($"Started: {moduleName}", ct);
+        return SendAsync($"Started: {moduleName} (RunId: {runId})", ct);
     }
 
     /// <summary>
@@ -73,14 +73,15 @@ public class TelegramPolicy
     /// <summary>
     /// Отправляет уведомление о завершении.
     /// </summary>
-    public Task NotifyFinishAsync(string moduleName, TestStatus status, CancellationToken ct)
+    public Task NotifyFinishAsync(TestReport report, CancellationToken ct)
     {
         if (!IsEnabled || !_settings.NotifyOnFinish)
         {
             return Task.CompletedTask;
         }
 
-        return SendAsync($"Finished: {moduleName} ({status})", ct);
+        var summary = $"Finished: {report.ModuleName} ({report.Status}) | Duration: {report.Metrics.TotalDurationMs:F0} ms | Failed: {report.Metrics.FailedItems} | RunId: {report.RunId}";
+        return SendAsync(summary, ct);
     }
 
     /// <summary>

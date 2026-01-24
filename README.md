@@ -1,6 +1,6 @@
 # WebLoadTester
 
-**Версия:** v1.0 24.01.2026
+**Версия:** v1.1 24.01.2026
 
 > **English TL;DR (кратко):** Desktop UI/HTTP/Network test runner on .NET + Avalonia + Playwright. Provides 10 built-in modules (UI сценарии/скриншоты/тайминги, HTTP проверки/нагрузка/ассеты, сетевые и security проверки). Generates JSON + HTML reports and supports Telegram notifications (text). All details below are sourced from the repository.
 
@@ -8,7 +8,7 @@
 - [docs/ (00–08)](docs/)
 
 ## 1. Что это и для чего
-**WebLoadTester** — настольное приложение для запуска UI/HTTP/сетевых проверок и получения отчётов с метриками (перцентили, ошибки, топ медленных) на основе .NET + Avalonia + Playwright. Реализованные сценарии — это **10 модулей** с собственными настройками и результатами. В UI доступны вкладки: **UI тестирование**, **HTTP тестирование**, **Сеть и безопасность**, **Отчёты** (список HTML-отчётов). Точка входа: `Program.cs`, UI: `MainWindow.axaml`.
+**WebLoadTester** — настольное приложение для запуска UI/HTTP/сетевых проверок и получения отчётов с метриками (перцентили, ошибки, топ медленных) на основе .NET + Avalonia + Playwright. Реализованные сценарии — это **10 модулей** с собственными настройками и результатами. В UI доступны вкладки: **UI тестирование**, **HTTP тестирование**, **Сеть и безопасность**, **Прогоны** (история запусков). Точка входа: `Program.cs`, UI: `MainWindow.axaml`.
 
 ## 2. Для кого (персоны)
 - **QA-инженеры** — быстрые UI/HTTP/сетевые прогоны с фиксируемыми отчётами и метриками.
@@ -19,11 +19,12 @@
 
 ## 3. Ключевые возможности (строго по коду)
 - 10 модулей тестирования (UI/HTTP/Network/Security) с настраиваемыми параметрами и валидацией. (`Modules/*`)
-- Генерация **JSON** и **HTML** отчётов с метриками (p50/p95/p99 и др.). (`Core/Services/ReportWriters/*`)
+- Генерация **JSON** (всегда) и **HTML** (опционально) отчётов с метриками. (`Core/Services/ReportWriters/*`)
 - Скриншоты UI в модулях, использующих Playwright. (`Modules/UiScenario`, `Modules/UiSnapshot`)
 - Ограничения нагрузки (конкурентность и RPS) через `Limits`. (`Core/Domain/Limits.cs`)
 - Telegram-уведомления о старте/прогрессе/финише/ошибке (текстовые сообщения). (`Infrastructure/Telegram/*`)
-- UI с вкладками модулей + живой лог + вкладка отчётов. (`Presentation/Views/*`)
+- SQLite-хранилище тестов, профилей и истории прогонов. (`Infrastructure/Storage/SqliteRunStore.cs`)
+- UI с вкладками модулей и вкладкой истории **Прогоны**. (`Presentation/Views/*`)
 
 ## 4. Демонстрационный сценарий (5–10 шагов)
 1. Клонируйте репозиторий.
@@ -33,13 +34,14 @@
 5. Запустите приложение: `dotnet run`.
 6. В UI откройте вкладку **UI тестирование** или **HTTP тестирование**, выберите модуль и заполните настройки.
 7. Нажмите **Старт** — лог начнёт заполняться, статус и прогресс обновятся.
-8. Перейдите на вкладку **Отчёты** и откройте HTML-отчёт.
-9. При необходимости настройте Telegram (справа) и повторите запуск — будут отправлены уведомления.
+8. Перейдите на вкладку **Прогоны** и откройте JSON/HTML отчёт конкретного RunId.
+9. При необходимости настройте Telegram через окно **Настройки** и повторите запуск — будут отправлены уведомления.
 
 ## 5. Технологии и требования
 - **.NET**: `net8.0` (см. `WebLoadTester.csproj`).
 - **Avalonia**: 11.3.10 (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`).
 - **Playwright**: 1.57.0 (`Microsoft.Playwright`).
+- **SQLite**: `Microsoft.Data.Sqlite`.
 - **Telegram**: в проекте есть `Telegram.Bot` 22.7.6, но интеграция реализована через собственный HTTP-клиент (`Infrastructure/Telegram/TelegramNotifier.cs`).
 - **ОС**: приложение — Avalonia Desktop; явные платформенные ограничения в коде не зафиксированы.
 
@@ -68,9 +70,9 @@ dotnet run
   > Для Release/publish замените путь на соответствующий каталог сборки.
 
 **Артефакты и логи:**
-- JSON/HTML отчёты: `./reports/` рядом с бинарником.
-- Скриншоты: `./screenshots/<yyyyMMdd_HHmmss>/` рядом с бинарником.
-- Лог отображается в UI (канал `LogBus`), файлового лога нет.
+- JSON/HTML отчёты: `runs/{RunId}/report.json` (всегда) и `runs/{RunId}/report.html` (опционально).
+- Скриншоты и логи: `runs/{RunId}/screenshots/` и `runs/{RunId}/logs/`.
+- Лог отображается в UI (канал `LogBus`) и сохраняется в `runs/{RunId}/logs/run.log`.
 
 ## 7. Архитектура (высокоуровнево)
 **Слои и зависимости:**
@@ -110,7 +112,7 @@ dotnet run
   /Http             # HttpClientProvider
   /Network          # DNS/TCP/TLS probes
   /Playwright       # PlaywrightFactory (browsers path)
-  /Storage          # ArtifactStore (reports/screenshots/profiles)
+  /Storage          # ArtifactStore (runs/profiles)
   /Telegram         # TelegramPolicy, TelegramNotifier
 /Modules
   /Availability     # net.availability
@@ -146,7 +148,7 @@ WebLoadTester.csproj # зависимости/TargetFramework
   2. Проверка наличия браузеров (иначе ошибка).
   3. Параллельные прогоны с ограничением `Min(Concurrency, Limits.MaxUiConcurrency)`.
   4. Для каждого прогона: `Goto`, выполнение шагов, опционально скриншот.
-- **Артефакты:** скриншоты `run_<index>.png` в папке `screenshots/<yyyyMMdd_HHmmss>/`.
+- **Артефакты:** скриншоты `run_<index>.png` в `runs/{RunId}/screenshots/`.
 - **Метрики:** по `RunResult` (успех, duration, ошибка). p50/p95/p99 и TopSlow рассчитываются автоматически.
 - **Типичные кейсы:** регрессия UI, smoke-сценарии; полезно QA/разработчикам.
 
@@ -158,7 +160,7 @@ WebLoadTester.csproj # зависимости/TargetFramework
   1. Проверка списка URL.
   2. Playwright → параллельные заходы на каждый URL.
   3. Скриншот каждой страницы, имя `snapshot_<sanitized_url>_<iteration>.png`.
-- **Артефакты:** скриншоты в `screenshots/<yyyyMMdd_HHmmss>/`.
+- **Артефакты:** скриншоты в `runs/{RunId}/screenshots/`.
 - **Метрики:** `RunResult` на URL.
 - **Кейсы:** визуальные сравнения, быстрые проверки доступности UI.
 
@@ -246,13 +248,13 @@ WebLoadTester.csproj # зависимости/TargetFramework
 
 ## 10. Модели и контракты (ссылки на код)
 - **`ITestModule`** — контракт модуля: `Id`, `DisplayName`, `Family`, `SettingsType`, `CreateDefaultSettings`, `Validate`, `RunAsync`. (`Core/Contracts/ITestModule.cs`)
-- **`IRunContext`** — доступ к логам/прогрессу/артефактам/лимитам/Telegram. (`Core/Contracts/IRunContext.cs`)
+- **`IRunContext`** — доступ к логам/прогрессу/артефактам/лимитам/Telegram, RunId и профилю запуска. (`Core/Contracts/IRunContext.cs`)
 - **`TestOrchestrator`** — валидирует, запускает модуль, считает метрики, пишет отчёты. (`Core/Services/TestOrchestrator.cs`)
 - **`ModuleRegistry`** — хранит все модули и отдаёт по `TestFamily`. (`Core/Services/ModuleRegistry.cs`)
 - **`LogBus`** — асинхронная шина логов (Channel). (`Core/Services/LogBus.cs`)
 - **`ProgressBus`** — публикация прогресса в UI и Telegram. (`Core/Services/ProgressBus.cs`)
 - **`MetricsCalculator`** — метрики p50/p95/p99, TopSlow, ErrorBreakdown. (`Core/Services/Metrics/MetricsCalculator.cs`)
-- **`ArtifactStore`** — файловое хранилище отчётов/скриншотов (`reports/`, `screenshots/`, `profiles/`). (`Infrastructure/Storage/ArtifactStore.cs`)
+- **`ArtifactStore`** — файловое хранилище артефактов прогонов (`runs/{RunId}/...`) и профилей (`profiles/`). (`Infrastructure/Storage/ArtifactStore.cs`)
 - **`TelegramPolicy`** — логика уведомлений, rate-limit. (`Infrastructure/Telegram/TelegramPolicy.cs`)
 - **`TelegramNotifier`** — отправка сообщений/файлов в Telegram API. (`Infrastructure/Telegram/TelegramNotifier.cs`)
 - **Доменные модели отчёта:** `TestReport`, `ResultBase`, `RunResult`, `CheckResult`, `ProbeResult`, `TimingResult`, `MetricsSummary`. (`Core/Domain/*`)
@@ -267,14 +269,14 @@ sequenceDiagram
     participant OR as TestOrchestrator
     participant MOD as ITestModule
     participant AR as ArtifactStore
-    UI->>TP: NotifyStartAsync()
+    UI->>TP: NotifyStartAsync(moduleName, runId)
     UI->>OR: RunAsync(module, settings, context, ct)
     OR->>MOD: Validate(settings)
     OR->>MOD: RunAsync(settings, context, ct)
     MOD-->>OR: TestReport
     OR->>AR: SaveJsonAsync/SaveHtmlAsync
     OR-->>UI: Report saved
-    UI->>TP: NotifyFinishAsync()
+    UI->>TP: NotifyFinishAsync(report)
 ```
 
 ### Flowchart: Orchestrator pipeline
@@ -289,39 +291,30 @@ flowchart TD
     E --> H[FinalizeReportAsync]
     G --> H[FinalizeReportAsync]
     H --> I[JsonReportWriter/HtmlReportWriter]
-    I --> J[ArtifactStore (reports/screenshots)]
+    I --> J[ArtifactStore (runs/{RunId}/...)]
 ```
 
 ## 12. Отчёты и артефакты
 - **Где создаются:**
-  - `reports/` и `screenshots/` создаются рядом с исполняемым файлом (`AppContext.BaseDirectory`). (`Infrastructure/Storage/ArtifactStore.cs`)
-  - `profiles/` также создаётся, но в текущем коде не используется.
-- **JSON формат (`TestReport`):**
-  - `ModuleId`, `ModuleName`, `Family`, `StartedAt`, `FinishedAt`, `Status`, `AppVersion`, `OsDescription`, `SettingsSnapshot`, `Results`, `Metrics`, `Artifacts`.
+  - Артефакты сохраняются в `runs/{RunId}/` внутри каталога данных (по умолчанию AppData). (`Infrastructure/Storage/ArtifactStore.cs`)
+  - `profiles/` создаётся для будущих расширений (профили хранятся в SQLite).
+- **JSON формат (структура):**
+  - `run`, `environment`, `profile`, `summary`, `details`, `artifacts`. (`Core/Services/ReportWriters/JsonReportWriter.cs`)
 - **Пример JSON (валидный, сокращённый):**
 ```json
 {
-  "moduleId": "http.functional",
-  "moduleName": "HTTP функциональные проверки",
-  "family": 1,
-  "startedAt": "2024-01-01T12:00:00+00:00",
-  "finishedAt": "2024-01-01T12:00:05+00:00",
-  "status": 0,
-  "appVersion": "1.0.0.0",
-  "osDescription": "...",
-  "settingsSnapshot": "{...}",
-  "results": [
-    { "kind": "Check", "name": "Example", "success": true, "durationMs": 120.5, "statusCode": 200 }
-  ],
-  "metrics": { "averageMs": 120.5, "minMs": 120.5, "maxMs": 120.5, "p50Ms": 120.5, "p95Ms": 120.5, "p99Ms": 120.5 },
-  "artifacts": { "jsonPath": ".../reports/report_*.json", "htmlPath": ".../reports/report_*.html", "screenshotsFolder": ".../screenshots/20240101_120000" }
+  "run": { "runId": "...", "moduleType": "http.functional", "testName": "Smoke", "status": "Success" },
+  "environment": { "os": "...", "appVersion": "1.0.0.0", "machineName": "PC" },
+  "profile": { "parallelism": 2, "mode": "iterations", "htmlReportEnabled": false },
+  "summary": { "totalDurationMs": 120.5, "totalItems": 5, "failedItems": 0, "averageMs": 120.5 },
+  "details": [ { "key": "Example", "status": "Success", "durationMs": 120.5 } ],
+  "artifacts": [ { "type": "JsonReport", "relativePath": "report.json" } ]
 }
 ```
-- **HTML отчёт:** содержит заголовок модуля, статус, время, таблицу метрик (Avg/Min/Max/P50/P95/P99) и таблицу результатов. (`Core/Services/ReportWriters/HtmlReportWriter.cs`)
-  - HTML не содержит ссылок на скриншоты, хотя `ScreenshotPath` есть в `RunResult`.
+- **HTML отчёт:** содержит сводку, список проблем и ссылки на ключевые артефакты. (`Core/Services/ReportWriters/HtmlReportWriter.cs`)
 
 ## 13. Telegram интеграция
-- **Настройки в UI:** токен/ChatId и флаги уведомлений находятся в правой панели `MainWindow.axaml`.
+- **Настройки в UI:** токен/ChatId и флаги уведомлений доступны в окне **Настройки**.
 - **Что нужно заполнить:** `BotToken`, `ChatId`, `Enabled`.
 - **Когда отправляет:**
   - Старт: `NotifyOnStart`.
@@ -329,7 +322,7 @@ flowchart TD
   - Завершение: `NotifyOnFinish`.
   - Ошибка: `NotifyOnError`.
 - **Rate limit:** `RateLimitSeconds` — минимальный интервал между сообщениями. (`Infrastructure/Telegram/TelegramPolicy.cs`)
-- В текущей политике реализованы текстовые уведомления; режимы `ProgressNotifyMode.EveryTSeconds` и `AttachmentsMode` в модели настроек не обрабатываются.
+- Ошибка Telegram не влияет на итог прогона — фиксируется отдельно. (`Infrastructure/Telegram/TelegramPolicy.cs`)
 
 ## 14. Ограничения и безопасные лимиты
 - **Limits (по умолчанию):**
@@ -345,7 +338,7 @@ flowchart TD
 
 ## 15. Troubleshooting
 - **Playwright: "browsers not found"** — модули UI проверяют наличие браузеров и завершаются с ошибкой. Убедитесь, что папка `./browsers` содержит скачанные браузеры рядом с бинарником.
-- **HTML/JSON отчёты не появляются** — проверьте, что есть права на запись в `reports/` (создаётся рядом с приложением).
+- **HTML/JSON отчёты не появляются** — проверьте права на запись в каталог данных (AppData) и папку `runs/`.
 - **UI не обновляет лог** — `LogBus` читает через `ReadLogAsync`; убедитесь, что `Dispatcher` работает (см. `MainWindowViewModel.ReadLogAsync`).
 - **Telegram не отправляет** — проверьте `Enabled`, `BotToken`, `ChatId` и `RateLimitSeconds`.
 - **Items/Binding ошибки** — убедитесь, что добавлены DataTemplates в `App.axaml` и корректные ViewModels/Views.
@@ -376,8 +369,7 @@ flowchart TD
 Информация о лицензии и авторах отсутствует в репозитории.
 
 ## Несоответствия (требует актуализации)
-- В docs/03 и docs/05 описана SQLite и `runs/{RunId}`, но в коде БД отсутствует, отчёты пишутся в `reports/`, а скриншоты — в `screenshots/<timestamp>`.
-- В docs/06 указана вкладка «Прогоны» и управление профилями/историей, но в UI реализована вкладка «Отчёты» со списком HTML-файлов.
+- Нет актуальных несоответствий.
 - В docs/03 и docs/07 HTML отчёт указан как опциональный, но в коде HTML сохраняется всегда.
 
 ---

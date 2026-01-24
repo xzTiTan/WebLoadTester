@@ -15,4 +15,8 @@ public abstract partial class SettingsViewModelBase : ObservableObject
     /// Заголовок секции настроек для UI.
     /// </summary>
     public abstract string Title { get; }
+    /// <summary>
+    /// Обновляет значения ViewModel из внешнего объекта настроек.
+    /// </summary>
+    public abstract void UpdateFrom(object settings);
 }

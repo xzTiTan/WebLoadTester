@@ -1,8 +1,12 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Contracts;
@@ -42,7 +46,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Хранилище артефактов запусков (отчёты, скриншоты).
     /// </summary>
-    private readonly ArtifactStore _artifactStore = new();
+    private readonly ArtifactStore _artifactStore;
+    /// <summary>
+    /// Хранилище тестов, профилей и прогонов.
+    /// </summary>
+    private readonly IRunStore _runStore;
+    /// <summary>
+    /// Сервис настроек приложения.
+    /// </summary>
+    private readonly AppSettingsService _settingsService;
     /// <summary>
     /// Лимиты на выполнение тестов, применяемые при запуске.
     /// </summary>
@@ -66,6 +78,10 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public MainWindowViewModel()
     {
+        _settingsService = new AppSettingsService();
+        _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
+        _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory, _settingsService.Settings.ProfilesDirectory);
+
         var modules = new ITestModule[]
         {
             new UiScenarioModule(),
@@ -88,22 +104,28 @@ public partial class MainWindowViewModel : ViewModelBase
         NetFamily = new ModuleFamilyViewModel("Сеть и безопасность", new ObservableCollection<ModuleItemViewModel>(
             Registry.GetByFamily(TestFamily.NetSec).Select(CreateModuleItem)));
 
-        ReportsTab = new ReportsTabViewModel(_artifactStore.ReportsRoot);
+        RunProfile = new RunProfileViewModel(_runStore);
         TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
+        Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
+        RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunAsync);
+        RunsTab.SetModuleOptions(Registry.Modules.Select(m => m.Id));
 
         _progressBus.ProgressChanged += OnProgressChanged;
 
-        _orchestrator = new TestOrchestrator(new JsonReportWriter(_artifactStore), new HtmlReportWriter(_artifactStore));
+        _orchestrator = new TestOrchestrator(new JsonReportWriter(_artifactStore), new HtmlReportWriter(_artifactStore), _runStore);
 
         _ = Task.Run(ReadLogAsync);
+        _ = Task.Run(InitializeAsync);
     }
 
     public ModuleRegistry Registry { get; }
     public ModuleFamilyViewModel UiFamily { get; }
     public ModuleFamilyViewModel HttpFamily { get; }
     public ModuleFamilyViewModel NetFamily { get; }
-    public ReportsTabViewModel ReportsTab { get; }
+    public RunsTabViewModel RunsTab { get; }
     public TelegramSettingsViewModel TelegramSettings { get; }
+    public RunProfileViewModel RunProfile { get; }
+    public SettingsWindowViewModel Settings { get; }
 
     public ObservableCollection<string> LogEntries { get; } = new();
 
@@ -112,6 +134,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private string progressText = "Прогресс: 0/0";
+
+    [ObservableProperty]
+    private string databaseStatus = "БД: проверка...";
+
+    [ObservableProperty]
+    private string telegramStatus = "Telegram: не настроен";
+
+    [ObservableProperty]
+    private string runStage = "Idle";
 
     [ObservableProperty]
     private bool isRunning;
@@ -129,7 +160,7 @@ public partial class MainWindowViewModel : ViewModelBase
             0 => UiFamily.SelectedModule,
             1 => HttpFamily.SelectedModule,
             2 => NetFamily.SelectedModule,
-            _ => UiFamily.SelectedModule
+            _ => null
         };
     }
 
@@ -148,34 +179,53 @@ public partial class MainWindowViewModel : ViewModelBase
         IsRunning = true;
         StatusText = $"Статус: выполняется {moduleItem.DisplayName}";
         ProgressText = "Прогресс: 0/0";
+        RunStage = "Running";
 
         _runCts = new CancellationTokenSource();
-        var notifier = CreateTelegramNotifier();
+        var profile = RunProfile.BuildProfileSnapshot();
+        var runId = Guid.NewGuid().ToString("N");
+        var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
         _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);
-        var ctx = new RunContext(_logBus, _progressBus, _artifactStore, _limits, notifier);
+
+        var testCase = await moduleItem.TestLibrary.EnsureTestCaseAsync(_runCts.Token);
+        var runFolder = _artifactStore.CreateRunFolder(runId);
+        var logSink = new CompositeLogSink(new ILogSink[]
+        {
+            _logBus,
+            new FileLogSink(_artifactStore.GetLogPath(runId))
+        });
+        var ctx = new RunContext(logSink, _progressBus, _artifactStore, _limits, notifier,
+            runId, profile, testCase.Name, testCase.Id, testCase.CurrentVersion);
+        ctx.SetRunFolder(runFolder);
 
         if (_telegramPolicy.IsEnabled)
         {
-            await _telegramPolicy.NotifyStartAsync(moduleItem.DisplayName, _runCts.Token);
+            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyStartAsync(moduleItem.DisplayName, runId, _runCts.Token));
         }
 
         try
         {
-            await _orchestrator.RunAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token);
+            var preflight = CreatePreflightSettings(moduleItem.SettingsViewModel.Settings);
+            var preflightModule = profile.PreflightEnabled ? Registry.Modules.FirstOrDefault(m => m.Id == "net.preflight") : null;
+            var report = await _orchestrator.RunAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token,
+                preflightModule, preflight);
+            moduleItem.LastReport = report;
             if (_telegramPolicy.IsEnabled)
             {
-                await _telegramPolicy.NotifyFinishAsync(moduleItem.DisplayName, TestStatus.Completed, _runCts.Token);
+                await SendTelegramAsync(runId, () => _telegramPolicy.NotifyFinishAsync(report, _runCts.Token));
             }
         }
         catch (Exception ex)
         {
-            await _telegramPolicy.NotifyErrorAsync(ex.Message, _runCts.Token);
+            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync(ex.Message, _runCts.Token));
         }
         finally
         {
+            await logSink.CompleteAsync();
             IsRunning = false;
             StatusText = "Статус: ожидание";
-            ReportsTab.RefreshCommand.Execute(null);
+            RunStage = "Done";
+            RunsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
         }
     }
@@ -188,6 +238,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _runCts?.Cancel();
         StatusText = "Статус: остановка";
+        RunStage = "Cancelled";
     }
 
     /// <summary>
@@ -225,6 +276,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
+        if (!value)
+        {
+            RunStage = "Idle";
+        }
     }
 
     /// <summary>
@@ -243,8 +298,14 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void OnProgressChanged(ProgressUpdate update)
     {
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}");
+        Dispatcher.UIThread.Post(() =>
+        {
+            ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}";
+            if (!string.IsNullOrWhiteSpace(update.Message))
+            {
+                RunStage = update.Message;
+            }
+        });
         if (_runCts != null && _telegramPolicy != null)
         {
             _ = _telegramPolicy.NotifyProgressAsync(update, _runCts.Token);
@@ -270,10 +331,227 @@ public partial class MainWindowViewModel : ViewModelBase
         return new TelegramNotifier(TelegramSettings.Settings.BotToken, TelegramSettings.Settings.ChatId);
     }
 
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var window = new WebLoadTester.Presentation.Views.SettingsWindow
+            {
+                DataContext = Settings
+            };
+            window.ShowDialog(desktop.MainWindow);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenRunsFolder()
+    {
+        OpenPath(_artifactStore.RunsRoot);
+    }
+
+    [RelayCommand]
+    private void OpenLatestJson()
+    {
+        var report = GetSelectedModule()?.LastReport;
+        if (report == null || string.IsNullOrWhiteSpace(report.Artifacts.JsonPath))
+        {
+            return;
+        }
+
+        OpenPath(report.Artifacts.JsonPath);
+    }
+
+    [RelayCommand]
+    private void OpenLatestHtml()
+    {
+        var report = GetSelectedModule()?.LastReport;
+        if (report == null || string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        {
+            return;
+        }
+
+        OpenPath(report.Artifacts.HtmlPath);
+    }
+
+    [RelayCommand]
+    private void OpenLatestRunFolder()
+    {
+        var report = GetSelectedModule()?.LastReport;
+        if (report == null)
+        {
+            return;
+        }
+
+        var path = Path.Combine(_artifactStore.RunsRoot, report.RunId);
+        OpenPath(path);
+    }
+
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            await _runStore.InitializeAsync(CancellationToken.None);
+            Dispatcher.UIThread.Post(() => DatabaseStatus = "БД: OK");
+        }
+        catch (Exception ex)
+        {
+            _logBus.Error($"DB init failed: {ex.Message}");
+            Dispatcher.UIThread.Post(() => DatabaseStatus = "БД: ошибка");
+        }
+
+        await RunProfile.RefreshCommand.ExecuteAsync(null);
+        foreach (var module in Registry.Modules)
+        {
+            var item = FindModuleItem(module.Id);
+            if (item != null)
+            {
+                await item.TestLibrary.RefreshCommand.ExecuteAsync(null);
+            }
+        }
+
+        await RunsTab.RefreshCommand.ExecuteAsync(null);
+        UpdateTelegramStatus();
+        TelegramSettings.PropertyChanged += (_, _) => UpdateTelegramStatus();
+    }
+
+    private void UpdateTelegramStatus()
+    {
+        TelegramStatus = TelegramSettings.Settings.Enabled &&
+                         !string.IsNullOrWhiteSpace(TelegramSettings.Settings.BotToken) &&
+                         !string.IsNullOrWhiteSpace(TelegramSettings.Settings.ChatId)
+            ? "Telegram: настроен"
+            : "Telegram: не настроен";
+    }
+
+    private async Task SendTelegramAsync(string runId, Func<Task> action)
+    {
+        if (_telegramPolicy == null || !_telegramPolicy.IsEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            await action();
+            await _runStore.AddTelegramNotificationAsync(new TelegramNotification
+            {
+                Id = Guid.NewGuid(),
+                RunId = runId,
+                SentAt = DateTimeOffset.Now,
+                Status = "Sent"
+            }, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logBus.Warn($"Telegram failed: {ex.Message}");
+            await _runStore.AddTelegramNotificationAsync(new TelegramNotification
+            {
+                Id = Guid.NewGuid(),
+                RunId = runId,
+                SentAt = DateTimeOffset.Now,
+                Status = "Failed",
+                ErrorMessage = ex.Message
+            }, CancellationToken.None);
+        }
+    }
+
+    private ModuleItemViewModel? FindModuleItem(string moduleId)
+    {
+        return UiFamily.Modules.Concat(HttpFamily.Modules).Concat(NetFamily.Modules)
+            .FirstOrDefault(item => item.Module.Id == moduleId);
+    }
+
+    private async Task RepeatRunAsync(string runId)
+    {
+        var detail = await _runStore.GetRunDetailAsync(runId, CancellationToken.None);
+        if (detail == null)
+        {
+            return;
+        }
+
+        var moduleItem = FindModuleItem(detail.Run.ModuleType);
+        if (moduleItem == null)
+        {
+            return;
+        }
+
+        var version = await _runStore.GetTestCaseVersionAsync(detail.Run.TestCaseId, detail.Run.TestCaseVersion, CancellationToken.None);
+        if (version != null)
+        {
+            var settings = System.Text.Json.JsonSerializer.Deserialize(version.PayloadJson, moduleItem.Module.SettingsType);
+            if (settings != null)
+            {
+                moduleItem.SettingsViewModel.UpdateFrom(settings);
+            }
+        }
+
+        var profile = System.Text.Json.JsonSerializer.Deserialize<RunProfile>(detail.Run.ProfileSnapshotJson);
+        if (profile != null)
+        {
+            RunProfile.SelectedProfile = profile;
+        }
+
+        SelectedTabIndex = moduleItem.Module.Family switch
+        {
+            TestFamily.UiTesting => 0,
+            TestFamily.HttpTesting => 1,
+            TestFamily.NetSec => 2,
+            _ => 0
+        };
+    }
+
+    private static PreflightSettings? CreatePreflightSettings(object settings)
+    {
+        string? target = settings switch
+        {
+            UiScenarioSettings s => s.TargetUrl,
+            UiSnapshotSettings s => s.Targets.FirstOrDefault()?.Url,
+            UiTimingSettings s => s.Targets.FirstOrDefault()?.Url,
+            HttpFunctionalSettings s => s.BaseUrl,
+            HttpPerformanceSettings s => s.Url,
+            HttpAssetsSettings s => s.BaseUrl,
+            NetDiagnosticsSettings s => $"https://{s.Hostname}",
+            AvailabilitySettings s => s.Target,
+            SecurityBaselineSettings s => s.Url,
+            PreflightSettings s => s.Target,
+            _ => null
+        };
+
+        if (string.IsNullOrWhiteSpace(target))
+        {
+            return null;
+        }
+
+        return new PreflightSettings
+        {
+            Target = target,
+            CheckDns = true,
+            CheckTcp = true,
+            CheckTls = true,
+            CheckHttp = true
+        };
+    }
+
+    private static void OpenPath(string path)
+    {
+        if (!Directory.Exists(path) && !File.Exists(path))
+        {
+            return;
+        }
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = path,
+            UseShellExecute = true
+        };
+        Process.Start(psi);
+    }
+
     /// <summary>
     /// Создаёт ViewModel элемента модуля с соответствующими настройками.
     /// </summary>
-    private static ModuleItemViewModel CreateModuleItem(ITestModule module)
+    private ModuleItemViewModel CreateModuleItem(ITestModule module)
     {
         var settings = module.CreateDefaultSettings();
         SettingsViewModelBase settingsVm = module switch
@@ -291,6 +569,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _ => throw new NotSupportedException("Unknown module")
         };
 
-        return new ModuleItemViewModel(module, settingsVm);
+        var testLibrary = new TestLibraryViewModel(_runStore, module, settingsVm);
+        return new ModuleItemViewModel(module, settingsVm, testLibrary);
     }
 }

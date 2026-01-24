@@ -20,6 +20,10 @@ public interface ITestModule
     /// </summary>
     string DisplayName { get; }
     /// <summary>
+    /// Короткое описание назначения модуля.
+    /// </summary>
+    string Description { get; }
+    /// <summary>
     /// Семейство тестов для группировки в UI.
     /// </summary>
     TestFamily Family { get; }

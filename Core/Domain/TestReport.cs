@@ -8,6 +8,10 @@ namespace WebLoadTester.Core.Domain;
 /// </summary>
 public class TestReport
 {
+    public string RunId { get; set; } = string.Empty;
+    public Guid TestCaseId { get; set; }
+    public int TestCaseVersion { get; set; }
+    public string TestName { get; set; } = string.Empty;
     public string ModuleId { get; set; } = string.Empty;
     public string ModuleName { get; set; } = string.Empty;
     public TestFamily Family { get; set; }
@@ -17,6 +21,7 @@ public class TestReport
     public string AppVersion { get; set; } = string.Empty;
     public string OsDescription { get; set; } = string.Empty;
     public string SettingsSnapshot { get; set; } = string.Empty;
+    public RunProfile ProfileSnapshot { get; set; } = new();
     public List<ResultBase> Results { get; set; } = new();
     public MetricsSummary Metrics { get; set; } = new();
     public ArtifactInfo Artifacts { get; set; } = new();
@@ -33,6 +38,9 @@ public class MetricsSummary
     public double P50Ms { get; set; }
     public double P95Ms { get; set; }
     public double P99Ms { get; set; }
+    public double TotalDurationMs { get; set; }
+    public int TotalItems { get; set; }
+    public int FailedItems { get; set; }
     public Dictionary<string, int> ErrorBreakdown { get; set; } = new();
     public List<ResultBase> TopSlow { get; set; } = new();
 }
@@ -45,4 +53,5 @@ public class ArtifactInfo
     public string JsonPath { get; set; } = string.Empty;
     public string HtmlPath { get; set; } = string.Empty;
     public string ScreenshotsFolder { get; set; } = string.Empty;
+    public string LogPath { get; set; } = string.Empty;
 }

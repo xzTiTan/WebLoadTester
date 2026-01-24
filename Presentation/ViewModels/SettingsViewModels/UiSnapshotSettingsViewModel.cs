@@ -31,6 +31,26 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "UI снимки";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not UiSnapshotSettings s)
+        {
+            return;
+        }
+
+        Targets.Clear();
+        foreach (var target in s.Targets)
+        {
+            Targets.Add(target);
+        }
+
+        Concurrency = s.Concurrency;
+        RepeatsPerUrl = s.RepeatsPerUrl;
+        WaitUntil = s.WaitUntil;
+        ExtraDelayMs = s.ExtraDelayMs;
+        FullPage = s.FullPage;
+        _settings.Targets = Targets.ToList();
+    }
 
     public ObservableCollection<SnapshotTarget> Targets { get; }
 

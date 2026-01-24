@@ -18,6 +18,7 @@ public class AvailabilityModule : ITestModule
 {
     public string Id => "net.availability";
     public string DisplayName => "Доступность";
+    public string Description => "Мониторит доступность HTTP/TCP и фиксирует интервалы недоступности.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(AvailabilitySettings);
 
@@ -59,12 +60,17 @@ public class AvailabilityModule : ITestModule
         var s = (AvailabilitySettings)settings;
         var report = new TestReport
         {
+            RunId = ctx.RunId,
+            TestCaseId = ctx.TestCaseId,
+            TestCaseVersion = ctx.TestCaseVersion,
+            TestName = ctx.TestName,
             ModuleId = Id,
             ModuleName = DisplayName,
             Family = Family,
             StartedAt = ctx.Now,
-            Status = TestStatus.Completed,
+            Status = TestStatus.Success,
             SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
+            ProfileSnapshot = ctx.Profile,
             AppVersion = typeof(AvailabilityModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
         };

@@ -27,6 +27,22 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "HTTP ассеты";
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not HttpAssetsSettings s)
+        {
+            return;
+        }
+
+        BaseUrl = s.BaseUrl;
+        TimeoutSeconds = s.TimeoutSeconds;
+        Assets.Clear();
+        foreach (var asset in s.Assets)
+        {
+            Assets.Add(asset);
+        }
+        _settings.Assets = Assets.ToList();
+    }
 
     public ObservableCollection<AssetItem> Assets { get; }
 

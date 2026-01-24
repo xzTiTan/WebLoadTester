@@ -17,7 +17,12 @@ public static class MetricsCalculator
     {
         var list = results.ToList();
         var durations = list.Select(r => r.DurationMs).Where(d => d >= 0).OrderBy(d => d).ToList();
-        var summary = new MetricsSummary();
+        var summary = new MetricsSummary
+        {
+            TotalItems = list.Count,
+            FailedItems = list.Count(r => !r.Success),
+            TotalDurationMs = durations.Sum()
+        };
 
         if (durations.Count > 0)
         {
