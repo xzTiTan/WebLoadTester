@@ -167,7 +167,7 @@ public class SqliteRunStore : IRunStore
     public async Task<TestCase> SaveTestCaseAsync(string name, string description, string moduleType, string payloadJson, string changeNote, CancellationToken ct)
     {
         await using var connection = CreateConnection();
-        await using var transaction = await connection.BeginTransactionAsync(ct);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct);
 
         var lookupCommand = connection.CreateCommand();
         lookupCommand.CommandText = @"SELECT Id, CurrentVersion FROM TestCases WHERE Name = $name AND ModuleType = $moduleType";
@@ -367,7 +367,7 @@ public class SqliteRunStore : IRunStore
     public async Task AddRunItemsAsync(IEnumerable<RunItem> items, CancellationToken ct)
     {
         await using var connection = CreateConnection();
-        await using var transaction = await connection.BeginTransactionAsync(ct);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct);
         foreach (var item in items)
         {
             var command = connection.CreateCommand();
@@ -391,7 +391,7 @@ public class SqliteRunStore : IRunStore
     public async Task AddArtifactsAsync(IEnumerable<ArtifactRecord> artifacts, CancellationToken ct)
     {
         await using var connection = CreateConnection();
-        await using var transaction = await connection.BeginTransactionAsync(ct);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct);
         foreach (var artifact in artifacts)
         {
             var command = connection.CreateCommand();

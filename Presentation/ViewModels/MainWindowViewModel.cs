@@ -340,7 +340,14 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 DataContext = Settings
             };
-            window.ShowDialog(desktop.MainWindow);
+            if (desktop.MainWindow is { } owner)
+            {
+                window.ShowDialog(owner);
+            }
+            else
+            {
+                window.Show();
+            }
         }
     }
 

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace WebLoadTester.Core.Contracts;
 
 /// <summary>
@@ -17,4 +19,9 @@ public interface ILogSink
     /// Лог уровня ошибка.
     /// </summary>
     void Error(string message);
+
+    /// <summary>
+    /// Завершает работу приёмника логов.
+    /// </summary>
+    Task CompleteAsync();
 }

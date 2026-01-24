@@ -255,12 +255,25 @@ public class TestOrchestrator
 
     private static string? BuildExtraJson(ResultBase result)
     {
-        var extra = result switch
+        Dictionary<string, object?>? extra = result switch
         {
-            RunResult run when !string.IsNullOrWhiteSpace(run.ScreenshotPath) => new { screenshot = run.ScreenshotPath },
-            CheckResult check when check.StatusCode.HasValue => new { statusCode = check.StatusCode.Value },
-            ProbeResult probe when !string.IsNullOrWhiteSpace(probe.Details) => new { details = probe.Details },
-            TimingResult timing => new { iteration = timing.Iteration, url = timing.Url },
+            RunResult run when !string.IsNullOrWhiteSpace(run.ScreenshotPath) => new Dictionary<string, object?>
+            {
+                ["screenshot"] = run.ScreenshotPath
+            },
+            CheckResult check when check.StatusCode.HasValue => new Dictionary<string, object?>
+            {
+                ["statusCode"] = check.StatusCode.Value
+            },
+            ProbeResult probe when !string.IsNullOrWhiteSpace(probe.Details) => new Dictionary<string, object?>
+            {
+                ["details"] = probe.Details
+            },
+            TimingResult timing => new Dictionary<string, object?>
+            {
+                ["iteration"] = timing.Iteration,
+                ["url"] = timing.Url
+            },
             _ => null
         };
 

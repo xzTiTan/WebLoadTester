@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Contracts;
@@ -128,7 +129,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        var clipboard = Application.Current?.Clipboard;
+        var clipboard = AvaloniaLocator.Current.GetService<IClipboard>();
         if (clipboard != null)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
