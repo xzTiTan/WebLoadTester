@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -129,8 +130,8 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        var clipboard = AvaloniaLocator.Current.GetService<IClipboard>();
-        if (clipboard != null)
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
         }
