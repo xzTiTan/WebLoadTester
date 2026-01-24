@@ -1,9 +1,14 @@
 # WebLoadTester
 
+**Версия:** v1.0 24.01.2026
+
 > **English TL;DR (кратко):** Desktop UI/HTTP/Network test runner on .NET + Avalonia + Playwright. Provides 10 built-in modules (UI сценарии/скриншоты/тайминги, HTTP проверки/нагрузка/ассеты, сетевые и security проверки). Generates JSON + HTML reports and supports Telegram notifications (text). All details below are sourced from the repository.
 
+- [AGENTS.md](AGENTS.md)
+- [docs/ (00–08)](docs/)
+
 ## 1. Что это и для чего
-**WebLoadTester** — настольное приложение для запуска UI/HTTP/сетевых проверок и получения отчётов с метриками (перцентили, ошибки, топ медленных) на основе .NET + Avalonia + Playwright. Проект предназначен для повторяемых прогонов сценариев и сетевых проверок, а также для ручного анализа отчётов (JSON/HTML). Реализованные сценарии — это **10 модулей** с собственными настройками и результатами. Точка входа: `Program.cs`, UI: `MainWindow.axaml`.
+**WebLoadTester** — настольное приложение для запуска UI/HTTP/сетевых проверок и получения отчётов с метриками (перцентили, ошибки, топ медленных) на основе .NET + Avalonia + Playwright. Реализованные сценарии — это **10 модулей** с собственными настройками и результатами. В UI доступны вкладки: **UI тестирование**, **HTTP тестирование**, **Сеть и безопасность**, **Отчёты** (список HTML-отчётов). Точка входа: `Program.cs`, UI: `MainWindow.axaml`.
 
 ## 2. Для кого (персоны)
 - **QA-инженеры** — быстрые UI/HTTP/сетевые прогоны с фиксируемыми отчётами и метриками.
@@ -17,14 +22,14 @@
 - Генерация **JSON** и **HTML** отчётов с метриками (p50/p95/p99 и др.). (`Core/Services/ReportWriters/*`)
 - Скриншоты UI в модулях, использующих Playwright. (`Modules/UiScenario`, `Modules/UiSnapshot`)
 - Ограничения нагрузки (конкурентность и RPS) через `Limits`. (`Core/Domain/Limits.cs`)
-- Telegram-уведомления о старте/прогрессе/финише/ошибке (только текст). (`Infrastructure/Telegram/*`)
+- Telegram-уведомления о старте/прогрессе/финише/ошибке (текстовые сообщения). (`Infrastructure/Telegram/*`)
 - UI с вкладками модулей + живой лог + вкладка отчётов. (`Presentation/Views/*`)
 
 ## 4. Демонстрационный сценарий (5–10 шагов)
 1. Клонируйте репозиторий.
 2. Проверьте, что установлен **.NET SDK 8.0** (см. `WebLoadTester.csproj`).
 3. Соберите проект: `dotnet build`.
-4. Установите браузеры Playwright в локальную папку `./browsers` рядом с бинарниками. **TODO/Не найдено в коде:** конкретная команда установки в проекте не зафиксирована; стандартный для .NET Playwright сценарий — запуск скрипта `playwright.ps1` из папки сборки.
+4. Установите браузеры Playwright в локальную папку `./browsers` рядом с бинарниками (см. команды ниже).
 5. Запустите приложение: `dotnet run`.
 6. В UI откройте вкладку **UI тестирование** или **HTTP тестирование**, выберите модуль и заполните настройки.
 7. Нажмите **Старт** — лог начнёт заполняться, статус и прогресс обновятся.
@@ -35,8 +40,8 @@
 - **.NET**: `net8.0` (см. `WebLoadTester.csproj`).
 - **Avalonia**: 11.3.10 (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`).
 - **Playwright**: 1.57.0 (`Microsoft.Playwright`).
-- **Telegram**: в проекте есть `Telegram.Bot` 22.7.6, но в коде используется собственный HTTP-клиент (`Infrastructure/Telegram/TelegramNotifier.cs`). **TODO/Не найдено в коде:** прямое использование `Telegram.Bot`.
-- **ОС**: приложение — Avalonia Desktop; явные платформенные ограничения в коде не зафиксированы. **TODO:** документировать проверенные ОС.
+- **Telegram**: в проекте есть `Telegram.Bot` 22.7.6, но интеграция реализована через собственный HTTP-клиент (`Infrastructure/Telegram/TelegramNotifier.cs`).
+- **ОС**: приложение — Avalonia Desktop; явные платформенные ограничения в коде не зафиксированы.
 
 ## 6. Быстрый старт (с нуля)
 ```bash
@@ -49,12 +54,23 @@ dotnet run
 ```
 **Playwright-браузеры:**
 - Приложение ожидает браузеры в папке `./browsers` **рядом с бинарником** (`AppContext.BaseDirectory`). (`Infrastructure/Playwright/PlaywrightFactory.cs`)
-- **TODO/Не найдено в коде:** точная команда установки браузеров. Обычно используется скрипт Playwright из каталога сборки.
+- Команды установки (после `dotnet build`):
+  - **Windows (PowerShell):**
+    ```powershell
+    $env:PLAYWRIGHT_BROWSERS_PATH = (Join-Path (Get-Location) "bin/Debug/net8.0/browsers")
+    .\bin\Debug\net8.0\playwright.ps1 install
+    ```
+  - **Linux/macOS (bash):**
+    ```bash
+    PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
+      ./bin/Debug/net8.0/playwright.sh install
+    ```
+  > Для Release/publish замените путь на соответствующий каталог сборки.
 
 **Артефакты и логи:**
-- JSON/HTML отчёты: `./reports/`.
-- Скриншоты: `./screenshots/<runId>/`.
-- Лог отображается в UI (канал `LogBus`).
+- JSON/HTML отчёты: `./reports/` рядом с бинарником.
+- Скриншоты: `./screenshots/<yyyyMMdd_HHmmss>/` рядом с бинарником.
+- Лог отображается в UI (канал `LogBus`), файлового лога нет.
 
 ## 7. Архитектура (высокоуровнево)
 **Слои и зависимости:**
@@ -123,33 +139,33 @@ WebLoadTester.csproj # зависимости/TargetFramework
 - **Id:** `ui.scenario` (`Modules/UiScenario/UiScenarioModule.cs`)
 - **Цель:** запуск последовательных UI-шагов через Playwright.
 - **Настройки (`UiScenarioSettings`):**
-  - `TargetUrl`, `TotalRuns`, `Concurrency`, `Headless`, `ErrorPolicy` (`StepErrorPolicy`), `Steps`, `ScreenshotAfterScenario`.
-  - `Steps`: `Selector`, `Action` (`WaitForVisible/Click/FillText`), `Text`, `TimeoutMs`.
+  - `TargetUrl`, `TotalRuns`, `Concurrency`, `Headless`, `ErrorPolicy` (`StepErrorPolicy`), `Steps`, `TimeoutMs`, `ScreenshotMode`.
+  - `Steps`: `Selector`, `Action` (`WaitForSelector/Click/Fill/Delay`), `Text`, `TimeoutMs`, `DelayMs`.
 - **Pipeline:**
   1. Проверка параметров.
   2. Проверка наличия браузеров (иначе ошибка).
   3. Параллельные прогоны с ограничением `Min(Concurrency, Limits.MaxUiConcurrency)`.
   4. Для каждого прогона: `Goto`, выполнение шагов, опционально скриншот.
-- **Артефакты:** скриншоты `run_<index>.png` в папке `screenshots/<runId>/`.
+- **Артефакты:** скриншоты `run_<index>.png` в папке `screenshots/<yyyyMMdd_HHmmss>/`.
 - **Метрики:** по `RunResult` (успех, duration, ошибка). p50/p95/p99 и TopSlow рассчитываются автоматически.
 - **Типичные кейсы:** регрессия UI, smoke-сценарии; полезно QA/разработчикам.
 
 ### 9.2 UI снимки
 - **Id:** `ui.snapshot` (`Modules/UiSnapshot/UiSnapshotModule.cs`)
 - **Цель:** массовое снятие скриншотов списка URL.
-- **Настройки (`UiSnapshotSettings`):** `Urls`, `Concurrency`, `WaitMode` (`load`/`domcontentloaded`), `DelayAfterLoadMs`.
+- **Настройки (`UiSnapshotSettings`):** `Targets` (URL + Tag), `Concurrency`, `RepeatsPerUrl`, `WaitUntil` (`load`/`domcontentloaded`/`networkidle`), `ExtraDelayMs`, `FullPage`.
 - **Pipeline:**
   1. Проверка списка URL.
   2. Playwright → параллельные заходы на каждый URL.
-  3. Скриншот каждой страницы, имя `snapshot_<sanitized_url>.png`.
-- **Артефакты:** скриншоты в `screenshots/<runId>/`.
+  3. Скриншот каждой страницы, имя `snapshot_<sanitized_url>_<iteration>.png`.
+- **Артефакты:** скриншоты в `screenshots/<yyyyMMdd_HHmmss>/`.
 - **Метрики:** `RunResult` на URL.
 - **Кейсы:** визуальные сравнения, быстрые проверки доступности UI.
 
 ### 9.3 UI тайминги
 - **Id:** `ui.timing` (`Modules/UiTiming/UiTimingModule.cs`)
 - **Цель:** измерение времени загрузки страниц.
-- **Настройки (`UiTimingSettings`):** `Urls`, `RepeatsPerUrl`, `Concurrency`, `WaitUntil` (`load`/`domcontentloaded`).
+- **Настройки (`UiTimingSettings`):** `Targets` (URL + Tag), `RepeatsPerUrl`, `Concurrency`, `WaitUntil` (`load`/`domcontentloaded`/`networkidle`), `Headless`, `TimeoutMs`.
 - **Pipeline:**
   1. Генерация пар (URL × итерации).
   2. Параллельные заходы и замеры времени `page.Goto`.
@@ -161,8 +177,8 @@ WebLoadTester.csproj # зависимости/TargetFramework
 - **Id:** `http.functional` (`Modules/HttpFunctional/HttpFunctionalModule.cs`)
 - **Цель:** точечные проверки HTTP-эндпоинтов с ассерциями.
 - **Настройки (`HttpFunctionalSettings`/`HttpEndpoint`):**
-  - `Endpoints`: `Name`, `Url`, `Method`, `Headers`, `Body`, `StatusCodeEquals`, `MaxLatencyMs`, `HeaderContainsKey`, `HeaderContainsValue`, `BodyContains`.
-  - `TimeoutSeconds`.
+  - `BaseUrl`, `TimeoutSeconds`.
+  - `Endpoints`: `Name`, `Path`, `Method`, `Headers`, `Body`, `StatusCodeEquals`, `MaxLatencyMs`, `HeaderContainsKey`, `HeaderContainsValue`, `BodyContains`.
 - **Pipeline:** последовательный обход эндпоинтов, запросы `HttpClient`.
 - **Артефакты:** нет.
 - **Метрики:** `CheckResult` (status code, latency, asserts).
@@ -182,7 +198,7 @@ WebLoadTester.csproj # зависимости/TargetFramework
 ### 9.6 HTTP ассеты
 - **Id:** `http.assets` (`Modules/HttpAssets/HttpAssetsModule.cs`)
 - **Цель:** проверка ассетов по размеру, типу и времени ответа.
-- **Настройки (`HttpAssetsSettings`/`AssetItem`):** `Assets` (`Url`, `ExpectedContentType`, `MaxSizeBytes`, `MaxLatencyMs`), `TimeoutSeconds`.
+- **Настройки (`HttpAssetsSettings`/`AssetItem`):** `BaseUrl`, `Assets` (`Path`, `ExpectedContentType`, `MaxSizeBytes`, `MaxLatencyMs`), `TimeoutSeconds`.
 - **Pipeline:** запрос каждого ассета, валидация размера/Content-Type/латентности.
 - **Артефакты:** нет.
 - **Метрики:** `CheckResult` с ошибками типа `Asset`.
@@ -191,7 +207,7 @@ WebLoadTester.csproj # зависимости/TargetFramework
 ### 9.7 Сетевая диагностика
 - **Id:** `net.diagnostics` (`Modules/NetDiagnostics/NetDiagnosticsModule.cs`)
 - **Цель:** DNS/TCP/TLS проверки для хоста.
-- **Настройки (`NetDiagnosticsSettings`):** `Hostname`, `Ports`, `EnableDns`, `EnableTcp`, `EnableTls`.
+- **Настройки (`NetDiagnosticsSettings`):** `Hostname`, `Ports`, `AutoPortsByScheme`, `EnableDns`, `EnableTcp`, `EnableTls`.
 - **Pipeline:** сетевые пробы (`NetworkProbes`) + фиксация деталей.
 - **Артефакты:** нет.
 - **Метрики:** `ProbeResult` (details, duration).
@@ -204,7 +220,7 @@ WebLoadTester.csproj # зависимости/TargetFramework
 - **Pipeline:** цикл проверок по интервалу; фиксация последовательных падений.
 - **Артефакты:** нет.
 - **Метрики:** `ProbeResult` с `Details = "Downtime window"` при превышении порога.
-- **Ограничения:** `IntervalSeconds >= 5` проверяется; лимиты `Limits.MinAvailabilityIntervalSeconds` и `Limits.MaxAvailabilityDurationMinutes` **не используются** (TODO).
+- **Ограничения:** `IntervalSeconds >= 5` проверяется валидацией; лимиты `Limits.MinAvailabilityIntervalSeconds` и `Limits.MaxAvailabilityDurationMinutes` доступны в `Limits`, но в модуле не применяются.
 - **Кейсы:** мониторинг стабильности сервиса.
 
 ### 9.9 Базовая безопасность
@@ -279,7 +295,7 @@ flowchart TD
 ## 12. Отчёты и артефакты
 - **Где создаются:**
   - `reports/` и `screenshots/` создаются рядом с исполняемым файлом (`AppContext.BaseDirectory`). (`Infrastructure/Storage/ArtifactStore.cs`)
-  - `profiles/` также создаётся, но пока не используется (TODO).
+  - `profiles/` также создаётся, но в текущем коде не используется.
 - **JSON формат (`TestReport`):**
   - `ModuleId`, `ModuleName`, `Family`, `StartedAt`, `FinishedAt`, `Status`, `AppVersion`, `OsDescription`, `SettingsSnapshot`, `Results`, `Metrics`, `Artifacts`.
 - **Пример JSON (валидный, сокращённый):**
@@ -298,11 +314,11 @@ flowchart TD
     { "kind": "Check", "name": "Example", "success": true, "durationMs": 120.5, "statusCode": 200 }
   ],
   "metrics": { "averageMs": 120.5, "minMs": 120.5, "maxMs": 120.5, "p50Ms": 120.5, "p95Ms": 120.5, "p99Ms": 120.5 },
-  "artifacts": { "jsonPath": ".../reports/report_*.json", "htmlPath": ".../reports/report_*.html", "screenshotsFolder": ".../screenshots/<runId>" }
+  "artifacts": { "jsonPath": ".../reports/report_*.json", "htmlPath": ".../reports/report_*.html", "screenshotsFolder": ".../screenshots/20240101_120000" }
 }
 ```
 - **HTML отчёт:** содержит заголовок модуля, статус, время, таблицу метрик (Avg/Min/Max/P50/P95/P99) и таблицу результатов. (`Core/Services/ReportWriters/HtmlReportWriter.cs`)
-  - **TODO:** HTML не содержит ссылок на скриншоты, хотя `ScreenshotPath` есть в `RunResult`.
+  - HTML не содержит ссылок на скриншоты, хотя `ScreenshotPath` есть в `RunResult`.
 
 ## 13. Telegram интеграция
 - **Настройки в UI:** токен/ChatId и флаги уведомлений находятся в правой панели `MainWindow.axaml`.
@@ -313,7 +329,7 @@ flowchart TD
   - Завершение: `NotifyOnFinish`.
   - Ошибка: `NotifyOnError`.
 - **Rate limit:** `RateLimitSeconds` — минимальный интервал между сообщениями. (`Infrastructure/Telegram/TelegramPolicy.cs`)
-- **TODO:** `ProgressNotifyMode.EveryTSeconds` и `AttachmentsMode` присутствуют в моделях, но в политике отправки не реализованы.
+- В текущей политике реализованы текстовые уведомления; режимы `ProgressNotifyMode.EveryTSeconds` и `AttachmentsMode` в модели настроек не обрабатываются.
 
 ## 14. Ограничения и безопасные лимиты
 - **Limits (по умолчанию):**
@@ -323,7 +339,7 @@ flowchart TD
   - `MinAvailabilityIntervalSeconds = 5`
   - `MaxAvailabilityDurationMinutes = 30`
 - Ограничения применяются в UI/HTTP модулях через `Min(Concurrency, Limits.*)` и `Min(RpsLimit, MaxRps)`.
-- **TODO:** в `AvailabilityModule` не используются лимиты `MinAvailabilityIntervalSeconds` и `MaxAvailabilityDurationMinutes` напрямую.
+- В `AvailabilityModule` лимиты `MinAvailabilityIntervalSeconds` и `MaxAvailabilityDurationMinutes` пока не используются напрямую.
 
 > Используйте только для собственных систем или с разрешения владельца.
 
@@ -357,7 +373,12 @@ flowchart TD
 - [ ] Отчёты корректно сохраняются (`TestOrchestrator`).
 
 ## 17. Лицензия / авторы / контакты
-**TODO/Не найдено в коде:** информация о лицензии и авторах отсутствует в репозитории.
+Информация о лицензии и авторах отсутствует в репозитории.
+
+## Несоответствия (требует актуализации)
+- В docs/03 и docs/05 описана SQLite и `runs/{RunId}`, но в коде БД отсутствует, отчёты пишутся в `reports/`, а скриншоты — в `screenshots/<timestamp>`.
+- В docs/06 указана вкладка «Прогоны» и управление профилями/историей, но в UI реализована вкладка «Отчёты» со списком HTML-файлов.
+- В docs/03 и docs/07 HTML отчёт указан как опциональный, но в коде HTML сохраняется всегда.
 
 ---
 
@@ -366,8 +387,8 @@ flowchart TD
 - Базовые стили панелей, логов, текстовых полей определены в `App.axaml`.
 
 ## Скриншоты
-**TODO:** в репозитории нет скриншотов UI. Можно добавить в `docs/images` при необходимости.
+В репозитории нет скриншотов UI. Можно добавить в `docs/images` при необходимости.
 
 ## Примерные пресеты (без выхода за лимиты)
-- **Smoke (UI сценарий):** `TotalRuns=1`, `Concurrency=1`, `Headless=true`, один шаг `WaitForVisible`.
+- **Smoke (UI сценарий):** `TotalRuns=1`, `Concurrency=1`, `Headless=true`, один шаг `WaitForSelector`.
 - **Нагрузка 50 VU (HTTP производительность):** `Concurrency=50`, `TotalRequests=200`, `RpsLimit=100` (в пределах `Limits.MaxHttpConcurrency` и `Limits.MaxRps`).
