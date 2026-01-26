@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
              xmlns:root="clr-namespace:WebLoadTester.Presentation.ViewModels"
+             xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
@@ -16,7 +17,7 @@
                                   ItemsSource="{Binding Modules}"
                                   SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="root:ModuleItemViewModel">
                                     <TextBlock Text="{Binding DisplayName}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -100,11 +101,11 @@
                             <ComboBox Classes="field-control"
                                       ItemsSource="{Binding Profiles}"
                                       SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="domain:RunProfile">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                             </ComboBox>
                         </Grid>
                         <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
@@ -193,18 +194,24 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Итоговая сводка" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding DataContext.SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
-                    <StackPanel DataContext="{Binding SelectedModule.LastReport}"
-                                IsVisible="{Binding DataContext.SelectedModule.HasReport, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                        <TextBlock Text="{Binding Status}" />
-                        <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
-                        <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
-                        <TextBlock Text="{Binding Metrics.AverageMs, StringFormat='Avg: {0:F1} ms'}" />
-                        <TextBlock Text="{Binding Metrics.P95Ms, StringFormat='P95: {0:F1} ms'}" />
-                    </StackPanel>
+                    <ContentControl Content="{Binding SelectedModule.LastReport}"
+                                    IsVisible="{Binding SelectedModule.HasReport}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="domain:TestReport">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Status}" />
+                                    <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
+                                    <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
+                                    <TextBlock Text="{Binding Metrics.AverageMs, StringFormat='Avg: {0:F1} ms'}" />
+                                    <TextBlock Text="{Binding Metrics.P95Ms, StringFormat='P95: {0:F1} ms'}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
                 </StackPanel>
             </Border>
 
@@ -212,19 +219,19 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Детальные результаты" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding DataContext.SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}"
                               Classes="list-min-180"
-                              IsVisible="{Binding DataContext.SelectedModule.HasReport, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                              IsVisible="{Binding SelectedModule.HasReport}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*" />
                             <DataGridTemplateColumn Header="Name" Width="2*">
                                 <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate x:CompileBindings="False">
-                                        <TextBlock Text="{Binding Name}" />
+                                    <DataTemplate x:DataType="domain:ResultBase">
+                                        <TextBlock Text="{Binding ., Converter={StaticResource ResultDisplayNameConverter}}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

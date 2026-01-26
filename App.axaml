@@ -9,6 +9,7 @@
     <Application.Resources>
         <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
         <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+        <conv:ResultDisplayNameConverter x:Key="ResultDisplayNameConverter" />
         <x:Double x:Key="SpacingXs">4</x:Double>
         <x:Double x:Key="SpacingS">8</x:Double>
         <x:Double x:Key="SpacingM">12</x:Double>
