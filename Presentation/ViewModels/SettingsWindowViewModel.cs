@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input.Platform;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Infrastructure.Storage;
@@ -149,12 +150,15 @@ public partial class SettingsWindowViewModel : ObservableObject
             return null;
         }
 
-        var dialog = new OpenFolderDialog
+        var storageProvider = desktop.MainWindow.StorageProvider;
+        var folders = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = title
-        };
+            Title = title,
+            AllowMultiple = false
+        });
 
-        return await dialog.ShowAsync(desktop.MainWindow);
+        var folder = folders.FirstOrDefault();
+        return folder?.Path.LocalPath;
     }
 
     private async Task CopyToClipboardAsync(string path)
