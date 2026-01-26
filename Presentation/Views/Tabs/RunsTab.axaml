@@ -8,27 +8,27 @@
             <Border Classes="section">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Фильтры" Classes="section-title" />
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Модуль" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding ModuleFilterOptions}"
                                   SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Статус" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding StatusFilterOptions}"
                                   SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="С" Classes="field-label" />
                         <DatePicker Classes="field-control" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="По" Classes="field-label" />
                         <DatePicker Classes="field-control" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Поиск" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding SearchText, Mode=TwoWay}" />
                     </Grid>
