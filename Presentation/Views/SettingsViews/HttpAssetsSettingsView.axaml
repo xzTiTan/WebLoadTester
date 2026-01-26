@@ -8,11 +8,11 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Base URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Timeout (сек)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>

@@ -12,7 +12,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Storage paths" Classes="section-title" />
 
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Data directory" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding DataDirectory, Mode=TwoWay}" />
                     </Grid>
@@ -24,7 +24,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Runs root" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding RunsDirectory, Mode=TwoWay}" />
                     </Grid>
@@ -36,7 +36,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Profiles directory" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding ProfilesDirectory, Mode=TwoWay}" />
                     </Grid>
@@ -48,7 +48,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Database path" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
                     </Grid>
@@ -66,32 +66,32 @@
             <Border Classes="section">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Telegram" Classes="section-title" />
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Token" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" PasswordChar="*" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="ChatId" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Уведомления" Classes="field-label" />
                         <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
                     </Grid>
                     <CheckBox Content="Уведомлять о старте" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
                     <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
                     <CheckBox Content="Уведомлять об ошибке" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Режим прогресса" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding TelegramSettings.ProgressModes}"
                                   SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Прогресс каждые N" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Ограничение частоты (сек)" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
                     </Grid>

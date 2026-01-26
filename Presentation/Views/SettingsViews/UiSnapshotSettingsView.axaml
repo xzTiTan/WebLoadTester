@@ -30,17 +30,17 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Параметры снимка" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="WaitUntil" Classes="field-label" />
                     <ComboBox Classes="field-control"
                               ItemsSource="{Binding WaitUntilOptions}"
                               SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="ExtraDelayMs" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="0" Increment="100" Value="{Binding ExtraDelayMs, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="FullPage" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding FullPage, Mode=TwoWay}" />
                 </Grid>
@@ -50,11 +50,11 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Параметры запуска" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Concurrency" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="RepeatsPerUrl" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
                 </Grid>

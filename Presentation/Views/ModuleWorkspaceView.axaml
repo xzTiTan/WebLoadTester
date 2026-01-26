@@ -9,7 +9,7 @@
             <Border Classes="section">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Выбор модуля" Classes="section-title" />
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Модуль" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding Modules}"
@@ -42,7 +42,7 @@
                                     Command="{Binding SelectedModule.TestLibrary.DeleteSelectedCommand}" />
                         </StackPanel>
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Тест" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
@@ -57,15 +57,15 @@
                                     Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
                         </StackPanel>
                     </StackPanel>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Название теста" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Описание" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Комментарий к версии" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
                     </Grid>
@@ -90,7 +90,7 @@
                                     Command="{Binding RequestDeleteProfileCommand}" />
                         </StackPanel>
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Профиль" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding Profiles}"
@@ -111,51 +111,51 @@
                                     Command="{Binding CancelDeleteProfileCommand}" />
                         </StackPanel>
                     </StackPanel>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Название профиля" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding ProfileName, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Parallelism" Classes="field-label" />
                         <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Режим" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding ModeOptions}"
                                   SelectedItem="{Binding Mode, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Iterations" Classes="field-label" />
                         <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Duration (sec)" Classes="field-label" />
                         <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Timeout (sec)" Classes="field-label" />
                         <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Headless" Classes="field-label" />
                         <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Screenshots policy" Classes="field-label" />
                         <ComboBox Classes="field-control"
                                   ItemsSource="{Binding ScreenshotsPolicyOptions}"
                                   SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="HTML отчёт" Classes="field-label" />
                         <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Telegram" Classes="field-label" />
                         <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                    <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Preflight" Classes="field-label" />
                         <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
                     </Grid>

@@ -7,30 +7,30 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Доступность" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Цель" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Target, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Тип цели" Classes="field-label" />
                     <ComboBox Classes="field-control" SelectedItem="{Binding TargetType, Mode=TwoWay}">
                         <ComboBoxItem>Http</ComboBoxItem>
                         <ComboBoxItem>Tcp</ComboBoxItem>
                     </ComboBox>
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Интервал (сек)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Длительность (мин)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (мс)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Порог ошибок" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
