@@ -30,25 +30,25 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Параметры тайминга" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="WaitUntil" Classes="field-label" />
                     <ComboBox Classes="field-control"
                               ItemsSource="{Binding WaitUntilOptions}"
                               SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="RepeatsPerUrl" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Concurrency" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Headless" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{DynamicResource FieldRowColumns}" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Timeout (ms)" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
