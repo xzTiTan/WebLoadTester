@@ -78,11 +78,8 @@
 
             <Border Classes="section">
                 <StackPanel Spacing="8"
-                            DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                            x:DataType="root:MainWindowViewModel">
-                    <StackPanel Spacing="8"
-                                DataContext="{Binding RunProfile}"
-                                x:DataType="root:RunProfileViewModel">
+                            DataContext="{Binding DataContext.RunProfile, RelativeSource={RelativeSource AncestorType=Window}}"
+                            x:DataType="root:RunProfileViewModel">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Text="Профиль запуска" Classes="section-title" />
                             <StackPanel Grid.Column="1" Classes="section-actions">
@@ -193,12 +190,12 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Итоговая сводка" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, ElementName=Root}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
                     <StackPanel DataContext="{Binding SelectedModule.LastReport}"
-                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}">
+                                IsVisible="{Binding SelectedModule.HasReport}">
                         <TextBlock Text="{Binding Status}" />
                         <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
                         <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
@@ -212,17 +209,22 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Детальные результаты" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, ElementName=Root}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}"
                               Classes="list-min-180"
-                              IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}"
-                              x:CompileBindings="False">
+                              IsVisible="{Binding SelectedModule.HasReport}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*" />
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
+                            <DataGridTemplateColumn Header="Name" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="{x:Null}">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Success" Binding="{Binding Success}" Width="*" />
                             <DataGridTextColumn Header="Duration (ms)" Binding="{Binding DurationMs}" Width="*" />
                             <DataGridTextColumn Header="Error" Binding="{Binding ErrorMessage}" Width="2*" />
