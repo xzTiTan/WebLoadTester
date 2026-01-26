@@ -4,32 +4,45 @@
              xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.NetDiagnosticsSettingsView"
              x:DataType="vm:NetDiagnosticsSettingsViewModel">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Сетевая диагностика" Classes="h1" />
-        <TextBlock Text="Имя хоста" Classes="label" />
-        <TextBox Text="{Binding Hostname, Mode=TwoWay}" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <CheckBox Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
-            <CheckBox Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
-            <CheckBox Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
-        </StackPanel>
-        <TextBlock Text="Порты" Classes="label" />
-        <CheckBox Content="Авто-порты по схеме URL (http→80, https→443)"
-                  IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
-        <StackPanel Classes="section-actions">
-            <Button Content="Добавить" Command="{Binding AddPortCommand}"
-                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
-                    IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-        </StackPanel>
-        <dg:DataGrid ItemsSource="{Binding Ports}"
-                     SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
-                     AutoGenerateColumns="False"
-                     Height="140"
-                     IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}">
-            <dg:DataGrid.Columns>
-                <dg:DataGridTextColumn Header="Port" Binding="{Binding Value}" Width="*" />
-            </dg:DataGrid.Columns>
-        </dg:DataGrid>
+    <StackPanel Spacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Опции" Classes="section-title" />
+                <Grid Classes="field-row">
+                    <TextBlock Text="Имя хоста" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding Hostname, Mode=TwoWay}" />
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <CheckBox Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
+                    <CheckBox Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
+                    <CheckBox Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
+                </StackPanel>
+                <CheckBox Content="Авто-порты по схеме URL (http→80, https→443)"
+                          IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
+            </StackPanel>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Ports / Checks" Classes="section-title" />
+                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                        <Button Content="Добавить" Command="{Binding AddPortCommand}"
+                                IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
+                                IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+                    </StackPanel>
+                </Grid>
+                <dg:DataGrid ItemsSource="{Binding Ports}"
+                             SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180"
+                             IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Port" Binding="{Binding Value}" Width="*" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

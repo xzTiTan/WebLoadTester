@@ -5,40 +5,50 @@
              x:DataType="vm:ModuleFamilyViewModel"
              x:CompileBindings="False">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="12">
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Выбор модуля" Classes="h1" />
-                    <ComboBox ItemsSource="{Binding Modules}"
-                              SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <TextBlock Text="{Binding SelectedModule.Description}" TextWrapping="Wrap" />
+        <StackPanel Spacing="16">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Выбор модуля" Classes="section-title" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Модуль" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding Modules}"
+                                  SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" />
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Тесты (Test Library)" Classes="h1" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Обновить"
-                                Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
-                        <Button Content="Загрузить"
-                                Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
-                        <Button Content="Сохранить"
-                                Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
-                        <Button Content="Сохранить как"
-                                Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
-                        <Button Content="Удалить"
-                                Command="{Binding SelectedModule.TestLibrary.DeleteSelectedCommand}" />
-                    </StackPanel>
-                    <ComboBox ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
-                              SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
-                    <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="4">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Тесты (Test Library)" Classes="section-title" />
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Обновить"
+                                    Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
+                            <Button Content="Загрузить"
+                                    Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
+                            <Button Content="Сохранить"
+                                    Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
+                            <Button Content="Сохранить как"
+                                    Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
+                            <Button Content="Удалить"
+                                    Command="{Binding SelectedModule.TestLibrary.DeleteSelectedCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Тест" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
+                                  SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
+                    </Grid>
+                    <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="8">
                         <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
                         <StackPanel Classes="section-actions">
                             <Button Content="Подтвердить удаление"
@@ -47,46 +57,52 @@
                                     Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
                         </StackPanel>
                     </StackPanel>
-                    <TextBlock Text="Название теста" Classes="label" />
-                    <TextBox Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
-                    <TextBlock Text="Описание" Classes="label" />
-                    <TextBox Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
-                    <TextBlock Text="Комментарий к версии" Classes="label" />
-                    <TextBox Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
-                    <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}"
-                               Foreground="Gray"
-                               TextWrapping="Wrap" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Название теста" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Описание" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Комментарий к версии" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
+                    </Grid>
+                    <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Classes="status-line" />
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Настройки модуля" Classes="h1" />
-                    <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
-                </StackPanel>
-            </Border>
+            <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6"
+            <Border Classes="section">
+                <StackPanel Spacing="8"
                             DataContext="{Binding DataContext.RunProfile, RelativeSource={RelativeSource AncestorType=Window}}">
-                    <TextBlock Text="Профиль запуска (RunProfile)" Classes="h1" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Сохранить профиль"
-                                Command="{Binding SaveProfileCommand}" />
-                        <Button Content="Сохранить как"
-                                Command="{Binding SaveAsProfileCommand}" />
-                        <Button Content="Удалить"
-                                Command="{Binding RequestDeleteProfileCommand}" />
-                    </StackPanel>
-                    <ComboBox ItemsSource="{Binding Profiles}"
-                              SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Профиль запуска" Classes="section-title" />
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Обновить" Command="{Binding RefreshCommand}" />
+                            <Button Content="Сохранить профиль"
+                                    Command="{Binding SaveProfileCommand}" />
+                            <Button Content="Сохранить как"
+                                    Command="{Binding SaveAsProfileCommand}" />
+                            <Button Content="Удалить"
+                                    Command="{Binding RequestDeleteProfileCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Профиль" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding Profiles}"
+                                  SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
                         <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
                         <StackPanel Classes="section-actions">
                             <Button Content="Подтвердить удаление"
@@ -95,62 +111,87 @@
                                     Command="{Binding CancelDeleteProfileCommand}" />
                         </StackPanel>
                     </StackPanel>
-                    <TextBlock Text="Название профиля" Classes="label" />
-                    <TextBox Text="{Binding ProfileName, Mode=TwoWay}" />
-                    <TextBlock Text="Parallelism" Classes="label" />
-                    <NumericUpDown Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
-                    <TextBlock Text="Режим" Classes="label" />
-                    <ComboBox ItemsSource="{Binding ModeOptions}"
-                              SelectedItem="{Binding Mode, Mode=TwoWay}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <StackPanel>
-                            <TextBlock Text="Iterations" Classes="label" />
-                            <NumericUpDown Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="Duration (sec)" Classes="label" />
-                            <NumericUpDown Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
-                        </StackPanel>
-                    </StackPanel>
-                    <TextBlock Text="Timeout (sec)" Classes="label" />
-                    <NumericUpDown Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
-                    <TextBlock Text="Headless" Classes="label" />
-                    <CheckBox Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                    <TextBlock Text="Screenshots policy" Classes="label" />
-                    <ComboBox ItemsSource="{Binding ScreenshotsPolicyOptions}"
-                              SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
-                    <CheckBox Content="HTML отчёт" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
-                    <CheckBox Content="Отправить статус в Telegram" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
-                    <CheckBox Content="Выполнить предпроверку (Preflight)" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Название профиля" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding ProfileName, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Parallelism" Classes="field-label" />
+                        <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Режим" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding ModeOptions}"
+                                  SelectedItem="{Binding Mode, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Iterations" Classes="field-label" />
+                        <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Duration (sec)" Classes="field-label" />
+                        <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Timeout (sec)" Classes="field-label" />
+                        <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Headless" Classes="field-label" />
+                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Screenshots policy" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding ScreenshotsPolicyOptions}"
+                                  SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="HTML отчёт" Classes="field-label" />
+                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Telegram" Classes="field-label" />
+                        <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Preflight" Classes="field-label" />
+                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                    </Grid>
                     <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Управление запуском" Classes="h1" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Start"
-                                Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                        <Button Content="Stop"
-                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                        <Button Content="Cancel"
-                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                    </StackPanel>
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Управление запуском" Classes="section-title" />
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Start"
+                                    Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Content="Stop"
+                                    Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Content="Cancel"
+                                    Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </StackPanel>
+                    </Grid>
                     <TextBlock Text="{Binding DataContext.RunStage, RelativeSource={RelativeSource AncestorType=Window}}" />
-                    <ProgressBar Minimum="0" Maximum="100" Height="10"
+                    <ProgressBar Minimum="0" Maximum="100"
                                  IsIndeterminate="{Binding DataContext.IsRunning, RelativeSource={RelativeSource AncestorType=Window}}" />
-                    <TextBlock Text="{Binding DataContext.ProgressText, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <TextBlock Text="{Binding DataContext.ProgressText, RelativeSource={RelativeSource AncestorType=Window}}" Classes="status-line" />
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Итоговая сводка" Classes="h1" />
-                    <TextBlock Text="Нет данных — выберите прогон"
-                               Foreground="Gray"
-                               IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}" />
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Итоговая сводка" Classes="section-title" />
+                    <StackPanel Classes="empty-state"
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                        <TextBlock Text="Нет данных" Classes="empty-title" />
+                        <TextBlock Text="Выберите прогон или выполните запуск" />
+                    </StackPanel>
                     <StackPanel DataContext="{Binding SelectedModule.LastReport}"
                                 IsVisible="{Binding SelectedModule.HasReport}">
                         <TextBlock Text="{Binding Status}" />
@@ -162,14 +203,16 @@
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Детальные результаты" Classes="h1" />
-                    <TextBlock Text="Нет данных — выберите прогон"
-                               Foreground="Gray"
-                               IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}" />
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Детальные результаты" Classes="section-title" />
+                    <StackPanel Classes="empty-state"
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                        <TextBlock Text="Нет данных" Classes="empty-title" />
+                        <TextBlock Text="Выберите прогон или выполните запуск" />
+                    </StackPanel>
                     <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}"
-                              Height="240"
+                              Classes="list-min-180"
                               IsVisible="{Binding SelectedModule.HasReport}"
                               x:CompileBindings="False">
                         <DataGrid.Columns>
@@ -183,24 +226,26 @@
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Артефакты" Classes="h1" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Открыть JSON"
-                                Command="{Binding DataContext.OpenLatestJsonCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                        <Button Content="Открыть HTML"
-                                Command="{Binding DataContext.OpenLatestHtmlCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                        <Button Content="Открыть папку прогона"
-                                Command="{Binding DataContext.OpenLatestRunFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                    </StackPanel>
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Артефакты" Classes="section-title" />
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Открыть JSON"
+                                    Command="{Binding DataContext.OpenLatestJsonCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Content="Открыть HTML"
+                                    Command="{Binding DataContext.OpenLatestHtmlCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Content="Открыть папку прогона"
+                                    Command="{Binding DataContext.OpenLatestRunFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Лог выполнения" Classes="h1" />
-                    <Border Classes="logbox" Height="220">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Лог выполнения" Classes="section-title" />
+                    <Border Classes="log-box" MinHeight="160">
                         <ListBox ItemsSource="{Binding DataContext.LogEntries, RelativeSource={RelativeSource AncestorType=Window}}"
                                  Classes="loglist">
                             <ListBox.ItemTemplate>

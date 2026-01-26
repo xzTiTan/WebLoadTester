@@ -4,47 +4,55 @@
              xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiTimingSettingsView"
              x:DataType="vm:UiTimingSettingsViewModel">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Настройки UI таймингов" Classes="h1" />
-        <TextBlock Text="URL-адреса" Classes="label" />
-        <dg:DataGrid ItemsSource="{Binding Targets}"
-                     SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
-                     AutoGenerateColumns="False"
-                     Height="160">
-            <dg:DataGrid.Columns>
-                <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
-                <dg:DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="*" />
-            </dg:DataGrid.Columns>
-        </dg:DataGrid>
-        <StackPanel Classes="section-actions">
-            <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
-            <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
-        </StackPanel>
+    <StackPanel Spacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="URL-адреса" Classes="section-title" />
+                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                        <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
+                        <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
+                    </StackPanel>
+                </Grid>
+                <dg:DataGrid ItemsSource="{Binding Targets}"
+                             SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="*" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </StackPanel>
+        </Border>
 
-        <TextBlock Text="Параметры тайминга" Classes="label" />
-        <WrapPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="WaitUntil" Classes="label" />
-                <ComboBox ItemsSource="{Binding WaitUntilOptions}"
-                          SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Параметры тайминга" Classes="section-title" />
+                <Grid Classes="field-row">
+                    <TextBlock Text="WaitUntil" Classes="field-label" />
+                    <ComboBox Classes="field-control"
+                              ItemsSource="{Binding WaitUntilOptions}"
+                              SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="RepeatsPerUrl" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Concurrency" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Headless" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Timeout (ms)" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
+                </Grid>
             </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="RepeatsPerUrl" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" Classes="compact" />
-            </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Concurrency" Classes="label" />
-                <NumericUpDown Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" Classes="compact" />
-            </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Headless" Classes="label" />
-                <CheckBox Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Timeout (ms)" Classes="label" />
-                <NumericUpDown Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" Classes="compact" />
-            </StackPanel>
-        </WrapPanel>
+        </Border>
     </StackPanel>
 </UserControl>

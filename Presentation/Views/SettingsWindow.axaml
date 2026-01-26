@@ -7,66 +7,101 @@
         Width="720" Height="640"
         WindowStartupLocation="CenterOwner">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="12" Spacing="12">
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Хранилище данных" Classes="h1" />
-                    <TextBlock Text="Data directory" Classes="label" />
-                    <TextBox Text="{Binding DataDirectory, Mode=TwoWay}" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Выбрать папку" Command="{Binding BrowseDataDirectoryCommand}" />
-                        <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
-                        <Button Content="Копировать путь" Command="{Binding CopyDataDirectoryCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="Runs directory" Classes="label" />
-                    <TextBox Text="{Binding RunsDirectory, Mode=TwoWay}" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Выбрать папку" Command="{Binding BrowseRunsDirectoryCommand}" />
-                        <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
-                        <Button Content="Копировать путь" Command="{Binding CopyRunsDirectoryCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="Profiles directory" Classes="label" />
-                    <TextBox Text="{Binding ProfilesDirectory, Mode=TwoWay}" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Выбрать папку" Command="{Binding BrowseProfilesDirectoryCommand}" />
-                        <Button Content="Открыть" Command="{Binding OpenProfilesDirectoryCommand}" />
-                        <Button Content="Копировать путь" Command="{Binding CopyProfilesDirectoryCommand}" />
-                    </StackPanel>
-                    <TextBlock Text="Database path" Classes="label" />
-                    <TextBox Text="{Binding DatabasePath}" IsReadOnly="True" />
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
-                        <Button Content="Копировать путь" Command="{Binding CopyDatabasePathCommand}" />
-                    </StackPanel>
+        <StackPanel Margin="16" Spacing="16">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Storage paths" Classes="section-title" />
+
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Data directory" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding DataDirectory, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Выбрать" Command="{Binding BrowseDataDirectoryCommand}" />
+                            <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
+                            <Button Content="Копировать" Command="{Binding CopyDataDirectoryCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Runs root" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding RunsDirectory, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Выбрать" Command="{Binding BrowseRunsDirectoryCommand}" />
+                            <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
+                            <Button Content="Копировать" Command="{Binding CopyRunsDirectoryCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Profiles directory" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding ProfilesDirectory, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Выбрать" Command="{Binding BrowseProfilesDirectoryCommand}" />
+                            <Button Content="Открыть" Command="{Binding OpenProfilesDirectoryCommand}" />
+                            <Button Content="Копировать" Command="{Binding CopyProfilesDirectoryCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Database path" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
+                    </Grid>
+                    <Grid ColumnDefinitions="200,*">
+                        <StackPanel Grid.Column="1" Classes="section-actions">
+                            <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
+                            <Button Content="Копировать" Command="{Binding CopyDatabasePathCommand}" />
+                        </StackPanel>
+                    </Grid>
+
                     <TextBlock Text="Артефакты прогонов сохраняются в runs/{RunId}/ (report.json, report.html, screenshots/, logs/)." TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Настройки Telegram" Classes="h1" />
-                    <CheckBox Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
-                    <TextBlock Text="Токен бота" Classes="label" />
-                    <TextBox Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" />
-                    <TextBlock Text="Идентификатор чата" Classes="label" />
-                    <TextBox Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Telegram" Classes="section-title" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Token" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" PasswordChar="*" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="ChatId" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Уведомления" Classes="field-label" />
+                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
+                    </Grid>
                     <CheckBox Content="Уведомлять о старте" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
                     <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
                     <CheckBox Content="Уведомлять об ошибке" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
-                    <TextBlock Text="Режим прогресса" Classes="label" />
-                    <ComboBox ItemsSource="{Binding TelegramSettings.ProgressModes}"
-                              SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
-                    <TextBlock Text="Прогресс каждые N" Classes="label" />
-                    <TextBox Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
-                    <TextBlock Text="Ограничение частоты (сек)" Classes="label" />
-                    <TextBox Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Режим прогресса" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding TelegramSettings.ProgressModes}"
+                                  SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Прогресс каждые N" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Ограничение частоты (сек)" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                    </Grid>
                 </StackPanel>
             </Border>
 
             <StackPanel Classes="section-actions">
                 <Button Content="Сохранить" Command="{Binding SaveCommand}" />
             </StackPanel>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
         </StackPanel>
     </ScrollViewer>
 </Window>

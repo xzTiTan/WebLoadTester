@@ -4,27 +4,42 @@
              xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
              x:DataType="vm:HttpAssetsSettingsViewModel">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Настройки HTTP ассетов" Classes="h1" />
-        <TextBlock Text="Base URL" Classes="label" />
-        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
-        <TextBlock Text="Ассеты (пути относительно Base URL)" Classes="label" />
-        <dg:DataGrid ItemsSource="{Binding Assets}"
-                     SelectedItem="{Binding SelectedAsset, Mode=TwoWay}"
-                     AutoGenerateColumns="False"
-                     Height="200">
-            <dg:DataGrid.Columns>
-                <dg:DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
-                <dg:DataGridTextColumn Header="ContentType" Binding="{Binding ExpectedContentType}" Width="*" />
-                <dg:DataGridTextColumn Header="MaxSizeBytes" Binding="{Binding MaxSizeBytes}" Width="*" />
-                <dg:DataGridTextColumn Header="MaxLatencyMs" Binding="{Binding MaxLatencyMs}" Width="*" />
-            </dg:DataGrid.Columns>
-        </dg:DataGrid>
-        <StackPanel Classes="section-actions">
-            <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
-            <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
-        </StackPanel>
-        <TextBlock Text="Таймаут (сек)" Classes="label" />
-        <TextBox Classes="compact" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+    <StackPanel Spacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Базовые настройки" Classes="section-title" />
+                <Grid Classes="field-row">
+                    <TextBlock Text="Base URL" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Timeout (сек)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Ассеты" Classes="section-title" />
+                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                        <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
+                    </StackPanel>
+                </Grid>
+                <dg:DataGrid ItemsSource="{Binding Assets}"
+                             SelectedItem="{Binding SelectedAsset, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
+                        <dg:DataGridTextColumn Header="ContentType" Binding="{Binding ExpectedContentType}" Width="*" />
+                        <dg:DataGridTextColumn Header="MaxSizeBytes" Binding="{Binding MaxSizeBytes}" Width="*" />
+                        <dg:DataGridTextColumn Header="MaxLatencyMs" Binding="{Binding MaxLatencyMs}" Width="*" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

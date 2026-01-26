@@ -5,47 +5,55 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView"
              x:DataType="vm:HttpFunctionalSettingsViewModel"
              x:Name="Root">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Настройки HTTP функциональных проверок" Classes="h1" />
-        <TextBlock Text="Base URL" Classes="label" />
-        <TextBox Text="{Binding BaseUrl, Mode=TwoWay}" />
-        <StackPanel Spacing="4">
-            <TextBlock Text="Эндпоинты (пути относительно Base URL)" Classes="label" />
-            <StackPanel Classes="section-actions">
-                <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
-                <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+    <StackPanel Spacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Базовые настройки" Classes="section-title" />
+                <Grid Classes="field-row">
+                    <TextBlock Text="Base URL" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Timeout (сек)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
             </StackPanel>
-        </StackPanel>
-        <dg:DataGrid ItemsSource="{Binding Endpoints}"
-                     SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
-                     AutoGenerateColumns="False"
-                     Height="200">
-            <dg:DataGrid.Columns>
-                <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
-                <dg:DataGridTemplateColumn Header="Method" Width="120">
-                    <dg:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Method}" />
-                        </DataTemplate>
-                    </dg:DataGridTemplateColumn.CellTemplate>
-                    <dg:DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate x:DataType="{x:Null}">
-                            <ComboBox ItemsSource="{Binding DataContext.MethodOptions, ElementName=Root}"
-                                      SelectedItem="{Binding Method, Mode=TwoWay}" />
-                        </DataTemplate>
-                    </dg:DataGridTemplateColumn.CellEditingTemplate>
-                </dg:DataGridTemplateColumn>
-                <dg:DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
-                <dg:DataGridTextColumn Header="ExpectedStatus" Binding="{Binding StatusCodeEquals}" Width="150" />
-                <dg:DataGridTextColumn Header="AssertContains" Binding="{Binding BodyContains}" Width="2*" />
-            </dg:DataGrid.Columns>
-        </dg:DataGrid>
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
-            <TextBlock Text="Таймаут (сек)" Classes="label" VerticalAlignment="Center" />
-            <TextBox Grid.Column="1"
-                     Classes="compact"
-                     Margin="8,0,0,0"
-                     Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-        </Grid>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Эндпоинты" Classes="section-title" />
+                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                        <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+                    </StackPanel>
+                </Grid>
+                <dg:DataGrid ItemsSource="{Binding Endpoints}"
+                             SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                        <dg:DataGridTemplateColumn Header="Method" Width="120">
+                            <dg:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Method}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellTemplate>
+                            <dg:DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate x:DataType="{x:Null}">
+                                    <ComboBox ItemsSource="{Binding DataContext.MethodOptions, ElementName=Root}"
+                                              SelectedItem="{Binding Method, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellEditingTemplate>
+                        </dg:DataGridTemplateColumn>
+                        <dg:DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
+                        <dg:DataGridTextColumn Header="ExpectedStatus" Binding="{Binding StatusCodeEquals}" Width="150" />
+                        <dg:DataGridTextColumn Header="AssertContains" Binding="{Binding BodyContains}" Width="2*" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

@@ -4,53 +4,79 @@
              x:Class="WebLoadTester.Presentation.Views.Tabs.RunsTab"
              x:DataType="vm:RunsTabViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="12">
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Фильтры" Classes="h1" />
-                    <TextBlock Text="Модуль" Classes="label" />
-                    <ComboBox ItemsSource="{Binding ModuleFilterOptions}"
-                              SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
-                    <TextBlock Text="Статус" Classes="label" />
-                    <ComboBox ItemsSource="{Binding StatusFilterOptions}"
-                              SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
-                    <TextBlock Text="С" Classes="label" />
-                    <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" />
-                    <TextBlock Text="По" Classes="label" />
-                    <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" />
-                    <TextBlock Text="Поиск" Classes="label" />
-                    <TextBox Text="{Binding SearchText, Mode=TwoWay}" />
-                    <Button Content="Применить" Command="{Binding RefreshCommand}" />
+        <StackPanel Spacing="16">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Фильтры" Classes="section-title" />
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Модуль" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding ModuleFilterOptions}"
+                                  SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Статус" Classes="field-label" />
+                        <ComboBox Classes="field-control"
+                                  ItemsSource="{Binding StatusFilterOptions}"
+                                  SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="С" Classes="field-label" />
+                        <DatePicker Classes="field-control" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="По" Classes="field-label" />
+                        <DatePicker Classes="field-control" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Classes="field-row">
+                        <TextBlock Text="Поиск" Classes="field-label" />
+                        <TextBox Classes="field-control" Text="{Binding SearchText, Mode=TwoWay}" />
+                    </Grid>
+                    <StackPanel Classes="section-actions">
+                        <Button Content="Применить" Command="{Binding RefreshCommand}" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
-            <Border Classes="panel">
-                <StackPanel Spacing="6">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Прогоны" Classes="h1" />
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" />
-                            <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" />
-                            <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" />
-                            <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}" />
-                            <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}" />
-                            <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}" />
-                            <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}" />
-                        </StackPanel>
-                    </Grid>
-                    <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Height="300">
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Прогоны" Classes="section-title" />
+                    <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Classes="list-min-240">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="DateTime" Binding="{Binding StartedAt}" Width="2*" />
+                            <DataGridTextColumn Header="Module" Binding="{Binding ModuleName}" Width="2*" />
                             <DataGridTextColumn Header="TestName" Binding="{Binding TestName}" Width="2*" />
-                            <DataGridTextColumn Header="ModuleName" Binding="{Binding ModuleName}" Width="2*" />
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
                             <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
-                            <DataGridTextColumn Header="Failed" Binding="{Binding FailedItems}" Width="*" />
-                            <DataGridTextColumn Header="KeyMetrics" Binding="{Binding KeyMetrics}" Width="2*" />
-                            <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
+                            <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>
-                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="4">
+                </StackPanel>
+            </Border>
+
+            <Border Classes="section">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Действия по выбранному прогону" Classes="section-title" />
+                    <StackPanel Classes="empty-state"
+                                IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}, ConverterParameter=invert}">
+                        <TextBlock Text="Нет данных" Classes="empty-title" />
+                        <TextBlock Text="Выполните запуск или выберите прогон" />
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
+                        <StackPanel Classes="section-actions">
+                            <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
                         <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
                         <StackPanel Classes="section-actions">
                             <Button Content="Подтвердить удаление"
@@ -59,7 +85,7 @@
                                     Command="{Binding CancelDeleteRunCommand}" />
                         </StackPanel>
                     </StackPanel>
-                    <TextBlock Text="{Binding UserMessage}" Foreground="Gray" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
                 </StackPanel>
             </Border>
         </StackPanel>

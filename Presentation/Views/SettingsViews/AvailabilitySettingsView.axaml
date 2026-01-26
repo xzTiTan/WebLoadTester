@@ -3,32 +3,38 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.AvailabilitySettingsView"
              x:DataType="vm:AvailabilitySettingsViewModel">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Доступность" Classes="h1" />
-        <TextBlock Text="Цель" Classes="label" />
-        <TextBox Text="{Binding Target, Mode=TwoWay}" />
-        <TextBlock Text="Тип цели" Classes="label" />
-        <ComboBox SelectedItem="{Binding TargetType, Mode=TwoWay}">
-            <ComboBoxItem>Http</ComboBoxItem>
-            <ComboBoxItem>Tcp</ComboBoxItem>
-        </ComboBox>
-        <WrapPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Интервал (сек)" Classes="label" />
-                <TextBox Classes="compact" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+    <StackPanel Spacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Доступность" Classes="section-title" />
+                <Grid Classes="field-row">
+                    <TextBlock Text="Цель" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding Target, Mode=TwoWay}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Тип цели" Classes="field-label" />
+                    <ComboBox Classes="field-control" SelectedItem="{Binding TargetType, Mode=TwoWay}">
+                        <ComboBoxItem>Http</ComboBoxItem>
+                        <ComboBoxItem>Tcp</ComboBoxItem>
+                    </ComboBox>
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Интервал (сек)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Длительность (мин)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Таймаут (мс)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
+                <Grid Classes="field-row">
+                    <TextBlock Text="Порог ошибок" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                </Grid>
             </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Длительность (мин)" Classes="label" />
-                <TextBox Classes="compact" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-            </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Таймаут (мс)" Classes="label" />
-                <TextBox Classes="compact" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-            </StackPanel>
-            <StackPanel Classes="field-block">
-                <TextBlock Text="Порог ошибок" Classes="label" />
-                <TextBox Classes="compact" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-            </StackPanel>
-        </WrapPanel>
+        </Border>
     </StackPanel>
 </UserControl>
