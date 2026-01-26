@@ -3,6 +3,7 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
              xmlns:root="clr-namespace:WebLoadTester.Presentation.ViewModels"
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
+             x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="16">
@@ -77,91 +78,95 @@
 
             <Border Classes="section">
                 <StackPanel Spacing="8"
-                            DataContext="{Binding DataContext.RunProfile, RelativeSource={RelativeSource AncestorType=Window}}"
-                            x:DataType="root:RunProfileViewModel">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Профиль запуска" Classes="section-title" />
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Обновить" Command="{Binding RefreshCommand}" />
-                            <Button Content="Сохранить профиль"
-                                    Command="{Binding SaveProfileCommand}" />
-                            <Button Content="Сохранить как"
-                                    Command="{Binding SaveAsProfileCommand}" />
-                            <Button Content="Удалить"
-                                    Command="{Binding RequestDeleteProfileCommand}" />
+                            DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                            x:DataType="root:MainWindowViewModel">
+                    <StackPanel Spacing="8"
+                                DataContext="{Binding RunProfile}"
+                                x:DataType="root:RunProfileViewModel">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Профиль запуска" Classes="section-title" />
+                            <StackPanel Grid.Column="1" Classes="section-actions">
+                                <Button Content="Обновить" Command="{Binding RefreshCommand}" />
+                                <Button Content="Сохранить профиль"
+                                        Command="{Binding SaveProfileCommand}" />
+                                <Button Content="Сохранить как"
+                                        Command="{Binding SaveAsProfileCommand}" />
+                                <Button Content="Удалить"
+                                        Command="{Binding RequestDeleteProfileCommand}" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Профиль" Classes="field-label" />
+                            <ComboBox Classes="field-control"
+                                      ItemsSource="{Binding Profiles}"
+                                      SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                        <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                            <StackPanel Classes="section-actions">
+                                <Button Content="Подтвердить удаление"
+                                        Command="{Binding ConfirmDeleteProfileCommand}" />
+                                <Button Content="Отмена"
+                                        Command="{Binding CancelDeleteProfileCommand}" />
+                            </StackPanel>
                         </StackPanel>
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Профиль" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding Profiles}"
-                                  SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                        <StackPanel Classes="section-actions">
-                            <Button Content="Подтвердить удаление"
-                                    Command="{Binding ConfirmDeleteProfileCommand}" />
-                            <Button Content="Отмена"
-                                    Command="{Binding CancelDeleteProfileCommand}" />
-                        </StackPanel>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Название профиля" Classes="field-label" />
+                            <TextBox Classes="field-control" Text="{Binding ProfileName, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Parallelism" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Режим" Classes="field-label" />
+                            <ComboBox Classes="field-control"
+                                      ItemsSource="{Binding ModeOptions}"
+                                      SelectedItem="{Binding Mode, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Iterations" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Duration (sec)" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Timeout (sec)" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Headless" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Screenshots policy" Classes="field-label" />
+                            <ComboBox Classes="field-control"
+                                      ItemsSource="{Binding ScreenshotsPolicyOptions}"
+                                      SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="HTML отчёт" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Telegram" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Preflight" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                     </StackPanel>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Название профиля" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding ProfileName, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Parallelism" Classes="field-label" />
-                        <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Режим" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding ModeOptions}"
-                                  SelectedItem="{Binding Mode, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Iterations" Classes="field-label" />
-                        <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Duration (sec)" Classes="field-label" />
-                        <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Timeout (sec)" Classes="field-label" />
-                        <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Headless" Classes="field-label" />
-                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Screenshots policy" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding ScreenshotsPolicyOptions}"
-                                  SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="HTML отчёт" Classes="field-label" />
-                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Telegram" Classes="field-label" />
-                        <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Preflight" Classes="field-label" />
-                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
-                    </Grid>
-                    <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                 </StackPanel>
             </Border>
 
@@ -188,12 +193,12 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Итоговая сводка" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, ElementName=Root}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
                     <StackPanel DataContext="{Binding SelectedModule.LastReport}"
-                                IsVisible="{Binding SelectedModule.HasReport, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}">
                         <TextBlock Text="{Binding Status}" />
                         <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
                         <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
@@ -207,13 +212,13 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Детальные результаты" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}, ElementName=Root}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
                     <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}"
                               Classes="list-min-180"
-                              IsVisible="{Binding SelectedModule.HasReport, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}"
                               x:CompileBindings="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*" />
