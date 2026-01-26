@@ -9,33 +9,33 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Параметры запуска" Classes="section-title" />
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Start URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TargetUrl, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Concurrency / Users" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Iterations" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TotalRuns, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Timeout (ms)" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="100" Increment="100" Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Headless" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Screenshots" Classes="field-label" />
                     <ComboBox Classes="field-control"
                               ItemsSource="{Binding ScreenshotModeOptions}"
                               SelectedItem="{Binding ScreenshotMode, Mode=TwoWay}" />
                 </Grid>
-                <Grid Classes="field-row">
+                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
                     <TextBlock Text="Политика ошибок" Classes="field-label" />
                     <ComboBox Classes="field-control"
                               ItemsSource="{Binding ErrorPolicyOptions}"

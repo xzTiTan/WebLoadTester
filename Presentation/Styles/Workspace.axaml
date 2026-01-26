@@ -22,7 +22,6 @@
     </Style>
 
     <Style Selector="Grid.field-row">
-        <Setter Property="ColumnDefinitions" Value="{DynamicResource LabelColumnWidth},*" />
         <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingS}" />
         <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
