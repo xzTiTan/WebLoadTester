@@ -164,7 +164,6 @@
                         <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                     </StackPanel>
-                </StackPanel>
             </Border>
 
             <Border Classes="section">
