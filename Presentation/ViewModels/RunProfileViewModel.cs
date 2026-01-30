@@ -71,11 +71,29 @@ public partial class RunProfileViewModel : ObservableObject
 
     public string WarningMessage =>
         Parallelism > 10 || DurationSeconds > 300
-            ? "Высокая нагрузка: Parallelism > 10 или Duration > 5 минут."
+            ? "Высокая нагрузка: параллельность > 10 или длительность > 5 минут."
             : string.Empty;
 
-    partial void OnParallelismChanged(int value) => OnPropertyChanged(nameof(WarningMessage));
-    partial void OnDurationSecondsChanged(int value) => OnPropertyChanged(nameof(WarningMessage));
+    public bool HasWarning => !string.IsNullOrWhiteSpace(WarningMessage);
+    public bool IsIterationsMode => Mode == RunMode.Iterations;
+    public bool IsDurationMode => Mode == RunMode.Duration;
+
+    partial void OnParallelismChanged(int value)
+    {
+        OnPropertyChanged(nameof(WarningMessage));
+        OnPropertyChanged(nameof(HasWarning));
+    }
+
+    partial void OnDurationSecondsChanged(int value)
+    {
+        OnPropertyChanged(nameof(WarningMessage));
+        OnPropertyChanged(nameof(HasWarning));
+    }
+    partial void OnModeChanged(RunMode value)
+    {
+        OnPropertyChanged(nameof(IsIterationsMode));
+        OnPropertyChanged(nameof(IsDurationMode));
+    }
 
     partial void OnSelectedProfileChanged(RunProfile? value)
     {

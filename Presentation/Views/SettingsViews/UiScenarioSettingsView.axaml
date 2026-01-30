@@ -8,32 +8,10 @@
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Параметры запуска" Classes="section-title" />
+                <TextBlock Text="Параметры сценария" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Start URL" Classes="field-label" />
+                    <TextBlock Text="Стартовый URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TargetUrl, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Concurrency / Users" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Iterations" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TotalRuns, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Timeout (ms)" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="100" Increment="100" Value="{Binding TimeoutMs, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Headless" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Screenshots" Classes="field-label" />
-                    <ComboBox Classes="field-control"
-                              ItemsSource="{Binding ScreenshotModeOptions}"
-                              SelectedItem="{Binding ScreenshotMode, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Политика ошибок" Classes="field-label" />
@@ -48,19 +26,19 @@
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Шаги сценария" Classes="section-title" />
-                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                         <Button Content="Добавить" Command="{Binding AddStepCommand}" />
                         <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
                         <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
                         <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Steps}"
                              SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
                              AutoGenerateColumns="False"
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
-                        <dg:DataGridTemplateColumn Header="Type" Width="160">
+                        <dg:DataGridTemplateColumn Header="Тип" Width="160">
                             <dg:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Action}" />
@@ -73,10 +51,10 @@
                                 </DataTemplate>
                             </dg:DataGridTemplateColumn.CellEditingTemplate>
                         </dg:DataGridTemplateColumn>
-                        <dg:DataGridTextColumn Header="Selector" Binding="{Binding Selector}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Value" Binding="{Binding Text}" Width="2*" />
-                        <dg:DataGridTextColumn Header="TimeoutMs" Binding="{Binding TimeoutMs}" Width="120" />
-                        <dg:DataGridTextColumn Header="DelayMs" Binding="{Binding DelayMs}" Width="120" />
+                        <dg:DataGridTextColumn Header="Селектор" Binding="{Binding Selector}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Значение" Binding="{Binding Text}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Таймаут, мс" Binding="{Binding TimeoutMs}" Width="140" />
+                        <dg:DataGridTextColumn Header="Задержка, мс" Binding="{Binding DelayMs}" Width="140" />
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>
             </StackPanel>

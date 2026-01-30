@@ -11,9 +11,18 @@
                     <TextBlock Text="URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
-                <CheckBox Content="Проверять заголовки" IsChecked="{Binding CheckHeaders, Mode=TwoWay}" />
-                <CheckBox Content="Проверять редирект HTTP→HTTPS" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
-                <CheckBox Content="Проверять срок TLS" IsChecked="{Binding CheckTlsExpiry, Mode=TwoWay}" />
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Заголовки безопасности" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckHeaders, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="HTTP → HTTPS" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять редирект" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="TLS" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять срок" IsChecked="{Binding CheckTlsExpiry, Mode=TwoWay}" />
+                </Grid>
             </StackPanel>
         </Border>
     </StackPanel>
