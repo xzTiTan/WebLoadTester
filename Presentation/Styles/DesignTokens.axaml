@@ -49,9 +49,5 @@
             <BoxShadow Color="#1A000000" Blur="14" Offset="0,4" />
         </BoxShadows>
 
-        <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
-            <ColumnDefinition Width="{DynamicResource LabelColumnWidth}" />
-            <ColumnDefinition Width="*" />
-        </ColumnDefinitions>
     </Styles.Resources>
 </Styles>

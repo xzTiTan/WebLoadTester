@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="**\App.axaml" />
     <AvaloniaXaml Include="App.axaml" />
   </ItemGroup>
 

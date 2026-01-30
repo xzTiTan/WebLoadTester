@@ -10,6 +10,10 @@
         <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
         <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
         <conv:ResultDisplayNameConverter x:Key="ResultDisplayNameConverter" />
+        <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </ColumnDefinitions>
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
