@@ -14,11 +14,13 @@
     <Style Selector="StackPanel.section-actions">
         <Setter Property="Orientation" Value="Horizontal" />
         <Setter Property="Spacing" Value="{DynamicResource SpacingS}" />
+        <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style Selector="StackPanel.list-toolbar">
         <Setter Property="Orientation" Value="Horizontal" />
         <Setter Property="Spacing" Value="{DynamicResource SpacingS}" />
+        <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style Selector="Grid.field-row">
@@ -27,12 +29,13 @@
     </Style>
 
     <Style Selector="TextBlock.field-label">
-        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="Control.field-control">
         <Setter Property="Grid.Column" Value="1" />
-        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style Selector="TextBlock.status-line">
