@@ -8,7 +8,7 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Опции" Classes="section-title" />
-                <Grid ColumnDefinitions="{DynamicResource LabelColumnWidth},*" Classes="field-row">
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Имя хоста" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Hostname, Mode=TwoWay}" />
                 </Grid>
