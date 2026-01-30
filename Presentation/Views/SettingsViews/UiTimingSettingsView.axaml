@@ -9,11 +9,11 @@
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="URL-адреса" Classes="section-title" />
-                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                         <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
                         <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
                         <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Targets}"
                              SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
@@ -21,7 +21,7 @@
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
                         <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="*" />
+                        <dg:DataGridTextColumn Header="Тег" Binding="{Binding Tag}" Width="*" />
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>
             </StackPanel>
@@ -31,25 +31,25 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Параметры тайминга" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="WaitUntil" Classes="field-label" />
+                    <TextBlock Text="Событие загрузки" Classes="field-label" />
                     <ComboBox Classes="field-control"
                               ItemsSource="{Binding WaitUntilOptions}"
                               SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="RepeatsPerUrl" Classes="field-label" />
+                    <TextBlock Text="Повторов на URL" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Concurrency" Classes="field-label" />
+                    <TextBlock Text="Параллельность" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Headless" Classes="field-label" />
+                    <TextBlock Text="Режим headless" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Timeout (ms)" Classes="field-label" />
+                    <TextBlock Text="Таймаут, мс" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>

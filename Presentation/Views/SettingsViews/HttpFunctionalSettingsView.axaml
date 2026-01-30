@@ -10,11 +10,11 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Base URL" Classes="field-label" />
+                    <TextBlock Text="Базовый URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Timeout (сек)" Classes="field-label" />
+                    <TextBlock Text="Таймаут (сек)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
             </StackPanel>
@@ -24,18 +24,18 @@
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Эндпоинты" Classes="section-title" />
-                    <StackPanel Grid.Column="1" Classes="list-toolbar">
+                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                         <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
                         <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Endpoints}"
                              SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
                              AutoGenerateColumns="False"
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
-                        <dg:DataGridTemplateColumn Header="Method" Width="120">
+                        <dg:DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*" />
+                        <dg:DataGridTemplateColumn Header="Метод" Width="120">
                             <dg:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Method}" />
@@ -48,9 +48,9 @@
                                 </DataTemplate>
                             </dg:DataGridTemplateColumn.CellEditingTemplate>
                         </dg:DataGridTemplateColumn>
-                        <dg:DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="2*" />
-                        <dg:DataGridTextColumn Header="ExpectedStatus" Binding="{Binding StatusCodeEquals}" Width="150" />
-                        <dg:DataGridTextColumn Header="AssertContains" Binding="{Binding BodyContains}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Путь" Binding="{Binding Path}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Код ответа" Binding="{Binding StatusCodeEquals}" Width="140" />
+                        <dg:DataGridTextColumn Header="Содержит" Binding="{Binding BodyContains}" Width="2*" />
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>
             </StackPanel>

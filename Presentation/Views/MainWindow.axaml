@@ -5,33 +5,43 @@
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="WebLoadTester"
-        Width="1280" Height="760">
+        Width="1280" Height="760"
+        Background="{DynamicResource PageBackground}">
     <Grid Margin="16" RowDefinitions="Auto,*" RowSpacing="16">
-        <Border Grid.Row="0" Classes="section">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Панель управления" Classes="section-title" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
+        <Border Grid.Row="0" Classes="app-bar">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="4">
+                <StackPanel>
+                    <TextBlock Text="WebLoadTester" Classes="page-title" />
+                    <TextBlock Text="Панель управления" Classes="muted" />
+                </StackPanel>
+                <WrapPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Classes="toolbar-wrap">
                     <Button Content="Настройки" Command="{Binding OpenSettingsCommand}" />
                     <Button Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                    <TextBlock Text="{Binding DatabaseStatus}" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding TelegramStatus}" VerticalAlignment="Center" />
-                </StackPanel>
-            </StackPanel>
+                    <Border Classes="{Binding DatabaseStatusBadgeClass}">
+                        <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
+                    </Border>
+                    <Border Classes="{Binding TelegramStatusBadgeClass}">
+                        <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
+                    </Border>
+                </WrapPanel>
+            </Grid>
         </Border>
 
-        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-            <TabItem Header="UI тестирование">
-                <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
-            </TabItem>
-            <TabItem Header="HTTP тестирование">
-                <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
-            </TabItem>
-            <TabItem Header="Сеть и безопасность">
-                <tabs:NetSecTab DataContext="{Binding NetFamily}" />
-            </TabItem>
-            <TabItem Header="Прогоны">
-                <tabs:RunsTab DataContext="{Binding RunsTab}" />
-            </TabItem>
-        </TabControl>
+        <Border Grid.Row="1" Classes="section">
+            <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+                <TabItem Header="UI тестирование">
+                    <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
+                </TabItem>
+                <TabItem Header="HTTP тестирование">
+                    <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
+                </TabItem>
+                <TabItem Header="Сеть и безопасность">
+                    <tabs:NetSecTab DataContext="{Binding NetFamily}" />
+                </TabItem>
+                <TabItem Header="Прогоны">
+                    <tabs:RunsTab DataContext="{Binding RunsTab}" />
+                </TabItem>
+            </TabControl>
+        </Border>
     </Grid>
 </Window>

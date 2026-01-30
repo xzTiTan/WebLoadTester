@@ -11,12 +11,15 @@
                     <TextBlock Text="Цель" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Target, Mode=TwoWay}" />
                 </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <CheckBox Content="DNS" IsChecked="{Binding CheckDns, Mode=TwoWay}" />
-                    <CheckBox Content="TCP" IsChecked="{Binding CheckTcp, Mode=TwoWay}" />
-                    <CheckBox Content="TLS" IsChecked="{Binding CheckTls, Mode=TwoWay}" />
-                    <CheckBox Content="HTTP" IsChecked="{Binding CheckHttp, Mode=TwoWay}" />
-                </StackPanel>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Проверки" Classes="field-label" />
+                    <WrapPanel Classes="field-control" Spacing="8">
+                        <CheckBox Content="DNS" IsChecked="{Binding CheckDns, Mode=TwoWay}" />
+                        <CheckBox Content="TCP" IsChecked="{Binding CheckTcp, Mode=TwoWay}" />
+                        <CheckBox Content="TLS" IsChecked="{Binding CheckTls, Mode=TwoWay}" />
+                        <CheckBox Content="HTTP" IsChecked="{Binding CheckHttp, Mode=TwoWay}" />
+                    </WrapPanel>
+                </Grid>
             </StackPanel>
         </Border>
     </StackPanel>

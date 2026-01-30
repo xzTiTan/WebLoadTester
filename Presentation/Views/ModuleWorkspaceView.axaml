@@ -3,11 +3,12 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
              xmlns:root="clr-namespace:WebLoadTester.Presentation.ViewModels"
              xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
+             xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="16">
+        <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
             <Border Classes="section">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Выбор модуля" Classes="section-title" />
@@ -31,7 +32,7 @@
                 <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Тесты (Test Library)" Classes="section-title" />
-                        <StackPanel Grid.Column="1" Classes="section-actions">
+                        <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                             <Button Content="Обновить"
                                     Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
                             <Button Content="Загрузить"
@@ -39,10 +40,12 @@
                             <Button Content="Сохранить"
                                     Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
                             <Button Content="Сохранить как"
+                                    Classes="ghost"
                                     Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
                             <Button Content="Удалить"
+                                    Classes="danger"
                                     Command="{Binding SelectedModule.TestLibrary.RequestDeleteSelectedCommand}" />
-                        </StackPanel>
+                        </WrapPanel>
                     </Grid>
                     <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Тест" Classes="field-label" />
@@ -52,12 +55,13 @@
                     </Grid>
                     <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="8">
                         <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                        <StackPanel Classes="section-actions">
+                        <WrapPanel Classes="toolbar-wrap">
                             <Button Content="Подтвердить удаление"
                                     Command="{Binding SelectedModule.TestLibrary.ConfirmDeleteSelectedCommand}" />
                             <Button Content="Отмена"
+                                    Classes="ghost"
                                     Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
-                        </StackPanel>
+                        </WrapPanel>
                     </StackPanel>
                     <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                         <TextBlock Text="Название теста" Classes="field-label" />
@@ -86,43 +90,46 @@
                                 x:DataType="root:RunProfileViewModel">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Text="Профиль запуска" Classes="section-title" />
-                            <StackPanel Grid.Column="1" Classes="section-actions">
+                            <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                                 <Button Content="Обновить" Command="{Binding RefreshCommand}" />
                                 <Button Content="Сохранить профиль"
                                         Command="{Binding SaveProfileCommand}" />
                                 <Button Content="Сохранить как"
+                                        Classes="ghost"
                                         Command="{Binding SaveAsProfileCommand}" />
                                 <Button Content="Удалить"
+                                        Classes="danger"
                                         Command="{Binding RequestDeleteProfileCommand}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Профиль" Classes="field-label" />
                             <ComboBox Classes="field-control"
                                       ItemsSource="{Binding Profiles}"
                                       SelectedItem="{Binding SelectedProfile, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="domain:RunProfile">
-                                    <TextBlock Text="{Binding Name}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="domain:RunProfile">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
                             </ComboBox>
                         </Grid>
                         <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
                             <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                            <StackPanel Classes="section-actions">
+                            <WrapPanel Classes="toolbar-wrap">
                                 <Button Content="Подтвердить удаление"
                                         Command="{Binding ConfirmDeleteProfileCommand}" />
                                 <Button Content="Отмена"
+                                        Classes="ghost"
                                         Command="{Binding CancelDeleteProfileCommand}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </StackPanel>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Название профиля" Classes="field-label" />
                             <TextBox Classes="field-control" Text="{Binding ProfileName, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Parallelism" Classes="field-label" />
+                            <TextBlock Text="Параллельность" Classes="field-label" />
                             <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -131,16 +138,16 @@
                                       ItemsSource="{Binding ModeOptions}"
                                       SelectedItem="{Binding Mode, Mode=TwoWay}" />
                         </Grid>
-                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Iterations" Classes="field-label" />
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsIterationsMode}">
+                            <TextBlock Text="Итерации" Classes="field-label" />
                             <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
                         </Grid>
-                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Duration (sec)" Classes="field-label" />
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsDurationMode}">
+                            <TextBlock Text="Длительность (сек)" Classes="field-label" />
                             <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Timeout (sec)" Classes="field-label" />
+                            <TextBlock Text="Таймаут (сек)" Classes="field-label" />
                             <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -148,13 +155,13 @@
                             <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Screenshots policy" Classes="field-label" />
+                            <TextBlock Text="Скриншоты" Classes="field-label" />
                             <ComboBox Classes="field-control"
                                       ItemsSource="{Binding ScreenshotsPolicyOptions}"
                                       SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="HTML отчёт" Classes="field-label" />
+                            <TextBlock Text="HTML-отчёт" Classes="field-label" />
                             <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -165,7 +172,9 @@
                             <TextBlock Text="Preflight" Classes="field-label" />
                             <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
                         </Grid>
-                        <TextBlock Text="{Binding WarningMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                        <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
+                            <TextBlock Text="{Binding WarningMessage}" />
+                        </Border>
                         <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                     </StackPanel>
                 </StackPanel>
@@ -177,13 +186,13 @@
                             x:DataType="root:MainWindowViewModel">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Управление запуском" Classes="section-title" />
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Start" Command="{Binding StartCommand}" />
-                            <Button Content="Stop" Command="{Binding StopCommand}" />
-                            <Button Content="Cancel" Command="{Binding StopCommand}" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
+                            <Button Content="Старт" Classes="primary" Command="{Binding StartCommand}" />
+                            <Button Content="Остановить" Command="{Binding StopCommand}" />
+                            <Button Content="Отмена" Classes="danger" Command="{Binding CancelCommand}" />
+                        </WrapPanel>
                     </Grid>
-                    <TextBlock Text="{Binding RunStage}" />
+                    <TextBlock Text="{Binding RunStage}" Classes="muted" />
                     <ProgressBar Minimum="0" Maximum="100"
                                  IsIndeterminate="{Binding IsRunning}" />
                     <TextBlock Text="{Binding ProgressText}" Classes="status-line" />
@@ -202,13 +211,18 @@
                                     IsVisible="{Binding SelectedModule.HasReport}">
                         <ContentControl.ContentTemplate>
                             <DataTemplate x:DataType="domain:TestReport">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Status}" />
-                                    <TextBlock Text="{Binding Metrics.TotalDurationMs, StringFormat='Duration: {0:F0} ms'}" />
-                                    <TextBlock Text="{Binding Metrics.FailedItems, StringFormat='Failed items: {0}'}" />
-                                    <TextBlock Text="{Binding Metrics.AverageMs, StringFormat='Avg: {0:F1} ms'}" />
-                                    <TextBlock Text="{Binding Metrics.P95Ms, StringFormat='P95: {0:F1} ms'}" />
-                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="6">
+                                    <TextBlock Text="Статус" Classes="muted" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" />
+                                    <TextBlock Grid.Row="1" Text="Длительность" Classes="muted" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Metrics.TotalDurationMs, StringFormat='{0:F0} мс'}" />
+                                    <TextBlock Grid.Row="2" Text="Ошибки" Classes="muted" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Metrics.FailedItems}" />
+                                    <TextBlock Grid.Row="3" Text="Среднее" Classes="muted" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Metrics.AverageMs, StringFormat='{0:F1} мс'}" />
+                                    <TextBlock Grid.Row="4" Text="P95" Classes="muted" />
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Metrics.P95Ms, StringFormat='{0:F1} мс'}" />
+                                </Grid>
                             </DataTemplate>
                         </ContentControl.ContentTemplate>
                     </ContentControl>
@@ -227,17 +241,17 @@
                               Classes="list-min-180"
                               IsVisible="{Binding SelectedModule.HasReport}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="*" />
-                            <DataGridTemplateColumn Header="Name" Width="2*">
+                            <DataGridTextColumn Header="Тип" Binding="{Binding Kind}" Width="140" />
+                            <DataGridTemplateColumn Header="Название" Width="2*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="domain:ResultBase">
                                         <TextBlock Text="{Binding ., Converter={StaticResource ResultDisplayNameConverter}}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Success" Binding="{Binding Success}" Width="*" />
-                            <DataGridTextColumn Header="Duration (ms)" Binding="{Binding DurationMs}" Width="*" />
-                            <DataGridTextColumn Header="Error" Binding="{Binding ErrorMessage}" Width="2*" />
+                            <DataGridTextColumn Header="Успех" Binding="{Binding Success}" Width="120" />
+                            <DataGridTextColumn Header="Длительность, мс" Binding="{Binding DurationMs}" Width="160" />
+                            <DataGridTextColumn Header="Ошибка" Binding="{Binding ErrorMessage}" Width="2*" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>
@@ -249,11 +263,11 @@
                             x:DataType="root:MainWindowViewModel">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Артефакты" Classes="section-title" />
-                        <StackPanel Grid.Column="1" Classes="section-actions">
+                        <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
                             <Button Content="Открыть JSON" Command="{Binding OpenLatestJsonCommand}" />
                             <Button Content="Открыть HTML" Command="{Binding OpenLatestHtmlCommand}" />
                             <Button Content="Открыть папку прогона" Command="{Binding OpenLatestRunFolderCommand}" />
-                        </StackPanel>
+                        </WrapPanel>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -262,17 +276,19 @@
                 <StackPanel Spacing="8"
                             DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                             x:DataType="root:MainWindowViewModel">
-                    <TextBlock Text="Лог выполнения" Classes="section-title" />
-                    <Border Classes="log-box" MinHeight="160">
-                        <ListBox ItemsSource="{Binding LogEntries}"
-                                 Classes="loglist">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Classes="logline" Text="{Binding}" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Border>
+                    <Expander Header="Лог выполнения" IsExpanded="True">
+                        <Border Classes="log-box" MinHeight="160" MaxHeight="260">
+                            <ListBox ItemsSource="{Binding LogEntries}"
+                                     Classes="loglist"
+                                     behaviors:AutoScrollBehavior.IsEnabled="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Classes="logline" Text="{Binding}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </Expander>
                 </StackPanel>
             </Border>
         </StackPanel>

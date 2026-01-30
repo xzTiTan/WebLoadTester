@@ -14,8 +14,8 @@
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Тип цели" Classes="field-label" />
                     <ComboBox Classes="field-control" SelectedItem="{Binding TargetType, Mode=TwoWay}">
-                        <ComboBoxItem>Http</ComboBoxItem>
-                        <ComboBoxItem>Tcp</ComboBoxItem>
+                        <ComboBoxItem>HTTP</ComboBoxItem>
+                        <ComboBoxItem>TCP</ComboBoxItem>
                     </ComboBox>
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">

@@ -142,13 +142,25 @@ public partial class MainWindowViewModel : ViewModelBase
     private string telegramStatus = "Telegram: не настроен";
 
     [ObservableProperty]
-    private string runStage = "Idle";
+    private bool isDatabaseOk;
+
+    [ObservableProperty]
+    private bool isTelegramConfigured;
+
+    [ObservableProperty]
+    private string runStage = "Ожидание";
 
     [ObservableProperty]
     private bool isRunning;
 
     [ObservableProperty]
     private int selectedTabIndex;
+
+    public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
+    public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
+
+    partial void OnIsDatabaseOkChanged(bool value) => OnPropertyChanged(nameof(DatabaseStatusBadgeClass));
+    partial void OnIsTelegramConfiguredChanged(bool value) => OnPropertyChanged(nameof(TelegramStatusBadgeClass));
 
     /// <summary>
     /// Возвращает выбранный модуль в зависимости от активной вкладки.
@@ -179,7 +191,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsRunning = true;
         StatusText = $"Статус: выполняется {moduleItem.DisplayName}";
         ProgressText = "Прогресс: 0/0";
-        RunStage = "Running";
+        RunStage = "Выполнение";
 
         _runCts = new CancellationTokenSource();
         var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
@@ -224,7 +236,7 @@ public partial class MainWindowViewModel : ViewModelBase
             await logSink.CompleteAsync();
             IsRunning = false;
             StatusText = "Статус: ожидание";
-            RunStage = "Done";
+            RunStage = "Готово";
             RunsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
         }
@@ -236,9 +248,20 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
+        CancelRun();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStop))]
+    private void Cancel()
+    {
+        CancelRun();
+    }
+
+    private void CancelRun()
+    {
         _runCts?.Cancel();
         StatusText = "Статус: остановка";
-        RunStage = "Cancelled";
+        RunStage = "Отменено";
     }
 
     /// <summary>
@@ -276,9 +299,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
+        CancelCommand.NotifyCanExecuteChanged();
         if (!value)
         {
-            RunStage = "Idle";
+            RunStage = "Ожидание";
         }
     }
 
@@ -399,12 +423,12 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             await _runStore.InitializeAsync(CancellationToken.None);
-            Dispatcher.UIThread.Post(() => DatabaseStatus = "БД: OK");
+            Dispatcher.UIThread.Post(() => SetDatabaseStatus("БД: OK", true));
         }
         catch (Exception ex)
         {
             _logBus.Error($"DB init failed: {ex.Message}");
-            Dispatcher.UIThread.Post(() => DatabaseStatus = "БД: ошибка");
+            Dispatcher.UIThread.Post(() => SetDatabaseStatus("БД: ошибка", false));
         }
 
         await RunProfile.RefreshCommand.ExecuteAsync(null);
@@ -424,11 +448,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateTelegramStatus()
     {
-        TelegramStatus = TelegramSettings.Settings.Enabled &&
-                         !string.IsNullOrWhiteSpace(TelegramSettings.Settings.BotToken) &&
-                         !string.IsNullOrWhiteSpace(TelegramSettings.Settings.ChatId)
-            ? "Telegram: настроен"
-            : "Telegram: не настроен";
+        var isConfigured = TelegramSettings.Settings.Enabled &&
+                           !string.IsNullOrWhiteSpace(TelegramSettings.Settings.BotToken) &&
+                           !string.IsNullOrWhiteSpace(TelegramSettings.Settings.ChatId);
+        TelegramStatus = isConfigured ? "Telegram: настроен" : "Telegram: не настроен";
+        IsTelegramConfigured = isConfigured;
+    }
+
+    private void SetDatabaseStatus(string status, bool isOk)
+    {
+        DatabaseStatus = status;
+        IsDatabaseOk = isOk;
     }
 
     private async Task SendTelegramAsync(string runId, Func<Task> action)

@@ -20,7 +20,7 @@
                     <TextBox Classes="field-control" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Ограничение RPS" Classes="field-label" />
+                    <TextBlock Text="Лимит RPS" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding RpsLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
