@@ -1,6 +1,6 @@
 # WebLoadTester
 
-**Версия:** v1.1.23 22.03.2026
+**Версия:** v1.1.24 23.03.2026
 
 > **English TL;DR (кратко):** Desktop UI/HTTP/Network test runner on .NET + Avalonia + Playwright. Provides 10 built-in modules (UI сценарии/скриншоты/тайминги, HTTP проверки/нагрузка/ассеты, сетевые и security проверки). Generates JSON + HTML reports and supports Telegram notifications (text). All details below are sourced from the repository.
 

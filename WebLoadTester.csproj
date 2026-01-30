@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Include="App.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <AvaloniaXaml Remove="WebLoadTester 30.01.2026 9am\**\*.axaml" />
     <Compile Remove="WebLoadTester 30.01.2026 9am\**\*.cs" />
     <None Remove="WebLoadTester 30.01.2026 9am\**\*" />
