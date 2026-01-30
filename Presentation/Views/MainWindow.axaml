@@ -15,12 +15,12 @@
                     <TextBlock Text="Панель управления" Classes="muted" />
                 </StackPanel>
                 <WrapPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Classes="toolbar-wrap">
-                    <Button Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                    <Button Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                    <Border Classes="{Binding DatabaseStatusBadgeClass}">
+                    <Button Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                    <Button Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                    <Border Margin="0,0,8,8" Classes="badge">
                         <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
                     </Border>
-                    <Border Classes="{Binding TelegramStatusBadgeClass}">
+                    <Border Margin="0,0,8,8" Classes="badge">
                         <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
                     </Border>
                 </WrapPanel>

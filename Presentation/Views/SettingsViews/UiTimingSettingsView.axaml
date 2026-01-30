@@ -10,9 +10,9 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="URL-адреса" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
-                        <Button Content="Очистить" Command="{Binding ClearTargetsCommand}" />
+                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddTargetCommand}" />
+                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
+                        <Button Margin="0,0,8,8" Content="Очистить" Command="{Binding ClearTargetsCommand}" />
                     </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Targets}"

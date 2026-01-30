@@ -14,10 +14,10 @@
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Проверки" Classes="field-label" />
-                    <WrapPanel Classes="field-control" Spacing="8">
-                        <CheckBox Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
-                        <CheckBox Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
-                        <CheckBox Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
+                    <WrapPanel Classes="field-control">
+                        <CheckBox Margin="0,0,8,8" Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
+                        <CheckBox Margin="0,0,8,8" Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
+                        <CheckBox Margin="0,0,8,8" Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
                     </WrapPanel>
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -34,9 +34,9 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Порты / проверки" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Content="Добавить" Command="{Binding AddPortCommand}"
+                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddPortCommand}"
                                 IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
+                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
                                 IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
                     </WrapPanel>
                 </Grid>

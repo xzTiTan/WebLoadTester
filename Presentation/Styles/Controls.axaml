@@ -5,7 +5,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
-        <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
+        <Setter Property="BoxShadow" Value="0 2 10 0 #1A000000" />
     </Style>
 
     <Style Selector="Border.app-bar">
@@ -14,7 +14,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
-        <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
+        <Setter Property="BoxShadow" Value="0 2 10 0 #1A000000" />
     </Style>
 
     <Style Selector="Border.warning-panel">
@@ -63,7 +63,6 @@
 
     <Style Selector="WrapPanel.toolbar-wrap">
         <Setter Property="Orientation" Value="Horizontal" />
-        <Setter Property="Spacing" Value="{DynamicResource SpacingS}" />
         <Setter Property="HorizontalAlignment" Value="Right" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>

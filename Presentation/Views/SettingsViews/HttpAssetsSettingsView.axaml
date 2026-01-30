@@ -24,8 +24,8 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Ассеты" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
+                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddAssetCommand}" />
+                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
                     </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Assets}"

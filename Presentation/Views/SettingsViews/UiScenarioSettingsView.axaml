@@ -27,10 +27,10 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Шаги сценария" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Content="Добавить" Command="{Binding AddStepCommand}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
-                        <Button Content="Вверх" Command="{Binding MoveStepUpCommand}" />
-                        <Button Content="Вниз" Command="{Binding MoveStepDownCommand}" />
+                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddStepCommand}" />
+                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
+                        <Button Margin="0,0,8,8" Content="Вверх" Command="{Binding MoveStepUpCommand}" />
+                        <Button Margin="0,0,8,8" Content="Вниз" Command="{Binding MoveStepDownCommand}" />
                     </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Steps}"

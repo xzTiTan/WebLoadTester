@@ -44,10 +44,5 @@
         <SolidColorBrush x:Key="BadgeWarnBorderBrush" Color="{DynamicResource BadgeWarnBorderColor}" />
         <SolidColorBrush x:Key="BadgeErrBackgroundBrush" Color="{DynamicResource BadgeErrBackgroundColor}" />
         <SolidColorBrush x:Key="BadgeErrBorderBrush" Color="{DynamicResource BadgeErrBorderColor}" />
-
-        <BoxShadows x:Key="CardShadow">
-            <BoxShadow Color="#1A000000" Blur="14" Offset="0,4" />
-        </BoxShadows>
-
     </Styles.Resources>
 </Styles>
