@@ -1,54 +1,55 @@
-<Styles xmlns="https://github.com/avaloniaui">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Styles.Resources>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingXs">4</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingS">8</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingM">12</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingL">16</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingXl">24</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="SpacingXxl">32</x:Double>
-        <x:Double xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="LabelColumnWidth">220</x:Double>
+        <x:Double x:Key="SpacingXs">4</x:Double>
+        <x:Double x:Key="SpacingS">8</x:Double>
+        <x:Double x:Key="SpacingM">12</x:Double>
+        <x:Double x:Key="SpacingL">16</x:Double>
+        <x:Double x:Key="SpacingXl">24</x:Double>
+        <x:Double x:Key="SpacingXxl">32</x:Double>
+        <x:Double x:Key="LabelColumnWidth">220</x:Double>
 
-        <CornerRadius xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="CardCornerRadius">12</CornerRadius>
+        <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
 
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PageBackgroundColor">#F5F6F8</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="CardBackgroundColor">#FFFFFF</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BorderNeutralColor">#DADDE3</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="MutedTextColor">#6B7280</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PrimaryColor">#2563EB</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PrimaryHoverColor">#1D4ED8</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="DangerColor">#DC2626</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="DangerHoverColor">#B91C1C</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="WarningBackgroundColor">#FFF4E5</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="WarningBorderColor">#F4C16D</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeOkBackgroundColor">#E7F6ED</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeOkBorderColor">#9AD0A9</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeWarnBackgroundColor">#FEF3C7</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeWarnBorderColor">#F5D575</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeErrBackgroundColor">#FEE2E2</Color>
-        <Color xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeErrBorderColor">#FCA5A5</Color>
+        <Color x:Key="PageBackgroundColor">#F5F6F8</Color>
+        <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+        <Color x:Key="BorderNeutralColor">#DADDE3</Color>
+        <Color x:Key="MutedTextColor">#6B7280</Color>
+        <Color x:Key="PrimaryColor">#2563EB</Color>
+        <Color x:Key="PrimaryHoverColor">#1D4ED8</Color>
+        <Color x:Key="DangerColor">#DC2626</Color>
+        <Color x:Key="DangerHoverColor">#B91C1C</Color>
+        <Color x:Key="WarningBackgroundColor">#FFF4E5</Color>
+        <Color x:Key="WarningBorderColor">#F4C16D</Color>
+        <Color x:Key="BadgeOkBackgroundColor">#E7F6ED</Color>
+        <Color x:Key="BadgeOkBorderColor">#9AD0A9</Color>
+        <Color x:Key="BadgeWarnBackgroundColor">#FEF3C7</Color>
+        <Color x:Key="BadgeWarnBorderColor">#F5D575</Color>
+        <Color x:Key="BadgeErrBackgroundColor">#FEE2E2</Color>
+        <Color x:Key="BadgeErrBorderColor">#FCA5A5</Color>
 
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PageBackground" Color="{DynamicResource PageBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="CardBackground" Color="{DynamicResource CardBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BorderBrushNeutral" Color="{DynamicResource BorderNeutralColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="MutedTextBrush" Color="{DynamicResource MutedTextColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PrimaryBrush" Color="{DynamicResource PrimaryColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="PrimaryHoverBrush" Color="{DynamicResource PrimaryHoverColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="DangerBrush" Color="{DynamicResource DangerColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="DangerHoverBrush" Color="{DynamicResource DangerHoverColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="WarningBackgroundBrush" Color="{DynamicResource WarningBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="WarningBorderBrush" Color="{DynamicResource WarningBorderColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeOkBackgroundBrush" Color="{DynamicResource BadgeOkBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeOkBorderBrush" Color="{DynamicResource BadgeOkBorderColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeWarnBackgroundBrush" Color="{DynamicResource BadgeWarnBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeWarnBorderBrush" Color="{DynamicResource BadgeWarnBorderColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeErrBackgroundBrush" Color="{DynamicResource BadgeErrBackgroundColor}" />
-        <SolidColorBrush xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="BadgeErrBorderBrush" Color="{DynamicResource BadgeErrBorderColor}" />
+        <SolidColorBrush x:Key="PageBackground" Color="{DynamicResource PageBackgroundColor}" />
+        <SolidColorBrush x:Key="CardBackground" Color="{DynamicResource CardBackgroundColor}" />
+        <SolidColorBrush x:Key="BorderBrushNeutral" Color="{DynamicResource BorderNeutralColor}" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="{DynamicResource MutedTextColor}" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource PrimaryColor}" />
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{DynamicResource PrimaryHoverColor}" />
+        <SolidColorBrush x:Key="DangerBrush" Color="{DynamicResource DangerColor}" />
+        <SolidColorBrush x:Key="DangerHoverBrush" Color="{DynamicResource DangerHoverColor}" />
+        <SolidColorBrush x:Key="WarningBackgroundBrush" Color="{DynamicResource WarningBackgroundColor}" />
+        <SolidColorBrush x:Key="WarningBorderBrush" Color="{DynamicResource WarningBorderColor}" />
+        <SolidColorBrush x:Key="BadgeOkBackgroundBrush" Color="{DynamicResource BadgeOkBackgroundColor}" />
+        <SolidColorBrush x:Key="BadgeOkBorderBrush" Color="{DynamicResource BadgeOkBorderColor}" />
+        <SolidColorBrush x:Key="BadgeWarnBackgroundBrush" Color="{DynamicResource BadgeWarnBackgroundColor}" />
+        <SolidColorBrush x:Key="BadgeWarnBorderBrush" Color="{DynamicResource BadgeWarnBorderColor}" />
+        <SolidColorBrush x:Key="BadgeErrBackgroundBrush" Color="{DynamicResource BadgeErrBackgroundColor}" />
+        <SolidColorBrush x:Key="BadgeErrBorderBrush" Color="{DynamicResource BadgeErrBorderColor}" />
 
-        <BoxShadows xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="CardShadow">
+        <BoxShadows x:Key="CardShadow">
             <BoxShadow Color="#1A000000" Blur="14" Offset="0,4" />
         </BoxShadows>
 
-        <ColumnDefinitions xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="FieldRowColumns" x:Shared="False">
+        <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
             <ColumnDefinition Width="{DynamicResource LabelColumnWidth}" />
             <ColumnDefinition Width="*" />
         </ColumnDefinitions>
