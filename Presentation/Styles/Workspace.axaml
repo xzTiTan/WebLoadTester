@@ -1,4 +1,5 @@
-<Styles xmlns="https://github.com/avaloniaui">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
         <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingS}" />
         <Setter Property="Margin" Value="0,0,0,8" />
@@ -9,9 +10,10 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <Style Selector=".field-control">
+    <Style Selector=".field-control"
+           x:SetterTargetType="Control">
         <Setter Property="Grid.Column" Value="1" />
-        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style Selector="TextBlock.status-line">

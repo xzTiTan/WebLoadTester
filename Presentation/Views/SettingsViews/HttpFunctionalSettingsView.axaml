@@ -43,7 +43,8 @@
                             </dg:DataGridTemplateColumn.CellTemplate>
                             <dg:DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="{x:Null}" x:CompileBindings="False">
-                                    <ComboBox ItemsSource="{Binding DataContext.MethodOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <ComboBox x:CompileBindings="False"
+                                              ItemsSource="{Binding DataContext.MethodOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                               SelectedItem="{Binding Method, Mode=TwoWay}" />
                                 </DataTemplate>
                             </dg:DataGridTemplateColumn.CellEditingTemplate>
