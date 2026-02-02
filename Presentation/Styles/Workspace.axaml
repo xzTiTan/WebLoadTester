@@ -5,13 +5,13 @@
     </Style>
 
     <Style Selector="TextBlock.field-label">
-        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <Style Selector="Control.field-control">
+    <Style Selector=".field-control">
         <Setter Property="Grid.Column" Value="1" />
-        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="TextBlock.status-line">
