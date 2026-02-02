@@ -39,4 +39,4 @@
   - В ядре только Iterations/Duration; stress/soak вынесены в перспективы.
 - Документация приведена в соответствие с фактической структурой кода (Core/Modules/Infrastructure/Presentation).
 - Зафиксированы DDL таблиц SQLite и формат отчёта report.json.
-
+- Обновлены README.md, AGENTS.md и добавлен docs/00_INDEX.md как стабильный индекс якорных документов.
