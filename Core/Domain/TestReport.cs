@@ -25,6 +25,7 @@ public class TestReport
     public List<ResultBase> Results { get; set; } = new();
     public MetricsSummary Metrics { get; set; } = new();
     public ArtifactInfo Artifacts { get; set; } = new();
+    public List<ModuleArtifact> ModuleArtifacts { get; set; } = new();
 }
 
 /// <summary>

@@ -1,7 +1,7 @@
 
 # Техническая спецификация — архитектура, модули, данные, отчёты
 
-**Версия:** v1.1 02.02.2026
+**Версия:** v1.2 08.03.2026
 
 ## 0. Связанные документы
 - Канон требований: `01_КАНОН_ПРОЕКТА_И_ТЗ...`
@@ -52,7 +52,7 @@
 - `DisplayName` — отображаемое имя.
 - `CreateDefaultSettings()` — создаёт объект настроек модуля.
 - `Validate(settings)` — синхронная валидация настроек.
-- `ExecuteAsync(settings, ctx, ct)` — выполняет прогон и возвращает `ModuleResult`.
+- `ExecuteAsync(settings, ctx, ct)` — выполняет одну итерацию прогона и возвращает `ModuleResult`.
 
 ### 3.2 RunContext / IRunContext
 Файл: `Core/Services/RunContext.cs`
@@ -76,7 +76,7 @@
 ---
 
 ## 4. Жизненный цикл прогона (стандарт)
-Фактическая реализация: `Core/Services/TestOrchestrator.cs`.
+Фактическая реализация: `Core/Services/RunOrchestrator.cs`.
 
 ### 4.1 Стадии
 1) **Validate** (валидация настроек модуля)
@@ -99,7 +99,7 @@
 
 ### 5.2 Параллельность
 - `RunProfile.Parallelism` задаёт число воркеров.
-- Реализация в модулях: через `SemaphoreSlim`/`Task.WhenAll` (зависит от модуля).
+- Реализация в оркестраторе: через `SemaphoreSlim`/`Task.WhenAll` (модули выполняют одну итерацию).
 
 ### 5.3 Safe defaults
 См. Канон, §8.
@@ -171,5 +171,5 @@ Telegram настройки хранятся в UI (см. `TelegramSettingsViewM
 
 ## 9. Расширение системы (extension points)
 - Добавить новый модуль: реализовать `ITestModule`, добавить SettingsViewModel + View, зарегистрировать в `MainWindowViewModel`.
-- Добавить новый writer: расширить `TestOrchestrator` (или ввести общий интерфейс) и `ArtifactStore`.
+- Добавить новый writer: расширить `RunOrchestrator` (или ввести общий интерфейс) и `ArtifactStore`.
 - Добавить новые поля профиля: обновить `RunProfile`, `RunProfileViewModel`, `SqliteRunStore` (DDL), `JsonReportWriter`.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,27 +70,12 @@ public class HttpAssetsModule : ITestModule
     }
 
     /// <summary>
-    /// Выполняет проверки ассетов и формирует отчёт.
+    /// Выполняет проверки ассетов и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpAssetsSettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(HttpAssetsModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();
@@ -153,9 +139,9 @@ public class HttpAssetsModule : ITestModule
             }
         }
 
-        report.Results = results;
-        report.FinishedAt = ctx.Now;
-        return report;
+        result.Results = results;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 
     private static string ResolveUrl(string baseUrl, string path)

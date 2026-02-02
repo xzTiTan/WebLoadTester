@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
@@ -22,7 +23,7 @@ public class JsonReportWriter
     /// <summary>
     /// Сохраняет отчёт в JSON и возвращает путь к файлу.
     /// </summary>
-    public Task<string> WriteAsync(TestReport report, string runFolder)
+    public Task<string> WriteAsync(TestReport report, string runId)
     {
         var payload = new
         {
@@ -71,7 +72,9 @@ public class JsonReportWriter
                 key = result switch
                 {
                     RunResult run => run.Name,
+                    StepResult step => step.Name,
                     CheckResult check => check.Name,
+                    PreflightResult preflight => preflight.Name,
                     ProbeResult probe => probe.Name,
                     TimingResult timing => timing.Url ?? timing.Name,
                     _ => result.Kind
@@ -81,14 +84,14 @@ public class JsonReportWriter
                 errorMessage = result.ErrorMessage,
                 extra = BuildExtra(result)
             }),
-            artifacts = BuildArtifacts(report, runFolder)
+            artifacts = BuildArtifacts(report)
         };
 
         var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions
         {
             WriteIndented = true
         });
-        return _artifactStore.SaveJsonAsync(json, runFolder);
+        return _artifactStore.SaveJsonReportAsync(runId, json);
     }
 
     private static object? BuildExtra(ResultBase result)
@@ -96,14 +99,16 @@ public class JsonReportWriter
         return result switch
         {
             RunResult run => string.IsNullOrWhiteSpace(run.ScreenshotPath) ? null : new { screenshot = run.ScreenshotPath },
+            StepResult step => new { action = step.Action, selector = step.Selector, screenshot = step.ScreenshotPath },
             CheckResult check => check.StatusCode.HasValue ? new { statusCode = check.StatusCode } : null,
+            PreflightResult preflight => new { statusCode = preflight.StatusCode, details = preflight.Details },
             ProbeResult probe => string.IsNullOrWhiteSpace(probe.Details) ? null : new { details = probe.Details },
             TimingResult timing => new { iteration = timing.Iteration, url = timing.Url },
             _ => null
         };
     }
 
-    private static List<object> BuildArtifacts(TestReport report, string runFolder)
+    private static List<object> BuildArtifacts(TestReport report)
     {
         var artifacts = new List<object>
         {
@@ -117,16 +122,27 @@ public class JsonReportWriter
 
         artifacts.Add(new { type = "Log", relativePath = "logs/run.log" });
 
-        if (System.IO.Directory.Exists(report.Artifacts.ScreenshotsFolder))
-        {
-            foreach (var file in System.IO.Directory.GetFiles(report.Artifacts.ScreenshotsFolder))
+        var screenshotPaths = report.Results
+            .Select(result => result switch
             {
-                artifacts.Add(new
-                {
-                    type = "Screenshot",
-                    relativePath = System.IO.Path.Combine("screenshots", System.IO.Path.GetFileName(file))
-                });
-            }
+                RunResult run => run.ScreenshotPath,
+                StepResult step => step.ScreenshotPath,
+                _ => null
+            })
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct();
+        foreach (var path in screenshotPaths)
+        {
+            artifacts.Add(new
+            {
+                type = "Screenshot",
+                relativePath = path
+            });
+        }
+
+        foreach (var artifact in report.ModuleArtifacts)
+        {
+            artifacts.Add(new { type = artifact.Type, relativePath = artifact.RelativePath });
         }
 
         return artifacts;

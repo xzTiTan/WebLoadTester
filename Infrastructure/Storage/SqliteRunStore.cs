@@ -14,7 +14,7 @@ namespace WebLoadTester.Infrastructure.Storage;
 /// <summary>
 /// SQLite-хранилище тестов, профилей и прогонов.
 /// </summary>
-public class SqliteRunStore : IRunStore
+public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileRepository, ITestRunRepository, IRunItemRepository, IArtifactRepository
 {
     private readonly string _dbPath;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -164,6 +164,54 @@ public class SqliteRunStore : IRunStore
         return null;
     }
 
+    public async Task<TestCase?> GetTestCaseAsync(Guid testCaseId, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Id, Name, Description, ModuleType, CreatedAt, UpdatedAt, CurrentVersion
+                                FROM TestCases WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", testCaseId.ToString());
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        if (await reader.ReadAsync(ct))
+        {
+            return new TestCase
+            {
+                Id = Guid.Parse(reader.GetString(0)),
+                Name = reader.GetString(1),
+                Description = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                ModuleType = reader.GetString(3),
+                CreatedAt = DateTimeOffset.Parse(reader.GetString(4), CultureInfo.InvariantCulture),
+                UpdatedAt = DateTimeOffset.Parse(reader.GetString(5), CultureInfo.InvariantCulture),
+                CurrentVersion = reader.GetInt32(6)
+            };
+        }
+
+        return null;
+    }
+
+    public Task<IReadOnlyList<TestCase>> ListAsync(string moduleType, CancellationToken ct)
+        => GetTestCasesAsync(moduleType, ct);
+
+    Task<TestCase?> ITestCaseRepository.GetAsync(Guid testCaseId, CancellationToken ct)
+        => GetTestCaseAsync(testCaseId, ct);
+
+    public Task<TestCaseVersion?> GetVersionAsync(Guid testCaseId, int version, CancellationToken ct)
+        => GetTestCaseVersionAsync(testCaseId, version, ct);
+
+    public Task<TestCase> SaveVersionAsync(string name, string description, string moduleType, string payloadJson, string changeNote, CancellationToken ct)
+        => SaveTestCaseAsync(name, description, moduleType, payloadJson, changeNote, ct);
+
+    public async Task SetCurrentVersionAsync(Guid testCaseId, int version, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"UPDATE TestCases SET CurrentVersion = $version, UpdatedAt = $updatedAt WHERE Id = $id";
+        command.Parameters.AddWithValue("$version", version);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", testCaseId.ToString());
+        await command.ExecuteNonQueryAsync(ct);
+    }
+
     public async Task<TestCase> SaveTestCaseAsync(string name, string description, string moduleType, string payloadJson, string changeNote, CancellationToken ct)
     {
         await using var connection = CreateConnection();
@@ -276,6 +324,9 @@ public class SqliteRunStore : IRunStore
         await transaction.CommitAsync(ct);
     }
 
+    Task ITestCaseRepository.DeleteAsync(Guid testCaseId, CancellationToken ct)
+        => DeleteTestCaseAsync(testCaseId, ct);
+
     public async Task<IReadOnlyList<RunProfile>> GetRunProfilesAsync(CancellationToken ct)
     {
         var result = new List<RunProfile>();
@@ -306,6 +357,46 @@ public class SqliteRunStore : IRunStore
 
         return result;
     }
+
+    public async Task<RunProfile?> GetRunProfileAsync(Guid profileId, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
+                                       Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled
+                                FROM RunProfiles WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", profileId.ToString());
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        if (await reader.ReadAsync(ct))
+        {
+            return new RunProfile
+            {
+                Id = Guid.Parse(reader.GetString(0)),
+                Name = reader.GetString(1),
+                Parallelism = reader.GetInt32(2),
+                Mode = Enum.Parse<RunMode>(reader.GetString(3)),
+                Iterations = reader.GetInt32(4),
+                DurationSeconds = reader.GetInt32(5),
+                TimeoutSeconds = reader.GetInt32(6),
+                Headless = reader.GetInt32(7) == 1,
+                ScreenshotsPolicy = Enum.Parse<ScreenshotsPolicy>(reader.GetString(8)),
+                HtmlReportEnabled = reader.GetInt32(9) == 1,
+                TelegramEnabled = reader.GetInt32(10) == 1,
+                PreflightEnabled = reader.GetInt32(11) == 1
+            };
+        }
+
+        return null;
+    }
+
+    public Task<IReadOnlyList<RunProfile>> ListAsync(CancellationToken ct)
+        => GetRunProfilesAsync(ct);
+
+    Task<RunProfile?> IRunProfileRepository.GetAsync(Guid profileId, CancellationToken ct)
+        => GetRunProfileAsync(profileId, ct);
+
+    public Task<RunProfile> SaveAsync(RunProfile profile, CancellationToken ct)
+        => SaveRunProfileAsync(profile, ct);
 
     public async Task<RunProfile> SaveRunProfileAsync(RunProfile profile, CancellationToken ct)
     {
@@ -369,6 +460,9 @@ public class SqliteRunStore : IRunStore
         await command.ExecuteNonQueryAsync(ct);
     }
 
+    Task IRunProfileRepository.DeleteAsync(Guid profileId, CancellationToken ct)
+        => DeleteRunProfileAsync(profileId, ct);
+
     public async Task CreateRunAsync(TestRun run, CancellationToken ct)
     {
         await using var connection = CreateConnection();
@@ -391,6 +485,9 @@ public class SqliteRunStore : IRunStore
         await command.ExecuteNonQueryAsync(ct);
     }
 
+    public Task CreateAsync(TestRun run, CancellationToken ct)
+        => CreateRunAsync(run, ct);
+
     public async Task UpdateRunAsync(TestRun run, CancellationToken ct)
     {
         await using var connection = CreateConnection();
@@ -402,6 +499,27 @@ public class SqliteRunStore : IRunStore
         command.Parameters.AddWithValue("$status", run.Status);
         command.Parameters.AddWithValue("$summaryJson", string.IsNullOrWhiteSpace(run.SummaryJson) ? DBNull.Value : run.SummaryJson);
         command.Parameters.AddWithValue("$runId", run.RunId);
+        await command.ExecuteNonQueryAsync(ct);
+    }
+
+    public async Task UpdateStatusAsync(string runId, string status, DateTimeOffset? finishedAt, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"UPDATE TestRuns SET Status = $status, FinishedAt = $finishedAt WHERE RunId = $runId";
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$finishedAt", finishedAt?.ToString("O"));
+        command.Parameters.AddWithValue("$runId", runId);
+        await command.ExecuteNonQueryAsync(ct);
+    }
+
+    public async Task UpdateSummaryAsync(string runId, string summaryJson, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"UPDATE TestRuns SET SummaryJson = $summary WHERE RunId = $runId";
+        command.Parameters.AddWithValue("$summary", string.IsNullOrWhiteSpace(summaryJson) ? DBNull.Value : summaryJson);
+        command.Parameters.AddWithValue("$runId", runId);
         await command.ExecuteNonQueryAsync(ct);
     }
 
@@ -429,6 +547,36 @@ public class SqliteRunStore : IRunStore
         await transaction.CommitAsync(ct);
     }
 
+    public Task AppendAsync(IEnumerable<RunItem> items, CancellationToken ct)
+        => AddRunItemsAsync(items, ct);
+
+    async Task<IReadOnlyList<RunItem>> IRunItemRepository.ListByRunAsync(string runId, CancellationToken ct)
+    {
+        var items = new List<RunItem>();
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Id, RunId, ItemType, ItemKey, Status, DurationMs, ErrorMessage, ExtraJson
+                                FROM RunItems WHERE RunId = $runId";
+        command.Parameters.AddWithValue("$runId", runId);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            items.Add(new RunItem
+            {
+                Id = Guid.Parse(reader.GetString(0)),
+                RunId = reader.GetString(1),
+                ItemType = reader.GetString(2),
+                ItemKey = reader.GetString(3),
+                Status = reader.GetString(4),
+                DurationMs = reader.GetDouble(5),
+                ErrorMessage = reader.IsDBNull(6) ? null : reader.GetString(6),
+                ExtraJson = reader.IsDBNull(7) ? null : reader.GetString(7)
+            });
+        }
+
+        return items;
+    }
+
     public async Task AddArtifactsAsync(IEnumerable<ArtifactRecord> artifacts, CancellationToken ct)
     {
         await using var connection = CreateConnection();
@@ -448,6 +596,33 @@ public class SqliteRunStore : IRunStore
         }
 
         await transaction.CommitAsync(ct);
+    }
+
+    public Task AddAsync(IEnumerable<ArtifactRecord> artifacts, CancellationToken ct)
+        => AddArtifactsAsync(artifacts, ct);
+
+    async Task<IReadOnlyList<ArtifactRecord>> IArtifactRepository.ListByRunAsync(string runId, CancellationToken ct)
+    {
+        var artifacts = new List<ArtifactRecord>();
+        await using var connection = CreateConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Id, RunId, ArtifactType, RelativePath, CreatedAt
+                                FROM Artifacts WHERE RunId = $runId";
+        command.Parameters.AddWithValue("$runId", runId);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            artifacts.Add(new ArtifactRecord
+            {
+                Id = Guid.Parse(reader.GetString(0)),
+                RunId = reader.GetString(1),
+                ArtifactType = reader.GetString(2),
+                RelativePath = reader.GetString(3),
+                CreatedAt = DateTimeOffset.Parse(reader.GetString(4), CultureInfo.InvariantCulture)
+            });
+        }
+
+        return artifacts;
     }
 
     public async Task AddTelegramNotificationAsync(TelegramNotification notification, CancellationToken ct)
@@ -521,6 +696,9 @@ public class SqliteRunStore : IRunStore
 
         return result;
     }
+
+    public Task<IReadOnlyList<TestRunSummary>> ListAsync(RunQuery query, CancellationToken ct)
+        => QueryRunsAsync(query, ct);
 
     public async Task<TestRunDetail?> GetRunDetailAsync(string runId, CancellationToken ct)
     {
@@ -607,6 +785,9 @@ public class SqliteRunStore : IRunStore
             Artifacts = artifacts
         };
     }
+
+    public Task<TestRunDetail?> GetByIdAsync(string runId, CancellationToken ct)
+        => GetRunDetailAsync(runId, ct);
 
     public async Task DeleteRunAsync(string runId, CancellationToken ct)
     {

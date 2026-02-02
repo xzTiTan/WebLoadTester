@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
@@ -53,27 +54,12 @@ public class AvailabilityModule : ITestModule
     }
 
     /// <summary>
-    /// Запускает цикл проверок доступности и формирует отчёт.
+    /// Запускает цикл проверок доступности и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (AvailabilitySettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(AvailabilityModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         var results = new List<ResultBase>();
         var totalChecks = (int)(TimeSpan.FromMinutes(s.DurationMinutes).TotalSeconds / s.IntervalSeconds);
@@ -135,8 +121,8 @@ public class AvailabilityModule : ITestModule
             await Task.Delay(TimeSpan.FromSeconds(s.IntervalSeconds), ct);
         }
 
-        report.Results = results;
-        report.FinishedAt = ctx.Now;
-        return report;
+        result.Results = results;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 }

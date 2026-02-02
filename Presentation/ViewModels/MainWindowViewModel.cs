@@ -62,7 +62,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Оркестратор запуска модулей и формирования отчётов.
     /// </summary>
-    private readonly TestOrchestrator _orchestrator;
+    private readonly RunOrchestrator _orchestrator;
 
     /// <summary>
     /// Токен отмены текущего запуска.
@@ -112,7 +112,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _progressBus.ProgressChanged += OnProgressChanged;
 
-        _orchestrator = new TestOrchestrator(new JsonReportWriter(_artifactStore), new HtmlReportWriter(_artifactStore), _runStore);
+        _orchestrator = new RunOrchestrator(new JsonReportWriter(_artifactStore), new HtmlReportWriter(_artifactStore), _runStore);
 
         _ = Task.Run(ReadLogAsync);
         _ = Task.Run(InitializeAsync);
@@ -200,7 +200,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);
 
         var testCase = await moduleItem.TestLibrary.EnsureTestCaseAsync(_runCts.Token);
-        var runFolder = _artifactStore.CreateRunFolder(runId);
         var logSink = new CompositeLogSink(new ILogSink[]
         {
             _logBus,
@@ -208,7 +207,6 @@ public partial class MainWindowViewModel : ViewModelBase
         });
         var ctx = new RunContext(logSink, _progressBus, _artifactStore, _limits, notifier,
             runId, profile, testCase.Name, testCase.Id, testCase.CurrentVersion);
-        ctx.SetRunFolder(runFolder);
 
         if (_telegramPolicy.IsEnabled)
         {
@@ -219,7 +217,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var preflight = CreatePreflightSettings(moduleItem.SettingsViewModel.Settings);
             var preflightModule = profile.PreflightEnabled ? Registry.Modules.FirstOrDefault(m => m.Id == "net.preflight") : null;
-            var report = await _orchestrator.RunAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token,
+            var report = await _orchestrator.StartAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token,
                 preflightModule, preflight);
             moduleItem.LastReport = report;
             if (_telegramPolicy.IsEnabled)
@@ -390,7 +388,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        OpenPath(report.Artifacts.JsonPath);
+        OpenPath(Path.Combine(_artifactStore.RunsRoot, report.RunId, report.Artifacts.JsonPath));
     }
 
     [RelayCommand]
@@ -402,7 +400,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        OpenPath(report.Artifacts.HtmlPath);
+        OpenPath(Path.Combine(_artifactStore.RunsRoot, report.RunId, report.Artifacts.HtmlPath));
     }
 
     [RelayCommand]

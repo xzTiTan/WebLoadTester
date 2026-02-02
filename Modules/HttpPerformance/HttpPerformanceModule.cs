@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,27 +62,12 @@ public class HttpPerformanceModule : ITestModule
     }
 
     /// <summary>
-    /// Выполняет серию HTTP-запросов и формирует отчёт.
+    /// Выполняет серию HTTP-запросов и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpPerformanceSettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(HttpPerformanceModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new ConcurrentBag<ResultBase>();
@@ -143,8 +129,8 @@ public class HttpPerformanceModule : ITestModule
         }
 
         await Task.WhenAll(tasks);
-        report.Results = new List<ResultBase>(results);
-        report.FinishedAt = ctx.Now;
-        return report;
+        result.Results = new List<ResultBase>(results);
+        result.Status = result.Results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 }

@@ -72,41 +72,25 @@ public class UiTimingModule : ITestModule
     }
 
     /// <summary>
-    /// Выполняет замеры времени и формирует отчёт.
+    /// Выполняет замеры времени и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiTimingSettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(UiTimingModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
-            report.Status = TestStatus.Failed;
-            report.Results.Add(new RunResult("Playwright")
+            result.Status = TestStatus.Failed;
+            result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
                 ErrorMessage = "Install browsers"
             });
-            report.FinishedAt = ctx.Now;
-            return report;
+            return result;
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
@@ -173,49 +157,8 @@ public class UiTimingModule : ITestModule
             });
 
         await Task.WhenAll(tasks);
-        report.Metrics = BuildMetrics(results);
-        report.Results = results;
-        report.FinishedAt = ctx.Now;
-        return report;
-    }
-
-    private static MetricsSummary BuildMetrics(IEnumerable<ResultBase> results)
-    {
-        var timings = results.OfType<TimingResult>().Where(r => r.Success).ToList();
-        if (timings.Count == 0)
-        {
-            return new MetricsSummary();
-        }
-
-        var durations = timings.Select(r => r.DurationMs).OrderBy(ms => ms).ToList();
-        return new MetricsSummary
-        {
-            AverageMs = durations.Average(),
-            MinMs = durations.First(),
-            MaxMs = durations.Last(),
-            P50Ms = Percentile(durations, 0.50),
-            P95Ms = Percentile(durations, 0.95),
-            P99Ms = Percentile(durations, 0.99),
-            TopSlow = timings.OrderByDescending(r => r.DurationMs).Take(5).Cast<ResultBase>().ToList()
-        };
-    }
-
-    private static double Percentile(IReadOnlyList<double> sorted, double percentile)
-    {
-        if (sorted.Count == 0)
-        {
-            return 0;
-        }
-
-        var position = (sorted.Count - 1) * percentile;
-        var lowerIndex = (int)Math.Floor(position);
-        var upperIndex = (int)Math.Ceiling(position);
-        if (lowerIndex == upperIndex)
-        {
-            return sorted[lowerIndex];
-        }
-
-        var weight = position - lowerIndex;
-        return sorted[lowerIndex] + (sorted[upperIndex] - sorted[lowerIndex]) * weight;
+        result.Results = results;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
@@ -23,10 +24,10 @@ public class HtmlReportWriter
     /// <summary>
     /// Формирует HTML-отчёт и сохраняет его.
     /// </summary>
-    public Task<string> WriteAsync(TestReport report, string runFolder)
+    public Task<string> WriteAsync(TestReport report, string runId)
     {
         var html = BuildHtml(report);
-        return _artifactStore.SaveHtmlAsync(report, runFolder, html);
+        return _artifactStore.SaveHtmlReportAsync(runId, html);
     }
 
     /// <summary>
@@ -56,7 +57,9 @@ public class HtmlReportWriter
             var name = result switch
             {
                 RunResult run => run.Name,
+                StepResult step => step.Name,
                 CheckResult check => check.Name,
+                PreflightResult preflight => preflight.Name,
                 ProbeResult probe => probe.Name,
                 TimingResult timing => timing.Name,
                 _ => ""
@@ -72,7 +75,9 @@ public class HtmlReportWriter
             var name = result switch
             {
                 RunResult run => run.Name,
+                StepResult step => step.Name,
                 CheckResult check => check.Name,
+                PreflightResult preflight => preflight.Name,
                 ProbeResult probe => probe.Name,
                 TimingResult timing => timing.Name,
                 _ => ""
@@ -90,6 +95,24 @@ public class HtmlReportWriter
             sb.AppendLine("<li>report.html</li>");
         }
         sb.AppendLine("<li>logs/run.log</li>");
+        var screenshots = report.Results
+            .Select(result => result switch
+            {
+                RunResult run => run.ScreenshotPath,
+                StepResult step => step.ScreenshotPath,
+                _ => null
+            })
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct()
+            .ToList();
+        foreach (var screenshot in screenshots)
+        {
+            sb.AppendLine($"<li>{screenshot}</li>");
+        }
+        foreach (var artifact in report.ModuleArtifacts)
+        {
+            sb.AppendLine($"<li>{artifact.RelativePath}</li>");
+        }
         sb.AppendLine("</ul>");
         sb.AppendLine("</body></html>");
         return sb.ToString();

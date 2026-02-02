@@ -25,15 +25,19 @@ public interface IArtifactStore
     /// </summary>
     string GetLogPath(string runId);
     /// <summary>
-    /// Сохраняет отчёт в формате JSON.
+    /// Добавляет строку в файл лога прогона.
     /// </summary>
-    Task<string> SaveJsonAsync(string json, string runFolder);
+    Task<string> AppendLogLineAsync(string runId, string line);
     /// <summary>
-    /// Сохраняет отчёт в формате HTML.
+    /// Сохраняет отчёт в формате JSON и возвращает относительный путь.
     /// </summary>
-    Task<string> SaveHtmlAsync(TestReport report, string runFolder, string html);
+    Task<string> SaveJsonReportAsync(string runId, string json);
     /// <summary>
-    /// Сохраняет скриншот в файл и возвращает путь.
+    /// Сохраняет отчёт в формате HTML и возвращает относительный путь.
     /// </summary>
-    Task<string> SaveScreenshotAsync(byte[] bytes, string runFolder, string fileName);
+    Task<string> SaveHtmlReportAsync(string runId, string html);
+    /// <summary>
+    /// Сохраняет скриншот в файл и возвращает относительный путь.
+    /// </summary>
+    Task<string> SaveScreenshotAsync(string runId, string fileName, byte[] bytes);
 }

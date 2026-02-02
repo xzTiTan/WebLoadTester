@@ -40,7 +40,7 @@ public interface ITestModule
     /// </summary>
     IReadOnlyList<string> Validate(object settings);
     /// <summary>
-    /// Запускает тест асинхронно и возвращает отчёт.
+    /// Запускает тест асинхронно и возвращает результат модуля.
     /// </summary>
-    Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct);
+    Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct);
 }

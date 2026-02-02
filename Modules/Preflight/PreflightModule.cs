@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,27 +48,12 @@ public class PreflightModule : ITestModule
     }
 
     /// <summary>
-    /// Выполняет серию preflight-проверок и формирует отчёт.
+    /// Выполняет серию preflight-проверок и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (PreflightSettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(PreflightModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         var results = new List<ResultBase>();
         var targetUri = new Uri(s.Target);
@@ -75,7 +61,7 @@ public class PreflightModule : ITestModule
         if (s.CheckDns)
         {
             var (success, duration, details) = await NetworkProbes.DnsProbeAsync(targetUri.Host, ct);
-            results.Add(new ProbeResult("DNS")
+            results.Add(new PreflightResult("DNS")
             {
                 Success = success,
                 DurationMs = duration,
@@ -89,7 +75,7 @@ public class PreflightModule : ITestModule
         {
             var port = targetUri.Port == -1 ? (targetUri.Scheme == "https" ? 443 : 80) : targetUri.Port;
             var (success, duration, details) = await NetworkProbes.TcpProbeAsync(targetUri.Host, port, ct);
-            results.Add(new ProbeResult("TCP")
+            results.Add(new PreflightResult("TCP")
             {
                 Success = success,
                 DurationMs = duration,
@@ -102,7 +88,7 @@ public class PreflightModule : ITestModule
         if (s.CheckTls && targetUri.Scheme == "https")
         {
             var (success, duration, details, days) = await NetworkProbes.TlsProbeAsync(targetUri.Host, 443, ct);
-            results.Add(new ProbeResult("TLS")
+            results.Add(new PreflightResult("TLS")
             {
                 Success = success,
                 DurationMs = duration,
@@ -118,7 +104,7 @@ public class PreflightModule : ITestModule
             try
             {
                 var response = await client.GetAsync(s.Target, ct);
-                results.Add(new CheckResult("HTTP")
+                results.Add(new PreflightResult("HTTP")
                 {
                     Success = response.IsSuccessStatusCode,
                     DurationMs = 0,
@@ -129,7 +115,7 @@ public class PreflightModule : ITestModule
             }
             catch (Exception ex)
             {
-                results.Add(new CheckResult("HTTP")
+                results.Add(new PreflightResult("HTTP")
                 {
                     Success = false,
                     DurationMs = 0,
@@ -139,8 +125,8 @@ public class PreflightModule : ITestModule
             }
         }
 
-        report.Results = results;
-        report.FinishedAt = ctx.Now;
-        return report;
+        result.Results = results;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 }

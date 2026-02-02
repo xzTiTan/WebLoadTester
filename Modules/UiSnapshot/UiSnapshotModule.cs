@@ -72,41 +72,25 @@ public class UiSnapshotModule : ITestModule
     }
 
     /// <summary>
-    /// Делает скриншоты указанных URL и формирует отчёт.
+    /// Делает скриншоты указанных URL и формирует результат.
     /// </summary>
-    public async Task<TestReport> RunAsync(object settings, IRunContext ctx, CancellationToken ct)
+    public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiSnapshotSettings)settings;
-        var report = new TestReport
-        {
-            RunId = ctx.RunId,
-            TestCaseId = ctx.TestCaseId,
-            TestCaseVersion = ctx.TestCaseVersion,
-            TestName = ctx.TestName,
-            ModuleId = Id,
-            ModuleName = DisplayName,
-            Family = Family,
-            StartedAt = ctx.Now,
-            Status = TestStatus.Success,
-            SettingsSnapshot = System.Text.Json.JsonSerializer.Serialize(s),
-            ProfileSnapshot = ctx.Profile,
-            AppVersion = typeof(UiSnapshotModule).Assembly.GetName().Version?.ToString() ?? string.Empty,
-            OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
-        };
+        var result = new ModuleResult();
 
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
-            report.Status = TestStatus.Failed;
-            report.Results.Add(new RunResult("Playwright")
+            result.Status = TestStatus.Failed;
+            result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
                 ErrorMessage = "Install browsers"
             });
-            report.FinishedAt = ctx.Now;
-            return report;
+            return result;
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
@@ -119,8 +103,6 @@ public class UiSnapshotModule : ITestModule
         var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
         var completed = 0;
-        var runFolder = ctx.RunFolder;
-
         var runs = s.Targets.SelectMany(target =>
             Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();
         var tasks = runs.Select(async run =>
@@ -144,7 +126,7 @@ public class UiSnapshotModule : ITestModule
                     }
                     var bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = s.FullPage });
                     var fileName = $"snapshot_{Sanitize(run.target.Url)}_{run.iteration}.png";
-                    var path = await ctx.Artifacts.SaveScreenshotAsync(bytes, runFolder, fileName);
+                    var path = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
                     sw.Stop();
                     results.Add(new RunResult(run.target.Tag ?? run.target.Url)
                     {
@@ -177,9 +159,9 @@ public class UiSnapshotModule : ITestModule
         });
 
         await Task.WhenAll(tasks);
-        report.Results = results;
-        report.FinishedAt = ctx.Now;
-        return report;
+        result.Results = results;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        return result;
     }
 
     /// <summary>

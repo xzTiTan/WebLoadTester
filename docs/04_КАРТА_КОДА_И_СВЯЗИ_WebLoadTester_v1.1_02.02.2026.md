@@ -1,7 +1,7 @@
 
 # Карта кода и связи — WebLoadTester
 
-**Версия:** v1.1 02.02.2026
+**Версия:** v1.2 08.03.2026
 
 ## 0. Назначение
 Этот файл связывает «как задумано» (01–03) с «как реализовано» (репозиторий):
@@ -13,9 +13,9 @@
 
 ## 1. Дерево ключевых директорий
 - `Core/`
-  - `Contracts/` — интерфейсы (`ITestModule`, `IRunStore`, `IArtifactStore`, `ILogSink`, `ITelegramNotifier`)
+  - `Contracts/` — интерфейсы (`ITestModule`, `IRunStore`, репозитории `ITestCaseRepository`/`IRunProfileRepository`/`ITestRunRepository`/`IRunItemRepository`/`IArtifactRepository`, `IArtifactStore`, `ILogSink`, `ITelegramNotifier`)
   - `Domain/` — сущности (`RunProfile`, `TestReport`, `ResultBase` и др.)
-  - `Services/` — `TestOrchestrator`, `ModuleRegistry`, `RunContext`, шины логов/прогресса
+  - `Services/` — `RunOrchestrator`, `ModuleRegistry`, `RunContext`, шины логов/прогресса
   - `Services/ReportWriters/` — `JsonReportWriter`, `HtmlReportWriter`
 
 - `Modules/` (10 модулей)
@@ -47,12 +47,12 @@
 **UI:** `MainWindowViewModel.StartAsync()`
 1) Определяет выбранный модуль из текущей вкладки.
 2) Собирает `RunProfileSnapshot` (`RunProfileViewModel.BuildProfileSnapshot`).
-3) Создаёт `RunId` и папку `runs/<runId>/` (`ArtifactStore.CreateRunFolder`).
+3) Создаёт `RunId`.
 4) Создаёт `RunContext` (лог + прогресс + лимиты + артефакты).
-5) Вызывает `TestOrchestrator.RunAsync(...)`.
+5) Вызывает `RunOrchestrator.StartAsync(...)`, который создаёт `runs/<runId>/`.
 
-**Core:** `TestOrchestrator.RunAsync(...)`
-- `Validate` → опционально `preflight` → `ExecuteAsync` модуля
+**Core:** `RunOrchestrator.StartAsync(...)`
+- `Validate` → опционально `preflight` → `ExecuteAsync` модуля (итерации/длительность управляет оркестратор)
 - создаёт `TestReport`
 - пишет `TestRun` + `TestRunItems` + `Artifacts` в SQLite
 - пишет `report.json` всегда, `report.html` если включено
@@ -60,7 +60,7 @@
 ---
 
 ## 3. Связь требований с кодом (пример)
-- Требование: «JSON всегда» → `JsonReportWriter.WriteAsync` + `ArtifactStore.SaveJsonAsync`.
+- Требование: «JSON всегда» → `JsonReportWriter.WriteAsync` + `ArtifactStore.SaveJsonReportAsync`.
 - Требование: «Telegram опционально, ошибка не влияет» → `TelegramPolicy.IsEnabled` + `MainWindowViewModel.SendTelegramAsync`.
 - Требование: «4 вкладки» → `MainWindow.axaml` + `MainWindowViewModel.SelectedTabIndex`.
 
@@ -87,4 +87,3 @@
 - Несогласованность `Id` модуля (в UI, в БД, в отчёте) → ломает фильтры/повтор запуска.
 - Изменение схемы SQLite без миграции → ошибки при чтении истории.
 - Неправильные Grid/Styles в XAML → краш layout (см. ошибки AVLNxxxx).
-

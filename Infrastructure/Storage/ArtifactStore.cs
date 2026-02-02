@@ -1,8 +1,6 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
-using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Infrastructure.Storage;
 
@@ -46,34 +44,50 @@ public class ArtifactStore : IArtifactStore
     }
 
     /// <summary>
-    /// Сохраняет отчёт в JSON-файл.
+    /// Добавляет строку в лог прогона и возвращает относительный путь.
     /// </summary>
-    public async Task<string> SaveJsonAsync(string json, string runFolder)
+    public async Task<string> AppendLogLineAsync(string runId, string line)
     {
-        Directory.CreateDirectory(runFolder);
-        var path = Path.Combine(runFolder, "report.json");
+        var folder = CreateRunFolder(runId);
+        var relative = Path.Combine("logs", "run.log");
+        var path = Path.Combine(folder, relative);
+        await File.AppendAllTextAsync(path, line + System.Environment.NewLine);
+        return relative;
+    }
+
+    /// <summary>
+    /// Сохраняет отчёт в JSON-файл и возвращает относительный путь.
+    /// </summary>
+    public async Task<string> SaveJsonReportAsync(string runId, string json)
+    {
+        var folder = CreateRunFolder(runId);
+        var relative = "report.json";
+        var path = Path.Combine(folder, relative);
         await File.WriteAllTextAsync(path, json);
-        return path;
+        return relative;
     }
 
     /// <summary>
-    /// Сохраняет отчёт в HTML-файл.
+    /// Сохраняет отчёт в HTML-файл и возвращает относительный путь.
     /// </summary>
-    public async Task<string> SaveHtmlAsync(TestReport report, string runFolder, string html)
+    public async Task<string> SaveHtmlReportAsync(string runId, string html)
     {
-        Directory.CreateDirectory(runFolder);
-        var path = Path.Combine(runFolder, "report.html");
+        var folder = CreateRunFolder(runId);
+        var relative = "report.html";
+        var path = Path.Combine(folder, relative);
         await File.WriteAllTextAsync(path, html);
-        return path;
+        return relative;
     }
 
     /// <summary>
-    /// Сохраняет скриншот в указанную папку.
+    /// Сохраняет скриншот в папку и возвращает относительный путь.
     /// </summary>
-    public async Task<string> SaveScreenshotAsync(byte[] bytes, string runFolder, string fileName)
+    public async Task<string> SaveScreenshotAsync(string runId, string fileName, byte[] bytes)
     {
-        var path = Path.Combine(runFolder, "screenshots", fileName);
+        var folder = CreateRunFolder(runId);
+        var relative = Path.Combine("screenshots", fileName);
+        var path = Path.Combine(folder, relative);
         await File.WriteAllBytesAsync(path, bytes);
-        return path;
+        return relative;
     }
 }

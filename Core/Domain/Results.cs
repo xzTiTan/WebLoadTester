@@ -22,6 +22,16 @@ public record RunResult(string Name) : ResultBase("Run")
 }
 
 /// <summary>
+/// Результат выполнения шага сценария.
+/// </summary>
+public record StepResult(string Name) : ResultBase("Step")
+{
+    public string? Action { get; init; }
+    public string? Selector { get; init; }
+    public string? ScreenshotPath { get; init; }
+}
+
+/// <summary>
 /// Результат проверки (например HTTP).
 /// </summary>
 public record CheckResult(string Name) : ResultBase("Check")
@@ -44,4 +54,13 @@ public record TimingResult(string Name) : ResultBase("Timing")
 {
     public int Iteration { get; init; }
     public string? Url { get; init; }
+}
+
+/// <summary>
+/// Результат preflight-проверки.
+/// </summary>
+public record PreflightResult(string Name) : ResultBase("PreflightCheck")
+{
+    public int? StatusCode { get; init; }
+    public string? Details { get; init; }
 }
