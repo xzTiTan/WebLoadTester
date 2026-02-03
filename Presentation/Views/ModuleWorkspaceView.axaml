@@ -207,7 +207,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Итоговая сводка" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
+                                IsVisible="{Binding DataContext.SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
@@ -237,7 +237,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Детальные результаты" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
+                                IsVisible="{Binding DataContext.SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
@@ -263,6 +263,7 @@
 
             <Border Classes="section">
                 <StackPanel Spacing="8"
+                            x:Name="ArtifactsPanel"
                             DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                             x:DataType="root:MainWindowViewModel">
                     <Grid ColumnDefinitions="*,Auto">
@@ -274,18 +275,18 @@
                         </WrapPanel>
                     </Grid>
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                                IsVisible="{Binding DataContext.SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выполните запуск, чтобы получить артефакты" />
                     </StackPanel>
-                    <ItemsControl ItemsSource="{Binding SelectedModule.ArtifactItems, ElementName=Root}"
-                                  IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}">
+                    <ItemsControl ItemsSource="{Binding DataContext.SelectedModule.ArtifactItems, ElementName=Root}"
+                                  IsVisible="{Binding DataContext.SelectedModule.HasReport, ElementName=Root}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="root:ArtifactListItem">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                     <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
                                     <Button Grid.Column="1" Content="Открыть"
-                                            Command="{Binding DataContext.OpenArtifactCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Command="{Binding DataContext.OpenArtifactCommand, ElementName=ArtifactsPanel}"
                                             CommandParameter="{Binding}" />
                                 </Grid>
                             </DataTemplate>
