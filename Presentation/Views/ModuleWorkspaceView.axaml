@@ -32,34 +32,38 @@
                         <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" />
                         <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
-                        <ContentControl x:Name="VmProxy"
-                                        Width="0"
-                                        Height="0"
-                                        IsVisible="False"
-                                        DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <ContentControl x:Name="VmProxy"
+                                    Width="0"
+                                    Height="0"
+                                    IsVisible="False"
+                                    DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <StackPanel x:Name="RunVm"
+                                Grid.Column="1"
+                                Spacing="6"
+                                HorizontalAlignment="Right"
+                                DataContext="{Binding DataContext, ElementName=VmProxy}"
+                                x:DataType="root:MainWindowViewModel">
                         <WrapPanel Classes="toolbar-wrap" HorizontalAlignment="Right">
                             <Button Content="Старт" Margin="0,0,8,8" Classes="primary"
-                                    Command="{Binding DataContext.StartCommand, ElementName=VmProxy}" />
+                                    Command="{Binding StartCommand}" />
                             <Button Content="Перезапуск" Margin="0,0,8,8"
-                                    Command="{Binding DataContext.RestartCommand, ElementName=VmProxy}" />
+                                    Command="{Binding RestartCommand}" />
                             <Button Content="Остановить" Margin="0,0,8,8"
-                                    Command="{Binding DataContext.StopCommand, ElementName=VmProxy}" />
+                                    Command="{Binding StopCommand}" />
                             <Button Content="Отмена" Margin="0,0,8,8" Classes="danger"
-                                    Command="{Binding DataContext.CancelCommand, ElementName=VmProxy}" />
+                                    Command="{Binding CancelCommand}" />
                         </WrapPanel>
                         <ProgressBar Minimum="0" Maximum="100"
-                                     Value="{Binding DataContext.ProgressPercent, ElementName=VmProxy}"
-                                     IsIndeterminate="{Binding DataContext.IsProgressIndeterminate, ElementName=VmProxy}" />
+                                     Value="{Binding ProgressPercent}"
+                                     IsIndeterminate="{Binding IsProgressIndeterminate}" />
                         <StackPanel Spacing="2" HorizontalAlignment="Right">
-                            <TextBlock Text="{Binding DataContext.RunStage, ElementName=VmProxy}" Classes="muted" />
-                            <TextBlock Text="{Binding DataContext.ProgressText, ElementName=VmProxy}" Classes="status-line" />
+                            <TextBlock Text="{Binding RunStage}" Classes="muted" />
+                            <TextBlock Text="{Binding ProgressText}" Classes="status-line" />
                         </StackPanel>
+                        <TextBlock Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
+                                   IsVisible="{Binding ShowRunHint}"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
-                    <TextBlock Grid.Row="1"
-                               Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
-                               IsVisible="{Binding DataContext.IsRunning, ElementName=VmProxy, Converter={StaticResource BooleanNotConverter}}"
-                               TextWrapping="Wrap" />
                 </Grid>
             </Border>
 

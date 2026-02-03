@@ -182,6 +182,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
     public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
+    public bool ShowRunHint => !IsRunning;
 
     partial void OnIsDatabaseOkChanged(bool value) => OnPropertyChanged(nameof(DatabaseStatusBadgeClass));
     partial void OnIsTelegramConfiguredChanged(bool value) => OnPropertyChanged(nameof(TelegramStatusBadgeClass));
@@ -338,6 +339,7 @@ public partial class MainWindowViewModel : ViewModelBase
         StartCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(ShowRunHint));
         if (!value)
         {
             RunStage = "Ожидание";
