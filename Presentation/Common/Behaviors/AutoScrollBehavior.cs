@@ -12,6 +12,9 @@ public static class AutoScrollBehavior
     public static readonly AttachedProperty<bool> IsEnabledProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("IsEnabled", typeof(AutoScrollBehavior));
 
+    private static readonly AttachedProperty<NotifyCollectionChangedEventHandler?> HandlerProperty =
+        AvaloniaProperty.RegisterAttached<Control, NotifyCollectionChangedEventHandler?>("Handler", typeof(AutoScrollBehavior));
+
     /// <summary>
     /// Регистрирует обработчик изменения свойства IsEnabled.
     /// </summary>
@@ -43,7 +46,21 @@ public static class AutoScrollBehavior
         {
             if (listBox.Items is INotifyCollectionChanged notify)
             {
-                notify.CollectionChanged += (_, _) => ScrollToEnd(listBox);
+                NotifyCollectionChangedEventHandler handler = (_, _) => ScrollToEnd(listBox);
+                listBox.SetValue(HandlerProperty, handler);
+                notify.CollectionChanged += handler;
+            }
+        }
+        else
+        {
+            if (listBox.Items is INotifyCollectionChanged notify)
+            {
+                var handler = listBox.GetValue(HandlerProperty);
+                if (handler != null)
+                {
+                    notify.CollectionChanged -= handler;
+                    listBox.SetValue(HandlerProperty, null);
+                }
             }
         }
     }

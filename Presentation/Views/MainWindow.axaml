@@ -2,12 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
         xmlns:tabs="clr-namespace:WebLoadTester.Presentation.Views.Tabs"
+        xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="WebLoadTester"
         Width="1280" Height="760"
         Background="{DynamicResource PageBackground}">
-    <Grid Margin="16" RowDefinitions="Auto,*" RowSpacing="16">
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto" RowSpacing="16">
         <Border Grid.Row="0" Classes="app-bar">
             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="4">
                 <StackPanel>
@@ -42,6 +43,30 @@
                     <tabs:RunsTab DataContext="{Binding RunsTab}" />
                 </TabItem>
             </TabControl>
+        </Border>
+
+        <Border Grid.Row="2" Classes="section">
+            <Expander Header="Лог выполнения" IsExpanded="{Binding IsLogDrawerExpanded}">
+                <Border Classes="log-box" MinHeight="160" MaxHeight="260">
+                    <StackPanel Spacing="8">
+                        <WrapPanel Classes="toolbar-wrap" HorizontalAlignment="Left">
+                            <CheckBox Content="Автоскролл" Margin="0,0,12,0" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
+                            <CheckBox Content="Только ошибки" Margin="0,0,12,0" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                            <Button Content="Очистить" Margin="0,0,12,0" Command="{Binding ClearLogCommand}" />
+                            <Button Content="Копировать" Command="{Binding CopyLogCommand}" />
+                        </WrapPanel>
+                        <ListBox ItemsSource="{Binding FilteredLogEntries}"
+                                 Classes="loglist"
+                                 behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Classes="logline" Text="{Binding}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+            </Expander>
         </Border>
     </Grid>
 </Window>

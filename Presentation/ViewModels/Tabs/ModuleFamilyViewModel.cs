@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace WebLoadTester.Presentation.ViewModels.Tabs;
@@ -24,28 +21,6 @@ public partial class ModuleFamilyViewModel : ObservableObject
     public string Title { get; }
     public ObservableCollection<ModuleItemViewModel> Modules { get; }
 
-    public IEnumerable<ModuleItemViewModel> FilteredModules =>
-        string.IsNullOrWhiteSpace(ModuleFilterText)
-            ? Modules
-            : Modules.Where(module => MatchesFilter(module.DisplayName));
-
     [ObservableProperty]
     private ModuleItemViewModel? selectedModule;
-
-    [ObservableProperty]
-    private string moduleFilterText = string.Empty;
-
-    partial void OnModuleFilterTextChanged(string value)
-    {
-        OnPropertyChanged(nameof(FilteredModules));
-        if (SelectedModule != null && MatchesFilter(SelectedModule.DisplayName))
-        {
-            return;
-        }
-
-        SelectedModule = FilteredModules.FirstOrDefault();
-    }
-
-    private bool MatchesFilter(string name) =>
-        name.Contains(ModuleFilterText ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 }

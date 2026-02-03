@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,6 +52,8 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Хранилище тестов, профилей и прогонов.
     /// </summary>
     private readonly IRunStore _runStore;
+    private readonly ITestCaseRepository _testCaseRepository;
+    private readonly IModuleConfigService _moduleConfigService;
     /// <summary>
     /// Сервис настроек приложения.
     /// </summary>
@@ -85,6 +88,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _settingsService = new AppSettingsService();
         _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
+        _testCaseRepository = (ITestCaseRepository)_runStore;
+        _moduleConfigService = new ModuleConfigService(_testCaseRepository);
         _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory, _settingsService.Settings.ProfilesDirectory);
 
         var modules = new ITestModule[]
@@ -144,6 +149,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool logOnlyErrors;
+
+    [ObservableProperty]
+    private bool logAutoScroll = true;
+
+    [ObservableProperty]
+    private bool isLogDrawerExpanded;
 
     [ObservableProperty]
     private string databaseStatus = "БД: проверка...";
@@ -213,6 +224,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        ClearLog();
         _runFinishedTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         IsRunning = true;
         StatusText = $"Статус: выполняется {moduleItem.DisplayName}";
@@ -227,7 +239,16 @@ public partial class MainWindowViewModel : ViewModelBase
         var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
         _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);
 
-        var testCase = await moduleItem.TestLibrary.EnsureTestCaseAsync(_runCts.Token);
+        var testCase = await moduleItem.ModuleConfig.EnsureConfigForRunAsync();
+        if (testCase == null)
+        {
+            _runCts?.Dispose();
+            _runCts = null;
+            IsRunning = false;
+            StatusText = "Статус: ожидание";
+            RunStage = "Ожидание";
+            return;
+        }
         var logSink = new CompositeLogSink(new ILogSink[]
         {
             _logBus,
@@ -320,6 +341,19 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         LogEntries.Clear();
         FilteredLogEntries.Clear();
+    }
+
+    [RelayCommand]
+    private async Task CopyLogAsync()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow?.Clipboard is not IClipboard clipboard)
+        {
+            return;
+        }
+
+        var lines = LogOnlyErrors ? FilteredLogEntries : LogEntries;
+        await clipboard.SetTextAsync(string.Join(Environment.NewLine, lines));
     }
 
     /// <summary>
@@ -546,7 +580,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var item = FindModuleItem(module.Id);
             if (item != null)
             {
-                await item.TestLibrary.RefreshCommand.ExecuteAsync(null);
+                await item.ModuleConfig.RefreshCommand.ExecuteAsync(null);
             }
         }
 
@@ -625,10 +659,26 @@ public partial class MainWindowViewModel : ViewModelBase
         var version = await _runStore.GetTestCaseVersionAsync(detail.Run.TestCaseId, detail.Run.TestCaseVersion, CancellationToken.None);
         if (version != null)
         {
-            var settings = System.Text.Json.JsonSerializer.Deserialize(version.PayloadJson, moduleItem.Module.SettingsType);
-            if (settings != null)
+            var payload = System.Text.Json.JsonSerializer.Deserialize<ModuleConfigPayload>(version.PayloadJson);
+            if (payload != null && payload.ModuleSettings.ValueKind != System.Text.Json.JsonValueKind.Undefined)
             {
-                moduleItem.SettingsViewModel.UpdateFrom(settings);
+                var moduleSettings = System.Text.Json.JsonSerializer.Deserialize(payload.ModuleSettings.GetRawText(), moduleItem.Module.SettingsType);
+                if (moduleSettings != null)
+                {
+                    moduleItem.SettingsViewModel.UpdateFrom(moduleSettings);
+                }
+
+                RunProfile.UpdateFrom(payload.RunParameters);
+                moduleItem.ModuleConfig.SelectedConfig = moduleItem.ModuleConfig.Configs
+                    .FirstOrDefault(item => string.Equals(item.FinalName, payload.Meta.FinalName, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                var settings = System.Text.Json.JsonSerializer.Deserialize(version.PayloadJson, moduleItem.Module.SettingsType);
+                if (settings != null)
+                {
+                    moduleItem.SettingsViewModel.UpdateFrom(settings);
+                }
             }
         }
 
@@ -716,6 +766,7 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         var testLibrary = new TestLibraryViewModel(_runStore, module, settingsVm);
-        return new ModuleItemViewModel(module, settingsVm, testLibrary);
+        var moduleConfig = new ModuleConfigViewModel(_moduleConfigService, _testCaseRepository, module, settingsVm, RunProfile);
+        return new ModuleItemViewModel(module, settingsVm, testLibrary, moduleConfig);
     }
 }

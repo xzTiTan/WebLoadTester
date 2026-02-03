@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+             xmlns:domain="clr-namespace:WebLoadTester.Modules.UiScenario"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel"
              x:Name="Root">
@@ -11,7 +11,7 @@
                 <TextBlock Text="Параметры сценария" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Стартовый URL" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TargetUrl, Mode=TwoWay}" />
+                    <TextBox Classes="field-control" Watermark="https://example.com" Text="{Binding TargetUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Политика ошибок" Classes="field-label" />
@@ -27,36 +27,38 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Шаги сценария" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddStepCommand}" />
-                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedStepCommand}" />
-                        <Button Margin="0,0,8,8" Content="Вверх" Command="{Binding MoveStepUpCommand}" />
-                        <Button Margin="0,0,8,8" Content="Вниз" Command="{Binding MoveStepDownCommand}" />
+                        <Button Margin="0,0,8,8" Content="+ Добавить шаг" Command="{Binding AddStepCommand}" />
                     </WrapPanel>
                 </Grid>
-                <dg:DataGrid ItemsSource="{Binding Steps}"
-                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTemplateColumn Header="Тип" Width="160">
-                            <dg:DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Action}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellTemplate>
-                            <dg:DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate x:DataType="{x:Null}">
-                                    <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
-                                              SelectedItem="{Binding Action, Mode=TwoWay}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellEditingTemplate>
-                        </dg:DataGridTemplateColumn>
-                        <dg:DataGridTextColumn Header="Селектор" Binding="{Binding Selector}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Значение" Binding="{Binding Text}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Таймаут, мс" Binding="{Binding TimeoutMs}" Width="140" />
-                        <dg:DataGridTextColumn Header="Задержка, мс" Binding="{Binding DelayMs}" Width="140" />
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
+                <TextBlock Text="Если текст заполнен — выполняется ввод, иначе будет клик по селектору."
+                           Classes="status-line" />
+                <ItemsControl ItemsSource="{Binding Steps}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="domain:UiStep">
+                            <Border Classes="step-card">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel Spacing="8">
+                                        <TextBox Watermark="Селектор элемента (CSS/XPath)"
+                                                 Text="{Binding Selector, Mode=TwoWay}" />
+                                        <TextBox Watermark="Текст для ввода (если нужно)"
+                                                 Text="{Binding Text, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
+                                        <Button Content="Вверх"
+                                                Command="{Binding DataContext.MoveStepUpCommand, ElementName=Root}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="Вниз"
+                                                Command="{Binding DataContext.MoveStepDownCommand, ElementName=Root}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="Удалить" Classes="danger"
+                                                Command="{Binding DataContext.RemoveStepCommand, ElementName=Root}"
+                                                CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Border>
     </StackPanel>

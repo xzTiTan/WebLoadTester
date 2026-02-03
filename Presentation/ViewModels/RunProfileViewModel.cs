@@ -214,4 +214,35 @@ public partial class RunProfileViewModel : ObservableObject
             PreflightEnabled = PreflightEnabled
         };
     }
+
+    public RunParametersDto BuildRunParameters()
+    {
+        return new RunParametersDto
+        {
+            Mode = Mode,
+            Iterations = Iterations,
+            DurationSeconds = DurationSeconds,
+            Parallelism = Parallelism,
+            TimeoutSeconds = TimeoutSeconds,
+            HtmlReportEnabled = HtmlReportEnabled,
+            TelegramEnabled = TelegramEnabled,
+            PreflightEnabled = PreflightEnabled,
+            Headless = Headless,
+            ScreenshotsPolicy = ScreenshotsPolicy
+        };
+    }
+
+    public void UpdateFrom(RunParametersDto parameters)
+    {
+        Mode = parameters.Mode;
+        Iterations = parameters.Iterations;
+        DurationSeconds = parameters.DurationSeconds;
+        Parallelism = parameters.Parallelism;
+        TimeoutSeconds = parameters.TimeoutSeconds;
+        HtmlReportEnabled = parameters.HtmlReportEnabled;
+        TelegramEnabled = parameters.TelegramEnabled;
+        PreflightEnabled = parameters.PreflightEnabled;
+        Headless = parameters.Headless;
+        ScreenshotsPolicy = parameters.ScreenshotsPolicy;
+    }
 }

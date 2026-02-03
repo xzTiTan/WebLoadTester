@@ -31,7 +31,7 @@ public class UiScenarioModule : ITestModule
         {
             Steps = new List<UiStep>
             {
-                new() { Selector = "body", Action = UiStepAction.WaitForSelector }
+                new() { Selector = "body", Action = UiStepAction.Click }
             }
         };
     }
@@ -110,7 +110,13 @@ public class UiScenarioModule : ITestModule
             try
             {
                 var timeout = step.TimeoutMs > 0 ? step.TimeoutMs : s.TimeoutMs;
-                switch (step.Action)
+                var effectiveAction = step.Action;
+                if (step.Action != UiStepAction.Delay && step.Action != UiStepAction.WaitForSelector)
+                {
+                    effectiveAction = string.IsNullOrWhiteSpace(step.Text) ? UiStepAction.Click : UiStepAction.Fill;
+                }
+
+                switch (effectiveAction)
                 {
                     case UiStepAction.Delay:
                         if (step.DelayMs > 0)
@@ -163,7 +169,7 @@ public class UiScenarioModule : ITestModule
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = errorType,
                     ErrorMessage = errorMessage,
-                    Action = step.Action.ToString(),
+                    Action = effectiveAction.ToString(),
                     Selector = step.Selector,
                     ScreenshotPath = screenshotPath
                 });
