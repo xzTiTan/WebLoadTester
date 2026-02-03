@@ -43,7 +43,8 @@
                     <TextBlock Text="Прогоны" Classes="section-title" />
                     <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Classes="list-min-240">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="DateTime" Binding="{Binding StartedAt}" Width="2*" />
+                            <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
+                            <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
                             <DataGridTextColumn Header="Module" Binding="{Binding ModuleName}" Width="2*" />
                             <DataGridTextColumn Header="TestName" Binding="{Binding TestName}" Width="2*" />
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
@@ -70,7 +71,11 @@
                                     IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
                             <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}"
                                     IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
                             <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}"
+                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}"
                                     IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
                             <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}"
                                     IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />

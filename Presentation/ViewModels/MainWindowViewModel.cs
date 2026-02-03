@@ -113,6 +113,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _progressBus.ProgressChanged += OnProgressChanged;
 
         _orchestrator = new RunOrchestrator(new JsonReportWriter(_artifactStore), new HtmlReportWriter(_artifactStore), _runStore);
+        _orchestrator.StageChanged += OnStageChanged;
 
         _ = Task.Run(ReadLogAsync);
         _ = Task.Run(InitializeAsync);
@@ -128,12 +129,16 @@ public partial class MainWindowViewModel : ViewModelBase
     public SettingsWindowViewModel Settings { get; }
 
     public ObservableCollection<string> LogEntries { get; } = new();
+    public ObservableCollection<string> FilteredLogEntries { get; } = new();
 
     [ObservableProperty]
     private string statusText = "Статус: ожидание";
 
     [ObservableProperty]
     private string progressText = "Прогресс: 0/0";
+
+    [ObservableProperty]
+    private bool logOnlyErrors;
 
     [ObservableProperty]
     private string databaseStatus = "БД: проверка...";
@@ -279,6 +284,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ClearLog()
     {
         LogEntries.Clear();
+        FilteredLogEntries.Clear();
     }
 
     /// <summary>
@@ -304,6 +310,11 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    partial void OnLogOnlyErrorsChanged(bool value)
+    {
+        RefreshFilteredLogs();
+    }
+
     /// <summary>
     /// Считывает логи из шины и добавляет их в UI.
     /// </summary>
@@ -311,7 +322,41 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         await foreach (var line in _logBus.ReadAllAsync())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => LogEntries.Add(line));
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AppendLogLine(LogEntries, line);
+                if (ShouldShowLogLine(line))
+                {
+                    AppendLogLine(FilteredLogEntries, line);
+                }
+            });
+        }
+    }
+
+    private void AppendLogLine(ObservableCollection<string> target, string line)
+    {
+        const int maxLines = 500;
+        target.Add(line);
+        while (target.Count > maxLines)
+        {
+            target.RemoveAt(0);
+        }
+    }
+
+    private bool ShouldShowLogLine(string line)
+    {
+        return !LogOnlyErrors || line.Contains("ERROR", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RefreshFilteredLogs()
+    {
+        FilteredLogEntries.Clear();
+        foreach (var line in LogEntries)
+        {
+            if (ShouldShowLogLine(line))
+            {
+                FilteredLogEntries.Add(line);
+            }
         }
     }
 
@@ -332,6 +377,14 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _ = _telegramPolicy.NotifyProgressAsync(update, _runCts.Token);
         }
+    }
+
+    private void OnStageChanged(object? sender, RunStageChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            RunStage = e.Message ?? e.Stage.ToString();
+        });
     }
 
     /// <summary>
@@ -413,6 +466,18 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var path = Path.Combine(_artifactStore.RunsRoot, report.RunId);
+        OpenPath(path);
+    }
+
+    [RelayCommand]
+    private void OpenArtifact(ArtifactListItem? artifact)
+    {
+        if (artifact == null)
+        {
+            return;
+        }
+
+        var path = Path.Combine(_artifactStore.RunsRoot, artifact.RunId, artifact.RelativePath);
         OpenPath(path);
     }
 

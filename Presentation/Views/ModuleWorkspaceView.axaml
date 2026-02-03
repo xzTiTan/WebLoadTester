@@ -7,79 +7,83 @@
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Выбор модуля" Classes="section-title" />
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Модуль" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding Modules}"
-                                  SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="root:ModuleItemViewModel">
-                                    <TextBlock Text="{Binding DisplayName}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-                    <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" />
-                </StackPanel>
-            </Border>
+    <Grid ColumnDefinitions="240,*" ColumnSpacing="16">
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Модули" Classes="section-title" />
+                <ListBox ItemsSource="{Binding Modules}"
+                         SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
+                         MinHeight="240">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="root:ModuleItemViewModel">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
 
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Тесты (Test Library)" Classes="section-title" />
-                        <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                            <Button Content="Обновить" Margin="0,0,8,8"
-                                    Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
-                            <Button Content="Загрузить" Margin="0,0,8,8"
-                                    Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
-                            <Button Content="Сохранить" Margin="0,0,8,8"
-                                    Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
-                            <Button Content="Сохранить как" Margin="0,0,8,8"
-                                    Classes="ghost"
-                                    Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
-                            <Button Content="Удалить" Margin="0,0,8,8"
-                                    Classes="danger"
-                                    Command="{Binding SelectedModule.TestLibrary.RequestDeleteSelectedCommand}" />
-                        </WrapPanel>
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Тест" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
-                                  SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
-                    </Grid>
-                    <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="8">
-                        <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                        <WrapPanel Classes="toolbar-wrap">
-                            <Button Content="Подтвердить удаление" Margin="0,0,8,8"
-                                    Command="{Binding SelectedModule.TestLibrary.ConfirmDeleteSelectedCommand}" />
-                            <Button Content="Отмена" Margin="0,0,8,8"
-                                    Classes="ghost"
-                                    Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
-                        </WrapPanel>
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
+                <Border Classes="section">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" />
+                        <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" />
                     </StackPanel>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Название теста" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Описание" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Комментарий к версии" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
-                    </Grid>
-                    <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Classes="status-line" />
-                </StackPanel>
-            </Border>
+                </Border>
 
-            <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+                <Border Classes="section">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Тесты (Test Library)" Classes="section-title" />
+                            <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
+                                <Button Content="Обновить" Margin="0,0,8,8"
+                                        Command="{Binding SelectedModule.TestLibrary.RefreshCommand}" />
+                                <Button Content="Загрузить" Margin="0,0,8,8"
+                                        Command="{Binding SelectedModule.TestLibrary.LoadSelectedCommand}" />
+                                <Button Content="Сохранить" Margin="0,0,8,8"
+                                        Command="{Binding SelectedModule.TestLibrary.SaveCurrentCommand}" />
+                                <Button Content="Сохранить как" Margin="0,0,8,8"
+                                        Classes="ghost"
+                                        Command="{Binding SelectedModule.TestLibrary.SaveAsCommand}" />
+                                <Button Content="Удалить" Margin="0,0,8,8"
+                                        Classes="danger"
+                                        Command="{Binding SelectedModule.TestLibrary.RequestDeleteSelectedCommand}" />
+                            </WrapPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Тест" Classes="field-label" />
+                            <ComboBox Classes="field-control"
+                                      ItemsSource="{Binding SelectedModule.TestLibrary.TestCases}"
+                                      SelectedItem="{Binding SelectedModule.TestLibrary.SelectedTestCase, Mode=TwoWay}" />
+                        </Grid>
+                        <StackPanel IsVisible="{Binding SelectedModule.TestLibrary.IsDeleteConfirmVisible}" Spacing="8">
+                            <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                            <WrapPanel Classes="toolbar-wrap">
+                                <Button Content="Подтвердить удаление" Margin="0,0,8,8"
+                                        Command="{Binding SelectedModule.TestLibrary.ConfirmDeleteSelectedCommand}" />
+                                <Button Content="Отмена" Margin="0,0,8,8"
+                                        Classes="ghost"
+                                        Command="{Binding SelectedModule.TestLibrary.CancelDeleteSelectedCommand}" />
+                            </WrapPanel>
+                        </StackPanel>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Название теста" Classes="field-label" />
+                            <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestName, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Описание" Classes="field-label" />
+                            <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.TestDescription, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Комментарий к версии" Classes="field-label" />
+                            <TextBox Classes="field-control" Text="{Binding SelectedModule.TestLibrary.ChangeNote, Mode=TwoWay}" />
+                        </Grid>
+                        <TextBlock Text="{Binding SelectedModule.TestLibrary.StatusMessage}" Classes="status-line" />
+                    </StackPanel>
+                </Border>
+
+                <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
 
             <Border Classes="section">
                 <StackPanel Spacing="8"
@@ -203,7 +207,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Итоговая сводка" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
@@ -233,11 +237,11 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Детальные результаты" Classes="section-title" />
                     <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                                IsVisible="{Binding SelectedModule.HasReport, ElementName=Root, Converter={StaticResource BooleanNotConverter}}">
                         <TextBlock Text="Нет данных" Classes="empty-title" />
                         <TextBlock Text="Выберите прогон или выполните запуск" />
                     </StackPanel>
-                    <DataGrid ItemsSource="{Binding SelectedModule.LastReport.Results}"
+                    <DataGrid ItemsSource="{Binding SelectedModule.DisplayResults}"
                               Classes="list-min-180"
                               IsVisible="{Binding SelectedModule.HasReport}">
                         <DataGrid.Columns>
@@ -269,6 +273,24 @@
                             <Button Content="Открыть папку прогона" Margin="0,0,8,8" Command="{Binding OpenLatestRunFolderCommand}" />
                         </WrapPanel>
                     </Grid>
+                    <StackPanel Classes="empty-state"
+                                IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
+                        <TextBlock Text="Нет данных" Classes="empty-title" />
+                        <TextBlock Text="Выполните запуск, чтобы получить артефакты" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding SelectedModule.ArtifactItems, ElementName=Root}"
+                                  IsVisible="{Binding SelectedModule.HasReport, ElementName=Root}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="root:ArtifactListItem">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                                    <Button Grid.Column="1" Content="Открыть"
+                                            Command="{Binding DataContext.OpenArtifactCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 
@@ -278,19 +300,23 @@
                             x:DataType="root:MainWindowViewModel">
                     <Expander Header="Лог выполнения" IsExpanded="True">
                         <Border Classes="log-box" MinHeight="160" MaxHeight="260">
-                            <ListBox ItemsSource="{Binding LogEntries}"
+                            <StackPanel Spacing="8">
+                                <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                                <ListBox ItemsSource="{Binding FilteredLogEntries}"
                                      Classes="loglist"
                                      behaviors:AutoScrollBehavior.IsEnabled="True">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Classes="logline" Text="{Binding}" />
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Classes="logline" Text="{Binding}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
                         </Border>
                     </Expander>
                 </StackPanel>
             </Border>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
