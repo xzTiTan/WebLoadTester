@@ -8,6 +8,7 @@
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>1.2.0.0</FileVersion>
     <InformationalVersion>1.2 08.03.2026</InformationalVersion>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,5 +37,11 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
     <PackageReference Include="Microsoft.Playwright" Version="1.57.0" />
     <PackageReference Include="Telegram.Bot" Version="22.7.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="WebLoadTester.Tests\**\*.cs" />
+    <EmbeddedResource Remove="WebLoadTester.Tests\**\*" />
+    <None Remove="WebLoadTester.Tests\**\*" />
   </ItemGroup>
 </Project>
