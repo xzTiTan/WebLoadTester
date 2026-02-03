@@ -1,4 +1,4 @@
-v1.6 09.03.2026
+v1.7 03.02.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -6,19 +6,28 @@ v1.6 09.03.2026
 WebLoadTester — кроссплатформенное настольное приложение на .NET 8 + Avalonia для запуска 10 модулей UI/HTTP/сетевых проверок с отчётами и артефактами. Архитектура модульная (Core + Infrastructure + Modules + Presentation), UI построен по MVVM, результаты сохраняются в `runs/{RunId}/`. Источник истины — якорные документы в `docs/`.
 
 ## Hard constraints / non-goals
-- Законность: тестирование только на собственных ресурсах или при наличии явного разрешения; не реализовывать атакующие функции. (docs/01)
-- Инварианты: 10 модулей / 3 семейства / 4 вкладки верхнего уровня. (docs/01, docs/02, docs/03)
-- Хранилище: SQLite + файловая структура `runs/` для артефактов. (docs/02)
-- Отчёты: JSON сохраняется всегда, HTML — опционально. (docs/02)
-- Telegram опционален; ошибка Telegram не влияет на итог статуса прогона. (docs/01, docs/02)
-- Нагрузка только Iterations/Duration с безопасными значениями и предупреждениями в UI; stress/soak — только в перспективах. (docs/01, docs/02)
-- UI не блокировать длительными операциями; все длительные операции async + `CancellationToken`. (docs/02, docs/06)
+- Законность: тестирование только на собственных ресурсах или при наличии явного разрешения; не реализовывать атакующие функции. (docs/01_CANON.md)
+- Инварианты: 10 модулей / 3 семейства / 4 вкладки верхнего уровня. (docs/01_CANON.md, docs/02_TECH_SPEC.md, docs/03_UI_SPEC.md)
+- Хранилище: SQLite + файловая структура `runs/` для артефактов. (docs/02_TECH_SPEC.md)
+- Отчёты: JSON сохраняется всегда, HTML — опционально. (docs/02_TECH_SPEC.md)
+- Telegram опционален; ошибка Telegram не влияет на итог статуса прогона. (docs/01_CANON.md, docs/02_TECH_SPEC.md)
+- Нагрузка только Iterations/Duration с безопасными значениями и предупреждениями в UI; stress/soak — только в перспективах. (docs/01_CANON.md, docs/02_TECH_SPEC.md)
+- UI не блокировать длительными операциями; все длительные операции async + `CancellationToken`. (docs/02_TECH_SPEC.md, docs/06_TEST_PLAN.md)
 - Модули обязаны уважать `CancellationToken`, публиковать прогресс через `IProgressSink`, логировать через `ILogSink`. (Core/Contracts, Core/Services)
-- Не нарушать разделение слоёв: UI без бизнес-логики, оркестратор в Core, интеграции в Infrastructure. (docs/02, docs/03)
+- Не нарушать разделение слоёв: UI без бизнес-логики, оркестратор в Core, интеграции в Infrastructure. (docs/02_TECH_SPEC.md, docs/03_UI_SPEC.md)
 
 ## Docs first
 - Перед изменениями читать: [docs/00_INDEX.md](docs/00_INDEX.md), затем ключевые якоря 01/02/03.
-- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы и добавь запись в журнал изменений (docs/08).
+- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы и добавь запись в журнал изменений ([docs/08_CODEX_RULES_AND_CHANGELOG.md](docs/08_CODEX_RULES_AND_CHANGELOG.md)).
+
+## Codex guardrails (кратко)
+- TODAY = 03.02.2026 (Europe/Berlin). Не ставить будущие даты.
+- Запрещены: `SetterTargetType`, `Mode=` в FluentTheme, `ElementName='\"'`, `WrapPanel Spacing`, ручные `TargetFrameworkAttribute`.
+- При CompiledBinding в XAML всегда указывать `x:DataType`.
+- Доступ к VM только через `RelativeSource`/`x:Reference`.
+- Перед финалом выполнить lint запрещённых токенов и сборку.
+
+Полная версия: см. [docs/08_CODEX_RULES_AND_CHANGELOG.md](docs/08_CODEX_RULES_AND_CHANGELOG.md).
 
 ## Repo map (Core / Infrastructure / Modules / Presentation + entry points)
 - **Entry points**: `Program.cs`, `App.axaml`, `Presentation/Views/MainWindow.axaml`, `Presentation/ViewModels/MainWindowViewModel.cs`.
@@ -83,12 +92,13 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 
 ## Tests & verification
 - Минимум: `dotnet restore`, `dotnet build`.
-- `dotnet test` — только если добавлены тестовые проекты (в репозитории их нет).
+- `dotnet test` — только если добавлены тестовые проекты (в репозитории они есть).
+- Локальный lint: `scripts/lint-avalonia.sh`.
 
 ## Document/versioning rule
 - При любом изменении файлов проекта **обновляйте версию и дату** в формате `vX.Y 24.01.2026`.
 - Минимум это относится к `README.md` и `AGENTS.md`.
-- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/08`.
+- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/08_CODEX_RULES_AND_CHANGELOG.md`.
 
 ## Safety / ethics
 Использовать приложение только с разрешения владельца системы и для легитимных целей. Не применять для атакующих сценариев.

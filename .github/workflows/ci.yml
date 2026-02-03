@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: dotnet restore
+        run: dotnet restore
+      - name: dotnet build
+        run: dotnet build -c Release --no-restore
+      - name: dotnet test
+        run: dotnet test -c Release --no-build
+      - name: lint forbidden tokens
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+          if grep -R -n --exclude-dir .git --exclude-dir bin --exclude-dir obj --include="*.axaml" --include="*.xaml" "SetterTargetType" .; then fail=1; fi
+          if grep -R -n --exclude-dir .git --exclude-dir bin --exclude-dir obj --include="*.axaml" --include="*.xaml" "ElementName='\"" .; then fail=1; fi
+          if grep -R -n --exclude-dir .git --exclude-dir bin --exclude-dir obj --include="*.axaml" --include="*.xaml" " Mode=" .; then fail=1; fi
+          if grep -R -n --exclude-dir .git --exclude-dir bin --exclude-dir obj --include="*.axaml" --include="*.xaml" "WrapPanel.*Spacing" .; then fail=1; fi
+          if grep -R -n --exclude-dir .git --exclude-dir bin --exclude-dir obj --include="*.cs" --include="*.csproj" "TargetFrameworkAttribute" .; then fail=1; fi
+          if [[ $fail -ne 0 ]]; then
+            echo "Forbidden tokens detected."
+            exit 1
+          fi
