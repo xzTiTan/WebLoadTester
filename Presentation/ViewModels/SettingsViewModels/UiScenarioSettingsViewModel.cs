@@ -59,12 +59,8 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
     public ObservableCollection<UiStep> Steps { get; }
 
-    public UiStepAction[] ActionOptions { get; } = Enum.GetValues<UiStepAction>();
     public StepErrorPolicy[] ErrorPolicyOptions { get; } = Enum.GetValues<StepErrorPolicy>();
     public ScreenshotMode[] ScreenshotModeOptions { get; } = Enum.GetValues<ScreenshotMode>();
-
-    [ObservableProperty]
-    private UiStep? selectedStep;
 
     [ObservableProperty]
     private string targetUrl = "https://example.com";
@@ -121,34 +117,33 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     {
         var step = new UiStep
         {
-            Action = UiStepAction.WaitForSelector,
+            Action = UiStepAction.Click,
             Selector = string.Empty,
             Text = string.Empty,
             TimeoutMs = 0,
             DelayMs = 0
         };
         Steps.Add(step);
-        SelectedStep = step;
     }
 
     [RelayCommand]
-    private void RemoveSelectedStep()
+    private void RemoveStep(UiStep? step)
     {
-        if (SelectedStep != null)
+        if (step != null)
         {
-            Steps.Remove(SelectedStep);
+            Steps.Remove(step);
         }
     }
 
     [RelayCommand]
-    private void MoveStepUp()
+    private void MoveStepUp(UiStep? step)
     {
-        if (SelectedStep == null)
+        if (step == null)
         {
             return;
         }
 
-        var index = Steps.IndexOf(SelectedStep);
+        var index = Steps.IndexOf(step);
         if (index > 0)
         {
             Steps.Move(index, index - 1);
@@ -156,14 +151,14 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     }
 
     [RelayCommand]
-    private void MoveStepDown()
+    private void MoveStepDown(UiStep? step)
     {
-        if (SelectedStep == null)
+        if (step == null)
         {
             return;
         }
 
-        var index = Steps.IndexOf(SelectedStep);
+        var index = Steps.IndexOf(step);
         if (index >= 0 && index < Steps.Count - 1)
         {
             Steps.Move(index, index + 1);

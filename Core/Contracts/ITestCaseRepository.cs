@@ -13,6 +13,7 @@ public interface ITestCaseRepository
 {
     Task<IReadOnlyList<TestCase>> ListAsync(string moduleType, CancellationToken ct);
     Task<TestCase?> GetAsync(Guid testCaseId, CancellationToken ct);
+    Task<TestCase?> GetByNameAsync(string name, CancellationToken ct);
     Task<TestCaseVersion?> GetVersionAsync(Guid testCaseId, int version, CancellationToken ct);
     Task<TestCase> SaveVersionAsync(string name, string description, string moduleType, string payloadJson, string changeNote, CancellationToken ct);
     Task SetCurrentVersionAsync(Guid testCaseId, int version, CancellationToken ct);

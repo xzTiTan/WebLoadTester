@@ -195,6 +195,32 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
     Task<TestCase?> ITestCaseRepository.GetAsync(Guid testCaseId, CancellationToken ct)
         => GetTestCaseAsync(testCaseId, ct);
 
+    public async Task<TestCase?> GetByNameAsync(string name, CancellationToken ct)
+    {
+        await using var connection = CreateConnection();
+        await connection.OpenAsync(ct);
+        var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Id, Name, Description, ModuleType, CreatedAt, UpdatedAt, CurrentVersion
+                                FROM TestCases WHERE Name = $name";
+        command.Parameters.AddWithValue("$name", name);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        if (await reader.ReadAsync(ct))
+        {
+            return new TestCase
+            {
+                Id = Guid.Parse(reader.GetString(0)),
+                Name = reader.GetString(1),
+                Description = reader.GetString(2),
+                ModuleType = reader.GetString(3),
+                CreatedAt = reader.GetDateTimeOffset(4),
+                UpdatedAt = reader.GetDateTimeOffset(5),
+                CurrentVersion = reader.GetInt32(6)
+            };
+        }
+
+        return null;
+    }
+
     public Task<TestCaseVersion?> GetVersionAsync(Guid testCaseId, int version, CancellationToken ct)
         => GetTestCaseVersionAsync(testCaseId, version, ct);
 

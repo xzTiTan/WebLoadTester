@@ -15,16 +15,18 @@ public partial class ModuleItemViewModel : ObservableObject
     /// <summary>
     /// Создаёт ViewModel элемента модуля.
     /// </summary>
-    public ModuleItemViewModel(ITestModule module, SettingsViewModelBase settingsViewModel, TestLibraryViewModel testLibrary)
+    public ModuleItemViewModel(ITestModule module, SettingsViewModelBase settingsViewModel, TestLibraryViewModel testLibrary, ModuleConfigViewModel moduleConfig)
     {
         Module = module;
         SettingsViewModel = settingsViewModel;
         TestLibrary = testLibrary;
+        ModuleConfig = moduleConfig;
     }
 
     public ITestModule Module { get; }
     public SettingsViewModelBase SettingsViewModel { get; }
     public TestLibraryViewModel TestLibrary { get; }
+    public ModuleConfigViewModel ModuleConfig { get; }
     /// <summary>
     /// Отображаемое имя модуля.
     /// </summary>
