@@ -10,8 +10,7 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <Style Selector=".field-control"
-           x:SetterTargetType="Control">
+    <Style Selector="Control.field-control">
         <Setter Property="Grid.Column" Value="1" />
         <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
