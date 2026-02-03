@@ -11,7 +11,9 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Модули" Classes="section-title" />
-                <ListBox ItemsSource="{Binding Modules}"
+                <TextBox Watermark="Поиск"
+                         Text="{Binding ModuleFilterText, Mode=TwoWay}" />
+                <ListBox ItemsSource="{Binding FilteredModules}"
                          SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
                          MinHeight="240">
                     <ListBox.ItemTemplate>
@@ -25,36 +27,39 @@
 
         <DockPanel Grid.Column="1">
             <Border Classes="app-bar" DockPanel.Dock="Top">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16">
                     <StackPanel Spacing="4">
                         <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" />
                         <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
-                        <Border x:Name="Vm"
-                                IsVisible="False"
-                                Width="0"
-                                Height="0"
-                                DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                                x:DataType="root:MainWindowViewModel" />
+                        <ContentControl x:Name="VmProxy"
+                                        Width="0"
+                                        Height="0"
+                                        IsVisible="False"
+                                        DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
                         <WrapPanel Classes="toolbar-wrap" HorizontalAlignment="Right">
                             <Button Content="Старт" Margin="0,0,8,8" Classes="primary"
-                                    Command="{Binding StartCommand, ElementName=Vm}" />
+                                    Command="{Binding DataContext.StartCommand, ElementName=VmProxy}" />
                             <Button Content="Перезапуск" Margin="0,0,8,8"
-                                    Command="{Binding RestartCommand, ElementName=Vm}" />
+                                    Command="{Binding DataContext.RestartCommand, ElementName=VmProxy}" />
                             <Button Content="Остановить" Margin="0,0,8,8"
-                                    Command="{Binding StopCommand, ElementName=Vm}" />
+                                    Command="{Binding DataContext.StopCommand, ElementName=VmProxy}" />
                             <Button Content="Отмена" Margin="0,0,8,8" Classes="danger"
-                                    Command="{Binding CancelCommand, ElementName=Vm}" />
+                                    Command="{Binding DataContext.CancelCommand, ElementName=VmProxy}" />
                         </WrapPanel>
                         <ProgressBar Minimum="0" Maximum="100"
-                                     Value="{Binding ProgressPercent, ElementName=Vm}"
-                                     IsIndeterminate="{Binding IsProgressIndeterminate, ElementName=Vm}" />
+                                     Value="{Binding DataContext.ProgressPercent, ElementName=VmProxy}"
+                                     IsIndeterminate="{Binding DataContext.IsProgressIndeterminate, ElementName=VmProxy}" />
                         <StackPanel Spacing="2" HorizontalAlignment="Right">
-                            <TextBlock Text="{Binding RunStage, ElementName=Vm}" Classes="muted" />
-                            <TextBlock Text="{Binding ProgressText, ElementName=Vm}" Classes="status-line" />
+                            <TextBlock Text="{Binding DataContext.RunStage, ElementName=VmProxy}" Classes="muted" />
+                            <TextBlock Text="{Binding DataContext.ProgressText, ElementName=VmProxy}" Classes="status-line" />
                         </StackPanel>
                     </StackPanel>
+                    <TextBlock Grid.Row="1"
+                               Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
+                               IsVisible="{Binding DataContext.IsRunning, ElementName=VmProxy, Converter={StaticResource BooleanNotConverter}}"
+                               TextWrapping="Wrap" />
                 </Grid>
             </Border>
 
@@ -178,10 +183,12 @@
                                     <TextBlock Text="Длительность (сек)" Classes="field-label" />
                                     <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
                                 </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                                    <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
-                                </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Таймаут (сек)" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                        </Grid>
+                        <Expander Header="Дополнительно" IsExpanded="False">
+                            <StackPanel Spacing="8">
                                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                     <TextBlock Text="Headless" Classes="field-label" />
                                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
@@ -209,8 +216,10 @@
                                 </Border>
                                 <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Expander>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
                     <Border Classes="section">
                         <StackPanel Spacing="8">
@@ -252,6 +261,7 @@
                             </StackPanel>
                             <DataGrid ItemsSource="{Binding SelectedModule.DisplayResults}"
                                       Classes="list-min-180"
+                                      MaxHeight="360"
                                       IsVisible="{Binding SelectedModule.HasReport}">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Тип" Binding="{Binding Kind}" Width="140" />
@@ -288,19 +298,22 @@
                                 <TextBlock Text="Нет данных" Classes="empty-title" />
                                 <TextBlock Text="Выполните запуск, чтобы получить артефакты" />
                             </StackPanel>
-                            <ItemsControl ItemsSource="{Binding DataContext.SelectedModule.ArtifactItems, ElementName=Root}"
+                            <ScrollViewer MaxHeight="260"
+                                          VerticalScrollBarVisibility="Auto"
                                           IsVisible="{Binding DataContext.SelectedModule.HasReport, ElementName=Root}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="root:ArtifactListItem">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
-                                            <Button Grid.Column="1" Content="Открыть"
-                                                    Command="{Binding DataContext.OpenArtifactCommand, ElementName=ArtifactsPanel}"
-                                                    CommandParameter="{Binding}" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                <ItemsControl ItemsSource="{Binding DataContext.SelectedModule.ArtifactItems, ElementName=Root}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="root:ArtifactListItem">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                                                <Button Grid.Column="1" Content="Открыть"
+                                                        Command="{Binding DataContext.OpenArtifactCommand, ElementName=ArtifactsPanel}"
+                                                        CommandParameter="{Binding}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                         </StackPanel>
                     </Border>
 
