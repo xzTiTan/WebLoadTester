@@ -9,12 +9,8 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Базовый URL" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
@@ -33,7 +29,7 @@
                              AutoGenerateColumns="False"
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="Путь" Binding="{Binding Path}" Width="2*" />
+                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
                         <dg:DataGridTextColumn Header="Тип контента" Binding="{Binding ExpectedContentType}" Width="*" />
                         <dg:DataGridTextColumn Header="Макс. размер, байт" Binding="{Binding MaxSizeBytes}" Width="*" />
                         <dg:DataGridTextColumn Header="Макс. задержка, мс" Binding="{Binding MaxLatencyMs}" Width="*" />

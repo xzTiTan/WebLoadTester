@@ -3,7 +3,6 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiSnapshot;
-using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
@@ -21,10 +20,12 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     {
         _settings = settings;
         Targets = new ObservableCollection<SnapshotTarget>(settings.Targets);
-        concurrency = settings.Concurrency;
-        repeatsPerUrl = settings.RepeatsPerUrl;
         waitUntil = settings.WaitUntil;
-        extraDelayMs = settings.ExtraDelayMs;
+        headless = settings.Headless;
+        timeoutSeconds = settings.TimeoutSeconds;
+        screenshotFormat = settings.ScreenshotFormat;
+        viewportWidth = settings.ViewportWidth;
+        viewportHeight = settings.ViewportHeight;
         fullPage = settings.FullPage;
         Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
     }
@@ -44,10 +45,12 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
             Targets.Add(target);
         }
 
-        Concurrency = s.Concurrency;
-        RepeatsPerUrl = s.RepeatsPerUrl;
         WaitUntil = s.WaitUntil;
-        ExtraDelayMs = s.ExtraDelayMs;
+        Headless = s.Headless;
+        TimeoutSeconds = s.TimeoutSeconds;
+        ScreenshotFormat = s.ScreenshotFormat;
+        ViewportWidth = s.ViewportWidth;
+        ViewportHeight = s.ViewportHeight;
         FullPage = s.FullPage;
         _settings.Targets = Targets.ToList();
     }
@@ -55,41 +58,56 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     public ObservableCollection<SnapshotTarget> Targets { get; }
 
     public string[] WaitUntilOptions { get; } = { "load", "domcontentloaded", "networkidle" };
+    public string[] ScreenshotFormatOptions { get; } = { "png" };
 
     [ObservableProperty]
     private SnapshotTarget? selectedTarget;
 
     [ObservableProperty]
-    private int concurrency;
-
-    [ObservableProperty]
-    private int repeatsPerUrl = 1;
-
-    [ObservableProperty]
     private string waitUntil = "load";
 
     [ObservableProperty]
-    private int extraDelayMs;
+    private bool headless = true;
+
+    [ObservableProperty]
+    private int timeoutSeconds = 30;
+
+    [ObservableProperty]
+    private string screenshotFormat = "png";
+
+    [ObservableProperty]
+    private int? viewportWidth;
+
+    [ObservableProperty]
+    private int? viewportHeight;
 
     [ObservableProperty]
     private bool fullPage = true;
 
     /// <summary>
-    /// Синхронизирует уровень конкурентности.
-    /// </summary>
-    partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
-    /// <summary>
-    /// Синхронизирует количество повторов на URL.
-    /// </summary>
-    partial void OnRepeatsPerUrlChanged(int value) => _settings.RepeatsPerUrl = value;
-    /// <summary>
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
     partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
     /// <summary>
-    /// Синхронизирует дополнительную задержку.
+    /// Синхронизирует Headless.
     /// </summary>
-    partial void OnExtraDelayMsChanged(int value) => _settings.ExtraDelayMs = value;
+    partial void OnHeadlessChanged(bool value) => _settings.Headless = value;
+    /// <summary>
+    /// Синхронизирует таймаут.
+    /// </summary>
+    partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
+    /// <summary>
+    /// Синхронизирует формат скриншота.
+    /// </summary>
+    partial void OnScreenshotFormatChanged(string value) => _settings.ScreenshotFormat = value;
+    /// <summary>
+    /// Синхронизирует ширину viewport.
+    /// </summary>
+    partial void OnViewportWidthChanged(int? value) => _settings.ViewportWidth = value;
+    /// <summary>
+    /// Синхронизирует высоту viewport.
+    /// </summary>
+    partial void OnViewportHeightChanged(int? value) => _settings.ViewportHeight = value;
     /// <summary>
     /// Синхронизирует флаг полного снимка страницы.
     /// </summary>

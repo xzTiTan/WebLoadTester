@@ -19,7 +19,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
         target = settings.Target;
         targetType = settings.TargetType;
         intervalSeconds = settings.IntervalSeconds;
-        durationMinutes = settings.DurationMinutes;
+        durationSeconds = settings.DurationSeconds;
         timeoutMs = settings.TimeoutMs;
         failThreshold = settings.FailThreshold;
     }
@@ -36,7 +36,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
         Target = s.Target;
         TargetType = s.TargetType;
         IntervalSeconds = s.IntervalSeconds;
-        DurationMinutes = s.DurationMinutes;
+        DurationSeconds = s.DurationSeconds;
         TimeoutMs = s.TimeoutMs;
         FailThreshold = s.FailThreshold;
     }
@@ -51,7 +51,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
     private int intervalSeconds;
 
     [ObservableProperty]
-    private int durationMinutes;
+    private int durationSeconds;
 
     [ObservableProperty]
     private int timeoutMs;
@@ -74,7 +74,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
     /// <summary>
     /// Синхронизирует длительность теста.
     /// </summary>
-    partial void OnDurationMinutesChanged(int value) => _settings.DurationMinutes = value;
+    partial void OnDurationSecondsChanged(int value) => _settings.DurationSeconds = value;
     /// <summary>
     /// Синхронизирует таймаут запросов.
     /// </summary>

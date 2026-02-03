@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Core.Services.Metrics;
@@ -51,5 +52,22 @@ public class ReportingTests
         Assert.True(File.Exists(jsonPath));
         var json = await File.ReadAllTextAsync(jsonPath);
         Assert.Contains(report.RunId, json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void OmitsHighPercentilesWhenSampleSmall()
+    {
+        var results = Enumerable.Range(1, 10)
+            .Select(i => new CheckResult($"Check {i}")
+            {
+                Success = true,
+                DurationMs = i
+            });
+
+        var metrics = MetricsCalculator.Calculate(results);
+
+        Assert.Equal(0, metrics.P95Ms);
+        Assert.Equal(0, metrics.P99Ms);
+        Assert.Equal(10, metrics.TotalItems);
     }
 }

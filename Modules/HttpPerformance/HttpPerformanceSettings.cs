@@ -1,4 +1,4 @@
-using System.Net.Http;
+using System.Collections.Generic;
 
 namespace WebLoadTester.Modules.HttpPerformance;
 
@@ -7,10 +7,15 @@ namespace WebLoadTester.Modules.HttpPerformance;
 /// </summary>
 public class HttpPerformanceSettings
 {
-    public string Url { get; set; } = "https://example.com";
-    public HttpMethod Method { get; set; } = HttpMethod.Get;
-    public int TotalRequests { get; set; } = 20;
-    public int Concurrency { get; set; } = 5;
-    public int? RpsLimit { get; set; } = 10;
+    public string BaseUrl { get; set; } = "https://example.com";
+    public List<HttpPerformanceEndpoint> Endpoints { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 10;
+}
+
+public class HttpPerformanceEndpoint
+{
+    public string Name { get; set; } = "Endpoint";
+    public string Method { get; set; } = "GET";
+    public string Path { get; set; } = "/";
+    public int? ExpectedStatusCode { get; set; }
 }

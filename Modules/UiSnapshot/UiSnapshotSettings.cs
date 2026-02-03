@@ -8,10 +8,12 @@ namespace WebLoadTester.Modules.UiSnapshot;
 public class UiSnapshotSettings
 {
     public List<SnapshotTarget> Targets { get; set; } = new();
-    public int Concurrency { get; set; } = 2;
-    public int RepeatsPerUrl { get; set; } = 1;
     public string WaitUntil { get; set; } = "load";
-    public int ExtraDelayMs { get; set; } = 0;
+    public bool Headless { get; set; } = true;
+    public int TimeoutSeconds { get; set; } = 30;
+    public string ScreenshotFormat { get; set; } = "png";
+    public int? ViewportWidth { get; set; }
+    public int? ViewportHeight { get; set; }
     public bool FullPage { get; set; } = true;
 }
 

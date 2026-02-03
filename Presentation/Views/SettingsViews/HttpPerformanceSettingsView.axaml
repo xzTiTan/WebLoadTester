@@ -1,32 +1,58 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:modules="clr-namespace:WebLoadTester.Modules.HttpPerformance"
+             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpPerformanceSettingsView"
-             x:DataType="vm:HttpPerformanceSettingsViewModel">
+             x:DataType="vm:HttpPerformanceSettingsViewModel"
+             x:Name="Root">
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="URL" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Всего запросов" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TotalRequests, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Параллельность" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding Concurrency, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Лимит RPS" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding RpsLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <TextBlock Text="Base URL" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Эндпоинты" Classes="section-title" />
+                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
+                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddEndpointCommand}" />
+                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+                    </WrapPanel>
+                </Grid>
+                <dg:DataGrid ItemsSource="{Binding Endpoints}"
+                             SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*" />
+                        <dg:DataGridTemplateColumn Header="Метод" Width="120">
+                            <dg:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="modules:HttpPerformanceEndpoint">
+                                    <TextBlock Text="{Binding Method}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellTemplate>
+                            <dg:DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate x:DataType="modules:HttpPerformanceEndpoint">
+                                    <ComboBox ItemsSource="{Binding DataContext.MethodOptions, ElementName=Root}"
+                                              SelectedItem="{Binding Method, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellEditingTemplate>
+                        </dg:DataGridTemplateColumn>
+                        <dg:DataGridTextColumn Header="Путь" Binding="{Binding Path}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Ожидаемый код" Binding="{Binding ExpectedStatusCode}" Width="160" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
             </StackPanel>
         </Border>
     </StackPanel>

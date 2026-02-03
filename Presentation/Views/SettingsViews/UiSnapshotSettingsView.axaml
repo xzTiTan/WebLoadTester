@@ -37,26 +37,36 @@
                               SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Доп. задержка, мс" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="0" Increment="100" Value="{Binding ExtraDelayMs, Mode=TwoWay}" />
+                    <TextBlock Text="Headless" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Полная страница" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding FullPage, Mode=TwoWay}" />
+                    <TextBlock Text="Таймаут (сек)" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Параметры запуска" Classes="section-title" />
+                <TextBlock Text="Формат снимка" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Параллельность" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
+                    <TextBlock Text="Формат" Classes="field-label" />
+                    <ComboBox Classes="field-control"
+                              ItemsSource="{Binding ScreenshotFormatOptions}"
+                              SelectedItem="{Binding ScreenshotFormat, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Повторов на URL" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
+                    <TextBlock Text="Viewport (ширина)" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="0" Value="{Binding ViewportWidth, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Viewport (высота)" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="0" Value="{Binding ViewportHeight, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Полная страница" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding FullPage, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>

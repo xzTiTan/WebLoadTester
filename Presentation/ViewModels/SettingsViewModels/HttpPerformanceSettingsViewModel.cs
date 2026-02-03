@@ -1,4 +1,7 @@
+using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.HttpPerformance;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -16,11 +19,10 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
     public HttpPerformanceSettingsViewModel(HttpPerformanceSettings settings)
     {
         _settings = settings;
-        url = settings.Url;
-        totalRequests = settings.TotalRequests;
-        concurrency = settings.Concurrency;
-        rpsLimit = settings.RpsLimit ?? 0;
+        baseUrl = settings.BaseUrl;
+        Endpoints = new ObservableCollection<HttpPerformanceEndpoint>(settings.Endpoints);
         timeoutSeconds = settings.TimeoutSeconds;
+        Endpoints.CollectionChanged += (_, _) => _settings.Endpoints = Endpoints.ToList();
     }
 
     public override object Settings => _settings;
@@ -32,46 +34,52 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
             return;
         }
 
-        Url = s.Url;
-        TotalRequests = s.TotalRequests;
-        Concurrency = s.Concurrency;
-        RpsLimit = s.RpsLimit ?? 0;
+        BaseUrl = s.BaseUrl;
+        Endpoints.Clear();
+        foreach (var endpoint in s.Endpoints)
+        {
+            Endpoints.Add(endpoint);
+        }
         TimeoutSeconds = s.TimeoutSeconds;
+        _settings.Endpoints = Endpoints.ToList();
     }
 
     [ObservableProperty]
-    private string url = string.Empty;
-
-    [ObservableProperty]
-    private int totalRequests;
-
-    [ObservableProperty]
-    private int concurrency;
-
-    [ObservableProperty]
-    private int rpsLimit;
+    private string baseUrl = string.Empty;
 
     [ObservableProperty]
     private int timeoutSeconds;
 
+    public ObservableCollection<HttpPerformanceEndpoint> Endpoints { get; }
+
+    public string[] MethodOptions { get; } = { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" };
+
+    [ObservableProperty]
+    private HttpPerformanceEndpoint? selectedEndpoint;
+
     /// <summary>
     /// Синхронизирует URL запроса.
     /// </summary>
-    partial void OnUrlChanged(string value) => _settings.Url = value;
-    /// <summary>
-    /// Синхронизирует количество запросов.
-    /// </summary>
-    partial void OnTotalRequestsChanged(int value) => _settings.TotalRequests = value;
-    /// <summary>
-    /// Синхронизирует уровень конкурентности.
-    /// </summary>
-    partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
-    /// <summary>
-    /// Синхронизирует ограничение RPS (0 отключает).
-    /// </summary>
-    partial void OnRpsLimitChanged(int value) => _settings.RpsLimit = value > 0 ? value : null;
+    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
     /// <summary>
     /// Синхронизирует таймаут запросов.
     /// </summary>
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
+
+    [RelayCommand]
+    private void AddEndpoint()
+    {
+        var endpoint = new HttpPerformanceEndpoint { Name = "Endpoint", Method = "GET", Path = "/" };
+        Endpoints.Add(endpoint);
+        SelectedEndpoint = endpoint;
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedEndpoint()
+    {
+        if (SelectedEndpoint != null)
+        {
+            Endpoints.Remove(SelectedEndpoint);
+        }
+    }
 }

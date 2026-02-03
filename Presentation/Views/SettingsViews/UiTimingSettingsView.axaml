@@ -37,20 +37,8 @@
                               SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Повторов на URL" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding RepeatsPerUrl, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Параллельность" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Concurrency, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Режим headless" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Таймаут, мс" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="1000" Increment="1000" Value="{Binding TimeoutMs, Mode=TwoWay}" />
+                    <TextBlock Text="Таймаут, сек" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>

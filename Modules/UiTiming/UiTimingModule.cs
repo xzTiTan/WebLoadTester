@@ -32,7 +32,9 @@ public class UiTimingModule : ITestModule
             Targets = new List<TimingTarget>
             {
                 new() { Url = "https://example.com", Tag = "Example" }
-            }
+            },
+            WaitUntil = "load",
+            TimeoutSeconds = 30
         };
     }
 
@@ -58,12 +60,7 @@ public class UiTimingModule : ITestModule
             errors.Add("Each URL must be absolute");
         }
 
-        if (s.RepeatsPerUrl <= 0)
-        {
-            errors.Add("RepeatsPerUrl must be positive");
-        }
-
-        if (s.TimeoutMs <= 0)
+        if (s.TimeoutSeconds <= 0)
         {
             errors.Add("Timeout must be positive");
         }
@@ -100,63 +97,52 @@ public class UiTimingModule : ITestModule
             "networkidle" => WaitUntilState.NetworkIdle,
             _ => WaitUntilState.Load
         };
-        var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
-        var runs = s.Targets.SelectMany(target =>
-            Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();
-        var total = runs.Count;
+        var total = s.Targets.Count;
         var completed = 0;
 
-        var tasks = runs.Select(async run =>
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = ctx.Profile.Headless });
+        var index = 0;
+        foreach (var target in s.Targets)
+        {
+            var sw = Stopwatch.StartNew();
+            index++;
+            try
             {
-                await semaphore.WaitAsync(ct);
-                try
+                var page = await browser.NewPageAsync();
+                await page.GotoAsync(target.Url, new PageGotoOptions
                 {
-                    var sw = Stopwatch.StartNew();
-                    try
-                    {
-                        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = s.Headless });
-                        var page = await browser.NewPageAsync();
-                        await page.GotoAsync(run.target.Url, new PageGotoOptions
-                        {
-                            WaitUntil = waitUntil,
-                            Timeout = s.TimeoutMs
-                        });
-                        sw.Stop();
-                        results.Add(new TimingResult(run.target.Tag ?? run.target.Url)
-                        {
-                            Url = run.target.Url,
-                            Iteration = run.iteration,
-                            Success = true,
-                            DurationMs = sw.Elapsed.TotalMilliseconds
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        sw.Stop();
-                        results.Add(new TimingResult(run.target.Tag ?? run.target.Url)
-                        {
-                            Url = run.target.Url,
-                            Iteration = run.iteration,
-                            Success = false,
-                            DurationMs = sw.Elapsed.TotalMilliseconds,
-                            ErrorType = ex.GetType().Name,
-                            ErrorMessage = ex.Message
-                        });
-                    }
-                    finally
-                    {
-                        var done = Interlocked.Increment(ref completed);
-                        ctx.Progress.Report(new ProgressUpdate(done, total, "UI тайминги"));
-                    }
-                }
-                finally
+                    WaitUntil = waitUntil,
+                    Timeout = s.TimeoutSeconds * 1000
+                });
+                sw.Stop();
+                results.Add(new TimingResult(target.Tag ?? target.Url)
                 {
-                    semaphore.Release();
-                }
-            });
-
-        await Task.WhenAll(tasks);
+                    Url = target.Url,
+                    Iteration = index,
+                    Success = true,
+                    DurationMs = sw.Elapsed.TotalMilliseconds
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                results.Add(new TimingResult(target.Tag ?? target.Url)
+                {
+                    Url = target.Url,
+                    Iteration = index,
+                    Success = false,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    ErrorType = ex.GetType().Name,
+                    ErrorMessage = ex.Message
+                });
+            }
+            finally
+            {
+                var done = Interlocked.Increment(ref completed);
+                ctx.Progress.Report(new ProgressUpdate(done, total, "UI тайминги"));
+            }
+        }
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;

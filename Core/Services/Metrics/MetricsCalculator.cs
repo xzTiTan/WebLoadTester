@@ -30,8 +30,11 @@ public static class MetricsCalculator
             summary.MaxMs = durations.Last();
             summary.AverageMs = durations.Average();
             summary.P50Ms = Percentile(durations, 0.50);
-            summary.P95Ms = Percentile(durations, 0.95);
-            summary.P99Ms = Percentile(durations, 0.99);
+            if (durations.Count >= 20)
+            {
+                summary.P95Ms = Percentile(durations, 0.95);
+                summary.P99Ms = Percentile(durations, 0.99);
+            }
         }
 
         summary.ErrorBreakdown = list

@@ -6,7 +6,11 @@ namespace WebLoadTester.Modules.SecurityBaseline;
 public class SecurityBaselineSettings
 {
     public string Url { get; set; } = "https://example.com";
-    public bool CheckHeaders { get; set; } = true;
-    public bool CheckRedirectHttpToHttps { get; set; } = false;
-    public bool CheckTlsExpiry { get; set; } = false;
+    public bool CheckHsts { get; set; } = true;
+    public bool CheckContentTypeOptions { get; set; } = true;
+    public bool CheckFrameOptions { get; set; } = true;
+    public bool CheckContentSecurityPolicy { get; set; } = true;
+    public bool CheckReferrerPolicy { get; set; } = true;
+    public bool CheckPermissionsPolicy { get; set; } = true;
+    public bool CheckRedirectHttpToHttps { get; set; } = true;
 }

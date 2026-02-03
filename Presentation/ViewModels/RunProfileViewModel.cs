@@ -70,8 +70,8 @@ public partial class RunProfileViewModel : ObservableObject
     private string statusMessage = string.Empty;
 
     public string WarningMessage =>
-        Parallelism > 10 || DurationSeconds > 300 || Iterations > 1000
-            ? "Высокая нагрузка: параллельность > 10, длительность > 5 минут или итерации > 1000."
+        Parallelism > 20 || DurationSeconds > 900 || Iterations > 2000
+            ? "Высокая нагрузка: параллельность > 20, длительность > 15 минут или итерации > 2000."
             : string.Empty;
 
     public bool HasWarning => !string.IsNullOrWhiteSpace(WarningMessage);

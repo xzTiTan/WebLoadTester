@@ -19,7 +19,6 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     public HttpAssetsSettingsViewModel(HttpAssetsSettings settings)
     {
         _settings = settings;
-        baseUrl = settings.BaseUrl;
         Assets = new ObservableCollection<AssetItem>(settings.Assets);
         timeoutSeconds = settings.TimeoutSeconds;
         Assets.CollectionChanged += (_, _) => _settings.Assets = Assets.ToList();
@@ -34,7 +33,6 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
             return;
         }
 
-        BaseUrl = s.BaseUrl;
         TimeoutSeconds = s.TimeoutSeconds;
         Assets.Clear();
         foreach (var asset in s.Assets)
@@ -47,18 +45,11 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     public ObservableCollection<AssetItem> Assets { get; }
 
     [ObservableProperty]
-    private string baseUrl = string.Empty;
-
-    [ObservableProperty]
     private AssetItem? selectedAsset;
 
     [ObservableProperty]
     private int timeoutSeconds;
 
-    /// <summary>
-    /// Синхронизирует базовый URL.
-    /// </summary>
-    partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
     /// <summary>
     /// Синхронизирует таймаут запросов.
     /// </summary>
@@ -67,7 +58,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     [RelayCommand]
     private void AddAsset()
     {
-        var asset = new AssetItem { Path = "/" };
+        var asset = new AssetItem { Url = "https://example.com" };
         Assets.Add(asset);
         SelectedAsset = asset;
     }

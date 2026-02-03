@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -28,7 +27,13 @@ public class HttpPerformanceModule : ITestModule
     /// </summary>
     public object CreateDefaultSettings()
     {
-        return new HttpPerformanceSettings();
+        return new HttpPerformanceSettings
+        {
+            Endpoints = new List<HttpPerformanceEndpoint>
+            {
+                new() { Name = "Example", Method = "GET", Path = "/" }
+            }
+        };
     }
 
     /// <summary>
@@ -43,19 +48,32 @@ public class HttpPerformanceModule : ITestModule
             return errors;
         }
 
-        if (string.IsNullOrWhiteSpace(s.Url))
+        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
         {
-            errors.Add("Url is required");
+            errors.Add("BaseUrl is required");
         }
 
-        if (s.TotalRequests <= 0)
+        if (s.Endpoints.Count == 0)
         {
-            errors.Add("TotalRequests must be positive");
+            errors.Add("At least one endpoint required");
         }
 
-        if (s.Concurrency <= 0)
+        foreach (var endpoint in s.Endpoints)
         {
-            errors.Add("Concurrency must be positive");
+            if (string.IsNullOrWhiteSpace(endpoint.Path))
+            {
+                errors.Add("Endpoint path is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(endpoint.Method))
+            {
+                errors.Add("Endpoint method is required");
+            }
+        }
+
+        if (s.TimeoutSeconds <= 0)
+        {
+            errors.Add("TimeoutSeconds must be positive");
         }
 
         return errors;
@@ -70,67 +88,68 @@ public class HttpPerformanceModule : ITestModule
         var result = new ModuleResult();
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
-        var results = new ConcurrentBag<ResultBase>();
-        var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxHttpConcurrency));
-        var throttle = new SemaphoreSlim(1, 1);
+        var results = new List<ResultBase>();
         var completed = 0;
+        var total = s.Endpoints.Count;
 
-        var tasks = new List<Task>();
-        for (var i = 0; i < s.TotalRequests; i++)
+        foreach (var endpoint in s.Endpoints)
         {
-            tasks.Add(Task.Run(async () =>
+            var sw = Stopwatch.StartNew();
+            try
             {
-                await semaphore.WaitAsync(ct);
-                try
-                {
-                    if (s.RpsLimit.HasValue)
-                    {
-                        await throttle.WaitAsync(ct);
-                        _ = Task.Delay(TimeSpan.FromSeconds(1.0 / Math.Min(s.RpsLimit.Value, ctx.Limits.MaxRps)), ct)
-                            .ContinueWith(_ => throttle.Release());
-                    }
+                var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), ResolveUrl(s.BaseUrl, endpoint.Path));
+                var response = await client.SendAsync(request, ct);
+                sw.Stop();
 
-                    var sw = Stopwatch.StartNew();
-                    try
-                    {
-                        var response = await client.SendAsync(new HttpRequestMessage(s.Method, s.Url), ct);
-                        sw.Stop();
-                        results.Add(new CheckResult("Request")
-                        {
-                            Success = response.IsSuccessStatusCode,
-                            DurationMs = sw.Elapsed.TotalMilliseconds,
-                            StatusCode = (int)response.StatusCode,
-                            ErrorType = response.IsSuccessStatusCode ? null : "Http",
-                            ErrorMessage = response.IsSuccessStatusCode ? null : response.StatusCode.ToString()
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        sw.Stop();
-                        results.Add(new CheckResult("Request")
-                        {
-                            Success = false,
-                            DurationMs = sw.Elapsed.TotalMilliseconds,
-                            ErrorType = ex.GetType().Name,
-                            ErrorMessage = ex.Message
-                        });
-                    }
-                    finally
-                    {
-                        var done = Interlocked.Increment(ref completed);
-                        ctx.Progress.Report(new ProgressUpdate(done, s.TotalRequests, "HTTP производительность"));
-                    }
-                }
-                finally
+                var success = response.IsSuccessStatusCode;
+                string? error = null;
+
+                if (endpoint.ExpectedStatusCode.HasValue && (int)response.StatusCode != endpoint.ExpectedStatusCode)
                 {
-                    semaphore.Release();
+                    success = false;
+                    error = $"Status {(int)response.StatusCode} expected {endpoint.ExpectedStatusCode}";
                 }
-            }, ct));
+
+                results.Add(new CheckResult(endpoint.Name)
+                {
+                    Success = success,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    StatusCode = (int)response.StatusCode,
+                    ErrorType = success ? null : "Http",
+                    ErrorMessage = error
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                results.Add(new CheckResult(endpoint.Name)
+                {
+                    Success = false,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    ErrorType = ex.GetType().Name,
+                    ErrorMessage = ex.Message
+                });
+            }
+            finally
+            {
+                completed++;
+                ctx.Progress.Report(new ProgressUpdate(completed, total, "HTTP производительность"));
+            }
         }
 
-        await Task.WhenAll(tasks);
-        result.Results = new List<ResultBase>(results);
+        result.Results = results;
         result.Status = result.Results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static string ResolveUrl(string baseUrl, string path)
+    {
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
+        {
+            return absolute.ToString();
+        }
+
+        var root = new Uri(baseUrl, UriKind.Absolute);
+        return new Uri(root, path).ToString();
     }
 }

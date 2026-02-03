@@ -45,9 +45,14 @@ public class AvailabilityModule : ITestModule
             errors.Add("Target required");
         }
 
-        if (s.IntervalSeconds < 5)
+        if (s.IntervalSeconds < 1)
         {
             errors.Add("IntervalSeconds too low");
+        }
+
+        if (s.DurationSeconds <= 0)
+        {
+            errors.Add("DurationSeconds must be positive");
         }
 
         return errors;
@@ -62,7 +67,9 @@ public class AvailabilityModule : ITestModule
         var result = new ModuleResult();
 
         var results = new List<ResultBase>();
-        var totalChecks = (int)(TimeSpan.FromMinutes(s.DurationMinutes).TotalSeconds / s.IntervalSeconds);
+        var totalChecks = ctx.Profile.Mode == RunMode.Iterations
+            ? Math.Max(1, ctx.Profile.Iterations)
+            : Math.Max(1, s.DurationSeconds / Math.Max(1, s.IntervalSeconds));
         var client = HttpClientProvider.Create(TimeSpan.FromMilliseconds(s.TimeoutMs));
         var consecutiveFails = 0;
 
@@ -118,7 +125,10 @@ public class AvailabilityModule : ITestModule
             });
 
             ctx.Progress.Report(new ProgressUpdate(i + 1, totalChecks, "Доступность"));
-            await Task.Delay(TimeSpan.FromSeconds(s.IntervalSeconds), ct);
+            if (s.IntervalSeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(s.IntervalSeconds), ct);
+            }
         }
 
         result.Results = results;

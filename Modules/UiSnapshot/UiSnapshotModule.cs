@@ -32,7 +32,11 @@ public class UiSnapshotModule : ITestModule
             Targets = new List<SnapshotTarget>
             {
                 new() { Url = "https://example.com", Tag = "Example" }
-            }
+            },
+            WaitUntil = "load",
+            Headless = true,
+            TimeoutSeconds = 30,
+            ScreenshotFormat = "png"
         };
     }
 
@@ -58,14 +62,20 @@ public class UiSnapshotModule : ITestModule
             errors.Add("Each URL must be absolute");
         }
 
-        if (s.Concurrency <= 0)
+        if (s.TimeoutSeconds <= 0)
         {
-            errors.Add("Concurrency must be positive");
+            errors.Add("TimeoutSeconds must be positive");
         }
 
-        if (s.RepeatsPerUrl <= 0)
+        if (!string.Equals(s.ScreenshotFormat, "png", StringComparison.OrdinalIgnoreCase))
         {
-            errors.Add("RepeatsPerUrl must be positive");
+            errors.Add("ScreenshotFormat must be png");
+        }
+
+        if ((s.ViewportWidth.HasValue && s.ViewportWidth.Value > 0) ^
+            (s.ViewportHeight.HasValue && s.ViewportHeight.Value > 0))
+        {
+            errors.Add("ViewportWidth and ViewportHeight must be set together");
         }
 
         return errors;
@@ -100,65 +110,60 @@ public class UiSnapshotModule : ITestModule
             "networkidle" => WaitUntilState.NetworkIdle,
             _ => WaitUntilState.Load
         };
-        var semaphore = new SemaphoreSlim(Math.Min(s.Concurrency, ctx.Limits.MaxUiConcurrency));
         var results = new List<ResultBase>();
         var completed = 0;
-        var runs = s.Targets.SelectMany(target =>
-            Enumerable.Range(1, s.RepeatsPerUrl).Select(iteration => (target, iteration))).ToList();
-        var tasks = runs.Select(async run =>
+        var total = s.Targets.Count;
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = s.Headless });
+
+        foreach (var target in s.Targets)
         {
-            await semaphore.WaitAsync(ct);
+            var sw = Stopwatch.StartNew();
             try
             {
-                var sw = Stopwatch.StartNew();
-                try
+                var page = await browser.NewPageAsync(new BrowserNewPageOptions
                 {
-                    await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-                    var page = await browser.NewPageAsync();
-                    await page.GotoAsync(run.target.Url, new PageGotoOptions
-                    {
-                        WaitUntil = waitUntil,
-                        Timeout = s.ExtraDelayMs > 0 ? s.ExtraDelayMs + 30000 : 30000
-                    });
-                    if (s.ExtraDelayMs > 0)
-                    {
-                        await Task.Delay(s.ExtraDelayMs, ct);
-                    }
-                    var bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = s.FullPage });
-                    var fileName = $"snapshot_{Sanitize(run.target.Url)}_{run.iteration}.png";
-                    var path = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
-                    sw.Stop();
-                    results.Add(new RunResult(run.target.Tag ?? run.target.Url)
-                    {
-                        Success = true,
-                        DurationMs = sw.Elapsed.TotalMilliseconds,
-                        ScreenshotPath = path
-                    });
-                }
-                catch (Exception ex)
+                    ViewportSize = s.ViewportWidth.HasValue && s.ViewportHeight.HasValue &&
+                                   s.ViewportWidth.Value > 0 && s.ViewportHeight.Value > 0
+                        ? new ViewportSize { Width = s.ViewportWidth.Value, Height = s.ViewportHeight.Value }
+                        : null
+                });
+                await page.GotoAsync(target.Url, new PageGotoOptions
                 {
-                    sw.Stop();
-                    results.Add(new RunResult(run.target.Tag ?? run.target.Url)
-                    {
-                        Success = false,
-                        DurationMs = sw.Elapsed.TotalMilliseconds,
-                        ErrorType = ex.GetType().Name,
-                        ErrorMessage = ex.Message
-                    });
-                }
-                finally
+                    WaitUntil = waitUntil,
+                    Timeout = s.TimeoutSeconds * 1000
+                });
+                var bytes = await page.ScreenshotAsync(new PageScreenshotOptions
                 {
-                    var done = Interlocked.Increment(ref completed);
-                    ctx.Progress.Report(new ProgressUpdate(done, runs.Count, "UI снимки"));
-                }
+                    FullPage = s.FullPage,
+                    Type = ScreenshotType.Png
+                });
+                var fileName = $"snapshot_{Sanitize(target.Url)}.png";
+                var path = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
+                sw.Stop();
+                results.Add(new RunResult(target.Tag ?? target.Url)
+                {
+                    Success = true,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    ScreenshotPath = path
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                results.Add(new RunResult(target.Tag ?? target.Url)
+                {
+                    Success = false,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    ErrorType = ex.GetType().Name,
+                    ErrorMessage = ex.Message
+                });
             }
             finally
             {
-                semaphore.Release();
+                var done = Interlocked.Increment(ref completed);
+                ctx.Progress.Report(new ProgressUpdate(done, total, "UI снимки"));
             }
-        });
-
-        await Task.WhenAll(tasks);
+        }
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;

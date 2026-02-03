@@ -20,11 +20,8 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     {
         _settings = settings;
         Targets = new ObservableCollection<TimingTarget>(settings.Targets);
-        repeatsPerUrl = settings.RepeatsPerUrl;
-        concurrency = settings.Concurrency;
         waitUntil = settings.WaitUntil;
-        headless = settings.Headless;
-        timeoutMs = settings.TimeoutMs;
+        timeoutSeconds = settings.TimeoutSeconds;
         Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
     }
 
@@ -43,11 +40,8 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
             Targets.Add(target);
         }
 
-        RepeatsPerUrl = s.RepeatsPerUrl;
-        Concurrency = s.Concurrency;
         WaitUntil = s.WaitUntil;
-        Headless = s.Headless;
-        TimeoutMs = s.TimeoutMs;
+        TimeoutSeconds = s.TimeoutSeconds;
         _settings.Targets = Targets.ToList();
     }
 
@@ -59,40 +53,19 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     private TimingTarget? selectedTarget;
 
     [ObservableProperty]
-    private int repeatsPerUrl;
-
-    [ObservableProperty]
-    private int concurrency;
-
-    [ObservableProperty]
     private string waitUntil = "load";
 
     [ObservableProperty]
-    private bool headless = true;
+    private int timeoutSeconds = 30;
 
-    [ObservableProperty]
-    private int timeoutMs = 30000;
-
-    /// <summary>
-    /// Синхронизирует количество повторов на URL.
-    /// </summary>
-    partial void OnRepeatsPerUrlChanged(int value) => _settings.RepeatsPerUrl = value;
-    /// <summary>
-    /// Синхронизирует уровень конкурентности.
-    /// </summary>
-    partial void OnConcurrencyChanged(int value) => _settings.Concurrency = value;
     /// <summary>
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
     partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
     /// <summary>
-    /// Синхронизирует режим headless.
-    /// </summary>
-    partial void OnHeadlessChanged(bool value) => _settings.Headless = value;
-    /// <summary>
     /// Синхронизирует таймаут навигации.
     /// </summary>
-    partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
+    partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
     [RelayCommand]
     private void AddTarget()

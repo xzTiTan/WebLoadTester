@@ -31,7 +31,7 @@ public class HttpAssetsModule : ITestModule
         {
             Assets = new List<AssetItem>
             {
-                new() { Path = "/" }
+                new() { Url = "https://example.com" }
             }
         };
     }
@@ -53,16 +53,11 @@ public class HttpAssetsModule : ITestModule
             errors.Add("At least one asset required");
         }
 
-        if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
-        {
-            errors.Add("BaseUrl is required");
-        }
-
         foreach (var asset in s.Assets)
         {
-            if (string.IsNullOrWhiteSpace(asset.Path))
+            if (!Uri.TryCreate(asset.Url, UriKind.Absolute, out _))
             {
-                errors.Add("Asset path is required");
+                errors.Add("Asset Url is required");
             }
         }
 
@@ -84,7 +79,7 @@ public class HttpAssetsModule : ITestModule
         foreach (var asset in s.Assets)
         {
             var sw = Stopwatch.StartNew();
-            var url = ResolveUrl(s.BaseUrl, asset.Path);
+            var url = asset.Url;
             try
             {
                 var response = await client.GetAsync(url, ct);
@@ -117,7 +112,7 @@ public class HttpAssetsModule : ITestModule
                     Success = success,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     StatusCode = (int)response.StatusCode,
-                    ErrorType = success ? null : "Asset",
+                    ErrorType = success ? null : (response.IsSuccessStatusCode ? "Warn" : "Asset"),
                     ErrorMessage = error
                 });
             }
@@ -142,16 +137,5 @@ public class HttpAssetsModule : ITestModule
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
-    }
-
-    private static string ResolveUrl(string baseUrl, string path)
-    {
-        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute))
-        {
-            return absolute.ToString();
-        }
-
-        var root = new Uri(baseUrl, UriKind.Absolute);
-        return new Uri(root, path).ToString();
     }
 }

@@ -23,8 +23,8 @@
                     <TextBox Classes="field-control" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Длительность (мин)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding DurationMinutes, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <TextBlock Text="Длительность (сек)" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding DurationSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (мс)" Classes="field-label" />

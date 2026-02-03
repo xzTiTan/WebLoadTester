@@ -1,7 +1,7 @@
 
 # Карта кода и связи — WebLoadTester
 
-**Версия:** v1.2 08.03.2026
+**Версия:** v1.4 08.03.2026
 
 ## 0. Назначение
 Этот файл связывает «как задумано» (01–03) с «как реализовано» (репозиторий):
@@ -38,7 +38,11 @@
 
 - `Presentation/`
   - `Views/` — Avalonia XAML
+  - `Views/SettingsViews/` — UI настроек модулей (A1–A3, B1–B3, C1–C4)
+  - `Views/Tabs/RunsTab.axaml` — вкладка «Прогоны» (история, repeat)
   - `ViewModels/` — VM, вкладки, настройки
+  - `ViewModels/SettingsViewModels/` — VM настроек модулей
+  - `ViewModels/RunsTabViewModel.cs` — список прогонов + повтор запуска
   - `Styles/` — tokens/controls/workspace
 
 ---
@@ -63,6 +67,7 @@
 - Требование: «JSON всегда» → `JsonReportWriter.WriteAsync` + `ArtifactStore.SaveJsonReportAsync`.
 - Требование: «Telegram опционально, ошибка не влияет» → `TelegramPolicy.IsEnabled` + `MainWindowViewModel.SendTelegramAsync`.
 - Требование: «4 вкладки» → `MainWindow.axaml` + `MainWindowViewModel.SelectedTabIndex`.
+- Требование: «Repeat run / Runs tab» → `RunsTabViewModel`, `RunsTab.axaml`, `MainWindowViewModel.RepeatRunAsync`.
 
 ---
 

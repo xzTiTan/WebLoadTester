@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Infrastructure.Http;
-using WebLoadTester.Infrastructure.Network;
 
 namespace WebLoadTester.Modules.SecurityBaseline;
 
@@ -61,52 +60,69 @@ public class SecurityBaselineModule : ITestModule
         var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, s.Url), ct);
         var headers = response.Headers;
 
-        if (s.CheckHeaders)
+        if (s.CheckHsts && s.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            var requiredHeaders = new[] { "Strict-Transport-Security", "X-Frame-Options", "X-Content-Type-Options", "Content-Security-Policy" };
-            foreach (var header in requiredHeaders)
-            {
-                var present = headers.Contains(header);
-                results.Add(new CheckResult(header)
-                {
-                    Success = present,
-                    DurationMs = 0,
-                    ErrorType = present ? null : "Header",
-                    ErrorMessage = present ? null : "Missing"
-                });
-            }
+            AddHeaderCheck(results, "Strict-Transport-Security", headers.Contains("Strict-Transport-Security"));
         }
 
-        if (s.CheckRedirectHttpToHttps)
+        if (s.CheckContentTypeOptions)
         {
-            var httpUrl = s.Url.Replace("https://", "http://", StringComparison.OrdinalIgnoreCase);
-            var httpResponse = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, httpUrl), ct);
+            var value = headers.TryGetValues("X-Content-Type-Options", out var values)
+                ? string.Join(";", values)
+                : string.Empty;
+            var ok = value.Contains("nosniff", StringComparison.OrdinalIgnoreCase);
+            AddHeaderCheck(results, "X-Content-Type-Options", ok, ok ? null : "Expected nosniff");
+        }
+
+        if (s.CheckFrameOptions)
+        {
+            var value = headers.TryGetValues("X-Frame-Options", out var values)
+                ? string.Join(";", values)
+                : string.Empty;
+            var ok = value.Contains("DENY", StringComparison.OrdinalIgnoreCase) ||
+                     value.Contains("SAMEORIGIN", StringComparison.OrdinalIgnoreCase);
+            AddHeaderCheck(results, "X-Frame-Options", ok, ok ? null : "Expected DENY or SAMEORIGIN");
+        }
+
+        if (s.CheckContentSecurityPolicy)
+        {
+            AddHeaderCheck(results, "Content-Security-Policy", headers.Contains("Content-Security-Policy"));
+        }
+
+        if (s.CheckReferrerPolicy)
+        {
+            AddHeaderCheck(results, "Referrer-Policy", headers.Contains("Referrer-Policy"));
+        }
+
+        if (s.CheckPermissionsPolicy)
+        {
+            AddHeaderCheck(results, "Permissions-Policy", headers.Contains("Permissions-Policy"));
+        }
+
+        if (s.CheckRedirectHttpToHttps && s.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            var handler = new HttpClientHandler { AllowAutoRedirect = false };
+            using var redirectClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+            var httpResponse = await redirectClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, s.Url), ct);
             var redirect = (int)httpResponse.StatusCode >= 300 && (int)httpResponse.StatusCode < 400;
-            results.Add(new CheckResult("HTTP->HTTPS")
-            {
-                Success = redirect,
-                DurationMs = 0,
-                ErrorType = redirect ? null : "Redirect",
-                ErrorMessage = redirect ? null : "No redirect"
-            });
-        }
-
-        if (s.CheckTlsExpiry)
-        {
-            var host = new Uri(s.Url).Host;
-            var (success, duration, details, days) = await NetworkProbes.TlsProbeAsync(host, 443, ct);
-            results.Add(new ProbeResult("TLS Expiry")
-            {
-                Success = success,
-                DurationMs = duration,
-                Details = days.HasValue ? $"Days to expiry: {days}" : details,
-                ErrorType = success ? null : "TLS",
-                ErrorMessage = success ? null : details
-            });
+            var location = httpResponse.Headers.Location?.ToString() ?? string.Empty;
+            var httpsRedirect = redirect && location.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+            AddHeaderCheck(results, "HTTP->HTTPS", httpsRedirect, httpsRedirect ? null : "No HTTPS redirect");
         }
 
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static void AddHeaderCheck(ICollection<ResultBase> results, string name, bool success, string? message = null)
+    {
+        results.Add(new CheckResult(name)
+        {
+            Success = success,
+            DurationMs = 0,
+            ErrorType = success ? null : "Warn",
+            ErrorMessage = success ? null : message ?? "Missing"
+        });
     }
 }

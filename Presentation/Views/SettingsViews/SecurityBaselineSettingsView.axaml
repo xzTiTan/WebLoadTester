@@ -12,16 +12,32 @@
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Заголовки безопасности" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckHeaders, Mode=TwoWay}" />
+                    <TextBlock Text="HSTS" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="X-Content-Type-Options" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="X-Frame-Options" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Content-Security-Policy" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Referrer-Policy" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
+                </Grid>
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Permissions-Policy" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="HTTP → HTTPS" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Проверять редирект" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="TLS" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять срок" IsChecked="{Binding CheckTlsExpiry, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
