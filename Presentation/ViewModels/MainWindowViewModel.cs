@@ -72,6 +72,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Политика Telegram-уведомлений для текущего запуска.
     /// </summary>
     private TelegramPolicy? _telegramPolicy;
+    /// <summary>
+    /// Источник завершения текущего прогона.
+    /// </summary>
+    private TaskCompletionSource<bool>? _runFinishedTcs;
+    private Task CurrentRunFinishedTask => _runFinishedTcs?.Task ?? Task.CompletedTask;
 
     /// <summary>
     /// Инициализирует модули, вкладки и сервисы запуска.
@@ -161,6 +166,20 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private int selectedTabIndex;
 
+    private double _progressPercent;
+    public double ProgressPercent
+    {
+        get => _progressPercent;
+        private set => SetProperty(ref _progressPercent, value);
+    }
+
+    private bool _isProgressIndeterminate;
+    public bool IsProgressIndeterminate
+    {
+        get => _isProgressIndeterminate;
+        private set => SetProperty(ref _isProgressIndeterminate, value);
+    }
+
     public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
     public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
 
@@ -193,9 +212,12 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        _runFinishedTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         IsRunning = true;
         StatusText = $"Статус: выполняется {moduleItem.DisplayName}";
         ProgressText = "Прогресс: 0/0";
+        ProgressPercent = 0;
+        IsProgressIndeterminate = true;
         RunStage = "Выполнение";
 
         _runCts = new CancellationTokenSource();
@@ -242,6 +264,7 @@ public partial class MainWindowViewModel : ViewModelBase
             RunStage = "Готово";
             RunsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
+            _runFinishedTcs?.TrySetResult(true);
         }
     }
 
@@ -273,7 +296,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task RestartAsync()
     {
-        Stop();
+        if (IsRunning)
+        {
+            CancelRun();
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
+            var completedTask = await Task.WhenAny(CurrentRunFinishedTask, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                _logBus.Warn("Таймаут ожидания завершения прогона перед перезапуском.");
+            }
+        }
+
+        ClearLog();
         await StartAsync();
     }
 
@@ -368,6 +402,16 @@ public partial class MainWindowViewModel : ViewModelBase
         Dispatcher.UIThread.Post(() =>
         {
             ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}";
+            if (update.Total <= 0)
+            {
+                IsProgressIndeterminate = true;
+                ProgressPercent = 0;
+            }
+            else
+            {
+                IsProgressIndeterminate = false;
+                ProgressPercent = (update.Current * 100.0) / update.Total;
+            }
             if (!string.IsNullOrWhiteSpace(update.Message))
             {
                 RunStage = update.Message;
