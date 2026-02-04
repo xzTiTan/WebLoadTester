@@ -15,6 +15,21 @@
         <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
+    <Style Selector="TextBox.field-control">
+        <Setter Property="MaxWidth" Value="520" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="ComboBox.field-control">
+        <Setter Property="MaxWidth" Value="520" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="NumericUpDown.field-control">
+        <Setter Property="MaxWidth" Value="220" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
     <Style Selector="TextBlock.status-line">
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
