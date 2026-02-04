@@ -1,12 +1,15 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -113,6 +116,9 @@ public partial class MainWindowViewModel : ViewModelBase
             Registry.GetByFamily(TestFamily.HttpTesting).Select(CreateModuleItem)));
         NetFamily = new ModuleFamilyViewModel("Сеть и безопасность", new ObservableCollection<ModuleItemViewModel>(
             Registry.GetByFamily(TestFamily.NetSec).Select(CreateModuleItem)));
+        UiFamily.PropertyChanged += OnFamilyPropertyChanged;
+        HttpFamily.PropertyChanged += OnFamilyPropertyChanged;
+        NetFamily.PropertyChanged += OnFamilyPropertyChanged;
 
         RunProfile = new RunProfileViewModel(_runStore);
         TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
@@ -211,6 +217,10 @@ public partial class MainWindowViewModel : ViewModelBase
             _ => null
         };
     }
+
+    public ModuleItemViewModel? SelectedModule => GetSelectedModule();
+
+    partial void OnSelectedTabIndexChanged(int value) => OnPropertyChanged(nameof(SelectedModule));
 
     /// <summary>
     /// Запускает выбранный модуль с учётом настроек и уведомлений.
@@ -346,8 +356,19 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task CopyLogAsync()
     {
-        if (Avalonia.Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
-            desktop.MainWindow?.Clipboard is not IClipboard clipboard)
+        if (Avalonia.Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return;
+        }
+
+        var mainWindow = desktop.MainWindow;
+        IClipboard? clipboard = mainWindow?.Clipboard;
+        if (clipboard == null && mainWindow != null)
+        {
+            clipboard = TopLevel.GetTopLevel(mainWindow)?.Clipboard;
+        }
+
+        if (clipboard == null)
         {
             return;
         }
@@ -602,6 +623,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         DatabaseStatus = status;
         IsDatabaseOk = isOk;
+    }
+
+    private void OnFamilyPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ModuleFamilyViewModel.SelectedModule))
+        {
+            OnPropertyChanged(nameof(SelectedModule));
+        }
     }
 
     private async Task SendTelegramAsync(string runId, Func<Task> action)

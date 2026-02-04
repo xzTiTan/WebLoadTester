@@ -102,6 +102,11 @@ public class UiScenarioModule : ITestModule
         for (var index = 0; index < totalSteps; index++)
         {
             var step = s.Steps[index];
+            var effectiveAction = step.Action;
+            if (effectiveAction == UiStepAction.Fill && string.IsNullOrWhiteSpace(step.Text))
+            {
+                effectiveAction = UiStepAction.Click;
+            }
             var sw = Stopwatch.StartNew();
             var success = true;
             string? errorMessage = null;
@@ -110,12 +115,6 @@ public class UiScenarioModule : ITestModule
             try
             {
                 var timeout = step.TimeoutMs > 0 ? step.TimeoutMs : s.TimeoutMs;
-                var effectiveAction = step.Action;
-                if (step.Action != UiStepAction.Delay && step.Action != UiStepAction.WaitForSelector)
-                {
-                    effectiveAction = string.IsNullOrWhiteSpace(step.Text) ? UiStepAction.Click : UiStepAction.Fill;
-                }
-
                 switch (effectiveAction)
                 {
                     case UiStepAction.Delay:
