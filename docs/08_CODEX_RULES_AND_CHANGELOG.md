@@ -1,7 +1,7 @@
 
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v1.7 03.02.2026
+**Версия:** v1.8 10.02.2026
 
 **Назначение:** описывает guardrails, типовые ошибки и журнал изменений документации.  
 **См. также:** [00_INDEX.md](00_INDEX.md), [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [03_UI_SPEC.md](03_UI_SPEC.md).
@@ -113,3 +113,10 @@ TODAY = 03.02.2026 (Europe/Berlin). НЕ ставь будущие даты.
 - Документация приведена в соответствие с фактической структурой кода (Core/Modules/Infrastructure/Presentation).
 - Зафиксированы DDL таблиц SQLite и формат отчёта report.json.
 - Обновлены README.md, AGENTS.md и добавлен docs/00_INDEX.md как стабильный индекс якорных документов.
+
+### v1.8 10.02.2026
+- Удалён неиспользуемый `TestLibraryViewModel`; модульный workspace работает через `ModuleConfigViewModel`.
+- Исправлен compiled binding в `HttpFunctionalSettingsView`: список HTTP методов задаётся через `x:Static HttpEndpoint.MethodOptions`.
+- `RunOrchestrator` применяет `RunProfile.TimeoutSeconds` как per-iteration timeout через linked CTS, таймаут возвращается как failed result с сообщением `Operation timed out`.
+- Нормализованы настройки UI/Net модулей: `UiScenarioSettings` и `UiSnapshotSettings` очищены от дублей run profile, `AvailabilityModule` выполняет одну probe за вызов.
+- В `ModuleWorkspaceView` добавлены поля `Headless` и `ScreenshotsPolicy` в секции параметров запуска; метрики переведены на безопасные строковые свойства без `StringFormat`.

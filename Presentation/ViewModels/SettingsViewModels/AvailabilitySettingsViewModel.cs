@@ -19,9 +19,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
         target = settings.Target;
         targetType = settings.TargetType;
         intervalSeconds = settings.IntervalSeconds;
-        durationSeconds = settings.DurationSeconds;
         timeoutMs = settings.TimeoutMs;
-        failThreshold = settings.FailThreshold;
     }
 
     public override object Settings => _settings;
@@ -36,9 +34,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
         Target = s.Target;
         TargetType = s.TargetType;
         IntervalSeconds = s.IntervalSeconds;
-        DurationSeconds = s.DurationSeconds;
         TimeoutMs = s.TimeoutMs;
-        FailThreshold = s.FailThreshold;
     }
 
     [ObservableProperty]
@@ -47,40 +43,31 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private string targetType = "Http";
 
+    public string[] TargetTypeOptions { get; } = { "Http", "Tcp" };
+
     [ObservableProperty]
     private int intervalSeconds;
 
     [ObservableProperty]
-    private int durationSeconds;
-
-    [ObservableProperty]
     private int timeoutMs;
-
-    [ObservableProperty]
-    private int failThreshold;
 
     /// <summary>
     /// Синхронизирует URL цели.
     /// </summary>
     partial void OnTargetChanged(string value) => _settings.Target = value;
+
     /// <summary>
     /// Синхронизирует тип цели (HTTP/TCP).
     /// </summary>
     partial void OnTargetTypeChanged(string value) => _settings.TargetType = value;
+
     /// <summary>
     /// Синхронизирует интервал проверок.
     /// </summary>
     partial void OnIntervalSecondsChanged(int value) => _settings.IntervalSeconds = value;
-    /// <summary>
-    /// Синхронизирует длительность теста.
-    /// </summary>
-    partial void OnDurationSecondsChanged(int value) => _settings.DurationSeconds = value;
+
     /// <summary>
     /// Синхронизирует таймаут запросов.
     /// </summary>
     partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
-    /// <summary>
-    /// Синхронизирует порог последовательных ошибок.
-    /// </summary>
-    partial void OnFailThresholdChanged(int value) => _settings.FailThreshold = value;
 }

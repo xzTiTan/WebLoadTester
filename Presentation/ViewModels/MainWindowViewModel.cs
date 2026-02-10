@@ -794,8 +794,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _ => throw new NotSupportedException("Unknown module")
         };
 
-        var testLibrary = new TestLibraryViewModel(_runStore, module, settingsVm);
         var moduleConfig = new ModuleConfigViewModel(_moduleConfigService, _testCaseRepository, module, settingsVm, RunProfile);
-        return new ModuleItemViewModel(module, settingsVm, testLibrary, moduleConfig);
+        return new ModuleItemViewModel(module, settingsVm, moduleConfig);
     }
 }

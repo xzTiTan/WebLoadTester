@@ -185,6 +185,16 @@
                                     <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                                 </Grid>
                                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                    <TextBlock Text="Headless" Classes="field-label" />
+                                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                    <TextBlock Text="Скриншоты" Classes="field-label" />
+                                    <ComboBox Classes="field-control"
+                                              ItemsSource="{Binding ScreenshotsPolicyOptions}"
+                                              SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                     <TextBlock Text="HTML-отчёт" Classes="field-label" />
                                     <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
                                 </Grid>
@@ -230,13 +240,13 @@
                                         <TextBlock Text="Статус" Classes="muted" />
                                         <TextBlock Grid.Column="1" Text="{Binding Status}" />
                                         <TextBlock Grid.Row="1" Text="Длительность" Classes="muted" />
-                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Metrics.TotalDurationMs, StringFormat='{}{0:F0} мс'}" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalDurationText}" />
                                         <TextBlock Grid.Row="2" Text="Ошибки" Classes="muted" />
                                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Metrics.FailedItems}" />
                                         <TextBlock Grid.Row="3" Text="Среднее" Classes="muted" />
-                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Metrics.AverageMs, StringFormat='{}{0:F1} мс'}" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding AverageText}" />
                                         <TextBlock Grid.Row="4" Text="P95" Classes="muted" />
-                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Metrics.P95Ms, StringFormat='{}{0:F1} мс'}" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding P95Text}" />
                                     </Grid>
                                 </DataTemplate>
                             </ContentControl.ContentTemplate>

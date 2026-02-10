@@ -263,9 +263,34 @@ public class RunOrchestrator
 
     private async Task<ModuleResult> ExecuteSafelyAsync(ITestModule module, object settings, RunContext context, CancellationToken ct, string iterationLabel)
     {
+        using var opCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if (context.Profile.TimeoutSeconds > 0)
+        {
+            opCts.CancelAfter(TimeSpan.FromSeconds(context.Profile.TimeoutSeconds));
+        }
+
         try
         {
-            return await module.ExecuteAsync(settings, context, ct);
+            return await module.ExecuteAsync(settings, context, opCts.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested && opCts.IsCancellationRequested)
+        {
+            var timeoutMessage = "Operation timed out";
+            context.Log.Error($"Iteration {iterationLabel} failed: {timeoutMessage}");
+            return new ModuleResult
+            {
+                Status = TestStatus.Failed,
+                Results = new List<ResultBase>
+                {
+                    new CheckResult($"Iteration {iterationLabel}")
+                    {
+                        Success = false,
+                        DurationMs = context.Profile.TimeoutSeconds * 1000,
+                        ErrorType = "Timeout",
+                        ErrorMessage = timeoutMessage
+                    }
+                }
+            };
         }
         catch (OperationCanceledException)
         {

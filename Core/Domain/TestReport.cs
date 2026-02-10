@@ -26,6 +26,10 @@ public class TestReport
     public MetricsSummary Metrics { get; set; } = new();
     public ArtifactInfo Artifacts { get; set; } = new();
     public List<ModuleArtifact> ModuleArtifacts { get; set; } = new();
+
+    public string TotalDurationText => $"{Metrics.TotalDurationMs:F0} мс";
+    public string AverageText => $"{Metrics.AverageMs:F1} мс";
+    public string P95Text => $"{Metrics.P95Ms:F1} мс";
 }
 
 /// <summary>

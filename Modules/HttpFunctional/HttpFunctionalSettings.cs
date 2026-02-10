@@ -18,6 +18,8 @@ public class HttpFunctionalSettings
 /// </summary>
 public class HttpEndpoint
 {
+    public static IReadOnlyList<string> MethodOptions { get; } = new[] { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" };
+
     public string Name { get; set; } = string.Empty;
     public string Path { get; set; } = "/";
     public string Method { get; set; } = HttpMethod.Get.Method;

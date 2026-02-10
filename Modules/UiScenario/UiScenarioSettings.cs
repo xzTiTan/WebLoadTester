@@ -9,13 +9,9 @@ namespace WebLoadTester.Modules.UiScenario;
 public class UiScenarioSettings
 {
     public string TargetUrl { get; set; } = "https://example.com";
-    public int TotalRuns { get; set; } = 1;
-    public int Concurrency { get; set; } = 1;
-    public bool Headless { get; set; } = true;
     public StepErrorPolicy ErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
     public List<UiStep> Steps { get; set; } = new();
     public int TimeoutMs { get; set; } = 10000;
-    public ScreenshotMode ScreenshotMode { get; set; } = ScreenshotMode.OnFailure;
 }
 
 /// <summary>
@@ -39,14 +35,4 @@ public enum UiStepAction
     Click,
     Fill,
     Delay
-}
-
-/// <summary>
-/// Режим снятия скриншотов.
-/// </summary>
-public enum ScreenshotMode
-{
-    Off,
-    OnFailure,
-    Always
 }

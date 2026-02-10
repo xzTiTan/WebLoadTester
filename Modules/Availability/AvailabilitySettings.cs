@@ -7,8 +7,6 @@ public class AvailabilitySettings
 {
     public string Target { get; set; } = "https://example.com";
     public string TargetType { get; set; } = "Http";
-    public int IntervalSeconds { get; set; } = 5;
-    public int DurationSeconds { get; set; } = 60;
+    public int IntervalSeconds { get; set; } = 0;
     public int TimeoutMs { get; set; } = 5000;
-    public int FailThreshold { get; set; } = 3;
 }

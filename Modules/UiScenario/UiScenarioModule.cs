@@ -63,6 +63,14 @@ public class UiScenarioModule : ITestModule
             errors.Add("At least one step is required");
         }
 
+        for (var i = 0; i < s.Steps.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(s.Steps[i].Selector))
+            {
+                errors.Add($"Step {i + 1}: Selector is required");
+            }
+        }
+
         return errors;
     }
 

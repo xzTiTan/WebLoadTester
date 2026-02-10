@@ -44,7 +44,7 @@
                             </dg:DataGridTemplateColumn.CellTemplate>
                             <dg:DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="modules:HttpEndpoint">
-                                    <ComboBox ItemsSource="{Binding DataContext.MethodOptions, ElementName=Root}"
+                                    <ComboBox ItemsSource="{x:Static modules:HttpEndpoint.MethodOptions}"
                                               SelectedItem="{Binding Method, Mode=TwoWay}" />
                                 </DataTemplate>
                             </dg:DataGridTemplateColumn.CellEditingTemplate>

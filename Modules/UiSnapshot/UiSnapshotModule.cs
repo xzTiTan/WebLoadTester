@@ -34,7 +34,6 @@ public class UiSnapshotModule : ITestModule
                 new() { Url = "https://example.com", Tag = "Example" }
             },
             WaitUntil = "load",
-            Headless = true,
             TimeoutSeconds = 30,
             ScreenshotFormat = "png"
         };
@@ -113,7 +112,7 @@ public class UiSnapshotModule : ITestModule
         var results = new List<ResultBase>();
         var completed = 0;
         var total = s.Targets.Count;
-        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = s.Headless });
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = ctx.Profile.Headless });
 
         foreach (var target in s.Targets)
         {

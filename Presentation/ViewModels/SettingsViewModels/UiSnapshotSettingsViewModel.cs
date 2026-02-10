@@ -21,7 +21,6 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         _settings = settings;
         Targets = new ObservableCollection<SnapshotTarget>(settings.Targets);
         waitUntil = settings.WaitUntil;
-        headless = settings.Headless;
         timeoutSeconds = settings.TimeoutSeconds;
         screenshotFormat = settings.ScreenshotFormat;
         viewportWidth = settings.ViewportWidth;
@@ -46,7 +45,6 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         }
 
         WaitUntil = s.WaitUntil;
-        Headless = s.Headless;
         TimeoutSeconds = s.TimeoutSeconds;
         ScreenshotFormat = s.ScreenshotFormat;
         ViewportWidth = s.ViewportWidth;
@@ -67,9 +65,6 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     private string waitUntil = "load";
 
     [ObservableProperty]
-    private bool headless = true;
-
-    [ObservableProperty]
     private int timeoutSeconds = 30;
 
     [ObservableProperty]
@@ -88,10 +83,6 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     /// Синхронизирует режим ожидания загрузки.
     /// </summary>
     partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
-    /// <summary>
-    /// Синхронизирует Headless.
-    /// </summary>
-    partial void OnHeadlessChanged(bool value) => _settings.Headless = value;
     /// <summary>
     /// Синхронизирует таймаут.
     /// </summary>

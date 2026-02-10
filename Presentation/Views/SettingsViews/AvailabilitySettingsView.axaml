@@ -13,26 +13,17 @@
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Тип цели" Classes="field-label" />
-                    <ComboBox Classes="field-control" SelectedItem="{Binding TargetType, Mode=TwoWay}">
-                        <ComboBoxItem>HTTP</ComboBoxItem>
-                        <ComboBoxItem>TCP</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox Classes="field-control"
+                              ItemsSource="{Binding TargetTypeOptions}"
+                              SelectedItem="{Binding TargetType, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Интервал (сек)" Classes="field-label" />
+                    <TextBlock Text="Интервал (сек, опц.)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Длительность (сек)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding DurationSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (мс)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Порог ошибок" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding FailThreshold, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 </Grid>
             </StackPanel>
         </Border>
