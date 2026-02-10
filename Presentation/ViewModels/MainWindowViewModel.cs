@@ -17,6 +17,7 @@ using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Core.Services;
 using WebLoadTester.Core.Services.ReportWriters;
+using WebLoadTester.Infrastructure.Playwright;
 using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Infrastructure.Telegram;
 using WebLoadTester.Modules.Availability;
@@ -183,6 +184,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private int selectedTabIndex;
 
+    [ObservableProperty]
+    private bool isInstallingPlaywright;
+
+    [ObservableProperty]
+    private string playwrightInstallMessage = string.Empty;
+
     private double _progressPercent;
     public double ProgressPercent
     {
@@ -200,6 +207,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
     public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
     public bool ShowRunHint => !IsRunning;
+    public bool ShowPlaywrightInstallBanner => SelectedModule?.Module.Id == "ui.scenario" && !PlaywrightFactory.HasBrowsersInstalled();
+    public bool CanInstallPlaywright => !IsInstallingPlaywright;
 
     partial void OnIsDatabaseOkChanged(bool value) => OnPropertyChanged(nameof(DatabaseStatusBadgeClass));
     partial void OnIsTelegramConfiguredChanged(bool value) => OnPropertyChanged(nameof(TelegramStatusBadgeClass));
@@ -220,7 +229,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ModuleItemViewModel? SelectedModule => GetSelectedModule();
 
-    partial void OnSelectedTabIndexChanged(int value) => OnPropertyChanged(nameof(SelectedModule));
+    partial void OnSelectedTabIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SelectedModule));
+        OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+    }
 
     /// <summary>
     /// Запускает выбранный модуль с учётом настроек и уведомлений.
@@ -272,6 +285,7 @@ public partial class MainWindowViewModel : ViewModelBase
             await SendTelegramAsync(runId, () => _telegramPolicy.NotifyStartAsync(moduleItem.DisplayName, runId, _runCts.Token));
         }
 
+        var finalProgressText = ProgressText;
         try
         {
             var preflight = CreatePreflightSettings(moduleItem.SettingsViewModel.Settings);
@@ -279,19 +293,29 @@ public partial class MainWindowViewModel : ViewModelBase
             var report = await _orchestrator.StartAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token,
                 preflightModule, preflight);
             moduleItem.LastReport = report;
+            finalProgressText = "Прогресс: завершено";
             if (_telegramPolicy.IsEnabled)
             {
                 await SendTelegramAsync(runId, () => _telegramPolicy.NotifyFinishAsync(report, _runCts.Token));
             }
         }
+        catch (OperationCanceledException)
+        {
+            finalProgressText = "Прогресс: отменено";
+            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync("Операция отменена", CancellationToken.None));
+        }
         catch (Exception ex)
         {
+            finalProgressText = $"Прогресс: ошибка ({ex.Message})";
             await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync(ex.Message, _runCts.Token));
         }
         finally
         {
             await logSink.CompleteAsync();
             IsRunning = false;
+            IsProgressIndeterminate = false;
+            ProgressPercent = 0;
+            ProgressText = finalProgressText;
             StatusText = "Статус: ожидание";
             RunStage = "Готово";
             RunsTab.RefreshCommand.Execute(null);
@@ -341,6 +365,31 @@ public partial class MainWindowViewModel : ViewModelBase
 
         ClearLog();
         await StartAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanInstallPlaywright))]
+    private async Task InstallPlaywrightBrowsersAsync()
+    {
+        IsInstallingPlaywright = true;
+        PlaywrightInstallMessage = "Установка Chromium...";
+        _logBus.Info("[Playwright] Installing Chromium browser...");
+
+        try
+        {
+            await PlaywrightFactory.InstallChromiumAsync(CancellationToken.None);
+            PlaywrightInstallMessage = "Chromium установлен.";
+            _logBus.Info("[Playwright] Chromium installed successfully.");
+        }
+        catch (Exception ex)
+        {
+            PlaywrightInstallMessage = $"Не удалось установить Chromium: {ex.Message}";
+            _logBus.Error($"[Playwright] Install failed: {ex.Message}");
+        }
+        finally
+        {
+            IsInstallingPlaywright = false;
+            OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+        }
     }
 
     /// <summary>
@@ -406,6 +455,12 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshFilteredLogs();
     }
 
+    partial void OnIsInstallingPlaywrightChanged(bool value)
+    {
+        InstallPlaywrightBrowsersCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanInstallPlaywright));
+    }
+
     /// <summary>
     /// Считывает логи из шины и добавляет их в UI.
     /// </summary>
@@ -458,14 +513,16 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Dispatcher.UIThread.Post(() =>
         {
-            ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}";
             if (update.Total <= 0)
             {
+                var suffix = string.IsNullOrWhiteSpace(update.Message) ? string.Empty : $" {update.Message}";
+                ProgressText = $"Итераций: {Math.Max(update.Current, 0)} (duration){suffix}";
                 IsProgressIndeterminate = true;
                 ProgressPercent = 0;
             }
             else
             {
+                ProgressText = $"Прогресс: {update.Current}/{update.Total} {update.Message}";
                 IsProgressIndeterminate = false;
                 ProgressPercent = (update.Current * 100.0) / update.Total;
             }
@@ -630,6 +687,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (e.PropertyName == nameof(ModuleFamilyViewModel.SelectedModule))
         {
             OnPropertyChanged(nameof(SelectedModule));
+            OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
         }
     }
 

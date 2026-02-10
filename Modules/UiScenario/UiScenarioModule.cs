@@ -81,22 +81,30 @@ public class UiScenarioModule : ITestModule
     {
         var s = (UiScenarioSettings)settings;
         var result = new ModuleResult();
+        var totalSteps = s.Steps.Count;
+        var profileTimeoutMs = Math.Max(1, ctx.Profile.TimeoutSeconds) * 1000;
+        var scenarioTimeoutMs = s.TimeoutMs > 0 ? s.TimeoutMs : profileTimeoutMs;
+        var effectiveTimeoutMs = Math.Min(scenarioTimeoutMs, profileTimeoutMs);
+        var normalizedTargetUrl = NormalizeUrl(s.TargetUrl);
 
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
-            ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
+            var browsersPath = PlaywrightFactory.GetBrowsersPath();
+            ctx.Log.Error($"[UiScenario] Chromium browser not found. Install browsers into: {browsersPath}");
             result.Status = TestStatus.Failed;
             result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
-                ErrorMessage = "Install browsers"
+                ErrorMessage = $"Chromium is not installed. Run playwright install chromium (path: {browsersPath})."
             });
             return result;
         }
 
         var results = new List<ResultBase>();
+        ctx.Progress.Report(new ProgressUpdate(0, totalSteps + 2, "Запуск браузера"));
+        ctx.Log.Info($"[UiScenario] Launching browser (Headless={ctx.Profile.Headless})...");
 
         using var playwright = await PlaywrightFactory.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -104,17 +112,22 @@ public class UiScenarioModule : ITestModule
             Headless = ctx.Profile.Headless
         });
         var page = await browser.NewPageAsync();
-        await page.GotoAsync(s.TargetUrl, new PageGotoOptions { WaitUntil = WaitUntilState.Load });
+        page.SetDefaultTimeout(effectiveTimeoutMs);
+        page.SetDefaultNavigationTimeout(effectiveTimeoutMs);
 
-        var totalSteps = s.Steps.Count;
+        ctx.Progress.Report(new ProgressUpdate(1, totalSteps + 2, "Открытие страницы"));
+        ctx.Log.Info($"[UiScenario] Navigating to {normalizedTargetUrl}");
+        await page.GotoAsync(normalizedTargetUrl, new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.DOMContentLoaded,
+            Timeout = effectiveTimeoutMs
+        });
+
         for (var index = 0; index < totalSteps; index++)
         {
             var step = s.Steps[index];
-            var effectiveAction = step.Action;
-            if (effectiveAction == UiStepAction.Fill && string.IsNullOrWhiteSpace(step.Text))
-            {
-                effectiveAction = UiStepAction.Click;
-            }
+            var isFill = !string.IsNullOrWhiteSpace(step.Text);
+            var actionText = isFill ? "Fill" : "Click";
             var sw = Stopwatch.StartNew();
             var success = true;
             string? errorMessage = null;
@@ -122,36 +135,21 @@ public class UiScenarioModule : ITestModule
             string? screenshotPath = null;
             try
             {
-                var timeout = step.TimeoutMs > 0 ? step.TimeoutMs : s.TimeoutMs;
-                switch (effectiveAction)
+                var timeout = Math.Min(step.TimeoutMs > 0 ? step.TimeoutMs : effectiveTimeoutMs, effectiveTimeoutMs);
+                ctx.Log.Info($"[UiScenario] Step {index + 1}: {actionText} {step.Selector}");
+                if (isFill)
                 {
-                    case UiStepAction.Delay:
-                        if (step.DelayMs > 0)
-                        {
-                            await Task.Delay(step.DelayMs, ct);
-                        }
-                        break;
-                    case UiStepAction.WaitForSelector:
-                        await page.WaitForSelectorAsync(step.Selector, new PageWaitForSelectorOptions
-                        {
-                            Timeout = timeout
-                        });
-                        break;
-                    case UiStepAction.Click:
-                        await page.ClickAsync(step.Selector, new PageClickOptions
-                        {
-                            Timeout = timeout
-                        });
-                        break;
-                    case UiStepAction.Fill:
-                        if (!string.IsNullOrWhiteSpace(step.Text))
-                        {
-                            await page.FillAsync(step.Selector, step.Text, new PageFillOptions
-                            {
-                                Timeout = timeout
-                            });
-                        }
-                        break;
+                    await page.FillAsync(step.Selector, step.Text!, new PageFillOptions
+                    {
+                        Timeout = timeout
+                    });
+                }
+                else
+                {
+                    await page.ClickAsync(step.Selector, new PageClickOptions
+                    {
+                        Timeout = timeout
+                    });
                 }
             }
             catch (Exception ex)
@@ -159,6 +157,7 @@ public class UiScenarioModule : ITestModule
                 success = false;
                 errorMessage = ex.Message;
                 errorType = ex.GetType().Name;
+                ctx.Log.Error($"[UiScenario] Step {index + 1} failed: {errorType}: {errorMessage}");
             }
             finally
             {
@@ -176,12 +175,12 @@ public class UiScenarioModule : ITestModule
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = errorType,
                     ErrorMessage = errorMessage,
-                    Action = effectiveAction.ToString(),
+                    Action = actionText,
                     Selector = step.Selector,
                     ScreenshotPath = screenshotPath
                 });
 
-                ctx.Progress.Report(new ProgressUpdate(index + 1, totalSteps, "UI сценарий"));
+                ctx.Progress.Report(new ProgressUpdate(index + 2, totalSteps + 2, $"Шаг {index + 1}/{totalSteps}"));
             }
 
             if (!success)
@@ -206,6 +205,18 @@ public class UiScenarioModule : ITestModule
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static string NormalizeUrl(string url)
+    {
+        var trimmed = (url ?? string.Empty).Trim();
+        if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return trimmed;
+        }
+
+        return $"https://{trimmed}";
     }
 
     private static async Task<string?> SaveScreenshotAsync(IRunContext ctx, IPage page, string fileName)

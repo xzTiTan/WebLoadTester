@@ -6,7 +6,7 @@
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
         <ContentControl x:Name="VmProxy"
                         Width="0"
                         Height="0"
@@ -51,8 +51,25 @@
             </Grid>
         </Border>
 
+        <Border Grid.Row="1"
+                Classes="warning-panel"
+                DataContext="{Binding DataContext, ElementName=VmProxy}"
+                x:DataType="root:MainWindowViewModel"
+                IsVisible="{Binding ShowPlaywrightInstallBanner}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <TextBlock Text="Chromium (Playwright) не установлен. UI сценарий завершится ошибкой, пока браузер не установлен."
+                           TextWrapping="Wrap" />
+                <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
+                    <Button Content="Install Chromium (Playwright)"
+                            Command="{Binding InstallPlaywrightBrowsersCommand}"
+                            IsEnabled="{Binding CanInstallPlaywright}" />
+                    <TextBlock Text="{Binding PlaywrightInstallMessage}" Classes="status-line" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Row 2: Module selection -->
-        <Border Grid.Row="1" Classes="app-bar">
+        <Border Grid.Row="2" Classes="app-bar">
             <ListBox ItemsSource="{Binding Modules}"
                      SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
                      Classes="segmented-bar"
@@ -71,7 +88,7 @@
         </Border>
 
         <!-- Row 3: Module info -->
-        <Border Grid.Row="2" Classes="app-bar">
+        <Border Grid.Row="3" Classes="app-bar">
             <Grid ColumnDefinitions="200,*" ColumnSpacing="16">
                 <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" />
                 <TextBlock Grid.Column="1"
@@ -82,7 +99,7 @@
         </Border>
 
         <!-- Body -->
-        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
             <Grid MaxWidth="1200"
                   HorizontalAlignment="Center"
                   ColumnDefinitions="560,*"
