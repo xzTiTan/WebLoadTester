@@ -71,6 +71,7 @@ public class HttpAssetsModule : ITestModule
     {
         var s = (HttpAssetsSettings)settings;
         var result = new ModuleResult();
+        ctx.Log.Info($"[HttpAssets] Assets={s.Assets.Count}");
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();

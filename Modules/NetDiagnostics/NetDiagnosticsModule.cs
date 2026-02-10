@@ -52,6 +52,10 @@ public class NetDiagnosticsModule : ITestModule
     {
         var s = (NetDiagnosticsSettings)settings;
         var result = new ModuleResult();
+        var totalChecks = (s.EnableDns ? 1 : 0) + (s.EnableTcp ? s.Ports.Count : 0) + (s.EnableTls ? 1 : 0);
+        var current = 0;
+        ctx.Progress.Report(new ProgressUpdate(0, Math.Max(totalChecks, 1), "Сетевая диагностика"));
+        ctx.Log.Info($"[NetDiagnostics] Host={s.Hostname}, checks={totalChecks}");
 
         var results = new List<ResultBase>();
 
@@ -66,6 +70,8 @@ public class NetDiagnosticsModule : ITestModule
                 ErrorType = success ? null : "DNS",
                 ErrorMessage = success ? null : details
             });
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "DNS"));
         }
 
         if (s.EnableTcp)
@@ -81,6 +87,8 @@ public class NetDiagnosticsModule : ITestModule
                     ErrorType = success ? null : "TCP",
                     ErrorMessage = success ? null : details
                 });
+                current++;
+                ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), $"TCP:{port}"));
             }
         }
 
@@ -95,6 +103,8 @@ public class NetDiagnosticsModule : ITestModule
                 ErrorType = success ? null : "TLS",
                 ErrorMessage = success ? null : details
             });
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "TLS"));
         }
 
         result.Results = results;

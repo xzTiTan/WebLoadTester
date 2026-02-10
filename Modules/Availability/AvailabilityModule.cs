@@ -55,6 +55,8 @@ public class AvailabilityModule : ITestModule
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (AvailabilitySettings)settings;
+        ctx.Log.Info($"[Availability] Probing {s.TargetType}:{s.Target}");
+        ctx.Progress.Report(new ProgressUpdate(0, 1, "Проверка доступности"));
         var sw = Stopwatch.StartNew();
         var success = false;
         string? error = null;
@@ -102,11 +104,6 @@ public class AvailabilityModule : ITestModule
             ErrorMessage = error,
             Details = success ? "Available" : "Unavailable"
         };
-
-        if (s.IntervalSeconds > 0)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(s.IntervalSeconds), ct);
-        }
 
         ctx.Progress.Report(new ProgressUpdate(1, 1, DisplayName));
 

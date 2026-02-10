@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -53,16 +54,44 @@ public class SecurityBaselineModule : ITestModule
     {
         var s = (SecurityBaselineSettings)settings;
         var result = new ModuleResult();
+        var totalChecks = (s.CheckHsts ? 1 : 0) + (s.CheckContentTypeOptions ? 1 : 0) + (s.CheckFrameOptions ? 1 : 0)
+            + (s.CheckContentSecurityPolicy ? 1 : 0) + (s.CheckReferrerPolicy ? 1 : 0) + (s.CheckPermissionsPolicy ? 1 : 0)
+            + (s.CheckRedirectHttpToHttps ? 1 : 0);
+        var current = 0;
+        ctx.Progress.Report(new ProgressUpdate(0, Math.Max(totalChecks, 1), "Security baseline старт"));
+        ctx.Log.Info($"[SecurityBaseline] Target={s.Url}");
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(10));
         var results = new List<ResultBase>();
+        HttpResponseMessage response;
+        var requestSw = Stopwatch.StartNew();
+        try
+        {
+            response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, s.Url), ct);
+            requestSw.Stop();
+        }
+        catch (Exception ex)
+        {
+            requestSw.Stop();
+            results.Add(new CheckResult("HTTP request")
+            {
+                Success = false,
+                DurationMs = requestSw.Elapsed.TotalMilliseconds,
+                ErrorType = ex.GetType().Name,
+                ErrorMessage = ex.Message
+            });
 
-        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, s.Url), ct);
+            result.Results = results;
+            result.Status = TestStatus.Failed;
+            return result;
+        }
         var headers = response.Headers;
 
         if (s.CheckHsts && s.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             AddHeaderCheck(results, "Strict-Transport-Security", headers.Contains("Strict-Transport-Security"));
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "HSTS"));
         }
 
         if (s.CheckContentTypeOptions)
@@ -72,6 +101,8 @@ public class SecurityBaselineModule : ITestModule
                 : string.Empty;
             var ok = value.Contains("nosniff", StringComparison.OrdinalIgnoreCase);
             AddHeaderCheck(results, "X-Content-Type-Options", ok, ok ? null : "Expected nosniff");
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "X-Content-Type-Options"));
         }
 
         if (s.CheckFrameOptions)
@@ -82,21 +113,29 @@ public class SecurityBaselineModule : ITestModule
             var ok = value.Contains("DENY", StringComparison.OrdinalIgnoreCase) ||
                      value.Contains("SAMEORIGIN", StringComparison.OrdinalIgnoreCase);
             AddHeaderCheck(results, "X-Frame-Options", ok, ok ? null : "Expected DENY or SAMEORIGIN");
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "X-Frame-Options"));
         }
 
         if (s.CheckContentSecurityPolicy)
         {
             AddHeaderCheck(results, "Content-Security-Policy", headers.Contains("Content-Security-Policy"));
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Content-Security-Policy"));
         }
 
         if (s.CheckReferrerPolicy)
         {
             AddHeaderCheck(results, "Referrer-Policy", headers.Contains("Referrer-Policy"));
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Referrer-Policy"));
         }
 
         if (s.CheckPermissionsPolicy)
         {
             AddHeaderCheck(results, "Permissions-Policy", headers.Contains("Permissions-Policy"));
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Permissions-Policy"));
         }
 
         if (s.CheckRedirectHttpToHttps && s.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
@@ -108,6 +147,8 @@ public class SecurityBaselineModule : ITestModule
             var location = httpResponse.Headers.Location?.ToString() ?? string.Empty;
             var httpsRedirect = redirect && location.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
             AddHeaderCheck(results, "HTTP->HTTPS", httpsRedirect, httpsRedirect ? null : "No HTTPS redirect");
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "HTTP->HTTPS"));
         }
 
         result.Results = results;

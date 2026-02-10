@@ -80,6 +80,7 @@ public class HttpFunctionalModule : ITestModule
     {
         var s = (HttpFunctionalSettings)settings;
         var result = new ModuleResult();
+        ctx.Log.Info($"[HttpFunctional] BaseUrl={s.BaseUrl}, endpoints={s.Endpoints.Count}");
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();
         var current = 0;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -54,9 +55,14 @@ public class PreflightModule : ITestModule
     {
         var s = (PreflightSettings)settings;
         var result = new ModuleResult();
+        var normalizedTarget = NormalizeTarget(s.Target);
+        var totalChecks = (s.CheckDns ? 1 : 0) + (s.CheckTcp ? 1 : 0) + (s.CheckTls ? 1 : 0) + (s.CheckHttp ? 1 : 0);
+        var current = 0;
+        ctx.Progress.Report(new ProgressUpdate(0, Math.Max(totalChecks, 1), "Preflight старт"));
+        ctx.Log.Info($"[Preflight] Target={normalizedTarget}");
 
         var results = new List<ResultBase>();
-        var targetUri = new Uri(s.Target);
+        var targetUri = new Uri(normalizedTarget);
 
         if (s.CheckDns)
         {
@@ -69,6 +75,8 @@ public class PreflightModule : ITestModule
                 ErrorType = success ? null : "DNS",
                 ErrorMessage = success ? null : details
             });
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Preflight DNS"));
         }
 
         if (s.CheckTcp)
@@ -83,6 +91,8 @@ public class PreflightModule : ITestModule
                 ErrorType = success ? null : "TCP",
                 ErrorMessage = success ? null : details
             });
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Preflight TCP"));
         }
 
         if (s.CheckTls && targetUri.Scheme == "https")
@@ -96,18 +106,22 @@ public class PreflightModule : ITestModule
                 ErrorType = success ? null : "TLS",
                 ErrorMessage = success ? null : details
             });
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Preflight TLS"));
         }
 
         if (s.CheckHttp)
         {
             using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(5));
+            var sw = Stopwatch.StartNew();
             try
             {
-                var response = await client.GetAsync(s.Target, ct);
+                var response = await client.GetAsync(normalizedTarget, ct);
+                sw.Stop();
                 results.Add(new PreflightResult("HTTP")
                 {
                     Success = response.IsSuccessStatusCode,
-                    DurationMs = 0,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
                     StatusCode = (int)response.StatusCode,
                     ErrorType = response.IsSuccessStatusCode ? null : "HTTP",
                     ErrorMessage = response.IsSuccessStatusCode ? null : response.StatusCode.ToString()
@@ -115,18 +129,34 @@ public class PreflightModule : ITestModule
             }
             catch (Exception ex)
             {
+                sw.Stop();
                 results.Add(new PreflightResult("HTTP")
                 {
                     Success = false,
-                    DurationMs = 0,
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = ex.GetType().Name,
                     ErrorMessage = ex.Message
                 });
             }
+
+            current++;
+            ctx.Progress.Report(new ProgressUpdate(current, Math.Max(totalChecks, 1), "Preflight HTTP"));
         }
 
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static string NormalizeTarget(string target)
+    {
+        var trimmed = (target ?? string.Empty).Trim();
+        if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return trimmed;
+        }
+
+        return $"https://{trimmed}";
     }
 }

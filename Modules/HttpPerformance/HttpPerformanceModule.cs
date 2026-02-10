@@ -86,6 +86,7 @@ public class HttpPerformanceModule : ITestModule
     {
         var s = (HttpPerformanceSettings)settings;
         var result = new ModuleResult();
+        ctx.Log.Info($"[HttpPerformance] BaseUrl={s.BaseUrl}, endpoints={s.Endpoints.Count}, parallelism={ctx.Profile.Parallelism}");
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();

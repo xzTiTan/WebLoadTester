@@ -78,14 +78,15 @@ public class UiTimingModule : ITestModule
 
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
-            ctx.Log.Error("Playwright browsers not found. Install browsers into ./browsers.");
+            var browsersPath = PlaywrightFactory.GetBrowsersPath();
+            ctx.Log.Error($"[UiTiming] Chromium browser not found. Install browsers into: {browsersPath}");
             result.Status = TestStatus.Failed;
             result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
-                ErrorMessage = "Install browsers"
+                ErrorMessage = $"Chromium is not installed. Run playwright install chromium (path: {browsersPath})."
             });
             return result;
         }
@@ -98,6 +99,7 @@ public class UiTimingModule : ITestModule
             _ => WaitUntilState.Load
         };
         var results = new List<ResultBase>();
+        ctx.Log.Info($"[UiTiming] Launching browser (Headless={ctx.Profile.Headless})");
         var total = s.Targets.Count;
         var completed = 0;
 
