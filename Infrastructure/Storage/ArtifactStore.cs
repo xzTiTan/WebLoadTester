@@ -10,18 +10,15 @@ namespace WebLoadTester.Infrastructure.Storage;
 public class ArtifactStore : IArtifactStore
 {
     /// <summary>
-    /// Инициализирует папки для отчётов, скриншотов и профилей.
+    /// Инициализирует папки для отчётов и скриншотов.
     /// </summary>
-    public ArtifactStore(string runsRoot, string profilesRoot)
+    public ArtifactStore(string runsRoot)
     {
         RunsRoot = runsRoot;
-        ProfilesRoot = profilesRoot;
         Directory.CreateDirectory(RunsRoot);
-        Directory.CreateDirectory(ProfilesRoot);
     }
 
     public string RunsRoot { get; }
-    public string ProfilesRoot { get; }
 
     /// <summary>
     /// Создаёт папку для конкретного запуска и возвращает путь.

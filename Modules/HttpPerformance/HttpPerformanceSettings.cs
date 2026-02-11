@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace WebLoadTester.Modules.HttpPerformance;
 
@@ -14,6 +15,9 @@ public class HttpPerformanceSettings
 
 public class HttpPerformanceEndpoint
 {
+    public static IReadOnlyList<string> MethodOptions { get; } =
+        new ReadOnlyCollection<string>(new[] { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" });
+
     public string Name { get; set; } = "Endpoint";
     public string Method { get; set; } = "GET";
     public string Path { get; set; } = "/";

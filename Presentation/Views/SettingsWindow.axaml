@@ -10,10 +10,10 @@
         <StackPanel Margin="16" Spacing="16">
             <Border Classes="section">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Storage paths" Classes="section-title" />
+                    <TextBlock Text="Пути хранения" Classes="section-title" />
 
                     <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Data directory" Classes="field-label" />
+                        <TextBlock Text="Каталог данных" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding DataDirectory, Mode=TwoWay}" />
                     </Grid>
                     <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
@@ -25,7 +25,7 @@
                     </Grid>
 
                     <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Runs root" Classes="field-label" />
+                        <TextBlock Text="Каталог прогонов" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding RunsDirectory, Mode=TwoWay}" />
                     </Grid>
                     <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
@@ -37,19 +37,7 @@
                     </Grid>
 
                     <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Profiles directory" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding ProfilesDirectory, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Выбрать" Command="{Binding BrowseProfilesDirectoryCommand}" />
-                            <Button Content="Открыть" Command="{Binding OpenProfilesDirectoryCommand}" />
-                            <Button Content="Копировать" Command="{Binding CopyProfilesDirectoryCommand}" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Database path" Classes="field-label" />
+                        <TextBlock Text="Путь к БД" Classes="field-label" />
                         <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
                     </Grid>
                     <Grid ColumnDefinitions="200,*">

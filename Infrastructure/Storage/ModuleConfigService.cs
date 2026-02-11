@@ -59,7 +59,7 @@ public sealed class ModuleConfigService : IModuleConfigService
     public async Task<string> SaveNewAsync(string userName, string moduleKey, string description, object moduleSettings, RunParametersDto runParameters, CancellationToken ct)
     {
         var normalizedUserName = NormalizeUserName(userName);
-        var moduleSuffix = BuildModuleSuffix(moduleKey);
+        var moduleSuffix = ModuleCatalog.GetSuffix(moduleKey);
         var finalName = $"{normalizedUserName}_{moduleSuffix}";
 
         var payload = BuildPayload(userName, finalName, moduleKey, description, moduleSettings, runParameters);
@@ -106,18 +106,6 @@ public sealed class ModuleConfigService : IModuleConfigService
     private static string NormalizeUserName(string userName)
     {
         return string.Join(string.Empty, userName.Where(ch => !char.IsWhiteSpace(ch))).Trim();
-    }
-
-    private static string BuildModuleSuffix(string moduleKey)
-    {
-        var parts = moduleKey.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-        {
-            return "Module";
-        }
-
-        return string.Concat(parts.Select(part =>
-            part.Length <= 1 ? part.ToUpperInvariant() : char.ToUpperInvariant(part[0]) + part[1..]));
     }
 
     private static string ParseUserName(string finalName)

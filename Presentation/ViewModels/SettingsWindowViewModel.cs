@@ -26,7 +26,6 @@ public partial class SettingsWindowViewModel : ObservableObject
         TelegramSettings = telegramSettings;
         dataDirectory = settingsService.Settings.DataDirectory;
         runsDirectory = settingsService.Settings.RunsDirectory;
-        profilesDirectory = settingsService.Settings.ProfilesDirectory;
     }
 
     public TelegramSettingsViewModel TelegramSettings { get; }
@@ -37,8 +36,6 @@ public partial class SettingsWindowViewModel : ObservableObject
     [ObservableProperty]
     private string runsDirectory = string.Empty;
 
-    [ObservableProperty]
-    private string profilesDirectory = string.Empty;
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
@@ -55,10 +52,8 @@ public partial class SettingsWindowViewModel : ObservableObject
     {
         _settingsService.Settings.DataDirectory = DataDirectory;
         _settingsService.Settings.RunsDirectory = RunsDirectory;
-        _settingsService.Settings.ProfilesDirectory = ProfilesDirectory;
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(RunsDirectory);
-        Directory.CreateDirectory(ProfilesDirectory);
         await _settingsService.SaveAsync();
         StatusMessage = "Настройки сохранены.";
     }
@@ -84,16 +79,6 @@ public partial class SettingsWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task BrowseProfilesDirectoryAsync()
-    {
-        var selected = await PickFolderAsync("Выберите папку для профилей");
-        if (!string.IsNullOrWhiteSpace(selected))
-        {
-            ProfilesDirectory = selected;
-        }
-    }
-
-    [RelayCommand]
     private void OpenDataDirectory()
     {
         OpenPath(DataDirectory);
@@ -103,12 +88,6 @@ public partial class SettingsWindowViewModel : ObservableObject
     private void OpenRunsDirectory()
     {
         OpenPath(RunsDirectory);
-    }
-
-    [RelayCommand]
-    private void OpenProfilesDirectory()
-    {
-        OpenPath(ProfilesDirectory);
     }
 
     [RelayCommand]
@@ -127,12 +106,6 @@ public partial class SettingsWindowViewModel : ObservableObject
     private async Task CopyRunsDirectoryAsync()
     {
         await CopyToClipboardAsync(RunsDirectory);
-    }
-
-    [RelayCommand]
-    private async Task CopyProfilesDirectoryAsync()
-    {
-        await CopyToClipboardAsync(ProfilesDirectory);
     }
 
     [RelayCommand]

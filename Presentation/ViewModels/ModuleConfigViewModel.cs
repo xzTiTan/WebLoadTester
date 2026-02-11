@@ -75,7 +75,7 @@ public partial class ModuleConfigViewModel : ObservableObject
                 return string.Empty;
             }
 
-            return $"{normalized}_{BuildModuleSuffix(_module.Id)}";
+            return $"{normalized}_{ModuleCatalog.GetSuffix(_module.Id)}";
         }
     }
 
@@ -246,18 +246,6 @@ public partial class ModuleConfigViewModel : ObservableObject
     private static string NormalizeUserName(string value)
     {
         return string.Join(string.Empty, value.Where(ch => !char.IsWhiteSpace(ch))).Trim();
-    }
-
-    private static string BuildModuleSuffix(string moduleKey)
-    {
-        var parts = moduleKey.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-        {
-            return "Module";
-        }
-
-        return string.Concat(parts.Select(part =>
-            part.Length <= 1 ? part.ToUpperInvariant() : char.ToUpperInvariant(part[0]) + part[1..]));
     }
 
     private static string ParseUserName(string finalName)

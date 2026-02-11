@@ -67,6 +67,9 @@ public partial class RunProfileViewModel : ObservableObject
     private bool isDeleteConfirmVisible;
 
     [ObservableProperty]
+    private bool isUiFamily = true;
+
+    [ObservableProperty]
     private string statusMessage = string.Empty;
 
     public string WarningMessage =>
@@ -244,5 +247,10 @@ public partial class RunProfileViewModel : ObservableObject
         PreflightEnabled = parameters.PreflightEnabled;
         Headless = parameters.Headless;
         ScreenshotsPolicy = parameters.ScreenshotsPolicy;
+    }
+
+    public void SetModuleFamily(TestFamily family)
+    {
+        IsUiFamily = family == TestFamily.UiTesting;
     }
 }

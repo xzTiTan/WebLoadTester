@@ -94,7 +94,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
         _testCaseRepository = (ITestCaseRepository)_runStore;
         _moduleConfigService = new ModuleConfigService(_testCaseRepository);
-        _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory, _settingsService.Settings.ProfilesDirectory);
+        _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory);
 
         var modules = new ITestModule[]
         {
@@ -122,6 +122,7 @@ public partial class MainWindowViewModel : ViewModelBase
         NetFamily.PropertyChanged += OnFamilyPropertyChanged;
 
         RunProfile = new RunProfileViewModel(_runStore);
+        UpdateRunProfileModuleFamily();
         TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
         RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunAsync);
@@ -233,6 +234,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(SelectedModule));
         OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+        UpdateRunProfileModuleFamily();
     }
 
     /// <summary>
@@ -688,7 +690,15 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+            UpdateRunProfileModuleFamily();
         }
+    }
+
+
+    private void UpdateRunProfileModuleFamily()
+    {
+        var family = SelectedModule?.Module.Family ?? TestFamily.UiTesting;
+        RunProfile.SetModuleFamily(family);
     }
 
     private async Task SendTelegramAsync(string runId, Func<Task> action)

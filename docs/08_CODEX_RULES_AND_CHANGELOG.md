@@ -1,7 +1,7 @@
 
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v2.0 10.02.2026
+**Версия:** v2.2 11.02.2026
 
 **Назначение:** описывает guardrails, типовые ошибки и журнал изменений документации.  
 **См. также:** [00_INDEX.md](00_INDEX.md), [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [03_UI_SPEC.md](03_UI_SPEC.md).
@@ -48,7 +48,7 @@ TODAY = 03.02.2026 (Europe/Berlin). НЕ ставь будущие даты.
 
 Запрещено в Avalonia/XAML:
 - SetterTargetType (WPF-паттерн).
-- Theme Mode (Mode= в FluentTheme/Styles).
+- Theme Mode (атрибут `Mode` только в `FluentTheme/Styles`).
 - ElementName='\"...' (кавычки внутри значения).
 - WrapPanel Spacing (если не поддерживается версией Avalonia).
 - Ручные TargetFrameworkAttribute в исходниках.
@@ -73,6 +73,15 @@ TODAY = 03.02.2026 (Europe/Berlin). НЕ ставь будущие даты.
 - проверить, что ссылки на docs не битые.
 
 ## 8. Журнал изменений
+### v2.2 11.02.2026
+- Добавлен единый каталог модулей `ModuleCatalog` с `ModuleSuffix`; превью/сохранение конфигов теперь формируют имя строго как `UserName_ModuleSuffix`.
+- В секции «Параметры запуска» поля `Headless` и `ScreenshotsPolicy` показываются только для UI-модулей (A1–A3).
+- Стабилизирован compiled binding в `HttpPerformanceSettingsView`: список HTTP-методов переведён на `x:Static HttpPerformanceEndpoint.MethodOptions`.
+
+### v2.1 11.02.2026
+- CI lint в `.github/workflows/ci.yml` сделан точечным: вместо общего поиска `Mode=` теперь проверяется только `Mode` в теге `FluentTheme`, чтобы не ловить валидные `Binding Mode=TwoWay/OneWay`.
+- Удалён `ProfilesDirectory` из настроек приложения и `ArtifactStore`: профили запусков остаются в SQLite (`RunProfiles`), в окне настроек оставлены только пути для данных/прогонов/БД.
+
 ### v2.0 10.02.2026
 - Модули C1/C2/C3/C4 приведены к честному MVP-циклу: добавлены явные progress/log события, обработка ошибок как результатов и без зависаний UI.
 - `net.availability` выполняет ровно один probe на вызов `ExecuteAsync` (без внутренней задержки/цикла), интервал оставлен на уровне оркестратора профиля.

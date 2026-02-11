@@ -51,8 +51,6 @@ public class AppSettings
 {
     public string DataDirectory { get; set; } = string.Empty;
     public string RunsDirectory { get; set; } = string.Empty;
-    public string ProfilesDirectory { get; set; } = string.Empty;
-
     public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
 
     public static AppSettings CreateDefault()
@@ -61,8 +59,7 @@ public class AppSettings
         return new AppSettings
         {
             DataDirectory = Path.Combine(root, "data"),
-            RunsDirectory = Path.Combine(root, "runs"),
-            ProfilesDirectory = Path.Combine(root, "profiles")
+            RunsDirectory = Path.Combine(root, "runs")
         };
     }
 }

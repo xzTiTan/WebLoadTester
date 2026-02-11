@@ -1,4 +1,4 @@
-v2.0 10.02.2026
+v2.2 11.02.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -59,7 +59,7 @@ WebLoadTester — кроссплатформенное настольное пр
 - **Отчёты**: сохраняются в `runs/{RunId}/report.json` (всегда) и `runs/{RunId}/report.html` (опционально).
 - **Скриншоты**: сохраняются в `runs/{RunId}/screenshots/`.
 - **Логи**: сохраняются в `runs/{RunId}/logs/run.log`.
-- **Профили**: папка `profiles/` создаётся для будущих расширений (профили сейчас хранятся в SQLite).
+- **Профили**: профили запусков хранятся в SQLite (`RunProfiles`), отдельный каталог profiles для MVP не используется.
 
 ## Playwright / browsers
 - Приложение ожидает браузеры в `AppContext.BaseDirectory/browsers` (то есть рядом с бинарником).

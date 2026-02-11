@@ -1,7 +1,7 @@
 
 # UI-спецификация — экраны, элементы, поведение
 
-**Версия:** v1.7 03.02.2026
+**Версия:** v1.8 11.02.2026
 
 **Назначение:** описывает состав экранов, UX-правила и валидируемые UI-ограничения.  
 **См. также:** [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [04_CODE_MAP.md](04_CODE_MAP.md), [05_GLOSSARY.md](05_GLOSSARY.md).
@@ -112,7 +112,7 @@ UX-правила:
 
 ## 7. Окно настроек
 Окно Settings включает:
-- пути хранения (DataDirectory/RunsDirectory/ProfilesDirectory),
+- пути хранения (DataDirectory/RunsDirectory),
 - проверку доступности БД,
 - настройки Telegram (token/chatId, режимы уведомлений).
 
