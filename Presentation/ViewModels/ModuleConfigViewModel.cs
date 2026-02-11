@@ -26,6 +26,12 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     public ModuleConfigViewModel(IModuleConfigService configService, ITestCaseRepository testCaseRepository, ITestModule module, SettingsViewModelBase settings, RunProfileViewModel runProfile)
     {
+        ArgumentNullException.ThrowIfNull(configService);
+        ArgumentNullException.ThrowIfNull(testCaseRepository);
+        ArgumentNullException.ThrowIfNull(module);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(runProfile);
+
         _configService = configService;
         _testCaseRepository = testCaseRepository;
         _module = module;
@@ -144,10 +150,17 @@ public partial class ModuleConfigViewModel : ObservableObject
             return;
         }
 
-        var finalName = await _configService.SaveNewAsync(UserName, _module.Id, Description, _settings.Settings, _runProfile.BuildRunParameters(), CancellationToken.None);
-        await RefreshAsync();
-        SelectedConfig = Configs.FirstOrDefault(item => string.Equals(item.FinalName, finalName, StringComparison.OrdinalIgnoreCase));
-        StatusMessage = $"Конфигурация сохранена как {finalName}.";
+        try
+        {
+            var finalName = await _configService.SaveNewAsync(UserName, _module.Id, Description, _settings.Settings, _runProfile.BuildRunParameters(), CancellationToken.None);
+            await RefreshAsync();
+            SelectedConfig = Configs.FirstOrDefault(item => string.Equals(item.FinalName, finalName, StringComparison.OrdinalIgnoreCase));
+            StatusMessage = $"Конфигурация сохранена как {finalName}.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Ошибка сохранения конфигурации: {ex.Message}";
+        }
     }
 
     [RelayCommand]

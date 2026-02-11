@@ -1,7 +1,7 @@
 
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v2.3 11.02.2026
+**Версия:** v2.4 11.02.2026
 
 **Назначение:** описывает guardrails, типовые ошибки и журнал изменений документации.  
 **См. также:** [00_INDEX.md](00_INDEX.md), [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [03_UI_SPEC.md](03_UI_SPEC.md).
@@ -73,6 +73,11 @@ TODAY = 03.02.2026 (Europe/Berlin). НЕ ставь будущие даты.
 - проверить, что ссылки на docs не битые.
 
 ## 8. Журнал изменений
+### v2.4 11.02.2026
+- Исправлено падение `NullReferenceException` в `ModuleConfigViewModel.SaveNewAsync`: `RunProfile` теперь инициализируется до создания `ModuleItemViewModel` в `MainWindowViewModel`.
+- В `ModuleConfigViewModel` добавлены `ArgumentNullException.ThrowIfNull(...)` для обязательных зависимостей и безопасная обработка ошибок сохранения конфигурации в `SaveNewAsync`.
+- В `MainWindowViewModel.StartAsync` добавлена предварительная валидация через `_orchestrator.Validate(...)` до старта прогона, с понятным статусом и предупреждением в логах.
+
 ### v2.3 11.02.2026
 - Исправлена ошибка сборки CS0535: из `IArtifactStore` удалено устаревшее свойство `ProfilesRoot`, которое больше не используется после упрощения MVP-хранилища профилей (профили остаются в SQLite).
 

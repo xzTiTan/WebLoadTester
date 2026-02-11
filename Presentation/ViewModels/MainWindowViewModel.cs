@@ -95,6 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _testCaseRepository = (ITestCaseRepository)_runStore;
         _moduleConfigService = new ModuleConfigService(_testCaseRepository);
         _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory, Path.Combine(_settingsService.Settings.DataDirectory, "profiles"));
+        RunProfile = new RunProfileViewModel(_runStore);
 
         var modules = new ITestModule[]
         {
@@ -120,8 +121,6 @@ public partial class MainWindowViewModel : ViewModelBase
         UiFamily.PropertyChanged += OnFamilyPropertyChanged;
         HttpFamily.PropertyChanged += OnFamilyPropertyChanged;
         NetFamily.PropertyChanged += OnFamilyPropertyChanged;
-
-        RunProfile = new RunProfileViewModel(_runStore);
         UpdateRunProfileModuleFamily();
         TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
@@ -249,6 +248,22 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
+        var validationErrors = _orchestrator.Validate(moduleItem.Module, moduleItem.SettingsViewModel.Settings, profile);
+        if (validationErrors.Count > 0)
+        {
+            StatusText = "Статус: ошибка валидации";
+            moduleItem.ModuleConfig.StatusMessage = "Заполните обязательные поля: " + string.Join("; ", validationErrors);
+            _logBus.Warn($"[Validation] {moduleItem.Module.Id}: {string.Join("; ", validationErrors)}");
+            return;
+        }
+
+        var testCase = await moduleItem.ModuleConfig.EnsureConfigForRunAsync();
+        if (testCase == null)
+        {
+            return;
+        }
+
         ClearLog();
         _runFinishedTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         IsRunning = true;
@@ -259,21 +274,9 @@ public partial class MainWindowViewModel : ViewModelBase
         RunStage = "Выполнение";
 
         _runCts = new CancellationTokenSource();
-        var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
         var runId = Guid.NewGuid().ToString("N");
         var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
         _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);
-
-        var testCase = await moduleItem.ModuleConfig.EnsureConfigForRunAsync();
-        if (testCase == null)
-        {
-            _runCts?.Dispose();
-            _runCts = null;
-            IsRunning = false;
-            StatusText = "Статус: ожидание";
-            RunStage = "Ожидание";
-            return;
-        }
         var logSink = new CompositeLogSink(new ILogSink[]
         {
             _logBus,
