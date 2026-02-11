@@ -19,6 +19,8 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
     private readonly string _dbPath;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
+    private static object DbValue(object? value) => value ?? DBNull.Value;
+
     public SqliteRunStore(string dbPath)
     {
         _dbPath = dbPath;
@@ -497,16 +499,16 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                                      ProfileSnapshotJson, StartedAt, FinishedAt, Status, SummaryJson)
                                 VALUES ($runId, $testCaseId, $testCaseVersion, $testName, $moduleType, $moduleName,
                                         $profileSnapshot, $startedAt, $finishedAt, $status, $summaryJson)";
-        command.Parameters.AddWithValue("$runId", run.RunId);
+        command.Parameters.AddWithValue("$runId", DbValue(run.RunId));
         command.Parameters.AddWithValue("$testCaseId", run.TestCaseId.ToString());
         command.Parameters.AddWithValue("$testCaseVersion", run.TestCaseVersion);
-        command.Parameters.AddWithValue("$testName", run.TestName);
-        command.Parameters.AddWithValue("$moduleType", run.ModuleType);
-        command.Parameters.AddWithValue("$moduleName", run.ModuleName);
-        command.Parameters.AddWithValue("$profileSnapshot", run.ProfileSnapshotJson);
+        command.Parameters.AddWithValue("$testName", DbValue(run.TestName));
+        command.Parameters.AddWithValue("$moduleType", DbValue(run.ModuleType));
+        command.Parameters.AddWithValue("$moduleName", DbValue(run.ModuleName));
+        command.Parameters.AddWithValue("$profileSnapshot", DbValue(run.ProfileSnapshotJson));
         command.Parameters.AddWithValue("$startedAt", run.StartedAt.ToString("O"));
-        command.Parameters.AddWithValue("$finishedAt", run.FinishedAt?.ToString("O"));
-        command.Parameters.AddWithValue("$status", run.Status);
+        command.Parameters.AddWithValue("$finishedAt", DbValue(run.FinishedAt?.ToString("O")));
+        command.Parameters.AddWithValue("$status", DbValue(run.Status));
         command.Parameters.AddWithValue("$summaryJson", string.IsNullOrWhiteSpace(run.SummaryJson) ? DBNull.Value : run.SummaryJson);
         await command.ExecuteNonQueryAsync(ct);
     }

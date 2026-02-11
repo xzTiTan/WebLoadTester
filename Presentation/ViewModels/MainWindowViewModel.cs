@@ -291,6 +291,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var finalProgressText = ProgressText;
+        var finalStatusText = "Статус: ожидание";
         try
         {
             var preflight = CreatePreflightSettings(moduleItem.SettingsViewModel.Settings);
@@ -307,11 +308,14 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (OperationCanceledException)
         {
             finalProgressText = "Прогресс: отменено";
+            finalStatusText = "Статус: отменено";
             await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync("Операция отменена", CancellationToken.None));
         }
         catch (Exception ex)
         {
             finalProgressText = $"Прогресс: ошибка ({ex.Message})";
+            finalStatusText = "Ошибка запуска: " + ex.Message;
+            _logBus.Error($"Start failed: {ex}");
             await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync(ex.Message, _runCts.Token));
         }
         finally
@@ -321,8 +325,10 @@ public partial class MainWindowViewModel : ViewModelBase
             IsProgressIndeterminate = false;
             ProgressPercent = 0;
             ProgressText = finalProgressText;
-            StatusText = "Статус: ожидание";
-            RunStage = "Готово";
+            StatusText = finalStatusText;
+            RunStage = finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal) ? "Ошибка" : "Готово";
+            _runCts?.Dispose();
+            _runCts = null;
             RunsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
             _runFinishedTcs?.TrySetResult(true);
