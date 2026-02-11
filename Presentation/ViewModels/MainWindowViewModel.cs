@@ -94,7 +94,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
         _testCaseRepository = (ITestCaseRepository)_runStore;
         _moduleConfigService = new ModuleConfigService(_testCaseRepository);
-        _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory);
+        _artifactStore = new ArtifactStore(_settingsService.Settings.RunsDirectory, Path.Combine(_settingsService.Settings.DataDirectory, "profiles"));
 
         var modules = new ITestModule[]
         {
