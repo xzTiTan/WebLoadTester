@@ -40,22 +40,34 @@ public class RunOrchestrator
 
         if (profile.Parallelism <= 0)
         {
-            errors.Add("Parallelism must be positive");
+            errors.Add("Параллелизм должен быть больше 0.");
         }
 
         if (profile.Mode == RunMode.Iterations && profile.Iterations <= 0)
         {
-            errors.Add("Iterations must be positive");
+            errors.Add("Количество итераций должно быть больше 0.");
         }
+
+        if (profile.Parallelism > 25)
+        {
+            errors.Add("Параллелизм не должен превышать 25 для безопасного MVP-режима.");
+        }
+
 
         if (profile.Mode == RunMode.Duration && profile.DurationSeconds <= 0)
         {
-            errors.Add("DurationSeconds must be positive");
+            errors.Add("Длительность должна быть больше 0 секунд.");
         }
+
+        if (profile.Mode == RunMode.Duration && profile.DurationSeconds > 60)
+        {
+            errors.Add("Длительность не должна превышать 60 секунд в безопасном MVP-режиме.");
+        }
+
 
         if (profile.TimeoutSeconds <= 0)
         {
-            errors.Add("TimeoutSeconds must be positive");
+            errors.Add("Таймаут должен быть больше 0 секунд.");
         }
 
         return errors;

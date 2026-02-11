@@ -300,6 +300,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 preflightModule, preflight);
             moduleItem.LastReport = report;
             finalProgressText = "Прогресс: завершено";
+            finalStatusText = report.Status switch
+            {
+                TestStatus.Success => "Статус: успешно",
+                TestStatus.Cancelled => "Статус: отменено",
+                _ => "Статус: завершено с ошибками"
+            };
             if (_telegramPolicy.IsEnabled)
             {
                 await SendTelegramAsync(runId, () => _telegramPolicy.NotifyFinishAsync(report, _runCts.Token));

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -103,7 +104,9 @@ public class UiTimingModule : ITestModule
         var total = s.Targets.Count;
         var completed = 0;
 
-        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = ctx.Profile.Headless });
+        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
+        Directory.CreateDirectory(runProfileDir);
+        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(runProfileDir, new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
         var index = 0;
         foreach (var target in s.Targets)
         {

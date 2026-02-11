@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,11 +108,13 @@ public class UiScenarioModule : ITestModule
         ctx.Log.Info($"[UiScenario] Launching browser (Headless={ctx.Profile.Headless})...");
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
+        Directory.CreateDirectory(runProfileDir);
+        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(runProfileDir, new BrowserTypeLaunchPersistentContextOptions
         {
             Headless = ctx.Profile.Headless
         });
-        var page = await browser.NewPageAsync();
+        var page = browser.Pages.FirstOrDefault() ?? await browser.NewPageAsync();
         page.SetDefaultTimeout(effectiveTimeoutMs);
         page.SetDefaultNavigationTimeout(effectiveTimeoutMs);
 

@@ -1,7 +1,7 @@
 
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v2.4 11.02.2026
+**Версия:** v2.5 11.02.2026
 
 **Назначение:** описывает guardrails, типовые ошибки и журнал изменений документации.  
 **См. также:** [00_INDEX.md](00_INDEX.md), [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [03_UI_SPEC.md](03_UI_SPEC.md).
@@ -73,6 +73,14 @@ TODAY = 03.02.2026 (Europe/Berlin). НЕ ставь будущие даты.
 - проверить, что ссылки на docs не битые.
 
 ## 8. Журнал изменений
+### v2.5 11.02.2026
+- Усилена валидация запуска в `RunOrchestrator`: добавлены русские сообщения и safety-ограничения MVP (`Parallelism <= 25`, `DurationSeconds <= 60`).
+- Исправлено финальное отображение статуса в `MainWindowViewModel.StartAsync`: теперь UI показывает реальный итог прогона (успех/ошибка/отмена).
+- UI-модули `ui.scenario`, `ui.snapshot`, `ui.timing` запускают Chromium с изолированным per-run профилем в `runs/{RunId}/profile`.
+- Обновлён `net.availability`: модуль выполняет последовательные проверки по числу итераций профиля (до 60) с подсчётом uptime.
+- Обновлён `net.preflight`: добавлены проверки FS/SQLite/Chromium; warning-состояния логируются и не приводят к падению прогона.
+- В `docs/06_TEST_PLAN.md` добавлен раздел smoke-сценариев (10 модулей, по одному сценарию на модуль).
+
 ### v2.4 11.02.2026
 - Исправлено падение `NullReferenceException` в `ModuleConfigViewModel.SaveNewAsync`: `RunProfile` теперь инициализируется до создания `ModuleItemViewModel` в `MainWindowViewModel`.
 - В `ModuleConfigViewModel` добавлены `ArgumentNullException.ThrowIfNull(...)` для обязательных зависимостей и безопасная обработка ошибок сохранения конфигурации в `SaveNewAsync`.

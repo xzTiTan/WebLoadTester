@@ -1,7 +1,7 @@
 
 # План испытаний и демонстрационные сценарии — WebLoadTester
 
-**Версия:** v1.7 03.02.2026
+**Версия:** v1.8 11.02.2026
 
 **Назначение:** закрепляет проверки для приёмки и демонстрации.  
 **См. также:** [01_CANON.md](01_CANON.md), [02_TECH_SPEC.md](02_TECH_SPEC.md), [07_TRACEABILITY.md](07_TRACEABILITY.md).
@@ -82,3 +82,16 @@
 ## Связанные файлы / входы / выходы
 - Входы: критерии приёмки из `01_CANON.md`.
 - Выходы: чек-листы для `07_TRACEABILITY.md` и демонстраций.
+
+
+## 5. Smoke (быстрые честные прогоны для 10 модулей)
+1) **A1 ui.scenario**: `TargetUrl=https://example.com`, шаги `body click` + `h1 click/fill` → ожидаемо: run в SQLite, `report.json`, при ошибке шага `screenshots/step_*.png`.
+2) **A2 ui.snapshot**: один URL `https://example.com` → ожидаемо: `screenshots/snapshot_*.png`, запись хеша/результата в `report.json`.
+3) **A3 ui.timing**: один URL `https://example.com`, 5 итераций через профиль → ожидаемо: набор `TimingResult` в `report.json`.
+4) **B1 http.functional**: GET `https://example.com` ожидание `200` → ожидаемо: Success check в отчёте.
+5) **B2 http.performance**: URL `https://example.com`, профиль `Duration=10s`, `Parallelism=5` → ожидаемо: серия latency-check результатов в `report.json`.
+6) **B3 http.assets**: список из 1–3 URL ассетов (css/js/image) → ожидаемо: статусы и latency для каждого ассета.
+7) **C1 net.diagnostics**: host `example.com`, port `443` → ожидаемо: DNS/TCP/TLS результаты с деталями.
+8) **C2 net.availability**: target `https://example.com`, профиль `Iterations=10` → ожидаемо: 10 последовательных проверок и итог uptime в логе.
+9) **C3 net.security**: URL `https://example.com` → ожидаемо: проверки security headers + TLS/redirect в `report.json`.
+10) **C4 net.preflight**: запуск preflight с пустой/дефолтной целью → ожидаемо: проверки FS/SQLite/Chromium, Completed без падения.
