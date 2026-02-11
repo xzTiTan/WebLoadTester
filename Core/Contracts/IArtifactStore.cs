@@ -13,10 +13,6 @@ public interface IArtifactStore
     /// </summary>
     string RunsRoot { get; }
     /// <summary>
-    /// Корневая папка профилей.
-    /// </summary>
-    string ProfilesRoot { get; }
-    /// <summary>
     /// Создаёт папку для конкретного запуска.
     /// </summary>
     string CreateRunFolder(string runId);
