@@ -1,7 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
-        <Setter Property="ColumnDefinitions" Value="220,*" />
         <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingM}" />
         <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
