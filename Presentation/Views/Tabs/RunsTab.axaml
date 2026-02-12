@@ -9,13 +9,16 @@
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" RowDefinitions="Auto,Auto" RowSpacing="12">
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Фильтры" Classes="section-title" />
                     <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="12">
-                        <ComboBox Watermark="Модуль"
-                                  ItemsSource="{Binding ModuleFilterOptions}"
-                                  SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
-                        <ComboBox Grid.Column="1"
-                                  Watermark="Статус"
-                                  ItemsSource="{Binding StatusFilterOptions}"
-                                  SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Модуль" Classes="muted" FontSize="12" />
+                            <ComboBox ItemsSource="{Binding ModuleFilterOptions}"
+                                      SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="4">
+                            <TextBlock Text="Статус" Classes="muted" FontSize="12" />
+                            <ComboBox ItemsSource="{Binding StatusFilterOptions}"
+                                      SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
+                        </StackPanel>
                         <DatePicker Grid.Column="2" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
                         <DatePicker Grid.Column="3" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
                         <TextBox Grid.Column="4" Watermark="Поиск по RunId / модулю" Text="{Binding SearchText, Mode=TwoWay}" />
