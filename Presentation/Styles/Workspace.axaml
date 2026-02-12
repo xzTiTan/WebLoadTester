@@ -1,13 +1,15 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
-        <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingS}" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="ColumnDefinitions" Value="220,*" />
+        <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingM}" />
+        <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
 
     <Style Selector="TextBlock.field-label">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style Selector="Control.field-control">
@@ -15,12 +17,7 @@
         <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
-    <Style Selector="TextBox.field-control">
-        <Setter Property="MaxWidth" Value="520" />
-        <Setter Property="HorizontalAlignment" Value="Left" />
-    </Style>
-
-    <Style Selector="ComboBox.field-control">
+    <Style Selector="TextBox.field-control, ComboBox.field-control">
         <Setter Property="MaxWidth" Value="520" />
         <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
@@ -28,6 +25,10 @@
     <Style Selector="NumericUpDown.field-control">
         <Setter Property="MaxWidth" Value="220" />
         <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="TextBlock.section-title">
+        <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
 
     <Style Selector="TextBlock.status-line">
@@ -56,9 +57,9 @@
     </Style>
 
     <Style Selector="Border.log-box">
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
         <Setter Property="Padding" Value="8" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
     </Style>
@@ -73,35 +74,53 @@
     </Style>
 
     <Style Selector="TabControl.main-tabs">
-        <Setter Property="Padding" Value="12" />
+        <Setter Property="Padding" Value="0" />
     </Style>
 
-    <Style Selector="ListBox.segmented-bar">
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="4" />
-    </Style>
-
-    <Style Selector="ListBox.segmented-bar ListBoxItem">
-        <Setter Property="Padding" Value="12,6" />
-        <Setter Property="Margin" Value="0" />
+    <Style Selector="TabControl.main-tabs > TabItem">
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="Margin" Value="0,0,8,12" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
-        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
+        <Setter Property="CornerRadius" Value="999" />
     </Style>
 
-    <Style Selector="ListBox.segmented-bar ListBoxItem:selected">
+    <Style Selector="TabControl.main-tabs > TabItem:selected">
         <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-        <Setter Property="Foreground" Value="White" />
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Foreground" Value="White" />
     </Style>
 
     <Style Selector="Border.step-card">
         <Setter Property="Padding" Value="12" />
         <Setter Property="Margin" Value="0,0,0,8" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
     </Style>
+
+
+    <Style Selector="ListBox.settings-nav">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBox.settings-nav ListBoxItem">
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBox.settings-nav ListBoxItem:selected">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
 </Styles>

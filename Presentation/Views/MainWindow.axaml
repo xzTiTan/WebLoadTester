@@ -8,63 +8,71 @@
         Title="WebLoadTester"
         Width="1280" Height="760"
         Background="{DynamicResource PageBackground}">
-    <Grid Margin="16" RowDefinitions="Auto,*,Auto" RowSpacing="16">
-        <Border Grid.Row="0" Classes="app-bar">
-            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="4">
-                <StackPanel>
-                    <TextBlock Text="WebLoadTester" Classes="page-title" />
-                    <TextBlock Text="Панель управления" Classes="muted" />
-                </StackPanel>
-                <WrapPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Classes="toolbar-wrap">
-                    <Button Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                    <Button Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                    <Border Margin="0,0,8,8" Classes="badge">
-                        <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
-                    </Border>
-                    <Border Margin="0,0,8,8" Classes="badge">
-                        <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
-                    </Border>
-                </WrapPanel>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="24" HorizontalAlignment="Center" MaxWidth="1400" RowDefinitions="Auto,*" RowSpacing="16">
+                <Border Grid.Row="0" Classes="app-bar">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="WebLoadTester" Classes="page-title" />
+                            <TextBlock Text="Панель управления" Classes="muted" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Classes="secondary" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                            <Button Classes="secondary" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                            <Border Classes="badge" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" />
+                            </Border>
+                            <Border Classes="badge" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" Classes="section" Padding="20">
+                    <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+                        <TabItem Header="UI тестирование">
+                            <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
+                        </TabItem>
+                        <TabItem Header="HTTP тестирование">
+                            <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
+                        </TabItem>
+                        <TabItem Header="Сеть и безопасность">
+                            <tabs:NetSecTab DataContext="{Binding NetFamily}" />
+                        </TabItem>
+                        <TabItem Header="Прогоны">
+                            <tabs:RunsTab DataContext="{Binding RunsTab}" />
+                        </TabItem>
+                    </TabControl>
+                </Border>
             </Grid>
-        </Border>
+        </ScrollViewer>
 
-        <Border Grid.Row="1" Classes="section">
-            <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                <TabItem Header="UI тестирование">
-                    <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
-                </TabItem>
-                <TabItem Header="HTTP тестирование">
-                    <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
-                </TabItem>
-                <TabItem Header="Сеть и безопасность">
-                    <tabs:NetSecTab DataContext="{Binding NetFamily}" />
-                </TabItem>
-                <TabItem Header="Прогоны">
-                    <tabs:RunsTab DataContext="{Binding RunsTab}" />
-                </TabItem>
-            </TabControl>
-        </Border>
+        <Border Grid.Row="1" Margin="24,0,24,24" HorizontalAlignment="Center" MaxWidth="1400" Classes="section" Padding="12">
+            <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
+                <Expander.Header>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <TextBlock Text="Лог выполнения (свернут)" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
+                            <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                            <Button Classes="link" Content="Очистить" Command="{Binding ClearLogCommand}" />
+                            <Button Classes="link" Content="Копировать" Command="{Binding CopyLogCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Expander.Header>
 
-        <Border Grid.Row="2" Classes="section">
-            <Expander Header="Лог выполнения" IsExpanded="{Binding IsLogDrawerExpanded}">
-                <Border Classes="log-box" MinHeight="160" MaxHeight="260">
-                    <StackPanel Spacing="8">
-                        <WrapPanel Classes="toolbar-wrap" HorizontalAlignment="Left">
-                            <CheckBox Content="Автоскролл" Margin="0,0,12,0" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
-                            <CheckBox Content="Только ошибки" Margin="0,0,12,0" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
-                            <Button Content="Очистить" Margin="0,0,12,0" Command="{Binding ClearLogCommand}" />
-                            <Button Content="Копировать" Command="{Binding CopyLogCommand}" />
-                        </WrapPanel>
-                        <ListBox ItemsSource="{Binding FilteredLogEntries}"
-                                 Classes="loglist"
-                                 behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <TextBlock Classes="logline" Text="{Binding}" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
+                <Border Classes="log-box" MinHeight="160" MaxHeight="260" Margin="0,8,0,0">
+                    <ListBox ItemsSource="{Binding FilteredLogEntries}"
+                             Classes="loglist"
+                             behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Classes="logline" Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Border>
             </Expander>
         </Border>

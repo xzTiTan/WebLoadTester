@@ -6,243 +6,210 @@
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
         <ContentControl x:Name="VmProxy"
                         Width="0"
                         Height="0"
                         IsVisible="False"
                         DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
 
-        <!-- Row 1: Run controls -->
         <Border Grid.Row="0" Classes="app-bar">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                <StackPanel Spacing="6">
-                    <StackPanel Spacing="2"
-                                DataContext="{Binding DataContext, ElementName=VmProxy}"
-                                x:DataType="root:MainWindowViewModel">
-                        <ProgressBar Minimum="0" Maximum="100"
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16"
+                      DataContext="{Binding DataContext, ElementName=VmProxy}"
+                      x:DataType="root:MainWindowViewModel">
+                    <StackPanel Spacing="6">
+                        <ProgressBar Minimum="0"
+                                     Maximum="100"
+                                     Height="6"
                                      Value="{Binding ProgressPercent}"
                                      IsIndeterminate="{Binding IsProgressIndeterminate}" />
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <TextBlock Text="{Binding RunStage}" Classes="muted" />
                             <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Classes="status-line" />
                         </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="6"
+                                    VerticalAlignment="Center"
+                                    DataContext="{Binding RunProfile}"
+                                    x:DataType="root:RunProfileViewModel"
+                                    IsVisible="{Binding IsUiFamily}">
+                            <TextBlock Text="Показывать браузер" VerticalAlignment="Center" />
+                            <ToggleSwitch IsChecked="{Binding Headless, Converter={StaticResource BooleanNotConverter}, Mode=TwoWay}" />
+                        </StackPanel>
+                        <Button Content="Старт" Classes="primary" Command="{Binding StartCommand}" />
+                        <Button Content="Перезапуск" Command="{Binding RestartCommand}" />
+                        <Button Content="Остановить" Command="{Binding StopCommand}" />
+                        <Button Content="Отмена" Classes="danger" Command="{Binding CancelCommand}" />
+                    </StackPanel>
+                </Grid>
+
+                <Border Classes="warning-panel"
+                        DataContext="{Binding DataContext, ElementName=VmProxy}"
+                        x:DataType="root:MainWindowViewModel"
+                        IsVisible="{Binding ShowPlaywrightInstallBanner}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <TextBlock Text="Chromium (Playwright) не установлен. UI сценарий завершится ошибкой, пока браузер не установлен."
+                                   TextWrapping="Wrap" />
+                        <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
+                            <Button Content="Install Chromium (Playwright)"
+                                    Command="{Binding InstallPlaywrightBrowsersCommand}"
+                                    IsEnabled="{Binding CanInstallPlaywright}" />
+                            <TextBlock Text="{Binding PlaywrightInstallMessage}" Classes="status-line" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <ListBox ItemsSource="{Binding Modules}"
+                                 SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
+                                 Classes="segmented-bar"
+                                 BorderThickness="0">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="root:ModuleItemViewModel">
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" FontSize="22" />
+                        <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" TextWrapping="Wrap" />
                         <TextBlock Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
+                                   DataContext="{Binding DataContext, ElementName=VmProxy}"
+                                   x:DataType="root:MainWindowViewModel"
                                    IsVisible="{Binding ShowRunHint}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </StackPanel>
-                <StackPanel Grid.Column="1"
-                            Spacing="6"
-                            HorizontalAlignment="Right"
-                            DataContext="{Binding DataContext, ElementName=VmProxy}"
-                            x:DataType="root:MainWindowViewModel">
-                    <WrapPanel Classes="toolbar-wrap" HorizontalAlignment="Right">
-                        <Button Content="Старт" Margin="0,0,8,8" Classes="primary"
-                                Command="{Binding StartCommand}" />
-                        <Button Content="Перезапуск" Margin="0,0,8,8"
-                                Command="{Binding RestartCommand}" />
-                        <Button Content="Остановить" Margin="0,0,8,8"
-                                Command="{Binding StopCommand}" />
-                        <Button Content="Отмена" Margin="0,0,8,8" Classes="danger"
-                                Command="{Binding CancelCommand}" />
-                    </WrapPanel>
-                </StackPanel>
             </Grid>
         </Border>
 
-        <Border Grid.Row="1"
-                Classes="warning-panel"
-                DataContext="{Binding DataContext, ElementName=VmProxy}"
-                x:DataType="root:MainWindowViewModel"
-                IsVisible="{Binding ShowPlaywrightInstallBanner}">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <TextBlock Text="Chromium (Playwright) не установлен. UI сценарий завершится ошибкой, пока браузер не установлен."
-                           TextWrapping="Wrap" />
-                <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
-                    <Button Content="Install Chromium (Playwright)"
-                            Command="{Binding InstallPlaywrightBrowsersCommand}"
-                            IsEnabled="{Binding CanInstallPlaywright}" />
-                    <TextBlock Text="{Binding PlaywrightInstallMessage}" Classes="status-line" TextWrapping="Wrap" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Row 2: Module selection -->
-        <Border Grid.Row="2" Classes="app-bar">
-            <ListBox ItemsSource="{Binding Modules}"
-                     SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
-                     Classes="segmented-bar"
-                     BorderThickness="0">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="8" />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="root:ModuleItemViewModel">
-                        <TextBlock Text="{Binding DisplayName}" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Border>
-
-        <!-- Row 3: Module info -->
-        <Border Grid.Row="3" Classes="app-bar">
-            <Grid ColumnDefinitions="200,*" ColumnSpacing="16">
-                <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" />
-                <TextBlock Grid.Column="1"
-                           Text="{Binding SelectedModule.Description}"
-                           Classes="status-line"
-                           TextWrapping="Wrap" />
-            </Grid>
-        </Border>
-
-        <!-- Body -->
-        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
-            <Grid MaxWidth="1200"
-                  HorizontalAlignment="Center"
-                  ColumnDefinitions="560,*"
-                  ColumnSpacing="16"
-                  RowDefinitions="Auto,Auto"
-                  RowSpacing="16">
-                <StackPanel Grid.Column="0"
-                            Spacing="16">
-                    <Border Classes="section">
-                        <StackPanel Spacing="8"
-                                    DataContext="{Binding SelectedModule.ModuleConfig}"
-                                    x:DataType="root:ModuleConfigViewModel">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Конфигурация" Classes="section-title" />
-                                <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                                    <Button Content="Обновить" Margin="0,0,8,8"
-                                            Command="{Binding RefreshCommand}" />
-                                    <Button Content="Загрузить" Margin="0,0,8,8"
-                                            Command="{Binding LoadSelectedCommand}" />
-                                    <Button Content="Сохранить" Margin="0,0,8,8"
-                                            Command="{Binding SaveNewCommand}" />
-                                    <Button Content="Перезаписать" Margin="0,0,8,8"
-                                            Classes="ghost"
-                                            Command="{Binding SaveOverwriteCommand}" />
-                                    <Button Content="Удалить" Margin="0,0,8,8"
-                                            Classes="danger"
-                                            Command="{Binding RequestDeleteSelectedCommand}" />
-                                </WrapPanel>
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Конфигурация" Classes="field-label" />
-                                <ComboBox Classes="field-control"
-                                          ItemsSource="{Binding Configs}"
-                                          SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="domain:ModuleConfigSummary">
-                                            <TextBlock Text="{Binding FinalName}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </Grid>
-                            <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
-                                <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                                <WrapPanel Classes="toolbar-wrap">
-                                    <Button Content="Подтвердить удаление" Margin="0,0,8,8"
-                                            Command="{Binding ConfirmDeleteSelectedCommand}" />
-                                    <Button Content="Отмена" Margin="0,0,8,8"
-                                            Classes="ghost"
-                                            Command="{Binding CancelDeleteSelectedCommand}" />
-                                </WrapPanel>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+                <Border Grid.Row="0" Grid.Column="0" Classes="section" MinWidth="440">
+                    <StackPanel Spacing="12"
+                                DataContext="{Binding SelectedModule.ModuleConfig}"
+                                x:DataType="root:ModuleConfigViewModel">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBlock Text="Конфигурация" Classes="section-title" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                <Button Classes="link" Content="Обновить" Command="{Binding RefreshCommand}" />
+                                <Button Classes="link" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
+                                <Button Classes="link" Content="Сохранить" Command="{Binding SaveNewCommand}" />
+                                <Button Classes="link" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
+                                <Button Classes="link" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
                             </StackPanel>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Имя (без пробелов)" Classes="field-label" />
-                                <TextBox Classes="field-control"
-                                         Watermark="Например: DemoConfig"
-                                         Text="{Binding UserName, Mode=TwoWay}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Финальное имя" Classes="field-label" />
-                                <TextBlock Classes="field-control" Text="{Binding FinalNamePreview}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Описание" Classes="field-label" />
-                                <TextBox Classes="field-control"
-                                         Watermark="Опишите назначение конфигурации"
-                                         Text="{Binding Description, Mode=TwoWay}" />
-                            </Grid>
-                            <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
-                        </StackPanel>
-                    </Border>
+                        </Grid>
 
-                    <Border Classes="section">
-                        <StackPanel Spacing="8"
-                                    DataContext="{Binding DataContext, ElementName=VmProxy}"
-                                    x:DataType="root:MainWindowViewModel">
-                            <StackPanel Spacing="8"
-                                        DataContext="{Binding RunProfile}"
-                                        x:DataType="root:RunProfileViewModel">
-                                <TextBlock Text="Параметры запуска" Classes="section-title" />
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Параллельность" Classes="field-label" />
-                                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Режим" Classes="field-label" />
-                                    <ComboBox Classes="field-control"
-                                              ItemsSource="{Binding ModeOptions}"
-                                              SelectedItem="{Binding Mode, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsIterationsMode}">
-                                    <TextBlock Text="Итерации" Classes="field-label" />
-                                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsDurationMode}">
-                                    <TextBlock Text="Длительность (сек)" Classes="field-label" />
-                                    <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                                    <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
-                                    <TextBlock Text="Headless" Classes="field-label" />
-                                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
-                                    <TextBlock Text="Скриншоты" Classes="field-label" />
-                                    <ComboBox Classes="field-control"
-                                              ItemsSource="{Binding ScreenshotsPolicyOptions}"
-                                              SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="HTML-отчёт" Classes="field-label" />
-                                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Telegram" Classes="field-label" />
-                                    <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                    <TextBlock Text="Preflight" Classes="field-label" />
-                                    <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
-                                </Grid>
-                                <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
-                                    <TextBlock Text="{Binding WarningMessage}" />
-                                </Border>
-                                <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Конфигурация" Classes="field-label" />
+                            <ComboBox Classes="field-control"
+                                      ItemsSource="{Binding Configs}"
+                                      SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="domain:ModuleConfigSummary">
+                                        <TextBlock Text="{Binding FinalName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                        <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Подтвердить удаление" Command="{Binding ConfirmDeleteSelectedCommand}" />
+                                <Button Content="Отмена" Classes="ghost" Command="{Binding CancelDeleteSelectedCommand}" />
                             </StackPanel>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Имя (без пробелов)" Classes="field-label" />
+                            <TextBox Classes="field-control" Watermark="Например: DemoConfig" Text="{Binding UserName, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Финальное имя" Classes="field-label" />
+                            <TextBlock Classes="field-control" Text="{Binding FinalNamePreview}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Описание" Classes="field-label" />
+                            <TextBox Classes="field-control" Watermark="Опишите назначение конфигурации" Text="{Binding Description, Mode=TwoWay}" />
+                        </Grid>
+                        <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
+                    </StackPanel>
+                </Border>
 
-                <StackPanel Grid.Column="1"
-                            Spacing="8">
-                    <TextBlock Text="Настройки модуля" Classes="section-title" />
-                    <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
-                </StackPanel>
+                <Border Grid.Row="0" Grid.Column="1" Classes="section" MinWidth="560">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Настройки модуля" Classes="section-title" />
+                        <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+                    </StackPanel>
+                </Border>
 
-                <Border Classes="section"
-                        Grid.Row="1"
-                        Grid.ColumnSpan="2">
+                <Border Grid.Row="1" Grid.Column="0" Classes="section"
+                        DataContext="{Binding DataContext, ElementName=VmProxy}"
+                        x:DataType="root:MainWindowViewModel">
+                    <StackPanel Spacing="8" DataContext="{Binding RunProfile}" x:DataType="root:RunProfileViewModel">
+                        <TextBlock Text="Параметры запуска" Classes="section-title" />
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Параллельность" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Режим" Classes="field-label" />
+                            <ComboBox Classes="field-control" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsIterationsMode}">
+                            <TextBlock Text="Итерации" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsDurationMode}">
+                            <TextBlock Text="Длительность (сек)" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="10" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Таймаут (сек)" Classes="field-label" />
+                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
+                            <TextBlock Text="Headless" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
+                            <TextBlock Text="Скриншоты" Classes="field-label" />
+                            <ComboBox Classes="field-control" ItemsSource="{Binding ScreenshotsPolicyOptions}" SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="HTML-отчёт" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Telegram" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Preflight" Classes="field-label" />
+                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                        </Grid>
+                        <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
+                            <TextBlock Text="{Binding WarningMessage}" />
+                        </Border>
+                        <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="section">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Результаты" Classes="section-title" />
+                        <TextBlock Text="Результаты и артефакты" Classes="section-title" />
                         <StackPanel Classes="empty-state"
                                     IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">
                             <TextBlock Text="Нет данных" Classes="empty-title" />
@@ -293,11 +260,11 @@
                                     x:DataType="root:MainWindowViewModel">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Артефакты" Classes="section-title" />
-                                <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                                    <Button Content="Открыть JSON" Margin="0,0,8,8" Command="{Binding OpenLatestJsonCommand}" />
-                                    <Button Content="Открыть HTML" Margin="0,0,8,8" Command="{Binding OpenLatestHtmlCommand}" />
-                                    <Button Content="Открыть папку прогона" Margin="0,0,8,8" Command="{Binding OpenLatestRunFolderCommand}" />
-                                </WrapPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                    <Button Classes="link" Content="Открыть JSON" Command="{Binding OpenLatestJsonCommand}" />
+                                    <Button Classes="link" Content="Открыть HTML" Command="{Binding OpenLatestHtmlCommand}" />
+                                    <Button Classes="link" Content="Открыть папку прогона" Command="{Binding OpenLatestRunFolderCommand}" />
+                                </StackPanel>
                             </Grid>
                             <StackPanel Classes="empty-state"
                                         IsVisible="{Binding SelectedModule.HasReport, Converter={StaticResource BooleanNotConverter}}">

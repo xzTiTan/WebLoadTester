@@ -4,92 +4,124 @@
         x:Class="WebLoadTester.Presentation.Views.SettingsWindow"
         x:DataType="vm:SettingsWindowViewModel"
         Title="Настройки"
-        Width="720" Height="640"
+        Width="1200" Height="760"
+        MinWidth="960" MinHeight="640"
         WindowStartupLocation="CenterOwner">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="16" Spacing="16">
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Пути хранения" Classes="section-title" />
-
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Каталог данных" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding DataDirectory, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Выбрать" Command="{Binding BrowseDataDirectoryCommand}" />
-                            <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
-                            <Button Content="Копировать" Command="{Binding CopyDataDirectoryCommand}" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Каталог прогонов" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding RunsDirectory, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="200,*" Margin="0,0,0,8">
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Выбрать" Command="{Binding BrowseRunsDirectoryCommand}" />
-                            <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
-                            <Button Content="Копировать" Command="{Binding CopyRunsDirectoryCommand}" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Путь к БД" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
-                    </Grid>
-                    <Grid ColumnDefinitions="200,*">
-                        <StackPanel Grid.Column="1" Classes="section-actions">
-                            <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
-                            <Button Content="Копировать" Command="{Binding CopyDatabasePathCommand}" />
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBlock Text="Артефакты прогонов сохраняются в runs/{RunId}/ (report.json, report.html, screenshots/, logs/)." TextWrapping="Wrap" />
-                </StackPanel>
-            </Border>
-
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Telegram" Classes="section-title" />
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Token" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" PasswordChar="*" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="ChatId" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Уведомления" Classes="field-label" />
-                        <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
-                    </Grid>
-                    <CheckBox Content="Уведомлять о старте" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
-                    <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
-                    <CheckBox Content="Уведомлять об ошибке" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Режим прогресса" Classes="field-label" />
-                        <ComboBox Classes="field-control"
-                                  ItemsSource="{Binding TelegramSettings.ProgressModes}"
-                                  SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Прогресс каждые N" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Ограничение частоты (сек)" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <StackPanel Classes="section-actions">
-                <Button Content="Сохранить" Command="{Binding SaveCommand}" />
+    <Grid RowDefinitions="*,Auto" ColumnDefinitions="270,*" ColumnSpacing="16" Margin="16">
+        <Border Grid.Row="0" Grid.Column="0" Classes="section">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Разделы" Classes="section-title" Margin="0,0,0,8" />
+                <ListBox Classes="settings-nav" SelectedIndex="0">
+                    <ListBoxItem>
+                        <TextBlock Text="Общие" />
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <TextBlock Text="Хранилище" />
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <TextBlock Text="Telegram" />
+                    </ListBoxItem>
+                </ListBox>
             </StackPanel>
-            <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
-        </StackPanel>
-    </ScrollViewer>
+        </Border>
+
+        <Border Grid.Row="0" Grid.Column="1" Classes="section">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" MinWidth="620">
+                    <Border Classes="section">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Пути хранения" Classes="section-title" />
+
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Каталог данных" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Выберите каталог данных" Text="{Binding DataDirectory, Mode=TwoWay}" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,8">
+                                <Button Content="Выбрать" Command="{Binding BrowseDataDirectoryCommand}" />
+                                <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
+                                <Button Content="Копировать" Command="{Binding CopyDataDirectoryCommand}" />
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Каталог прогонов" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Выберите каталог прогонов" Text="{Binding RunsDirectory, Mode=TwoWay}" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,8">
+                                <Button Content="Выбрать" Command="{Binding BrowseRunsDirectoryCommand}" />
+                                <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
+                                <Button Content="Копировать" Command="{Binding CopyRunsDirectoryCommand}" />
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Путь к БД" Classes="field-label" />
+                                <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,0">
+                                <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
+                                <Button Content="Копировать" Command="{Binding CopyDatabasePathCommand}" />
+                            </StackPanel>
+
+                            <TextBlock Text="Артефакты прогонов сохраняются в runs/{RunId}/ (report.json, report.html, screenshots/, logs/)." TextWrapping="Wrap" Classes="status-line" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Telegram" Classes="section-title" />
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Token" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Введите Bot Token" Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" PasswordChar="*" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="ChatId" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Введите ChatId" Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Уведомления" Classes="field-label" />
+                                <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="О старте" Classes="field-label" />
+                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="О завершении" Classes="field-label" />
+                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Об ошибке" Classes="field-label" />
+                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Режим прогресса" Classes="field-label" />
+                                <ComboBox Classes="field-control"
+                                          ItemsSource="{Binding TelegramSettings.ProgressModes}"
+                                          SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Прогресс каждые N" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Например: 10" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Ограничение частоты (сек)" Classes="field-label" />
+                                <TextBox Classes="field-control" Watermark="Например: 5" Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Classes="section" Padding="12">
+            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                <TextBlock Text="Подсказка: настройки применяются для следующих запусков."
+                           Classes="status-line"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Отмена" IsCancel="True" />
+                    <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

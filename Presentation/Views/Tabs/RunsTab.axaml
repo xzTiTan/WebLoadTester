@@ -4,95 +4,128 @@
              x:Class="WebLoadTester.Presentation.Views.Tabs.RunsTab"
              x:DataType="vm:RunsTabViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="16">
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Фильтры" Classes="section-title" />
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Модуль" Classes="field-label" />
-                        <ComboBox Classes="field-control"
+        <Grid RowDefinitions="Auto,*" RowSpacing="16">
+            <Border Grid.Row="0" Classes="section">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" RowDefinitions="Auto,Auto" RowSpacing="12">
+                    <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Фильтры" Classes="section-title" />
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="12">
+                        <ComboBox Watermark="Модуль"
                                   ItemsSource="{Binding ModuleFilterOptions}"
                                   SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Статус" Classes="field-label" />
-                        <ComboBox Classes="field-control"
+                        <ComboBox Grid.Column="1"
+                                  Watermark="Статус"
                                   ItemsSource="{Binding StatusFilterOptions}"
                                   SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
+                        <DatePicker Grid.Column="2" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
+                        <TextBox Grid.Column="4" Watermark="Поиск по RunId / модулю" Text="{Binding SearchText, Mode=TwoWay}" />
                     </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="С" Classes="field-label" />
-                        <DatePicker Classes="field-control" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="По" Classes="field-label" />
-                        <DatePicker Classes="field-control" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                        <TextBlock Text="Поиск" Classes="field-label" />
-                        <TextBox Classes="field-control" Text="{Binding SearchText, Mode=TwoWay}" />
-                    </Grid>
-                    <StackPanel Classes="section-actions">
-                        <Button Content="Применить" Command="{Binding RefreshCommand}" />
-                    </StackPanel>
-                </StackPanel>
+                    <Button Grid.Row="1" Grid.Column="1" Content="Применить" Classes="primary" Command="{Binding RefreshCommand}" />
+                </Grid>
             </Border>
 
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Прогоны" Classes="section-title" />
-                    <DataGrid ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun, Mode=TwoWay}" Classes="list-min-240">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
-                            <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
-                            <DataGridTextColumn Header="Module" Binding="{Binding ModuleName}" Width="2*" />
-                            <DataGridTextColumn Header="TestName" Binding="{Binding TestName}" Width="2*" />
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
-                            <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
-                            <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-            </Border>
+            <Grid Grid.Row="1" ColumnDefinitions="1.2*,*" ColumnSpacing="16">
+                <Border Grid.Column="0" Classes="section">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Список прогонов" Classes="section-title" />
+                            <Border Grid.Column="1" Classes="badge">
+                                <TextBlock Text="Sort: newest" FontSize="12" />
+                            </Border>
+                        </Grid>
 
-            <Border Classes="section">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Действия по выбранному прогону" Classes="section-title" />
-                    <StackPanel Classes="empty-state"
-                                IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}, ConverterParameter=invert}">
-                        <TextBlock Text="Нет данных" Classes="empty-title" />
-                        <TextBlock Text="Выполните запуск или выберите прогон" />
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
-                        <StackPanel Classes="section-actions">
-                            <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Открыть папку" Command="{Binding OpenRunFolderCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Повторить запуск" Command="{Binding RepeatRunCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}"
-                                    IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding Runs}"
+                                  SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
+                                  Classes="list-min-240"
+                                  AutoGenerateColumns="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
+                                <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
+                                <DataGridTextColumn Header="Module" Binding="{Binding ModuleName}" Width="1.5*" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                                <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
+                                <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Classes="section">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Classes="badge">
+                                    <TextBlock Text="{Binding SelectedRun.ModuleName, StringFormat='Module: {0}'}" FontSize="12" />
+                                </Border>
+                                <Border Classes="badge">
+                                    <TextBlock Text="{Binding SelectedRun.Status, StringFormat='Status: {0}'}" FontSize="12" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                <Button Classes="link" Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                                <Button Classes="link" Content="Повторить" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Детали прогона" Classes="section-title" />
+                        <StackPanel Classes="empty-state"
+                                    IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}, ConverterParameter=invert}">
+                            <TextBlock Text="Нет данных" Classes="empty-title" />
+                            <TextBlock Text="Выполните запуск или выберите прогон" />
                         </StackPanel>
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
-                        <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                        <StackPanel Classes="section-actions">
-                            <Button Content="Подтвердить удаление"
-                                    Command="{Binding ConfirmDeleteRunCommand}" />
-                            <Button Content="Отмена"
-                                    Command="{Binding CancelDeleteRunCommand}" />
+
+                        <Grid IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}"
+                              ColumnDefinitions="150,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="6"
+                              ColumnSpacing="8">
+                            <TextBlock Text="RunId" Classes="muted" />
+                            <TextBlock Grid.Column="1" Text="{Binding SelectedRun.RunId}" TextWrapping="Wrap" />
+                            <TextBlock Grid.Row="1" Text="Start" Classes="muted" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedRun.StartedAt}" />
+                            <TextBlock Grid.Row="2" Text="Duration" Classes="muted" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedRun.DurationMs}" />
+                            <TextBlock Grid.Row="3" Text="Target" Classes="muted" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedRun.TestName}" TextWrapping="Wrap" />
+                            <TextBlock Grid.Row="4" Text="Profile" Classes="muted" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedRun.ModuleType}" />
+                        </Grid>
+
+                        <TextBlock Text="Артефакты" Classes="section-title" />
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
+                            <TextBlock Text="report.json" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Открыть" Command="{Binding OpenJsonCommand}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
+                            <TextBlock Text="report.html" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Открыть" Command="{Binding OpenHtmlCommand}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
+                            <TextBlock Text="Папка прогона" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Открыть" Command="{Binding OpenRunFolderCommand}" />
+                        </Grid>
+
+                        <Expander Header="Дополнительно" IsVisible="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}">
+                            <StackPanel Spacing="6" Margin="0,8,0,0">
+                                <Button Content="Копировать RunId" Command="{Binding CopyRunIdCommand}" />
+                                <Button Content="Копировать путь" Command="{Binding CopyRunPathCommand}" />
+                                <Button Content="Удалить прогон" Command="{Binding RequestDeleteRunCommand}" />
+                            </StackPanel>
+                        </Expander>
+
+                        <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
+                            <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Подтвердить удаление" Command="{Binding ConfirmDeleteRunCommand}" />
+                                <Button Content="Отмена" Command="{Binding CancelDeleteRunCommand}" />
+                            </StackPanel>
                         </StackPanel>
+
+                        <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
                     </StackPanel>
-                    <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
-                </StackPanel>
-            </Border>
-        </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
     </ScrollViewer>
 </UserControl>
