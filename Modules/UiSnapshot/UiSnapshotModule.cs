@@ -32,7 +32,7 @@ public class UiSnapshotModule : ITestModule
         {
             Targets = new List<SnapshotTarget>
             {
-                new() { Url = "https://example.com", Tag = "Example" }
+                new() { Url = "https://example.com", Tag = "Example", Selector = string.Empty }
             },
             WaitUntil = "load",
             TimeoutSeconds = 30,
@@ -60,6 +60,11 @@ public class UiSnapshotModule : ITestModule
         if (s.Targets.Any(target => !Uri.TryCreate(target.Url, UriKind.Absolute, out _)))
         {
             errors.Add("Each URL must be absolute");
+        }
+
+        if (s.Targets.Any(target => !string.IsNullOrWhiteSpace(target.Selector) && string.IsNullOrWhiteSpace(target.Url)))
+        {
+            errors.Add("URL is required when selector is provided");
         }
 
         if (s.TimeoutSeconds <= 0)
@@ -124,23 +129,43 @@ public class UiSnapshotModule : ITestModule
             var sw = Stopwatch.StartNew();
             try
             {
-                var page = await browser.NewPageAsync(new BrowserNewPageOptions
+                var page = await browser.NewPageAsync();
+                if (s.ViewportWidth.HasValue && s.ViewportHeight.HasValue &&
+                    s.ViewportWidth.Value > 0 && s.ViewportHeight.Value > 0)
                 {
-                    ViewportSize = s.ViewportWidth.HasValue && s.ViewportHeight.HasValue &&
-                                   s.ViewportWidth.Value > 0 && s.ViewportHeight.Value > 0
-                        ? new ViewportSize { Width = s.ViewportWidth.Value, Height = s.ViewportHeight.Value }
-                        : null
-                });
+                    await page.SetViewportSizeAsync(s.ViewportWidth.Value, s.ViewportHeight.Value);
+                }
+
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
                     WaitUntil = waitUntil,
                     Timeout = s.TimeoutSeconds * 1000
                 });
-                var bytes = await page.ScreenshotAsync(new PageScreenshotOptions
+
+                byte[] bytes;
+                if (!string.IsNullOrWhiteSpace(target.Selector))
                 {
-                    FullPage = s.FullPage,
-                    Type = ScreenshotType.Png
-                });
+                    ctx.Log.Info($"[UiSnapshot] Waiting for selector '{target.Selector}' on {target.Url}");
+                    var locator = page.Locator(target.Selector);
+                    await locator.WaitForAsync(new LocatorWaitForOptions
+                    {
+                        State = WaitForSelectorState.Visible,
+                        Timeout = s.TimeoutSeconds * 1000
+                    });
+                    bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions
+                    {
+                        Type = ScreenshotType.Png
+                    });
+                }
+                else
+                {
+                    bytes = await page.ScreenshotAsync(new PageScreenshotOptions
+                    {
+                        FullPage = s.FullPage,
+                        Type = ScreenshotType.Png
+                    });
+                }
+
                 var fileName = $"snapshot_{Sanitize(target.Url)}.png";
                 var path = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
                 sw.Stop();
@@ -154,6 +179,7 @@ public class UiSnapshotModule : ITestModule
             catch (Exception ex)
             {
                 sw.Stop();
+                ctx.Log.Error($"[UiSnapshot] Failed for {target.Url}: {ex.GetType().Name}: {ex.Message}");
                 results.Add(new RunResult(target.Tag ?? target.Url)
                 {
                     Success = false,

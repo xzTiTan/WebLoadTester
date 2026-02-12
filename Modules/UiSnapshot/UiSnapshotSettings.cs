@@ -20,4 +20,5 @@ public class SnapshotTarget
 {
     public string Url { get; set; } = string.Empty;
     public string? Tag { get; set; }
+    public string? Selector { get; set; }
 }
