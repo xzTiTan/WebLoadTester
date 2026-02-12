@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+<style>
+  .h1 { font: 600 22px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .h2 { font: 600 16px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .body { font: 400 14px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .muted { font: 400 12px "Inter", "Segoe UI", Arial; fill: #556070; }
+  .btn { font: 600 13px "Inter", "Segoe UI", Arial; fill: #fff; }
+  .btn2 { font: 600 13px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .mono { font: 400 12px "Consolas","SFMono-Regular","Menlo",monospace; fill: #556070; }
+  .chip { font: 600 12px "Inter", "Segoe UI", Arial; }
+</style>
+<rect x="0" y="0" width="1200" height="760" fill="#F5F7FA"/>
+<rect x="24" y="24" width="1152" height="712" rx="18" ry="18" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="44" y="58" class="h1" text-anchor="start">Настройки</text>
+<rect x="44" y="78" width="220" height="622" rx="14" fill="#F5F7FA" stroke="#D9DEE7"/>
+<rect x="52" y="88" width="204" height="34" rx="10" fill="#E8F0FF" stroke="#1F6FEB"/>
+<text x="62" y="112" class="body" text-anchor="start">Storage (SQLite)</text>
+<text x="62" y="156" class="body" text-anchor="start">Telegram</text>
+<text x="62" y="200" class="body" text-anchor="start">UI / Playwright</text>
+<text x="62" y="244" class="body" text-anchor="start">О программе</text>
+<rect x="280" y="78" width="876" height="622" rx="14" fill="#FFFFFF" stroke="#D9DEE7"/>
+<text x="296" y="106" class="h2" text-anchor="start">Storage (SQLite)</text>
+<line x1="296" y1="118" x2="1140" y2="118" stroke="#D9DEE7" stroke-width="1" />
+<text x="296" y="164" class="muted" text-anchor="start">Путь к БД</text>
+<rect x="528" y="146" width="612" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="540" y="166" class="mono" text-anchor="start">data/weblt.db</text>
+<text x="296" y="216" class="muted" text-anchor="start">Папка прогонов</text>
+<rect x="528" y="198" width="612" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="540" y="218" class="mono" text-anchor="start">runs/</text>
+<text x="296" y="268" class="muted" text-anchor="start">Авто-очистка</text>
+<rect x="528" y="250" width="612" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="540" y="270" class="body" text-anchor="start">Off</text>
+<text x="296" y="320" class="muted" text-anchor="start">Хранить дней</text>
+<rect x="528" y="302" width="612" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="540" y="322" class="body" text-anchor="start">30</text>
+<rect x="1036" y="678" width="120" height="36" rx="10" ry="10" fill="#1F6FEB" stroke="#1F6FEB" stroke-width="1"/>
+<text x="1096.0" y="700.0" class="btn" text-anchor="middle">Сохранить</text>
+<rect x="906" y="678" width="120" height="36" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="966.0" y="700.0" class="btn2" text-anchor="middle">Отмена</text>
+<text x="44" y="704" class="muted" text-anchor="start">Изменения применяются без перезапуска, где возможно</text>
+</svg>

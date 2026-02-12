@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+<style>
+  .h1 { font: 600 22px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .h2 { font: 600 16px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .body { font: 400 14px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .muted { font: 400 12px "Inter", "Segoe UI", Arial; fill: #556070; }
+  .btn { font: 600 13px "Inter", "Segoe UI", Arial; fill: #fff; }
+  .btn2 { font: 600 13px "Inter", "Segoe UI", Arial; fill: #0B1220; }
+  .mono { font: 400 12px "Consolas","SFMono-Regular","Menlo",monospace; fill: #556070; }
+  .chip { font: 600 12px "Inter", "Segoe UI", Arial; }
+</style>
+<rect x="0" y="0" width="3840" height="2160" fill="#F5F7FA"/>
+<rect x="24" y="24" width="3792" height="92" rx="16" ry="16" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="44" y="58" class="h1" text-anchor="start">WebLoadTester</text>
+<text x="44" y="82" class="muted" text-anchor="start">Панель управления</text>
+<rect x="3676" y="84" width="120" height="28" rx="14.0" ry="14.0" fill="#E7F6EC" stroke="#1A7F37" stroke-width="1"/>
+<text x="3736.0" y="102.0" class="chip" text-anchor="middle" fill="#1A7F37">Telegram: OK</text>
+<rect x="3546" y="84" width="120" height="28" rx="14.0" ry="14.0" fill="#E7F6EC" stroke="#1A7F37" stroke-width="1"/>
+<text x="3606.0" y="102.0" class="chip" text-anchor="middle" fill="#1A7F37">DB: OK</text>
+<rect x="3382" y="84" width="150" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="3457.0" y="104.0" class="btn2" text-anchor="middle">Папка прогонов</text>
+<rect x="3252" y="84" width="120" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="3312.0" y="104.0" class="btn2" text-anchor="middle">Настройки</text>
+<rect x="24" y="132" width="3792" height="44" rx="14" ry="14" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<rect x="40" y="140" width="133" height="28" rx="14.0" ry="14.0" fill="#E8F0FF" stroke="#1F6FEB" stroke-width="1"/>
+<text x="106.5" y="158.0" class="chip" text-anchor="middle" fill="#1F6FEB">UI тестирование</text>
+<rect x="183" y="140" width="147" height="28" rx="14.0" ry="14.0" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="256.5" y="158.0" class="chip" text-anchor="middle" fill="#556070">HTTP тестирование</text>
+<rect x="340" y="140" width="161" height="28" rx="14.0" ry="14.0" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="420.5" y="158.0" class="chip" text-anchor="middle" fill="#556070">Сеть и безопасность</text>
+<rect x="511" y="140" width="77" height="28" rx="14.0" ry="14.0" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="549.5" y="158.0" class="chip" text-anchor="middle" fill="#556070">Прогоны</text>
+<rect x="24" y="192" width="3792" height="1868" rx="16" ry="16" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<rect x="1020.0" y="210" width="1800" height="168" rx="16" ry="16" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="1038.0" y="240" class="muted" text-anchor="start">3840×2160 • Workspace: UI (A1..A3)</text>
+<rect x="1038.0" y="250" width="1764" height="10" rx="5" fill="#D9DEE7" opacity="0.6"/>
+<rect x="1038.0" y="250" width="1093.68" height="10" rx="5" fill="#1F6FEB"/>
+<text x="1038.0" y="280" class="body" text-anchor="start">Stage: Running • 62% • 00:38 elapsed</text>
+<rect x="2692.0" y="306" width="110" height="34" rx="10" ry="10" fill="#D73A49" stroke="#D73A49" stroke-width="1"/>
+<text x="2747.0" y="327.0" class="btn" text-anchor="middle">Отмена</text>
+<rect x="2572.0" y="306" width="110" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="2627.0" y="327.0" class="btn2" text-anchor="middle">Остановить</text>
+<rect x="2442.0" y="306" width="120" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="2502.0" y="327.0" class="btn2" text-anchor="middle">Перезапуск</text>
+<rect x="2340.0" y="306" width="92" height="34" rx="10" ry="10" fill="#1F6FEB" stroke="#1F6FEB" stroke-width="1"/>
+<text x="2386.0" y="327.0" class="btn" text-anchor="middle">Старт</text>
+<rect x="2270.0" y="312" width="56" height="22" rx="11.0" fill="#D9DEE7"/>
+<circle cx="2281.0" cy="323.0" r="8.0" fill="#FFFFFF" stroke="#D9DEE7"/>
+<text x="2260.0" y="334" class="muted" text-anchor="end">Показывать браузер</text>
+<text x="1038.0" y="368" class="muted" text-anchor="start">Модули:</text>
+<rect x="1100.0" y="354" width="101" height="28" rx="14.0" ry="14.0" fill="#E8F0FF" stroke="#1F6FEB" stroke-width="1"/>
+<text x="1150.5" y="372.0" class="chip" text-anchor="middle" fill="#1F6FEB">A1 Сценарий</text>
+<rect x="1211.0" y="354" width="87" height="28" rx="14.0" ry="14.0" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1254.5" y="372.0" class="chip" text-anchor="middle" fill="#556070">A2 Снимки</text>
+<rect x="1308.0" y="354" width="101" height="28" rx="14.0" ry="14.0" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1358.5" y="372.0" class="chip" text-anchor="middle" fill="#556070">A3 Тайминги</text>
+<text x="1038.0" y="362" class="muted" text-anchor="start">A1 ui.scenario — navigate/click/fill/assert + скриншоты по политике</text>
+<rect x="1020.0" y="394" width="560" height="300" rx="14" ry="14" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="1036.0" y="420" class="h2" text-anchor="start">Конфигурация</text>
+<text x="1564.0" y="420" class="muted" text-anchor="end">Обновить  Загрузить  Сохранить  Перезаписать  Удалить</text>
+<line x1="1036.0" y1="432" x2="1564.0" y2="432" stroke="#D9DEE7" stroke-width="1" />
+<text x="1036.0" y="480" class="muted" text-anchor="start">Конфиг</text>
+<rect x="1248.0" y="462" width="316" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="483.0" class="muted" text-anchor="start">Demo_A1</text>
+<text x="1036.0" y="534" class="muted" text-anchor="start">Имя (без пробелов)</text>
+<rect x="1248.0" y="516" width="316" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="537.0" class="muted" text-anchor="start">DemoConfig</text>
+<text x="1036.0" y="588" class="muted" text-anchor="start">Финальное имя</text>
+<rect x="1248.0" y="570" width="316" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="590" class="body" text-anchor="start">TiTan_ui.scenario</text>
+<text x="1036.0" y="642" class="muted" text-anchor="start">Описание</text>
+<rect x="1248.0" y="624" width="316" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="645.0" class="muted" text-anchor="start">Базовый сценарий</text>
+<rect x="1020.0" y="710" width="560" height="340" rx="14" ry="14" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="1036.0" y="736" class="h2" text-anchor="start">Параметры запуска</text>
+<line x1="1036.0" y1="748" x2="1564.0" y2="748" stroke="#D9DEE7" stroke-width="1" />
+<text x="1036.0" y="794" class="muted" text-anchor="start">Параллельность</text>
+<rect x="1248.0" y="776" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="796.0" class="muted" text-anchor="start">5</text>
+<text x="1036.0" y="836" class="muted" text-anchor="start">Режим</text>
+<rect x="1248.0" y="818" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="838.0" class="muted" text-anchor="start">Duration</text>
+<text x="1036.0" y="878" class="muted" text-anchor="start">Длительность (сек)</text>
+<rect x="1248.0" y="860" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="880.0" class="muted" text-anchor="start">60</text>
+<text x="1036.0" y="920" class="muted" text-anchor="start">Таймаут (сек)</text>
+<rect x="1248.0" y="902" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="922.0" class="muted" text-anchor="start">30</text>
+<text x="1036.0" y="962" class="muted" text-anchor="start">Headless</text>
+<rect x="1248.0" y="944" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="964.0" class="muted" text-anchor="start">Off</text>
+<text x="1036.0" y="1004" class="muted" text-anchor="start">Скриншоты</text>
+<rect x="1248.0" y="986" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="1006.0" class="muted" text-anchor="start">OnError</text>
+<text x="1036.0" y="1046" class="muted" text-anchor="start">HTML-отчёт</text>
+<rect x="1248.0" y="1028" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="1048.0" class="muted" text-anchor="start">On</text>
+<text x="1036.0" y="1088" class="muted" text-anchor="start">Telegram</text>
+<rect x="1248.0" y="1070" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="1090.0" class="muted" text-anchor="start">Off</text>
+<text x="1036.0" y="1130" class="muted" text-anchor="start">Preflight</text>
+<rect x="1248.0" y="1112" width="316" height="32" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1260.0" y="1132.0" class="muted" text-anchor="start">On</text>
+<rect x="1596.0" y="394" width="1224" height="656" rx="14" ry="14" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="1612.0" y="420" class="h2" text-anchor="start">Настройки модуля (A1)</text>
+<line x1="1612.0" y1="432" x2="2804.0" y2="432" stroke="#D9DEE7" stroke-width="1" />
+<text x="1612.0" y="468" class="muted" text-anchor="start">Шаги сценария</text>
+<rect x="1612.0" y="480" width="1192" height="210" rx="12" fill="#F5F7FA" stroke="#D9DEE7"/>
+<text x="1624.0" y="506" class="muted" text-anchor="start">№</text>
+<text x="1672.0" y="506" class="muted" text-anchor="start">Action</text>
+<text x="1832.0" y="506" class="muted" text-anchor="start">Target</text>
+<text x="2666.0" y="506" class="muted" text-anchor="start">Assert</text>
+<line x1="1620.0" y1="514" x2="2796.0" y2="514" stroke="#D9DEE7" stroke-width="1" />
+<text x="1626.0" y="538" class="body" text-anchor="start">1</text>
+<text x="1672.0" y="538" class="body" text-anchor="start">Navigate</text>
+<text x="1832.0" y="538" class="mono" text-anchor="start">https://example.com</text>
+<text x="2666.0" y="538" class="body" text-anchor="start">Status=200</text>
+<text x="1626.0" y="568" class="body" text-anchor="start">2</text>
+<text x="1672.0" y="568" class="body" text-anchor="start">Click</text>
+<text x="1832.0" y="568" class="mono" text-anchor="start">#login</text>
+<text x="2666.0" y="568" class="body" text-anchor="start">Visible</text>
+<text x="1626.0" y="598" class="body" text-anchor="start">3</text>
+<text x="1672.0" y="598" class="body" text-anchor="start">Fill</text>
+<text x="1832.0" y="598" class="mono" text-anchor="start">#user</text>
+<text x="2666.0" y="598" class="body" text-anchor="start">NonEmpty</text>
+<text x="1626.0" y="628" class="body" text-anchor="start">4</text>
+<text x="1672.0" y="628" class="body" text-anchor="start">Fill</text>
+<text x="1832.0" y="628" class="mono" text-anchor="start">#pass</text>
+<text x="2666.0" y="628" class="body" text-anchor="start">NonEmpty</text>
+<text x="1626.0" y="658" class="body" text-anchor="start">5</text>
+<text x="1672.0" y="658" class="body" text-anchor="start">Click</text>
+<text x="1832.0" y="658" class="mono" text-anchor="start">button[type=submit]</text>
+<text x="2666.0" y="658" class="body" text-anchor="start">Text contains 'OK'</text>
+<rect x="1612.0" y="710" width="120" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1672.0" y="731.0" class="btn2" text-anchor="middle">Добавить шаг</text>
+<rect x="1742.0" y="710" width="110" height="34" rx="10" ry="10" fill="#D73A49" stroke="#D73A49" stroke-width="1"/>
+<text x="1797.0" y="731.0" class="btn" text-anchor="middle">Удалить</text>
+<rect x="1862.0" y="710" width="120" height="34" rx="10" ry="10" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1"/>
+<text x="1922.0" y="731.0" class="btn2" text-anchor="middle">Импорт JSON</text>
+<rect x="1020.0" y="1066" width="1800" height="976" rx="14" ry="14" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="1036.0" y="1092" class="h2" text-anchor="start">Результаты и артефакты</text>
+<text x="2804.0" y="1092" class="muted" text-anchor="end">Открыть JSON  Открыть HTML  Открыть папку</text>
+<line x1="1036.0" y1="1104" x2="2804.0" y2="1104" stroke="#D9DEE7" stroke-width="1" />
+<rect x="1036.0" y="1124" width="260" height="90" rx="14" fill="#E7F6EC" stroke="#1A7F37"/>
+<text x="1050.0" y="1154" class="muted" text-anchor="start">Статус</text>
+<text x="1050.0" y="1186" class="h2" text-anchor="start">Success</text>
+<rect x="1308.0" y="1124" width="260" height="90" rx="14" fill="#E8F0FF" stroke="#1F6FEB"/>
+<text x="1322.0" y="1154" class="muted" text-anchor="start">Длительность</text>
+<text x="1322.0" y="1186" class="h2" text-anchor="start">00:58</text>
+<rect x="1580.0" y="1124" width="260" height="90" rx="14" fill="#FFFFFF" stroke="#D9DEE7"/>
+<text x="1594.0" y="1154" class="muted" text-anchor="start">Ошибки</text>
+<text x="1594.0" y="1186" class="h2" text-anchor="start">0</text>
+<rect x="1036.0" y="1230" width="1768" height="796" rx="14" fill="#F5F7FA" stroke="#D9DEE7"/>
+<text x="1048.0" y="1256" class="muted" text-anchor="start">Тип</text>
+<text x="1196.0" y="1256" class="muted" text-anchor="start">Название</text>
+<text x="2444.0" y="1256" class="muted" text-anchor="start">Успех</text>
+<text x="2544.0" y="1256" class="muted" text-anchor="start">Длительность</text>
+<text x="2664.0" y="1256" class="muted" text-anchor="start">Ошибка</text>
+<line x1="1044.0" y1="1264" x2="2796.0" y2="1264" stroke="#D9DEE7" stroke-width="1" />
+<rect x="24" y="2076" width="3792" height="60" rx="16" ry="16" fill="#FFFFFF" stroke="#D9DEE7" stroke-width="1" />
+<text x="44" y="2112" class="muted" text-anchor="start">Лог выполнения (свернут) — автоскролл • только ошибки • очистить • копировать</text>
+<text x="3820" y="2148" class="muted" text-anchor="end">Mockup SVG • Light Theme • Responsive container max-width</text>
+</svg>
