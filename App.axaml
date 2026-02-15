@@ -56,23 +56,23 @@
         <StyleInclude Source="avares://WebLoadTester/Presentation/Styles/Workspace.axaml" />
 
         <Style Selector="TextBox">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="36" />
         </Style>
 
         <Style Selector="ComboBox">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="36" />
         </Style>
 
         <Style Selector="DatePicker">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="36" />
         </Style>
 
         <Style Selector="NumericUpDown">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="36" />
         </Style>
 
         <Style Selector="Button">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="MinWidth" Value="96" />
         </Style>
 

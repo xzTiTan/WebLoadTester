@@ -6,24 +6,35 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,*" RowSpacing="16">
             <Border Grid.Row="0" Classes="section">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" RowDefinitions="Auto,Auto" RowSpacing="12">
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Фильтры" Classes="section-title" />
-                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="12">
-                        <StackPanel Spacing="4">
+                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                    <TextBlock Grid.Row="0" Text="Фильтры" Classes="section-title" />
+                    <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                        <StackPanel Spacing="4" MinWidth="220" Margin="0,0,12,12">
                             <TextBlock Text="Модуль" Classes="muted" FontSize="12" />
                             <ComboBox ItemsSource="{Binding ModuleFilterOptions}"
                                       SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="4">
+                        <StackPanel Spacing="4" MinWidth="200" Margin="0,0,12,12">
                             <TextBlock Text="Статус" Classes="muted" FontSize="12" />
                             <ComboBox ItemsSource="{Binding StatusFilterOptions}"
                                       SelectedItem="{Binding SelectedStatus, Mode=TwoWay}" />
                         </StackPanel>
-                        <DatePicker Grid.Column="2" SelectedDate="{Binding FromDate, Mode=TwoWay}" />
-                        <DatePicker Grid.Column="3" SelectedDate="{Binding ToDate, Mode=TwoWay}" />
-                        <TextBox Grid.Column="4" Watermark="Поиск по RunId / модулю" Text="{Binding SearchText, Mode=TwoWay}" />
-                    </Grid>
-                    <Button Grid.Row="1" Grid.Column="1" Content="Применить" Classes="primary" Command="{Binding RefreshCommand}" />
+                        <StackPanel Spacing="4" MinWidth="190" Margin="0,0,12,12">
+                            <TextBlock Text="От" Classes="muted" FontSize="12" />
+                            <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" MinWidth="190" Margin="0,0,12,12">
+                            <TextBlock Text="До" Classes="muted" FontSize="12" />
+                            <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" MinWidth="280" Margin="0,0,12,12">
+                            <TextBlock Text="Поиск" Classes="muted" FontSize="12" />
+                            <TextBox Watermark="Поиск по RunId / модулю" Text="{Binding SearchText, Mode=TwoWay}" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Применить" Classes="primary" Command="{Binding RefreshCommand}" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -65,10 +76,10 @@
                                     <TextBlock Text="{Binding SelectedRun.Status, StringFormat='Status: {0}'}" FontSize="12" />
                                 </Border>
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                <Button Classes="link" Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                                <Button Classes="link" Content="Повторить" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                            </StackPanel>
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Classes="link" Margin="0,0,8,8" Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                                <Button Classes="link" Margin="0,0,0,8" Content="Повторить" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                            </WrapPanel>
                         </Grid>
 
                         <TextBlock Text="Детали прогона" Classes="section-title" />

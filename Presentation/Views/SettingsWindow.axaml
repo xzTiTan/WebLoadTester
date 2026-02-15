@@ -27,7 +27,7 @@
 
         <Border Grid.Row="0" Grid.Column="1" Classes="section">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="16" MinWidth="620">
+                <StackPanel Spacing="16" MinWidth="560">
                     <Border Classes="section">
                         <StackPanel Spacing="10">
                             <TextBlock Text="Пути хранения" Classes="section-title" />
@@ -36,30 +36,42 @@
                                 <TextBlock Text="Каталог данных" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Выберите каталог данных" Text="{Binding DataDirectory, Mode=TwoWay}" />
                             </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,8">
-                                <Button Content="Выбрать" Command="{Binding BrowseDataDirectoryCommand}" />
-                                <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
-                                <Button Content="Копировать" Command="{Binding CopyDataDirectoryCommand}" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <Border Grid.Column="1" Background="Transparent">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Выбрать" Command="{Binding BrowseDataDirectoryCommand}" />
+                                        <Button Content="Открыть" Command="{Binding OpenDataDirectoryCommand}" />
+                                        <Button Content="Копировать" Command="{Binding CopyDataDirectoryCommand}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="Каталог прогонов" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Выберите каталог прогонов" Text="{Binding RunsDirectory, Mode=TwoWay}" />
                             </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,8">
-                                <Button Content="Выбрать" Command="{Binding BrowseRunsDirectoryCommand}" />
-                                <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
-                                <Button Content="Копировать" Command="{Binding CopyRunsDirectoryCommand}" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <Border Grid.Column="1" Background="Transparent">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Выбрать" Command="{Binding BrowseRunsDirectoryCommand}" />
+                                        <Button Content="Открыть" Command="{Binding OpenRunsDirectoryCommand}" />
+                                        <Button Content="Копировать" Command="{Binding CopyRunsDirectoryCommand}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="Путь к БД" Classes="field-label" />
                                 <TextBox Classes="field-control" Text="{Binding DatabasePath}" IsReadOnly="True" />
                             </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="220,0,0,0">
-                                <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
-                                <Button Content="Копировать" Command="{Binding CopyDatabasePathCommand}" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <Border Grid.Column="1" Background="Transparent">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Открыть" Command="{Binding OpenDatabasePathCommand}" />
+                                        <Button Content="Копировать" Command="{Binding CopyDatabasePathCommand}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
 
                             <TextBlock Text="Артефакты прогонов сохраняются в runs/{RunId}/ (report.json, report.html, screenshots/, logs/)." TextWrapping="Wrap" Classes="status-line" />
                         </StackPanel>

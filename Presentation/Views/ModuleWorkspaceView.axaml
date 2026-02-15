@@ -30,7 +30,7 @@
                         </Grid>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                         <StackPanel Orientation="Horizontal"
                                     Spacing="6"
                                     VerticalAlignment="Center"
@@ -40,11 +40,11 @@
                             <TextBlock Text="Показывать браузер" VerticalAlignment="Center" />
                             <ToggleSwitch IsChecked="{Binding Headless, Converter={StaticResource BooleanNotConverter}, Mode=TwoWay}" />
                         </StackPanel>
-                        <Button Content="Старт" Classes="primary" Command="{Binding StartCommand}" />
-                        <Button Content="Перезапуск" Command="{Binding RestartCommand}" />
-                        <Button Content="Остановить" Command="{Binding StopCommand}" />
-                        <Button Content="Отмена" Classes="danger" Command="{Binding CancelCommand}" />
-                    </StackPanel>
+                        <Button Margin="0,0,8,8" Content="Старт" Classes="primary" Command="{Binding StartCommand}" />
+                        <Button Margin="0,0,8,8" Content="Перезапуск" Command="{Binding RestartCommand}" />
+                        <Button Margin="0,0,8,8" Content="Остановить" Command="{Binding StopCommand}" />
+                        <Button Margin="0,0,0,8" Content="Отмена" Classes="danger" Command="{Binding CancelCommand}" />
+                    </WrapPanel>
                 </Grid>
 
                 <Border Classes="warning-panel"
@@ -64,8 +64,8 @@
                 </Border>
 
                 <StackPanel Spacing="8">
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <TextBlock Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Margin="0,0,8,8" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <ListBox ItemsSource="{Binding Modules}"
                                  SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
                                  Classes="segmented-bar"
@@ -81,7 +81,7 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </StackPanel>
+                    </WrapPanel>
 
                     <StackPanel Spacing="4">
                         <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" FontSize="22" />
@@ -104,13 +104,13 @@
                                 x:DataType="root:ModuleConfigViewModel">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <TextBlock Text="Конфигурация" Classes="section-title" />
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                <Button Classes="link" Content="Обновить" Command="{Binding RefreshCommand}" />
-                                <Button Classes="link" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
-                                <Button Classes="link" Content="Сохранить" Command="{Binding SaveNewCommand}" />
-                                <Button Classes="link" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
-                                <Button Classes="link" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
-                            </StackPanel>
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Classes="link" Margin="0,0,8,8" Content="Обновить" Command="{Binding RefreshCommand}" />
+                                <Button Classes="link" Margin="0,0,8,8" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
+                                <Button Classes="link" Margin="0,0,8,8" Content="Сохранить" Command="{Binding SaveNewCommand}" />
+                                <Button Classes="link" Margin="0,0,8,8" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
+                                <Button Classes="link" Margin="0,0,0,8" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
+                            </WrapPanel>
                         </Grid>
 
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">

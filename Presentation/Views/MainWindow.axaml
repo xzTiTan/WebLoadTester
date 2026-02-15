@@ -17,16 +17,16 @@
                             <TextBlock Text="WebLoadTester" Classes="page-title" />
                             <TextBlock Text="Панель управления" Classes="muted" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <Button Classes="secondary" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                            <Button Classes="secondary" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                            <Border Classes="badge" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" />
+                        <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Button Classes="secondary" Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                            <Button Classes="secondary" Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                            <Border Classes="badge" Margin="0,0,8,8" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                             </Border>
-                            <Border Classes="badge" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" />
+                            <Border Classes="badge" Margin="0,0,0,8" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                             </Border>
-                        </StackPanel>
+                        </WrapPanel>
                     </Grid>
                 </Border>
 
@@ -52,14 +52,14 @@
         <Border Grid.Row="1" Margin="24,0,24,24" HorizontalAlignment="Center" MaxWidth="1400" Classes="section" Padding="12">
             <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
                 <Expander.Header>
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                        <TextBlock Text="Лог выполнения (свернут)" VerticalAlignment="Center" FontWeight="SemiBold" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                            <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
-                            <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
-                            <Button Classes="link" Content="Очистить" Command="{Binding ClearLogCommand}" />
-                            <Button Classes="link" Content="Копировать" Command="{Binding CopyLogCommand}" />
-                        </StackPanel>
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                        <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                            <CheckBox Margin="0,0,12,8" Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
+                            <CheckBox Margin="0,0,12,8" Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                            <Button Classes="link" Margin="0,0,8,8" Content="Очистить" Command="{Binding ClearLogCommand}" />
+                            <Button Classes="link" Margin="0,0,0,8" Content="Копировать" Command="{Binding CopyLogCommand}" />
+                        </WrapPanel>
                     </Grid>
                 </Expander.Header>
 
