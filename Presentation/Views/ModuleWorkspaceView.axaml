@@ -6,7 +6,7 @@
              x:Class="WebLoadTester.Presentation.Views.ModuleWorkspaceView"
              x:Name="Root"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+    <Grid RowDefinitions="Auto,*" RowSpacing="12">
         <ContentControl x:Name="VmProxy"
                         Width="0"
                         Height="0"
@@ -27,7 +27,11 @@
                                      IsIndeterminate="{Binding IsProgressIndeterminate}" />
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <TextBlock Text="{Binding RunStage}" Classes="muted" />
-                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Classes="status-line" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ProgressText}"
+                                       Classes="status-line"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
                         </Grid>
                     </StackPanel>
 
@@ -41,10 +45,10 @@
                             <TextBlock Text="Показывать браузер" VerticalAlignment="Center" />
                             <ToggleSwitch IsChecked="{Binding Headless, Converter={StaticResource BooleanNotConverter}, Mode=TwoWay}" />
                         </StackPanel>
-                        <Button Margin="0,0,8,8" Content="Старт" Classes="primary toolbar-button" Command="{Binding StartCommand}" />
-                        <Button Margin="0,0,8,8" Content="Перезапуск" Classes="toolbar-button" Command="{Binding RestartCommand}" />
-                        <Button Margin="0,0,8,8" Content="Остановить" Classes="toolbar-button" Command="{Binding StopCommand}" />
-                        <Button Margin="0,0,0,8" Content="Отмена" Classes="danger toolbar-button" Command="{Binding CancelCommand}" />
+                        <Button Margin="0,0,8,0" Content="Старт" Classes="primary toolbar-button" Command="{Binding StartCommand}" />
+                        <Button Margin="0,0,8,0" Content="Перезапуск" Classes="toolbar-button" Command="{Binding RestartCommand}" />
+                        <Button Margin="0,0,8,0" Content="Остановить" Classes="toolbar-button" Command="{Binding StopCommand}" />
+                        <Button Margin="0,0,0,0" Content="Отмена" Classes="danger toolbar-button" Command="{Binding CancelCommand}" />
                     </WrapPanel>
                 </Grid>
 
@@ -67,7 +71,7 @@
 
                 <StackPanel Grid.Row="2" Spacing="8">
                     <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Margin="0,0,8,8" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Margin="0,0,8,0" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <ListBox ItemsSource="{Binding Modules}"
                                  SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
                                  Classes="segmented-bar"
@@ -98,7 +102,7 @@
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
                 <Border Grid.Row="0" Grid.Column="0" Classes="section" MinWidth="440" VerticalAlignment="Top">
                     <StackPanel Spacing="12"
@@ -111,11 +115,11 @@
                                        TextWrapping="NoWrap"
                                        ClipToBounds="True" />
                             <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Обновить" Command="{Binding RefreshCommand}" />
-                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
-                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Сохранить" Command="{Binding SaveNewCommand}" />
-                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
-                                <Button Classes="link toolbar-button" Margin="0,0,0,8" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,0" Content="Обновить" Command="{Binding RefreshCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,0" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,0" Content="Сохранить" Command="{Binding SaveNewCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,0" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,0,0" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
                             </WrapPanel>
                         </Grid>
 
@@ -154,12 +158,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Row="0" Grid.Column="1" Classes="section" MinWidth="560">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Настройки модуля" Classes="section-title" />
-                        <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
-                    </StackPanel>
-                </Border>
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="8" MinWidth="560">
+                    <TextBlock Text="Настройки модуля" Classes="section-title" />
+                    <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+                </StackPanel>
 
                 <Border Grid.Row="1" Grid.Column="0" Classes="section"
                         DataContext="{Binding DataContext, ElementName=VmProxy}"
