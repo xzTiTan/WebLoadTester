@@ -77,8 +77,8 @@
                                 </Border>
                             </StackPanel>
                             <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Classes="link" Margin="0,0,8,8" Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
-                                <Button Classes="link" Margin="0,0,0,8" Content="Повторить" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                                <Button Classes="link" Margin="0,0,8,0" Content="Открыть папку" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
+                                <Button Classes="link" Margin="0,0,0,0" Content="Повторить" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding SelectedRun, Converter={StaticResource NullToBoolConverter}}" />
                             </WrapPanel>
                         </Grid>
 

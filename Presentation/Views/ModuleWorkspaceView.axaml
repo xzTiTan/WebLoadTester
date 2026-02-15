@@ -14,7 +14,7 @@
                         DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
 
         <Border Grid.Row="0" Classes="app-bar">
-            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12">
                 <Grid Grid.Row="0"
                       ColumnDefinitions="*,Auto" ColumnSpacing="16"
                       DataContext="{Binding DataContext, ElementName=VmProxy}"
@@ -52,7 +52,36 @@
                     </WrapPanel>
                 </Grid>
 
-                <Border Grid.Row="1"
+                <WrapPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Margin="0,0,8,0" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <ListBox ItemsSource="{Binding Modules}"
+                             SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
+                             Classes="segmented-bar"
+                             BorderThickness="0">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="root:ModuleItemViewModel">
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </WrapPanel>
+
+                <StackPanel Grid.Row="2" Spacing="4">
+                    <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" FontSize="22" />
+                    <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" TextWrapping="Wrap" />
+                    <TextBlock Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
+                               DataContext="{Binding DataContext, ElementName=VmProxy}"
+                               x:DataType="root:MainWindowViewModel"
+                               IsVisible="{Binding ShowRunHint}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Border Grid.Row="3"
                         Classes="warning-panel"
                         DataContext="{Binding DataContext, ElementName=VmProxy}"
                         x:DataType="root:MainWindowViewModel"
@@ -69,36 +98,6 @@
                     </Grid>
                 </Border>
 
-                <StackPanel Grid.Row="2" Spacing="8">
-                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Margin="0,0,8,0" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        <ListBox ItemsSource="{Binding Modules}"
-                                 SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
-                                 Classes="segmented-bar"
-                                 BorderThickness="0">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="root:ModuleItemViewModel">
-                                    <TextBlock Text="{Binding DisplayName}" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </WrapPanel>
-
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" FontSize="22" />
-                        <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" TextWrapping="Wrap" />
-                        <TextBlock Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
-                                   DataContext="{Binding DataContext, ElementName=VmProxy}"
-                                   x:DataType="root:MainWindowViewModel"
-                                   IsVisible="{Binding ShowRunHint}"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                </StackPanel>
             </Grid>
         </Border>
 
@@ -163,7 +162,7 @@
                     <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
                 </StackPanel>
 
-                <Border Grid.Row="1" Grid.Column="0" Classes="section"
+                <Border Grid.Row="1" Grid.ColumnSpan="2" Classes="section"
                         DataContext="{Binding DataContext, ElementName=VmProxy}"
                         x:DataType="root:MainWindowViewModel">
                     <StackPanel Spacing="8" DataContext="{Binding RunProfile}" x:DataType="root:RunProfileViewModel">

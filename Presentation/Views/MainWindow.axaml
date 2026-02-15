@@ -17,12 +17,12 @@
                         <TextBlock Text="Панель управления" Classes="muted" />
                     </StackPanel>
                     <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <Button Classes="secondary toolbar-button" Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                        <Button Classes="secondary toolbar-button" Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                        <Border Classes="badge" Margin="0,0,8,8" VerticalAlignment="Center">
+                        <Button Classes="secondary toolbar-button" Margin="0,0,8,0" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                        <Button Classes="secondary toolbar-button" Margin="0,0,8,0" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                        <Border Classes="badge" Margin="0,0,8,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         </Border>
-                        <Border Classes="badge" Margin="0,0,0,8" VerticalAlignment="Center">
+                        <Border Classes="badge" Margin="0,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         </Border>
                     </WrapPanel>
@@ -53,10 +53,10 @@
                     <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
                         <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
                         <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                            <CheckBox Margin="0,0,12,8" Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
-                            <CheckBox Margin="0,0,12,8" Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
-                            <Button Classes="link" Margin="0,0,8,8" Content="Очистить" Command="{Binding ClearLogCommand}" />
-                            <Button Classes="link" Margin="0,0,0,8" Content="Копировать" Command="{Binding CopyLogCommand}" />
+                            <CheckBox Margin="0,0,12,0" Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
+                            <CheckBox Margin="0,0,12,0" Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                            <Button Classes="link" Margin="0,0,8,0" Content="Очистить" Command="{Binding ClearLogCommand}" />
+                            <Button Classes="link" Margin="0,0,0,0" Content="Копировать" Command="{Binding CopyLogCommand}" />
                         </WrapPanel>
                     </Grid>
                 </Expander.Header>
