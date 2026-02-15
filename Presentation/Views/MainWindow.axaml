@@ -9,45 +9,43 @@
         Width="1280" Height="760"
         Background="{DynamicResource PageBackground}">
     <Grid RowDefinitions="*,Auto">
-        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="24" HorizontalAlignment="Center" MaxWidth="1400" RowDefinitions="Auto,*" RowSpacing="16">
-                <Border Grid.Row="0" Classes="app-bar">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="WebLoadTester" Classes="page-title" />
-                            <TextBlock Text="Панель управления" Classes="muted" />
-                        </StackPanel>
-                        <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                            <Button Classes="secondary" Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                            <Button Classes="secondary" Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                            <Border Classes="badge" Margin="0,0,8,8" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                            </Border>
-                            <Border Classes="badge" Margin="0,0,0,8" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                            </Border>
-                        </WrapPanel>
-                    </Grid>
-                </Border>
+        <Grid Grid.Row="0" Margin="24" HorizontalAlignment="Center" MaxWidth="1400" RowDefinitions="Auto,*" RowSpacing="16">
+            <Border Grid.Row="0" Classes="app-bar">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="WebLoadTester" Classes="page-title" />
+                        <TextBlock Text="Панель управления" Classes="muted" />
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Classes="secondary toolbar-button" Margin="0,0,8,8" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                        <Button Classes="secondary toolbar-button" Margin="0,0,8,8" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                        <Border Classes="badge" Margin="0,0,8,8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        </Border>
+                        <Border Classes="badge" Margin="0,0,0,8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        </Border>
+                    </WrapPanel>
+                </Grid>
+            </Border>
 
-                <Border Grid.Row="1" Classes="section" Padding="20">
-                    <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                        <TabItem Header="UI тестирование">
-                            <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
-                        </TabItem>
-                        <TabItem Header="HTTP тестирование">
-                            <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
-                        </TabItem>
-                        <TabItem Header="Сеть и безопасность">
-                            <tabs:NetSecTab DataContext="{Binding NetFamily}" />
-                        </TabItem>
-                        <TabItem Header="Прогоны">
-                            <tabs:RunsTab DataContext="{Binding RunsTab}" />
-                        </TabItem>
-                    </TabControl>
-                </Border>
-            </Grid>
-        </ScrollViewer>
+            <Border Grid.Row="1" Classes="section" Padding="20">
+                <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+                    <TabItem Header="UI тестирование">
+                        <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
+                    </TabItem>
+                    <TabItem Header="HTTP тестирование">
+                        <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
+                    </TabItem>
+                    <TabItem Header="Сеть и безопасность">
+                        <tabs:NetSecTab DataContext="{Binding NetFamily}" />
+                    </TabItem>
+                    <TabItem Header="Прогоны">
+                        <tabs:RunsTab DataContext="{Binding RunsTab}" />
+                    </TabItem>
+                </TabControl>
+            </Border>
+        </Grid>
 
         <Border Grid.Row="1" Margin="24,0,24,24" HorizontalAlignment="Center" MaxWidth="1400" Classes="section" Padding="12">
             <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
@@ -63,7 +61,7 @@
                     </Grid>
                 </Expander.Header>
 
-                <Border Classes="log-box" MinHeight="160" MaxHeight="260" Margin="0,8,0,0">
+                <Border Classes="log-box" MinHeight="220" MaxHeight="360" Margin="0,8,0,0">
                     <ListBox ItemsSource="{Binding FilteredLogEntries}"
                              Classes="loglist"
                              behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">

@@ -7,25 +7,8 @@
         Width="1200" Height="760"
         MinWidth="960" MinHeight="640"
         WindowStartupLocation="CenterOwner">
-    <Grid RowDefinitions="*,Auto" ColumnDefinitions="270,*" ColumnSpacing="16" Margin="16">
-        <Border Grid.Row="0" Grid.Column="0" Classes="section">
-            <StackPanel Spacing="6">
-                <TextBlock Text="Разделы" Classes="section-title" Margin="0,0,0,8" />
-                <ListBox Classes="settings-nav" SelectedIndex="0">
-                    <ListBoxItem>
-                        <TextBlock Text="Общие" />
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <TextBlock Text="Хранилище" />
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <TextBlock Text="Telegram" />
-                    </ListBoxItem>
-                </ListBox>
-            </StackPanel>
-        </Border>
-
-        <Border Grid.Row="0" Grid.Column="1" Classes="section">
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <Border Grid.Row="0" Classes="section">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="16" MinWidth="560">
                     <Border Classes="section">
@@ -90,19 +73,19 @@
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="Уведомления" Classes="field-label" />
-                                <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
+                                <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="О старте" Classes="field-label" />
-                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
+                                <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramSettings.NotifyOnStart, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="О завершении" Classes="field-label" />
-                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
+                                <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramSettings.NotifyOnFinish, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="Об ошибке" Classes="field-label" />
-                                <CheckBox Classes="field-control" Content="Уведомлять" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
+                                <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramSettings.NotifyOnError, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                                 <TextBlock Text="Режим прогресса" Classes="field-label" />
@@ -124,7 +107,7 @@
             </ScrollViewer>
         </Border>
 
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Classes="section" Padding="12">
+        <Border Grid.Row="1" Classes="section" Padding="12">
             <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
                 <TextBlock Text="Подсказка: настройки применяются для следующих запусков."
                            Classes="status-line"

@@ -1,4 +1,4 @@
-v2.7 15.02.2026
+v2.9 15.02.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -18,7 +18,7 @@ WebLoadTester — кроссплатформенное настольное пр
 
 ## Docs first
 - Перед изменениями читать: [docs/00_INDEX.md](docs/00_INDEX.md), затем ключевые якоря 01/02/03.
-- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы и добавь запись в журнал изменений (docs/08).
+- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы, `docs/08_FULL_SOFTWARE_DESCRIPTION.md` и добавь запись в журнал изменений (`docs/06_CODEX_RULES_AND_CHANGELOG.md`).
 
 ## Repo map (Core / Infrastructure / Modules / Presentation + entry points)
 - **Entry points**: `Program.cs`, `App.axaml`, `Presentation/Views/MainWindow.axaml`, `Presentation/ViewModels/MainWindowViewModel.cs`.
@@ -88,7 +88,7 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 ## Document/versioning rule
 - При любом изменении файлов проекта **обновляйте версию и дату** в формате `vX.Y 24.01.2026`.
 - Минимум это относится к `README.md` и `AGENTS.md`.
-- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/08`.
+- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/06_CODEX_RULES_AND_CHANGELOG.md`.
 
 ## Safety / ethics
 Использовать приложение только с разрешения владельца системы и для легитимных целей. Не применять для атакующих сценариев.

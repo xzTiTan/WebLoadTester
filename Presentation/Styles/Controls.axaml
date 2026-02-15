@@ -101,6 +101,10 @@
         <Setter Property="TextBlock.TextDecorations" Value="Underline" />
     </Style>
 
+    <Style Selector="Button.toolbar-button">
+        <Setter Property="MinWidth" Value="72" />
+    </Style>
+
     <Style Selector="TextBox, ComboBox, NumericUpDown">
         <Setter Property="MinHeight" Value="{DynamicResource ControlHeight}" />
     </Style>

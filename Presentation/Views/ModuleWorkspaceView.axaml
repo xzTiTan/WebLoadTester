@@ -15,7 +15,8 @@
 
         <Border Grid.Row="0" Classes="app-bar">
             <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16"
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto" ColumnSpacing="16"
                       DataContext="{Binding DataContext, ElementName=VmProxy}"
                       x:DataType="root:MainWindowViewModel">
                     <StackPanel Spacing="6">
@@ -40,14 +41,15 @@
                             <TextBlock Text="Показывать браузер" VerticalAlignment="Center" />
                             <ToggleSwitch IsChecked="{Binding Headless, Converter={StaticResource BooleanNotConverter}, Mode=TwoWay}" />
                         </StackPanel>
-                        <Button Margin="0,0,8,8" Content="Старт" Classes="primary" Command="{Binding StartCommand}" />
-                        <Button Margin="0,0,8,8" Content="Перезапуск" Command="{Binding RestartCommand}" />
-                        <Button Margin="0,0,8,8" Content="Остановить" Command="{Binding StopCommand}" />
-                        <Button Margin="0,0,0,8" Content="Отмена" Classes="danger" Command="{Binding CancelCommand}" />
+                        <Button Margin="0,0,8,8" Content="Старт" Classes="primary toolbar-button" Command="{Binding StartCommand}" />
+                        <Button Margin="0,0,8,8" Content="Перезапуск" Classes="toolbar-button" Command="{Binding RestartCommand}" />
+                        <Button Margin="0,0,8,8" Content="Остановить" Classes="toolbar-button" Command="{Binding StopCommand}" />
+                        <Button Margin="0,0,0,8" Content="Отмена" Classes="danger toolbar-button" Command="{Binding CancelCommand}" />
                     </WrapPanel>
                 </Grid>
 
-                <Border Classes="warning-panel"
+                <Border Grid.Row="1"
+                        Classes="warning-panel"
                         DataContext="{Binding DataContext, ElementName=VmProxy}"
                         x:DataType="root:MainWindowViewModel"
                         IsVisible="{Binding ShowPlaywrightInstallBanner}">
@@ -63,7 +65,7 @@
                     </Grid>
                 </Border>
 
-                <StackPanel Spacing="8">
+                <StackPanel Grid.Row="2" Spacing="8">
                     <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Margin="0,0,8,8" Text="Модули:" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <ListBox ItemsSource="{Binding Modules}"
@@ -98,18 +100,22 @@
 
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
-                <Border Grid.Row="0" Grid.Column="0" Classes="section" MinWidth="440">
+                <Border Grid.Row="0" Grid.Column="0" Classes="section" MinWidth="440" VerticalAlignment="Top">
                     <StackPanel Spacing="12"
                                 DataContext="{Binding SelectedModule.ModuleConfig}"
                                 x:DataType="root:ModuleConfigViewModel">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                            <TextBlock Text="Конфигурация" Classes="section-title" />
+                            <TextBlock Text="Конфигурация"
+                                       Classes="section-title"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="NoWrap"
+                                       ClipToBounds="True" />
                             <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Classes="link" Margin="0,0,8,8" Content="Обновить" Command="{Binding RefreshCommand}" />
-                                <Button Classes="link" Margin="0,0,8,8" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
-                                <Button Classes="link" Margin="0,0,8,8" Content="Сохранить" Command="{Binding SaveNewCommand}" />
-                                <Button Classes="link" Margin="0,0,8,8" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
-                                <Button Classes="link" Margin="0,0,0,8" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Обновить" Command="{Binding RefreshCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Сохранить" Command="{Binding SaveNewCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,8,8" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
+                                <Button Classes="link toolbar-button" Margin="0,0,0,8" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
                             </WrapPanel>
                         </Grid>
 
@@ -181,24 +187,20 @@
                             <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
-                            <TextBlock Text="Headless" Classes="field-label" />
-                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding Headless, Mode=TwoWay}" />
-                        </Grid>
-                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
                             <TextBlock Text="Скриншоты" Classes="field-label" />
                             <ComboBox Classes="field-control" ItemsSource="{Binding ScreenshotsPolicyOptions}" SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="HTML-отчёт" Classes="field-label" />
-                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
+                            <ToggleSwitch Classes="field-control" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Telegram" Classes="field-label" />
-                            <CheckBox Classes="field-control" Content="Отправлять статус" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
+                            <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Preflight" Classes="field-label" />
-                            <CheckBox Classes="field-control" Content="Включено" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
+                            <ToggleSwitch Classes="field-control" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
                             <TextBlock Text="{Binding WarningMessage}" />

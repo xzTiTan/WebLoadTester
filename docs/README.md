@@ -1,6 +1,6 @@
 # WebLoadTester
 
-**Версия документации:** v2.5 11.02.2026
+**Версия документации:** v2.9 15.02.2026
 
 WebLoadTester — кроссплатформенное настольное приложение на **.NET 8 + Avalonia 11** для эксплуатационной диагностики и тестирования **UI / HTTP / сети**.
 
@@ -17,16 +17,17 @@ WebLoadTester — кроссплатформенное настольное пр
 - **Telegram** — опционально; ошибки Telegram не ломают прогон.
 - **Никаких атакующих/опасных функций** (flood/packet attack/эксплуатация уязвимостей и т.п.).
 
-## Документация (сжато до 8 файлов)
-> Этот набор заменяет разрозненные 00–09 и «UI канон» отдельным файлом.
+## Документация (актуальный набор)
 
-1) [docs/01_CANON.md](docs/01_CANON.md) — требования, границы, критерии приёмки (источник истины).
-2) [docs/02_ARCHITECTURE_AND_DATA.md](docs/02_ARCHITECTURE_AND_DATA.md) — архитектура, потоки, SQLite, артефакты, карта кода.
-3) [docs/03_UI_CANON.md](docs/03_UI_CANON.md) — UI канон и поведения (4 вкладки, pinned-rows, log drawer, UX-правила).
-4) [docs/04_GLOSSARY.md](docs/04_GLOSSARY.md) — термины (единые определения для кода/ВКР/UI).
-5) [docs/05_TEST_PLAN_AND_TRACEABILITY.md](docs/05_TEST_PLAN_AND_TRACEABILITY.md) — тест-план + трассируемость.
-6) [docs/06_CODEX_RULES_AND_CHANGELOG.md](docs/06_CODEX_RULES_AND_CHANGELOG.md) — guardrails Codex + журнал изменений.
-7) [docs/07_VKR_DRAFT.md](docs/07_VKR_DRAFT.md) — каркас пояснительной записки (ВКР) и привязка к артефактам.
+1) [docs/00_INDEX.md](docs/00_INDEX.md) — индекс и рекомендуемый порядок чтения.
+2) [docs/01_CANON.md](docs/01_CANON.md) — требования, границы, критерии приёмки (источник истины).
+3) [docs/02_ARCHITECTURE_AND_DATA.md](docs/02_ARCHITECTURE_AND_DATA.md) — архитектура, потоки, SQLite, артефакты, карта кода.
+4) [docs/03_UI_CANON.md](docs/03_UI_CANON.md) — UI канон и поведения (4 вкладки, pinned-rows, log drawer, UX-правила).
+5) [docs/04_GLOSSARY.md](docs/04_GLOSSARY.md) — термины (единые определения для кода/ВКР/UI).
+6) [docs/05_TEST_PLAN_AND_TRACEABILITY.md](docs/05_TEST_PLAN_AND_TRACEABILITY.md) — тест-план + трассируемость.
+7) [docs/06_CODEX_RULES_AND_CHANGELOG.md](docs/06_CODEX_RULES_AND_CHANGELOG.md) — guardrails Codex + журнал изменений.
+8) [docs/07_VKR_DRAFT.md](docs/07_VKR_DRAFT.md) — каркас пояснительной записки (ВКР) и привязка к артефактам.
+9) [docs/08_FULL_SOFTWARE_DESCRIPTION.md](docs/08_FULL_SOFTWARE_DESCRIPTION.md) — цельное описание ПО для обзора/защиты.
 
 ## Быстрый старт (dev)
 ```bash
