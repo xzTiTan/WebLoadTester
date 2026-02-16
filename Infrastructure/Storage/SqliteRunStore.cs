@@ -62,6 +62,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 Iterations INTEGER NOT NULL,
                 DurationSeconds INTEGER NOT NULL,
                 TimeoutSeconds INTEGER NOT NULL,
+                PauseBetweenIterationsMs INTEGER NOT NULL DEFAULT 0,
                 Headless INTEGER NOT NULL,
                 ScreenshotsPolicy TEXT NOT NULL,
                 HtmlReportEnabled INTEGER NOT NULL,
@@ -88,6 +89,8 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 ItemKey TEXT NOT NULL,
                 Status TEXT NOT NULL,
                 DurationMs REAL NOT NULL,
+                WorkerId INTEGER NOT NULL DEFAULT 0,
+                Iteration INTEGER NOT NULL DEFAULT 0,
                 ErrorMessage TEXT,
                 ExtraJson TEXT
             );",
@@ -113,6 +116,10 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
             command.CommandText = sql;
             await command.ExecuteNonQueryAsync(ct);
         }
+
+        await EnsureColumnExistsAsync(connection, "RunProfiles", "PauseBetweenIterationsMs", "INTEGER NOT NULL DEFAULT 0", ct);
+        await EnsureColumnExistsAsync(connection, "RunItems", "WorkerId", "INTEGER NOT NULL DEFAULT 0", ct);
+        await EnsureColumnExistsAsync(connection, "RunItems", "Iteration", "INTEGER NOT NULL DEFAULT 0", ct);
     }
 
     public async Task<IReadOnlyList<TestCase>> GetTestCasesAsync(string moduleType, CancellationToken ct)
@@ -360,7 +367,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         var result = new List<RunProfile>();
         await using var connection = CreateConnection();
         await using var command = connection.CreateCommand();
-        command.CommandText = @"SELECT Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
+        command.CommandText = @"SELECT Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds, PauseBetweenIterationsMs,
                                        Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled
                                 FROM RunProfiles ORDER BY Name";
         await using var reader = await command.ExecuteReaderAsync(ct);
@@ -375,11 +382,12 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 Iterations = reader.GetInt32(4),
                 DurationSeconds = reader.GetInt32(5),
                 TimeoutSeconds = reader.GetInt32(6),
-                Headless = reader.GetInt32(7) == 1,
-                ScreenshotsPolicy = Enum.Parse<ScreenshotsPolicy>(reader.GetString(8)),
-                HtmlReportEnabled = reader.GetInt32(9) == 1,
-                TelegramEnabled = reader.GetInt32(10) == 1,
-                PreflightEnabled = reader.GetInt32(11) == 1
+                PauseBetweenIterationsMs = reader.GetInt32(7),
+                Headless = reader.GetInt32(8) == 1,
+                ScreenshotsPolicy = Enum.Parse<ScreenshotsPolicy>(reader.GetString(9)),
+                HtmlReportEnabled = reader.GetInt32(10) == 1,
+                TelegramEnabled = reader.GetInt32(11) == 1,
+                PreflightEnabled = reader.GetInt32(12) == 1
             });
         }
 
@@ -390,7 +398,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
     {
         await using var connection = CreateConnection();
         await using var command = connection.CreateCommand();
-        command.CommandText = @"SELECT Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
+        command.CommandText = @"SELECT Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds, PauseBetweenIterationsMs,
                                        Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled
                                 FROM RunProfiles WHERE Id = $id";
         command.Parameters.AddWithValue("$id", profileId.ToString());
@@ -406,11 +414,12 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 Iterations = reader.GetInt32(4),
                 DurationSeconds = reader.GetInt32(5),
                 TimeoutSeconds = reader.GetInt32(6),
-                Headless = reader.GetInt32(7) == 1,
-                ScreenshotsPolicy = Enum.Parse<ScreenshotsPolicy>(reader.GetString(8)),
-                HtmlReportEnabled = reader.GetInt32(9) == 1,
-                TelegramEnabled = reader.GetInt32(10) == 1,
-                PreflightEnabled = reader.GetInt32(11) == 1
+                PauseBetweenIterationsMs = reader.GetInt32(7),
+                Headless = reader.GetInt32(8) == 1,
+                ScreenshotsPolicy = Enum.Parse<ScreenshotsPolicy>(reader.GetString(9)),
+                HtmlReportEnabled = reader.GetInt32(10) == 1,
+                TelegramEnabled = reader.GetInt32(11) == 1,
+                PreflightEnabled = reader.GetInt32(12) == 1
             };
         }
 
@@ -433,16 +442,16 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         var storedId = profile.Id == Guid.Empty ? Guid.NewGuid() : profile.Id;
         if (profile.Id == Guid.Empty)
         {
-            command.CommandText = @"INSERT INTO RunProfiles (Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds,
+            command.CommandText = @"INSERT INTO RunProfiles (Id, Name, Parallelism, Mode, Iterations, DurationSeconds, TimeoutSeconds, PauseBetweenIterationsMs,
                                        Headless, ScreenshotsPolicy, HtmlReportEnabled, TelegramEnabled, PreflightEnabled)
-                                VALUES ($id, $name, $parallelism, $mode, $iterations, $duration, $timeout,
+                                VALUES ($id, $name, $parallelism, $mode, $iterations, $duration, $timeout, $pause,
                                         $headless, $screenshotsPolicy, $html, $telegram, $preflight)";
         }
         else
         {
             command.CommandText = @"UPDATE RunProfiles
                                     SET Name = $name, Parallelism = $parallelism, Mode = $mode, Iterations = $iterations,
-                                        DurationSeconds = $duration, TimeoutSeconds = $timeout, Headless = $headless,
+                                        DurationSeconds = $duration, TimeoutSeconds = $timeout, PauseBetweenIterationsMs = $pause, Headless = $headless,
                                         ScreenshotsPolicy = $screenshotsPolicy, HtmlReportEnabled = $html,
                                         TelegramEnabled = $telegram, PreflightEnabled = $preflight
                                     WHERE Id = $id";
@@ -455,6 +464,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         command.Parameters.AddWithValue("$iterations", profile.Iterations);
         command.Parameters.AddWithValue("$duration", profile.DurationSeconds);
         command.Parameters.AddWithValue("$timeout", profile.TimeoutSeconds);
+        command.Parameters.AddWithValue("$pause", profile.PauseBetweenIterationsMs);
         command.Parameters.AddWithValue("$headless", profile.Headless ? 1 : 0);
         command.Parameters.AddWithValue("$screenshotsPolicy", profile.ScreenshotsPolicy.ToString());
         command.Parameters.AddWithValue("$html", profile.HtmlReportEnabled ? 1 : 0);
@@ -471,6 +481,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
             Iterations = profile.Iterations,
             DurationSeconds = profile.DurationSeconds,
             TimeoutSeconds = profile.TimeoutSeconds,
+            PauseBetweenIterationsMs = profile.PauseBetweenIterationsMs,
             Headless = profile.Headless,
             ScreenshotsPolicy = profile.ScreenshotsPolicy,
             HtmlReportEnabled = profile.HtmlReportEnabled,
@@ -558,14 +569,16 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         foreach (var item in items)
         {
             var command = connection.CreateCommand();
-            command.CommandText = @"INSERT INTO RunItems (Id, RunId, ItemType, ItemKey, Status, DurationMs, ErrorMessage, ExtraJson)
-                                    VALUES ($id, $runId, $itemType, $itemKey, $status, $duration, $errorMessage, $extra)";
+            command.CommandText = @"INSERT INTO RunItems (Id, RunId, ItemType, ItemKey, Status, DurationMs, WorkerId, Iteration, ErrorMessage, ExtraJson)
+                                    VALUES ($id, $runId, $itemType, $itemKey, $status, $duration, $workerId, $iteration, $errorMessage, $extra)";
             command.Parameters.AddWithValue("$id", item.Id.ToString());
             command.Parameters.AddWithValue("$runId", item.RunId);
             command.Parameters.AddWithValue("$itemType", item.ItemType);
             command.Parameters.AddWithValue("$itemKey", item.ItemKey);
             command.Parameters.AddWithValue("$status", item.Status);
             command.Parameters.AddWithValue("$duration", item.DurationMs);
+            command.Parameters.AddWithValue("$workerId", item.WorkerId);
+            command.Parameters.AddWithValue("$iteration", item.Iteration);
             command.Parameters.AddWithValue("$errorMessage", item.ErrorMessage ?? string.Empty);
             command.Parameters.AddWithValue("$extra", item.ExtraJson ?? string.Empty);
             command.Transaction = transaction;
@@ -583,7 +596,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         var items = new List<RunItem>();
         await using var connection = CreateConnection();
         await using var command = connection.CreateCommand();
-        command.CommandText = @"SELECT Id, RunId, ItemType, ItemKey, Status, DurationMs, ErrorMessage, ExtraJson
+        command.CommandText = @"SELECT Id, RunId, ItemType, ItemKey, Status, DurationMs, WorkerId, Iteration, ErrorMessage, ExtraJson
                                 FROM RunItems WHERE RunId = $runId";
         command.Parameters.AddWithValue("$runId", runId);
         await using var reader = await command.ExecuteReaderAsync(ct);
@@ -595,10 +608,12 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 RunId = reader.GetString(1),
                 ItemType = reader.GetString(2),
                 ItemKey = reader.GetString(3),
-                Status = reader.GetString(4),
+                Status = NormalizeStatus(reader.GetString(4)),
                 DurationMs = reader.GetDouble(5),
-                ErrorMessage = reader.IsDBNull(6) ? null : reader.GetString(6),
-                ExtraJson = reader.IsDBNull(7) ? null : reader.GetString(7)
+                WorkerId = reader.GetInt32(6),
+                Iteration = reader.GetInt32(7),
+                ErrorMessage = reader.IsDBNull(8) ? null : reader.GetString(8),
+                ExtraJson = reader.IsDBNull(9) ? null : reader.GetString(9)
             });
         }
 
@@ -680,8 +695,17 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         }
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
-            filters.Add("Status = $status");
-            command.Parameters.AddWithValue("$status", query.Status);
+            if (string.Equals(query.Status, "Canceled", StringComparison.OrdinalIgnoreCase) || string.Equals(query.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                filters.Add("(Status = $statusCanceled OR Status = $statusCancelled)");
+                command.Parameters.AddWithValue("$statusCanceled", "Canceled");
+                command.Parameters.AddWithValue("$statusCancelled", "Cancelled");
+            }
+            else
+            {
+                filters.Add("Status = $status");
+                command.Parameters.AddWithValue("$status", query.Status);
+            }
         }
         if (query.From.HasValue)
         {
@@ -714,7 +738,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                 StartedAt = DateTimeOffset.Parse(reader.GetString(1), CultureInfo.InvariantCulture),
                 TestName = reader.GetString(2),
                 ModuleName = reader.GetString(3),
-                Status = reader.GetString(4),
+                Status = NormalizeStatus(reader.GetString(4)),
                 DurationMs = summary.TotalDurationMs,
                 FailedItems = summary.FailedItems,
                 KeyMetrics = summary.KeyMetrics,
@@ -752,7 +776,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                     ProfileSnapshotJson = reader.GetString(6),
                     StartedAt = DateTimeOffset.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
                     FinishedAt = reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture),
-                    Status = reader.GetString(9),
+                    Status = NormalizeStatus(reader.GetString(9)),
                     SummaryJson = reader.IsDBNull(10) ? string.Empty : reader.GetString(10)
                 };
             }
@@ -766,7 +790,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         var items = new List<RunItem>();
         await using (var command = connection.CreateCommand())
         {
-            command.CommandText = @"SELECT Id, RunId, ItemType, ItemKey, Status, DurationMs, ErrorMessage, ExtraJson
+            command.CommandText = @"SELECT Id, RunId, ItemType, ItemKey, Status, DurationMs, WorkerId, Iteration, ErrorMessage, ExtraJson
                                     FROM RunItems WHERE RunId = $runId";
             command.Parameters.AddWithValue("$runId", runId);
             await using var reader = await command.ExecuteReaderAsync(ct);
@@ -778,10 +802,12 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
                     RunId = reader.GetString(1),
                     ItemType = reader.GetString(2),
                     ItemKey = reader.GetString(3),
-                    Status = reader.GetString(4),
+                    Status = NormalizeStatus(reader.GetString(4)),
                     DurationMs = reader.GetDouble(5),
-                    ErrorMessage = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    ExtraJson = reader.IsDBNull(7) ? null : reader.GetString(7)
+                    WorkerId = reader.GetInt32(6),
+                    Iteration = reader.GetInt32(7),
+                    ErrorMessage = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    ExtraJson = reader.IsDBNull(9) ? null : reader.GetString(9)
                 });
             }
         }
@@ -854,6 +880,31 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         var connection = new SqliteConnection($"Data Source={_dbPath}");
         connection.Open();
         return connection;
+    }
+
+    private static async Task EnsureColumnExistsAsync(SqliteConnection connection, string table, string column, string definition, CancellationToken ct)
+    {
+        await using var pragma = connection.CreateCommand();
+        pragma.CommandText = $"PRAGMA table_info({table})";
+        await using var reader = await pragma.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+
+        await using var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition}";
+        await alter.ExecuteNonQueryAsync(ct);
+    }
+
+    private static string NormalizeStatus(string status)
+    {
+        return string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase)
+            ? "Canceled"
+            : status;
     }
 
     private SummaryPayload ParseSummary(string summaryJson)

@@ -53,6 +53,19 @@ public interface IRunContext
     /// </summary>
     ITelegramNotifier? Telegram { get; }
     /// <summary>
+    /// Идентификатор воркера, выполняющего текущую итерацию.
+    /// </summary>
+    int WorkerId { get; }
+    /// <summary>
+    /// Номер текущей итерации внутри запуска.
+    /// </summary>
+    int Iteration { get; }
+    /// <summary>
+    /// Признак запрошенной мягкой остановки.
+    /// </summary>
+    bool IsStopRequested { get; }
+
+    /// <summary>
     /// Текущее время выполнения.
     /// </summary>
     DateTimeOffset Now { get; }

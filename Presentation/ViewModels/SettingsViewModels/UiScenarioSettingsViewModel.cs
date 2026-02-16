@@ -106,6 +106,30 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         SyncSteps();
     }
 
+
+    [RelayCommand]
+    private void DuplicateStep(UiStep? step)
+    {
+        if (step == null)
+        {
+            return;
+        }
+
+        var clone = new UiStep
+        {
+            Action = step.Action,
+            Selector = step.Selector,
+            Value = step.Value,
+            Text = step.Text,
+            DelayMs = step.DelayMs
+        };
+
+        clone.PropertyChanged += (_, _) => SyncSteps();
+        var index = Steps.IndexOf(step);
+        Steps.Insert(index + 1, clone);
+        SyncSteps();
+    }
+
     [RelayCommand]
     private void MoveStepUp(UiStep? step)
     {

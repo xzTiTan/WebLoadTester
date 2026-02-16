@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Infrastructure.Storage;
 using Xunit;
@@ -69,4 +70,67 @@ public class StorageTests
         Assert.Single(detail!.Items);
         Assert.Single(detail.Artifacts);
     }
+
+    [Fact]
+    public async Task InitializeAsync_IsIdempotent_ForMigrations()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "WebLoadTesterTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var dbPath = Path.Combine(tempRoot, "data", "runs.db");
+
+        var store = new SqliteRunStore(dbPath);
+        await store.InitializeAsync(CancellationToken.None);
+        await store.InitializeAsync(CancellationToken.None);
+
+        var profiles = await store.GetRunProfilesAsync(CancellationToken.None);
+        Assert.NotNull(profiles);
+    }
+
+    [Fact]
+    public async Task QueryRuns_NormalizesLegacyCancelledStatus_ToCanceled()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "WebLoadTesterTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var dbPath = Path.Combine(tempRoot, "data", "runs.db");
+
+        var store = new SqliteRunStore(dbPath);
+        await store.InitializeAsync(CancellationToken.None);
+
+        var runId = Guid.NewGuid().ToString("N");
+        await store.CreateRunAsync(new TestRun
+        {
+            RunId = runId,
+            TestCaseId = Guid.NewGuid(),
+            TestCaseVersion = 1,
+            TestName = "Legacy cancelled",
+            ModuleType = "http.functional",
+            ModuleName = "HTTP",
+            ProfileSnapshotJson = "{}",
+            StartedAt = DateTimeOffset.UtcNow,
+            Status = "Running"
+        }, CancellationToken.None);
+
+        await store.UpdateRunAsync(new TestRun
+        {
+            RunId = runId,
+            TestCaseId = Guid.Empty,
+            TestCaseVersion = 1,
+            TestName = "Legacy cancelled",
+            ModuleType = "http.functional",
+            ModuleName = "HTTP",
+            ProfileSnapshotJson = "{}",
+            StartedAt = DateTimeOffset.UtcNow,
+            FinishedAt = DateTimeOffset.UtcNow,
+            Status = "Cancelled",
+            SummaryJson = "{}"
+        }, CancellationToken.None);
+
+        var all = await store.QueryRunsAsync(new RunQuery(), CancellationToken.None);
+        var normalized = Assert.Single(all, r => r.RunId == runId);
+        Assert.Equal("Canceled", normalized.Status);
+
+        var filtered = await store.QueryRunsAsync(new RunQuery { Status = "Canceled" }, CancellationToken.None);
+        Assert.Contains(filtered, r => r.RunId == runId);
+    }
+
 }

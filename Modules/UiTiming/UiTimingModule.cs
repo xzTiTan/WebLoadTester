@@ -108,6 +108,7 @@ public class UiTimingModule : ITestModule
             var target = s.Targets[i];
             var index = i + 1;
             var sw = Stopwatch.StartNew();
+            string? screenshotPath = null;
 
             try
             {
@@ -120,37 +121,42 @@ public class UiTimingModule : ITestModule
 
                 sw.Stop();
                 var nav = await ReadNavigationTimingAsync(page);
-                var details = JsonSerializer.Serialize(new
+                if (ctx.Profile.ScreenshotsPolicy == ScreenshotsPolicy.Always)
                 {
-                    url = target.Url,
-                    waitUntil = s.WaitUntil.ToString(),
-                    totalMs = sw.Elapsed.TotalMilliseconds,
-                    nav,
-                    timestampUtc = DateTimeOffset.UtcNow
-                });
+                    screenshotPath = await SaveTimingScreenshotAsync(ctx, page, $"target_{index:00}_final.png", ct);
+                }
 
-                results.Add(new TimingResult($"Timing: {GetDisplayName(target.Url)}")
+                var metrics = BuildTimingMetrics(sw.Elapsed.TotalMilliseconds, nav);
+                results.Add(new TimingResult($"Target: {GetDisplayName(target.Url)}")
                 {
                     Url = target.Url,
                     Iteration = index,
                     Success = true,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
-                    DetailsJson = details
+                    DetailsJson = JsonSerializer.Serialize(new { url = target.Url, metrics, screenshot = screenshotPath })
                 });
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                var details = JsonSerializer.Serialize(new
+                if (ctx.Profile.ScreenshotsPolicy is ScreenshotsPolicy.OnError or ScreenshotsPolicy.Always)
                 {
-                    url = target.Url,
-                    waitUntil = s.WaitUntil.ToString(),
-                    totalMs = sw.Elapsed.TotalMilliseconds,
-                    timestampUtc = DateTimeOffset.UtcNow
-                });
+                    try
+                    {
+                        var page = browser.Pages.LastOrDefault();
+                        if (page != null)
+                        {
+                            screenshotPath = await SaveTimingScreenshotAsync(ctx, page, $"target_{index:00}_error.png", ct);
+                        }
+                    }
+                    catch
+                    {
+                        // best effort screenshot on error
+                    }
+                }
 
                 ctx.Log.Error($"[UiTiming] Цель {index} failed: {ex.GetType().Name}: {ex.Message}");
-                results.Add(new TimingResult($"Timing: {GetDisplayName(target.Url)}")
+                results.Add(new TimingResult($"Target: {GetDisplayName(target.Url)}")
                 {
                     Url = target.Url,
                     Iteration = index,
@@ -158,7 +164,12 @@ public class UiTimingModule : ITestModule
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = ex.GetType().Name,
                     ErrorMessage = ex.Message,
-                    DetailsJson = details
+                    DetailsJson = JsonSerializer.Serialize(new
+                    {
+                        url = target.Url,
+                        metrics = new { navigationMs = sw.Elapsed.TotalMilliseconds },
+                        screenshot = screenshotPath
+                    })
                 });
             }
             finally
@@ -173,7 +184,47 @@ public class UiTimingModule : ITestModule
         return result;
     }
 
-    private static async Task<object?> ReadNavigationTimingAsync(IPage page)
+    private static async Task<string> SaveTimingScreenshotAsync(IRunContext ctx, IPage page, string fileName, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var relative = Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+        var bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true, Type = ScreenshotType.Png });
+        return await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relative, bytes);
+    }
+
+    private static object BuildTimingMetrics(double navigationMs, JsonElement? nav)
+    {
+        var dom = TryReadNumber(nav, "domContentLoadedMs");
+        var load = TryReadNumber(nav, "loadEventMs");
+        return new
+        {
+            navigationMs,
+            domContentLoadedMs = dom,
+            loadEventMs = load
+        };
+    }
+
+    private static double? TryReadNumber(JsonElement? nav, string propertyName)
+    {
+        if (!nav.HasValue || nav.Value.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        if (!nav.Value.TryGetProperty(propertyName, out var value))
+        {
+            return null;
+        }
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var result))
+        {
+            return result;
+        }
+
+        return null;
+    }
+
+    private static async Task<JsonElement?> ReadNavigationTimingAsync(IPage page)
     {
         try
         {

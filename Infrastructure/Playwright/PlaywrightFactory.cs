@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -12,7 +13,20 @@ namespace WebLoadTester.Infrastructure.Playwright;
 /// </summary>
 public static class PlaywrightFactory
 {
-    private static string BrowsersPath => Path.Combine(AppContext.BaseDirectory, "browsers");
+    private static string _browsersPath = Path.Combine(AppContext.BaseDirectory, "browsers");
+
+    public static string BrowsersPath => _browsersPath;
+
+    public static void ConfigureBrowsersPath(string browsersPath)
+    {
+        if (string.IsNullOrWhiteSpace(browsersPath))
+        {
+            return;
+        }
+
+        _browsersPath = browsersPath;
+        Directory.CreateDirectory(_browsersPath);
+    }
 
     /// <summary>
     /// Создаёт экземпляр Playwright и задаёт путь к браузерам.
@@ -28,12 +42,26 @@ public static class PlaywrightFactory
     /// </summary>
     public static bool HasBrowsersInstalled()
     {
-        return Directory.Exists(BrowsersPath) && Directory.GetDirectories(BrowsersPath).Length > 0;
+        if (!Directory.Exists(BrowsersPath))
+        {
+            return false;
+        }
+
+        foreach (var directory in Directory.GetDirectories(BrowsersPath))
+        {
+            var name = Path.GetFileName(directory).ToLowerInvariant();
+            if (name.Contains("chrom"))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static string GetBrowsersPath() => BrowsersPath;
 
-    public static async Task InstallChromiumAsync(CancellationToken ct)
+    public static async Task InstallChromiumAsync(CancellationToken ct, Action<string>? onOutput = null)
     {
         var script = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "playwright.ps1" : "playwright.sh";
         var scriptPath = Path.Combine(AppContext.BaseDirectory, script);
@@ -42,26 +70,52 @@ public static class PlaywrightFactory
             throw new FileNotFoundException($"Playwright installer script not found: {scriptPath}");
         }
 
-        var psi = new System.Diagnostics.ProcessStartInfo
+        var psi = new ProcessStartInfo
         {
-            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "powershell" : "bash",
+            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pwsh" : "bash",
             WorkingDirectory = AppContext.BaseDirectory,
-            UseShellExecute = false
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
-        psi.ArgumentList.Add(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "-ExecutionPolicy" : scriptPath);
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            psi.ArgumentList.Add("Bypass");
-            psi.ArgumentList.Add("-File");
             psi.ArgumentList.Add(scriptPath);
         }
+        else
+        {
+            psi.ArgumentList.Add(scriptPath);
+        }
+
         psi.ArgumentList.Add("install");
         psi.ArgumentList.Add("chromium");
         psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = BrowsersPath;
 
-        using var process = new System.Diagnostics.Process { StartInfo = psi };
+        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrWhiteSpace(e.Data))
+            {
+                onOutput?.Invoke(e.Data);
+            }
+        };
+
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrWhiteSpace(e.Data))
+            {
+                onOutput?.Invoke(e.Data);
+            }
+        };
+
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
         await process.WaitForExitAsync(ct);
+
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException($"Playwright install failed with code {process.ExitCode}.");

@@ -49,6 +49,9 @@ public partial class RunProfileViewModel : ObservableObject
     private int timeoutSeconds = 30;
 
     [ObservableProperty]
+    private int pauseBetweenIterationsMs;
+
+    [ObservableProperty]
     private bool headless = true;
 
     [ObservableProperty]
@@ -117,6 +120,7 @@ public partial class RunProfileViewModel : ObservableObject
         Iterations = value.Iterations;
         DurationSeconds = value.DurationSeconds;
         TimeoutSeconds = value.TimeoutSeconds;
+        PauseBetweenIterationsMs = value.PauseBetweenIterationsMs;
         Headless = value.Headless;
         ScreenshotsPolicy = value.ScreenshotsPolicy;
         HtmlReportEnabled = value.HtmlReportEnabled;
@@ -210,6 +214,7 @@ public partial class RunProfileViewModel : ObservableObject
             Iterations = Iterations,
             DurationSeconds = DurationSeconds,
             TimeoutSeconds = TimeoutSeconds,
+            PauseBetweenIterationsMs = Math.Max(0, PauseBetweenIterationsMs),
             Headless = Headless,
             ScreenshotsPolicy = ScreenshotsPolicy,
             HtmlReportEnabled = HtmlReportEnabled,
@@ -227,6 +232,7 @@ public partial class RunProfileViewModel : ObservableObject
             DurationSeconds = DurationSeconds,
             Parallelism = Parallelism,
             TimeoutSeconds = TimeoutSeconds,
+            PauseBetweenIterationsMs = Math.Max(0, PauseBetweenIterationsMs),
             HtmlReportEnabled = HtmlReportEnabled,
             TelegramEnabled = TelegramEnabled,
             PreflightEnabled = PreflightEnabled,
@@ -242,6 +248,7 @@ public partial class RunProfileViewModel : ObservableObject
         DurationSeconds = parameters.DurationSeconds;
         Parallelism = parameters.Parallelism;
         TimeoutSeconds = parameters.TimeoutSeconds;
+        PauseBetweenIterationsMs = Math.Max(0, parameters.PauseBetweenIterationsMs);
         HtmlReportEnabled = parameters.HtmlReportEnabled;
         TelegramEnabled = parameters.TelegramEnabled;
         PreflightEnabled = parameters.PreflightEnabled;

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
@@ -27,30 +29,19 @@ public class JsonReportWriter
     {
         var payload = new
         {
-            run = new
-            {
-                runId = report.RunId,
-                startedAt = report.StartedAt,
-                finishedAt = report.FinishedAt,
-                status = report.Status.ToString(),
-                moduleType = report.ModuleId,
-                moduleNameRu = report.ModuleName,
-                testName = report.TestName,
-                testCaseId = report.TestCaseId,
-                testCaseVersion = report.TestCaseVersion
-            },
-            environment = new
-            {
-                os = report.OsDescription,
-                appVersion = report.AppVersion,
-                machineName = System.Environment.MachineName
-            },
+            runId = report.RunId,
+            moduleId = report.ModuleId,
+            finalName = string.IsNullOrWhiteSpace(report.FinalName) ? report.TestName : report.FinalName,
+            startedAtUtc = report.StartedAt,
+            finishedAtUtc = report.FinishedAt,
+            status = report.Status.ToString(),
             profile = new
             {
                 parallelism = report.ProfileSnapshot.Parallelism,
                 mode = report.ProfileSnapshot.Mode.ToString().ToLowerInvariant(),
                 iterations = report.ProfileSnapshot.Iterations,
                 durationSeconds = report.ProfileSnapshot.DurationSeconds,
+                pauseBetweenIterationsMs = report.ProfileSnapshot.PauseBetweenIterationsMs,
                 timeouts = new { operationSeconds = report.ProfileSnapshot.TimeoutSeconds },
                 headless = report.ProfileSnapshot.Headless,
                 screenshotsPolicy = report.ProfileSnapshot.ScreenshotsPolicy.ToString(),
@@ -58,40 +49,75 @@ public class JsonReportWriter
                 telegramEnabled = report.ProfileSnapshot.TelegramEnabled,
                 preflightEnabled = report.ProfileSnapshot.PreflightEnabled
             },
+            moduleSettings = BuildModuleSettings(report),
             summary = new
             {
-                totalDurationMs = report.Metrics.TotalDurationMs,
+                durationMs = report.Metrics.TotalDurationMs,
                 totalItems = report.Metrics.TotalItems,
                 failedItems = report.Metrics.FailedItems,
+                workers = report.ProfileSnapshot.Parallelism,
                 averageMs = report.Metrics.AverageMs,
                 p95Ms = report.Metrics.P95Ms,
                 p99Ms = report.Metrics.P99Ms
             },
-            details = report.Results.ConvertAll(result => new
+            items = report.Results.ConvertAll(result =>
             {
-                key = result switch
+                var artifactRefs = BuildArtifactRefs(result);
+                return new
                 {
-                    RunResult run => run.Name,
-                    StepResult step => step.Name,
-                    CheckResult check => check.Name,
-                    PreflightResult preflight => preflight.Name,
-                    ProbeResult probe => probe.Name,
-                    TimingResult timing => timing.Url ?? timing.Name,
-                    _ => result.Kind
-                },
-                status = result.Success ? "Success" : "Failed",
-                durationMs = result.DurationMs,
-                errorMessage = result.ErrorMessage,
-                extra = BuildExtra(result)
+                    key = result switch
+                    {
+                        RunResult run => run.Name,
+                        StepResult step => step.Name,
+                        CheckResult check => check.Name,
+                        PreflightResult preflight => preflight.Name,
+                        ProbeResult probe => probe.Name,
+                        TimingResult timing => timing.Url ?? timing.Name,
+                        _ => result.Kind
+                    },
+                    kind = result.Kind,
+                    workerId = result.WorkerId,
+                    iteration = result.IterationIndex,
+                    ok = result.Success,
+                    message = result.Success ? "ok" : result.ErrorMessage,
+                    errorKind = result.ErrorType,
+                    durationMs = result.DurationMs,
+                    artifactRefs,
+                    metrics = BuildMetrics(result),
+                    extra = BuildExtra(result)
+                };
             }),
             artifacts = BuildArtifacts(report)
         };
 
-        var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
         {
             WriteIndented = true
         });
         return _artifactStore.SaveJsonReportAsync(runId, json);
+    }
+
+
+    private static JsonElement BuildModuleSettings(TestReport report)
+    {
+        if (report.ModuleSettingsSnapshot.ValueKind != JsonValueKind.Undefined)
+        {
+            return report.ModuleSettingsSnapshot;
+        }
+
+        if (!string.IsNullOrWhiteSpace(report.SettingsSnapshot))
+        {
+            try
+            {
+                return JsonSerializer.SerializeToElement(JsonSerializer.Deserialize<JsonElement>(report.SettingsSnapshot));
+            }
+            catch (JsonException)
+            {
+                // Ignore malformed legacy snapshot and fallback to empty object.
+            }
+        }
+
+        return JsonSerializer.SerializeToElement(new { });
     }
 
     private static object? BuildExtra(ResultBase result)
@@ -106,6 +132,51 @@ public class JsonReportWriter
             TimingResult timing => new { iteration = timing.Iteration, url = timing.Url, detailsJson = timing.DetailsJson },
             _ => null
         };
+    }
+
+
+    private static List<string> BuildArtifactRefs(ResultBase result)
+    {
+        var refs = new List<string>();
+        switch (result)
+        {
+            case RunResult run when !string.IsNullOrWhiteSpace(run.ScreenshotPath):
+                refs.Add(run.ScreenshotPath!);
+                break;
+            case StepResult step when !string.IsNullOrWhiteSpace(step.ScreenshotPath):
+                refs.Add(step.ScreenshotPath!);
+                break;
+        }
+
+        return refs;
+    }
+
+    private static object? BuildMetrics(ResultBase result)
+    {
+        return result switch
+        {
+            RunResult run => ParseDetails(run.DetailsJson),
+            StepResult step => ParseDetails(step.DetailsJson),
+            TimingResult timing => ParseDetails(timing.DetailsJson),
+            _ => null
+        };
+    }
+
+    private static JsonElement? ParseDetails(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<JsonElement>(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static List<object> BuildArtifacts(TestReport report)

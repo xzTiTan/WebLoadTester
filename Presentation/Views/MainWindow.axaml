@@ -6,30 +6,49 @@
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="WebLoadTester"
-        Width="1280" Height="760"
+        Width="1200"
+        Height="800"
+        MinWidth="1024"
+        MinHeight="720"
         Background="{DynamicResource PageBackground}">
     <Grid RowDefinitions="*,Auto">
-        <Grid Grid.Row="0" Margin="24" HorizontalAlignment="Center" MaxWidth="1400" RowDefinitions="Auto,*" RowSpacing="16">
+        <Grid Grid.Row="0"
+              Margin="{DynamicResource PagePadding}"
+              HorizontalAlignment="Center"
+              MaxWidth="1400"
+              RowDefinitions="Auto,*"
+              RowSpacing="{DynamicResource CardSpacing}">
             <Border Grid.Row="0" Classes="app-bar">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="WebLoadTester" Classes="page-title" />
-                        <TextBlock Text="Панель управления" Classes="muted" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <Button Classes="secondary toolbar-button" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                        <Button Classes="secondary toolbar-button" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                        <Border Classes="badge" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource FieldSpacing}">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel>
+                            <TextBlock Text="WebLoadTester" Classes="page-title" />
+                            <TextBlock Text="Панель управления" Classes="muted" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Classes="secondary toolbar-button"
+                                Content="Настройки"
+                                Command="{Binding OpenSettingsCommand}" />
+                    </Grid>
+
+                    <WrapPanel Grid.Row="1" Classes="wrap-gap">
+                        <Button Classes="secondary toolbar-button"
+                                Content="Папка прогонов"
+                                Command="{Binding OpenRunsFolderCommand}" />
+                        <Border Classes="badge">
+                            <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
                         </Border>
-                        <Border Classes="badge" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <Border Classes="badge">
+                            <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
                         </Border>
-                    </StackPanel>
+                        <Border Classes="badge warn">
+                            <TextBlock Text="Playwright: через баннер модуля" FontSize="12" FontWeight="SemiBold" />
+                        </Border>
+                    </WrapPanel>
                 </Grid>
             </Border>
 
-            <Border Grid.Row="1" Classes="section" Padding="20">
+            <Border Grid.Row="1" Classes="section" Padding="{DynamicResource CardPadding}">
                 <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <TabItem Header="UI тестирование">
                         <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
@@ -47,19 +66,24 @@
             </Border>
         </Grid>
 
-        <Border Grid.Row="1" Margin="24,0,24,24" HorizontalAlignment="Center" MaxWidth="1400" Classes="section" Padding="12">
+        <Border Grid.Row="1"
+                Margin="16,0,16,16"
+                HorizontalAlignment="Center"
+                MaxWidth="1400"
+                Classes="section"
+                Padding="12">
             <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
                 <Expander.Header>
                     <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </Expander.Header>
 
-                <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="0,8,0,0" MinHeight="220" MaxHeight="360">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="0,8,0,0" MinHeight="200" MaxHeight="340">
+                    <WrapPanel Grid.Row="0" Classes="wrap-gap">
                         <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
                         <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
                         <Button Classes="link" Content="Очистить" Command="{Binding ClearLogCommand}" />
                         <Button Classes="link" Content="Копировать" Command="{Binding CopyLogCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
 
                     <Border Grid.Row="1" Classes="log-box">
                         <ListBox ItemsSource="{Binding FilteredLogEntries}"

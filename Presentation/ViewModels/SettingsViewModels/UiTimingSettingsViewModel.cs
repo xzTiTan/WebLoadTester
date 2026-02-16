@@ -81,6 +81,22 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
         SyncTargets();
     }
 
+
+    [RelayCommand]
+    private void DuplicateSelectedTarget()
+    {
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var clone = new TimingTarget { Url = SelectedTarget.Url };
+        var index = Targets.IndexOf(SelectedTarget);
+        Targets.Insert(index + 1, clone);
+        SelectedTarget = clone;
+        SyncTargets();
+    }
+
     [RelayCommand]
     private void MoveTargetUp()
     {

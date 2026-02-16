@@ -33,7 +33,8 @@ public partial class RunsTabViewModel : ObservableObject
         StatusFilterOptions.Add("Success");
         StatusFilterOptions.Add("Failed");
         StatusFilterOptions.Add("Partial");
-        StatusFilterOptions.Add("Cancelled");
+        StatusFilterOptions.Add("Stopped");
+        StatusFilterOptions.Add("Canceled");
     }
 
     public ObservableCollection<TestRunSummary> Runs { get; } = new();

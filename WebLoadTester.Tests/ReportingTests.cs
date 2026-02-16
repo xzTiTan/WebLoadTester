@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Core.Services.Metrics;
@@ -24,6 +25,7 @@ public class ReportingTests
         var report = new TestReport
         {
             RunId = Guid.NewGuid().ToString("N"),
+            FinalName = "DemoConfig_HTTPФункциональные",
             TestCaseId = Guid.NewGuid(),
             TestCaseVersion = 1,
             TestName = "Reporting smoke",
@@ -36,7 +38,18 @@ public class ReportingTests
             AppVersion = "1.0.0",
             OsDescription = "Test OS",
             SettingsSnapshot = "{}",
-            ProfileSnapshot = new RunProfile()
+            ModuleSettingsSnapshot = JsonSerializer.SerializeToElement(new
+            {
+                baseUrl = "https://example.com",
+                timeoutSeconds = 15
+            }),
+            ProfileSnapshot = new RunProfile
+            {
+                Parallelism = 2,
+                Mode = RunMode.Iterations,
+                Iterations = 3,
+                TimeoutSeconds = 20
+            }
         };
 
         report.Results.Add(new CheckResult("Ping")
@@ -50,8 +63,20 @@ public class ReportingTests
         var jsonPath = Path.Combine(runsRoot, report.RunId, relative);
 
         Assert.True(File.Exists(jsonPath));
-        var json = await File.ReadAllTextAsync(jsonPath);
-        Assert.Contains(report.RunId, json, StringComparison.OrdinalIgnoreCase);
+        await using var stream = File.OpenRead(jsonPath);
+        using var document = await JsonDocument.ParseAsync(stream);
+        var root = document.RootElement;
+
+        Assert.Equal(report.RunId, root.GetProperty("runId").GetString());
+        Assert.Equal(report.ModuleId, root.GetProperty("moduleId").GetString());
+        Assert.Equal(report.FinalName, root.GetProperty("finalName").GetString());
+
+        Assert.True(root.TryGetProperty("profile", out var profile));
+        Assert.Equal(report.ProfileSnapshot.Parallelism, profile.GetProperty("parallelism").GetInt32());
+
+        Assert.True(root.TryGetProperty("moduleSettings", out var moduleSettings));
+        Assert.Equal(JsonValueKind.Object, moduleSettings.ValueKind);
+        Assert.Equal("https://example.com", moduleSettings.GetProperty("baseUrl").GetString());
     }
 
     [Fact]

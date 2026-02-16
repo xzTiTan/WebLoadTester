@@ -129,6 +129,7 @@ public class UiSnapshotModule : ITestModule
             var targetIndex = i + 1;
             var sw = Stopwatch.StartNew();
             string? screenshotPath = null;
+            var selectorFound = false;
 
             try
             {
@@ -145,6 +146,7 @@ public class UiSnapshotModule : ITestModule
                 });
 
                 var fileName = BuildSnapshotFileName(targetIndex, target.Name, target.Url);
+                var relativePath = BuildScreenshotRelativePath(ctx, fileName);
                 if (!string.IsNullOrWhiteSpace(target.Selector))
                 {
                     var locator = page.Locator(target.Selector);
@@ -155,7 +157,8 @@ public class UiSnapshotModule : ITestModule
                     });
 
                     var bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions { Type = ScreenshotType.Png });
-                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
+                    selectorFound = true;
+                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relativePath, bytes);
                 }
                 else
                 {
@@ -164,24 +167,27 @@ public class UiSnapshotModule : ITestModule
                         Type = ScreenshotType.Png,
                         FullPage = s.FullPage
                     });
-                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
+
+                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relativePath, bytes);
                 }
 
                 sw.Stop();
                 var details = new
                 {
                     url = target.Url,
-                    selector = string.IsNullOrWhiteSpace(target.Selector) ? null : target.Selector,
+                    hasSelector = !string.IsNullOrWhiteSpace(target.Selector),
+                    selectorFound,
                     fullPage = s.FullPage,
                     waitUntil = s.WaitUntil.ToString(),
                     viewport = s.ViewportWidth.GetValueOrDefault() > 0 && s.ViewportHeight.GetValueOrDefault() > 0
                         ? new { width = s.ViewportWidth, height = s.ViewportHeight }
                         : null,
+                    bytes = TryReadScreenshotSize(ctx, screenshotPath),
                     elapsedMs = sw.Elapsed.TotalMilliseconds
                 };
 
                 var displayName = GetTargetDisplayName(target);
-                results.Add(new RunResult($"Snapshot: {displayName}")
+                results.Add(new RunResult($"Target: {displayName}")
                 {
                     Success = true,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -195,7 +201,8 @@ public class UiSnapshotModule : ITestModule
                 var details = new
                 {
                     url = target.Url,
-                    selector = target.Selector,
+                    hasSelector = !string.IsNullOrWhiteSpace(target.Selector),
+                    selectorFound,
                     fullPage = s.FullPage,
                     waitUntil = s.WaitUntil.ToString(),
                     viewport = s.ViewportWidth.GetValueOrDefault() > 0 && s.ViewportHeight.GetValueOrDefault() > 0
@@ -206,7 +213,7 @@ public class UiSnapshotModule : ITestModule
 
                 ctx.Log.Error($"[UiSnapshot] Цель {targetIndex} failed: {ex.GetType().Name}: {ex.Message}");
                 var displayName = GetTargetDisplayName(target);
-                results.Add(new RunResult($"Snapshot: {displayName}")
+                results.Add(new RunResult($"Target: {displayName}")
                 {
                     Success = false,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
@@ -225,6 +232,22 @@ public class UiSnapshotModule : ITestModule
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static string BuildScreenshotRelativePath(IRunContext ctx, string fileName)
+    {
+        return Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+    }
+
+    private static long? TryReadScreenshotSize(IRunContext ctx, string? relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        var path = Path.Combine(ctx.RunFolder, relativePath);
+        return File.Exists(path) ? new FileInfo(path).Length : null;
     }
 
     private static string BuildSnapshotFileName(int index, string? name, string url)

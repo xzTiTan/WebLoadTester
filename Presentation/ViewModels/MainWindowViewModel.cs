@@ -76,6 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Токен отмены текущего запуска.
     /// </summary>
     private CancellationTokenSource? _runCts;
+    private int _stopRequested;
     /// <summary>
     /// Политика Telegram-уведомлений для текущего запуска.
     /// </summary>
@@ -92,6 +93,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         _settingsService = new AppSettingsService();
+        PlaywrightFactory.ConfigureBrowsersPath(_settingsService.Settings.BrowsersDirectory);
         _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
         _testCaseRepository = (ITestCaseRepository)_runStore;
         _moduleConfigService = new ModuleConfigService(_testCaseRepository);
@@ -218,7 +220,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
     public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
     public bool ShowRunHint => !IsRunning;
-    public bool ShowPlaywrightInstallBanner => SelectedModule?.Module.Id == "ui.scenario" && !PlaywrightFactory.HasBrowsersInstalled();
+    public bool ShowPlaywrightInstallBanner => IsSelectedUiModule() && !PlaywrightFactory.HasBrowsersInstalled();
     public bool CanInstallPlaywright => !IsInstallingPlaywright;
 
     partial void OnIsDatabaseOkChanged(bool value) => OnPropertyChanged(nameof(DatabaseStatusBadgeClass));
@@ -286,6 +288,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RunStage = "Выполнение";
 
         _runCts = new CancellationTokenSource();
+        Interlocked.Exchange(ref _stopRequested, 0);
         var runId = Guid.NewGuid().ToString("N");
         var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
         var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
@@ -296,7 +299,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new FileLogSink(_artifactStore.GetLogPath(runId))
         });
         var ctx = new RunContext(logSink, _progressBus, _artifactStore, _limits, notifier,
-            runId, profile, testCase.Name, testCase.Id, testCase.CurrentVersion);
+            runId, profile, testCase.Name, testCase.Id, testCase.CurrentVersion, isStopRequested: () => Volatile.Read(ref _stopRequested) == 1);
 
         if (_telegramPolicy.IsEnabled)
         {
@@ -316,7 +319,8 @@ public partial class MainWindowViewModel : ViewModelBase
             finalStatusText = report.Status switch
             {
                 TestStatus.Success => "Статус: успешно",
-                TestStatus.Cancelled => "Статус: отменено",
+                TestStatus.Canceled => "Статус: отменено",
+                TestStatus.Stopped => "Статус: остановлено",
                 _ => "Статус: завершено с ошибками"
             };
             if (_telegramPolicy.IsEnabled)
@@ -348,6 +352,7 @@ public partial class MainWindowViewModel : ViewModelBase
             RunStage = finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal) ? "Ошибка" : "Готово";
             _runCts?.Dispose();
             _runCts = null;
+            Interlocked.Exchange(ref _stopRequested, 0);
             RunsTab.RefreshCommand.Execute(null);
             _telegramPolicy = null;
             _runFinishedTcs?.TrySetResult(true);
@@ -360,19 +365,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
-        CancelRun();
+        Interlocked.Exchange(ref _stopRequested, 1);
+        StatusText = "Статус: мягкая остановка";
+        RunStage = "Остановка";
     }
 
     [RelayCommand(CanExecute = nameof(CanStop))]
     private void Cancel()
     {
-        CancelRun();
+        RequestCancel();
     }
 
-    private void CancelRun()
+    private void RequestCancel()
     {
         _runCts?.Cancel();
-        StatusText = "Статус: остановка";
+        StatusText = "Статус: отмена";
         RunStage = "Отменено";
     }
 
@@ -384,7 +391,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (IsRunning)
         {
-            CancelRun();
+            RequestCancel();
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
             var completedTask = await Task.WhenAny(CurrentRunFinishedTask, timeoutTask);
             if (completedTask == timeoutTask)
@@ -406,7 +413,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await PlaywrightFactory.InstallChromiumAsync(CancellationToken.None);
+            await PlaywrightFactory.InstallChromiumAsync(CancellationToken.None, line => _logBus.Info($"[Playwright] {line}"));
             PlaywrightInstallMessage = "Chromium установлен.";
             _logBus.Info("[Playwright] Chromium installed successfully.");
         }
@@ -726,6 +733,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+
+
+    private bool IsSelectedUiModule()
+    {
+        var moduleId = SelectedModule?.Module.Id;
+        return moduleId is "ui.scenario" or "ui.snapshot" or "ui.timing";
+    }
 
     private void UpdateRunProfileModuleFamily()
     {

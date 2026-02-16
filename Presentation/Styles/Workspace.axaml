@@ -1,14 +1,15 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
-        <Setter Property="ColumnSpacing" Value="{DynamicResource SpacingM}" />
-        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="ColumnSpacing" Value="{DynamicResource FieldSpacing}" />
+        <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
 
     <Style Selector="TextBlock.field-label">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
     </Style>
 
     <Style Selector="Control.field-control">
@@ -30,7 +31,7 @@
     </Style>
 
     <Style Selector="NumericUpDown.field-control">
-        <Setter Property="MinWidth" Value="180" />
+        <Setter Property="MinWidth" Value="{DynamicResource NumericBoxWidth}" />
         <Setter Property="MaxWidth" Value="220" />
         <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
@@ -48,6 +49,7 @@
     <Style Selector="TextBlock.status-line">
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
     </Style>
 
     <Style Selector="StackPanel.empty-state">
@@ -116,7 +118,6 @@
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
     </Style>
 
-
     <Style Selector="ListBox.settings-nav">
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="Transparent" />
@@ -136,5 +137,4 @@
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
     </Style>
-
 </Styles>

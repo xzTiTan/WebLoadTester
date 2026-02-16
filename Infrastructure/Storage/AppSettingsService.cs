@@ -18,6 +18,7 @@ public class AppSettingsService
         Directory.CreateDirectory(root);
         _settingsPath = Path.Combine(root, "settings.json");
         Settings = Load();
+        EnsureDirectories(Settings);
     }
 
     public AppSettings Settings { get; private set; }
@@ -25,6 +26,7 @@ public class AppSettingsService
     public Task SaveAsync()
     {
         var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions { WriteIndented = true });
+        EnsureDirectories(Settings);
         return File.WriteAllTextAsync(_settingsPath, json);
     }
 
@@ -42,6 +44,13 @@ public class AppSettingsService
 
         return AppSettings.CreateDefault();
     }
+
+    private static void EnsureDirectories(AppSettings settings)
+    {
+        Directory.CreateDirectory(settings.DataDirectory);
+        Directory.CreateDirectory(settings.RunsDirectory);
+        Directory.CreateDirectory(settings.BrowsersDirectory);
+    }
 }
 
 /// <summary>
@@ -51,15 +60,18 @@ public class AppSettings
 {
     public string DataDirectory { get; set; } = string.Empty;
     public string RunsDirectory { get; set; } = string.Empty;
+    public string BrowsersDirectory { get; set; } = string.Empty;
     public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
 
     public static AppSettings CreateDefault()
     {
         var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WebLoadTester");
+        var dataDirectory = Path.Combine(root, "data");
         return new AppSettings
         {
-            DataDirectory = Path.Combine(root, "data"),
-            RunsDirectory = Path.Combine(root, "runs")
+            DataDirectory = dataDirectory,
+            RunsDirectory = Path.Combine(root, "runs"),
+            BrowsersDirectory = Path.Combine(dataDirectory, "browsers")
         };
     }
 }

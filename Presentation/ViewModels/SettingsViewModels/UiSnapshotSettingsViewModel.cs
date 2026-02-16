@@ -105,6 +105,29 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         SyncTargets();
     }
 
+
+    [RelayCommand]
+    private void DuplicateSelectedTarget()
+    {
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var clone = new SnapshotTarget
+        {
+            Url = SelectedTarget.Url,
+            Selector = SelectedTarget.Selector,
+            Name = SelectedTarget.Name,
+            Tag = SelectedTarget.Tag
+        };
+
+        var index = Targets.IndexOf(SelectedTarget);
+        Targets.Insert(index + 1, clone);
+        SelectedTarget = clone;
+        SyncTargets();
+    }
+
     [RelayCommand]
     private void MoveTargetUp()
     {

@@ -267,10 +267,6 @@ public class UiScenarioModule : ITestModule
                         break;
                 }
 
-                if (step.Action != UiStepAction.Screenshot && ctx.Profile.ScreenshotsPolicy == ScreenshotsPolicy.Always)
-                {
-                    screenshotPath = await SaveStepScreenshotAsync(ctx, page, selector, stepIndex, step.Action, null, ct);
-                }
             }
             catch (Exception ex)
             {
@@ -310,6 +306,25 @@ public class UiScenarioModule : ITestModule
                 });
 
                 ctx.Progress.Report(new ProgressUpdate(stepIndex + 1, totalUnits, $"Шаг {stepIndex}/{stepCount}"));
+            }
+        }
+
+        if (ctx.Profile.ScreenshotsPolicy == ScreenshotsPolicy.Always)
+        {
+            try
+            {
+                var finalScreenshot = await SaveStepScreenshotAsync(ctx, page, null, stepCount + 1, UiStepAction.Screenshot, "final", ct);
+                results.Add(new RunResult("Scenario: итоговый скриншот")
+                {
+                    Success = true,
+                    DurationMs = 0,
+                    ScreenshotPath = finalScreenshot,
+                    DetailsJson = JsonSerializer.Serialize(new { stage = "iteration-final", policy = "Always" })
+                });
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Warn($"[UiScenario] Не удалось сохранить итоговый скриншот: {ex.Message}");
             }
         }
 
@@ -357,7 +372,8 @@ public class UiScenarioModule : ITestModule
             bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
         }
 
-        return await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
+        var relative = Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+        return await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relative, bytes);
     }
 
     private static string NormalizeUrl(string url)

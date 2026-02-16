@@ -1,4 +1,4 @@
-v3.3 16.02.2026
+v3.4 16.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,13 @@ v3.3 16.02.2026
 ---
 
 # Changelog
+
+
+## v3.4 16.02.2026
+- Prompt 5: доработан UI-family MVP (`ui.scenario`, `ui.snapshot`, `ui.timing`) под TO-BE из `docs/INDEX.md` (§1.1, §8.A).
+- Playwright path перенесён в `{DataDirectory}/browsers`, установка Chromium теперь стримит вывод в лог и баннер показывается для всех UI-модулей.
+- В UI-настройках модулей добавлены wrap-safe TableToolbar-панели (Add/Delete/Duplicate, plus Up/Down только для сценария).
+- Обновлены версии `README.md` и `AGENTS.md` по правилу versioning.
 
 ## v3.3 16.02.2026
 - Консолидация документации: `docs/INDEX.md` — единственный исходный документ.

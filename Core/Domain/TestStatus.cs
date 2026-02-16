@@ -8,5 +8,7 @@ public enum TestStatus
     Success,
     Failed,
     Partial,
-    Cancelled
+    Canceled,
+    Stopped,
+    Cancelled = Canceled
 }

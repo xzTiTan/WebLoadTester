@@ -42,6 +42,7 @@ public class RunProfile
     public int Iterations { get; set; } = 10;
     public int DurationSeconds { get; set; } = 60;
     public int TimeoutSeconds { get; set; } = 30;
+    public int PauseBetweenIterationsMs { get; set; }
     public bool Headless { get; set; } = true;
     public ScreenshotsPolicy ScreenshotsPolicy { get; set; } = ScreenshotsPolicy.OnError;
     public bool HtmlReportEnabled { get; set; }
@@ -97,6 +98,8 @@ public class RunItem
     public string ItemKey { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public double DurationMs { get; set; }
+    public int WorkerId { get; set; }
+    public int Iteration { get; set; }
     public string? ErrorMessage { get; set; }
     public string? ExtraJson { get; set; }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace WebLoadTester.Core.Domain;
 
@@ -9,6 +10,7 @@ namespace WebLoadTester.Core.Domain;
 public class TestReport
 {
     public string RunId { get; set; } = string.Empty;
+    public string FinalName { get; set; } = string.Empty;
     public Guid TestCaseId { get; set; }
     public int TestCaseVersion { get; set; }
     public string TestName { get; set; } = string.Empty;
@@ -21,6 +23,7 @@ public class TestReport
     public string AppVersion { get; set; } = string.Empty;
     public string OsDescription { get; set; } = string.Empty;
     public string SettingsSnapshot { get; set; } = string.Empty;
+    public JsonElement ModuleSettingsSnapshot { get; set; }
     public RunProfile ProfileSnapshot { get; set; } = new();
     public List<ResultBase> Results { get; set; } = new();
     public MetricsSummary Metrics { get; set; } = new();

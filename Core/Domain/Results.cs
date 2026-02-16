@@ -11,6 +11,8 @@ public abstract record ResultBase(string Kind)
     public double DurationMs { get; init; }
     public string? ErrorType { get; init; }
     public string? ErrorMessage { get; init; }
+    public int WorkerId { get; init; }
+    public int IterationIndex { get; init; }
 }
 
 /// <summary>

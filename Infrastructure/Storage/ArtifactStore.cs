@@ -87,6 +87,12 @@ public class ArtifactStore : IArtifactStore
         var folder = CreateRunFolder(runId);
         var relative = Path.Combine("screenshots", fileName);
         var path = Path.Combine(folder, relative);
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
         await File.WriteAllBytesAsync(path, bytes);
         return relative;
     }

@@ -70,6 +70,11 @@ public class RunOrchestrator
             errors.Add("Таймаут должен быть больше 0 секунд.");
         }
 
+        if (profile.PauseBetweenIterationsMs < 0)
+        {
+            errors.Add("Пауза между итерациями должна быть >= 0 мс.");
+        }
+
         return errors;
     }
 
@@ -137,7 +142,7 @@ public class RunOrchestrator
         {
             context.Log.Warn("Run cancelled.");
             var cancelledReport = CreateBaseReport(module, settings, context, startTime);
-            cancelledReport.Status = TestStatus.Cancelled;
+            cancelledReport.Status = TestStatus.Canceled;
             cancelledReport.Results = allResults;
             cancelledReport.ModuleArtifacts = moduleArtifacts;
             cancelledReport.FinishedAt = context.Now;
@@ -186,7 +191,7 @@ public class RunOrchestrator
         report.ModuleArtifacts = moduleArtifacts;
         report.FinishedAt = context.Now;
         report.Metrics = MetricsCalculator.Calculate(report.Results);
-        report.Status = ResolveStatus(report.Results, ct);
+        report.Status = ResolveStatus(report.Status, report.Results, context.IsStopRequested, ct);
 
         return await FinalizeReportAsync(report, context, ct);
     }
@@ -204,76 +209,79 @@ public class RunOrchestrator
     {
         var mode = context.Profile.Mode;
         var parallelism = Math.Max(1, context.Profile.Parallelism);
+        var pauseMs = Math.Max(0, context.Profile.PauseBetweenIterationsMs);
         var moduleResults = new ConcurrentBag<ResultBase>();
         var moduleArtifacts = new ConcurrentBag<ModuleArtifact>();
 
-        if (mode == RunMode.Iterations)
+        var nextIteration = 0;
+        var completed = 0;
+        var totalIterations = mode == RunMode.Iterations ? Math.Max(0, context.Profile.Iterations) : 0;
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(Math.Max(0, context.Profile.DurationSeconds));
+
+        var workers = Enumerable.Range(1, parallelism).Select(async workerId =>
         {
-            var total = context.Profile.Iterations;
-            var semaphore = new SemaphoreSlim(parallelism, parallelism);
-            var completed = 0;
-            var tasks = Enumerable.Range(1, total).Select(async iteration =>
+            while (!ct.IsCancellationRequested)
             {
-                await semaphore.WaitAsync(ct);
-                try
+                if (context.IsStopRequested)
                 {
-                    var result = await ExecuteSafelyAsync(module, settings, context, ct, iteration.ToString());
-                    foreach (var item in result.Results)
-                    {
-                        moduleResults.Add(item);
-                    }
-
-                    foreach (var artifact in result.Artifacts)
-                    {
-                        moduleArtifacts.Add(artifact);
-                    }
+                    break;
                 }
-                finally
+
+                var iteration = Interlocked.Increment(ref nextIteration);
+                if (mode == RunMode.Iterations && iteration > totalIterations)
                 {
-                    var done = Interlocked.Increment(ref completed);
-                    context.Progress.Report(new ProgressUpdate(done, total, module.DisplayName));
-                    semaphore.Release();
+                    break;
                 }
-            }).ToList();
 
-            await Task.WhenAll(tasks);
-        }
-        else
-        {
-            var deadline = DateTimeOffset.Now.AddSeconds(context.Profile.DurationSeconds);
-            var iteration = 0;
-            var workers = Enumerable.Range(0, parallelism).Select(async _ =>
-            {
-                while (!ct.IsCancellationRequested && DateTimeOffset.Now < deadline)
+                if (mode == RunMode.Duration && DateTimeOffset.UtcNow >= deadline)
                 {
-                    var current = Interlocked.Increment(ref iteration);
-                    var result = await ExecuteSafelyAsync(module, settings, context, ct, current.ToString());
-                    foreach (var item in result.Results)
-                    {
-                        moduleResults.Add(item);
-                    }
-
-                    foreach (var artifact in result.Artifacts)
-                    {
-                        moduleArtifacts.Add(artifact);
-                    }
-
-                    context.Progress.Report(new ProgressUpdate(current, 0, module.DisplayName));
+                    break;
                 }
-            }).ToList();
 
-            await Task.WhenAll(workers);
-        }
+                var scopedContext = context.CreateScoped(workerId, iteration);
+                var result = await ExecuteSafelyAsync(module, settings, scopedContext, ct, workerId, iteration);
+
+                foreach (var item in result.Results)
+                {
+                    moduleResults.Add(item with { WorkerId = workerId, IterationIndex = iteration });
+                }
+
+                foreach (var artifact in result.Artifacts)
+                {
+                    moduleArtifacts.Add(artifact);
+                }
+
+                var done = Interlocked.Increment(ref completed);
+                context.Progress.Report(new ProgressUpdate(done, totalIterations, module.DisplayName));
+
+                if (context.IsStopRequested)
+                {
+                    break;
+                }
+
+                if (mode == RunMode.Duration && DateTimeOffset.UtcNow >= deadline)
+                {
+                    break;
+                }
+
+                if (pauseMs > 0)
+                {
+                    await Task.Delay(pauseMs, ct);
+                }
+            }
+        }).ToList();
+
+        await Task.WhenAll(workers);
 
         return new ModuleResult
         {
             Results = moduleResults.ToList(),
             Artifacts = moduleArtifacts.ToList(),
-            Status = moduleResults.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success
+            Status = moduleResults.Any(r => !r.Success) ? TestStatus.Failed : (context.IsStopRequested ? TestStatus.Stopped : TestStatus.Success)
         };
     }
 
-    private async Task<ModuleResult> ExecuteSafelyAsync(ITestModule module, object settings, RunContext context, CancellationToken ct, string iterationLabel)
+    private async Task<ModuleResult> ExecuteSafelyAsync(ITestModule module, object settings, RunContext context, CancellationToken ct, int workerId, int iteration)
     {
         using var opCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         if (context.Profile.TimeoutSeconds > 0)
@@ -288,13 +296,13 @@ public class RunOrchestrator
         catch (OperationCanceledException) when (!ct.IsCancellationRequested && opCts.IsCancellationRequested)
         {
             var timeoutMessage = "Operation timed out";
-            context.Log.Error($"Iteration {iterationLabel} failed: {timeoutMessage}");
+            context.Log.Error($"Worker {workerId}, iteration {iteration} failed: {timeoutMessage}");
             return new ModuleResult
             {
                 Status = TestStatus.Failed,
                 Results = new List<ResultBase>
                 {
-                    new CheckResult($"Iteration {iterationLabel}")
+                    new CheckResult($"Iteration {iteration}")
                     {
                         Success = false,
                         DurationMs = context.Profile.TimeoutSeconds * 1000,
@@ -314,13 +322,13 @@ public class RunOrchestrator
         }
         catch (Exception ex)
         {
-            context.Log.Error($"Iteration {iterationLabel} failed: {ex.Message}");
+            context.Log.Error($"Worker {workerId}, iteration {iteration} failed: {ex.Message}");
             return new ModuleResult
             {
                 Status = TestStatus.Failed,
                 Results = new List<ResultBase>
                 {
-                    new CheckResult($"Iteration {iterationLabel}")
+                    new CheckResult($"Iteration {iteration}")
                     {
                         Success = false,
                         DurationMs = 0,
@@ -342,6 +350,7 @@ public class RunOrchestrator
         return new TestReport
         {
             RunId = context.RunId,
+            FinalName = context.TestName,
             TestCaseId = context.TestCaseId,
             TestCaseVersion = context.TestCaseVersion,
             TestName = context.TestName,
@@ -353,6 +362,7 @@ public class RunOrchestrator
             AppVersion = typeof(RunOrchestrator).Assembly.GetName().Version?.ToString() ?? string.Empty,
             OsDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
             SettingsSnapshot = JsonSerializer.Serialize(settings),
+            ModuleSettingsSnapshot = JsonSerializer.SerializeToElement(settings, settings.GetType()),
             ProfileSnapshot = context.Profile
         };
     }
@@ -360,7 +370,7 @@ public class RunOrchestrator
     private async Task<TestReport> FinalizeReportAsync(TestReport report, RunContext context, CancellationToken ct)
     {
         SetStage(RunStage.Saving, "Saving");
-        report.Status = ResolveStatus(report.Results, ct);
+        report.Status = ResolveStatus(report.Status, report.Results, context.IsStopRequested, ct);
         if (report.FinishedAt == default)
         {
             report.FinishedAt = DateTimeOffset.Now;
@@ -374,7 +384,8 @@ public class RunOrchestrator
         }
 
         context.Log.Info($"Report saved: {report.Artifacts.JsonPath}");
-        await SaveRunArtifactsAsync(report, context, ct);
+        var persistenceToken = ct.IsCancellationRequested ? CancellationToken.None : ct;
+        await SaveRunArtifactsAsync(report, context, persistenceToken);
         SetStage(RunStage.Done, "Done");
         return report;
     }
@@ -448,6 +459,8 @@ public class RunOrchestrator
             },
             Status = result.Success ? TestStatus.Success.ToString() : TestStatus.Failed.ToString(),
             DurationMs = result.DurationMs,
+            WorkerId = result.WorkerId,
+            Iteration = result.IterationIndex,
             ErrorMessage = result.ErrorMessage,
             ExtraJson = BuildExtraJson(result)
         }).ToList();
@@ -491,7 +504,18 @@ public class RunOrchestrator
             _ => null
         };
 
-        return extra == null ? null : JsonSerializer.Serialize(extra);
+        extra ??= new Dictionary<string, object?>();
+        if (result.WorkerId > 0)
+        {
+            extra["workerId"] = result.WorkerId;
+        }
+
+        if (result.IterationIndex > 0)
+        {
+            extra["iteration"] = result.IterationIndex;
+        }
+
+        return extra.Count == 0 ? null : JsonSerializer.Serialize(extra);
     }
 
     private static IReadOnlyList<ArtifactRecord> BuildArtifacts(TestReport report)
@@ -566,25 +590,30 @@ public class RunOrchestrator
         return artifacts;
     }
 
-    private static TestStatus ResolveStatus(IEnumerable<ResultBase> results, CancellationToken ct)
+    private static TestStatus ResolveStatus(TestStatus currentStatus, IEnumerable<ResultBase> results, bool stopRequested, CancellationToken ct)
     {
         if (ct.IsCancellationRequested)
         {
-            return TestStatus.Cancelled;
+            return TestStatus.Canceled;
+        }
+
+        if (currentStatus == TestStatus.Failed)
+        {
+            return TestStatus.Failed;
         }
 
         var list = results.ToList();
         if (list.Count == 0)
         {
-            return TestStatus.Success;
+            return stopRequested ? TestStatus.Stopped : TestStatus.Success;
         }
 
         var failed = list.Count(r => !r.Success);
-        if (failed == 0)
+        if (failed > 0)
         {
-            return TestStatus.Success;
+            return failed == list.Count ? TestStatus.Failed : TestStatus.Partial;
         }
 
-        return failed == list.Count ? TestStatus.Failed : TestStatus.Partial;
+        return stopRequested ? TestStatus.Stopped : TestStatus.Success;
     }
 }
