@@ -48,9 +48,9 @@ public class RunOrchestrator
             errors.Add("Количество итераций должно быть больше 0.");
         }
 
-        if (profile.Parallelism > 25)
+        if (profile.Parallelism > RunProfileLimits.MaxParallelism)
         {
-            errors.Add("Параллелизм не должен превышать 25 для безопасного MVP-режима.");
+            errors.Add($"Параллелизм не должен превышать {RunProfileLimits.MaxParallelism} для безопасного MVP-режима.");
         }
 
 
@@ -59,9 +59,9 @@ public class RunOrchestrator
             errors.Add("Длительность должна быть больше 0 секунд.");
         }
 
-        if (profile.Mode == RunMode.Duration && profile.DurationSeconds > 60)
+        if (profile.Mode == RunMode.Duration && profile.DurationSeconds > RunProfileLimits.MaxDurationSeconds)
         {
-            errors.Add("Длительность не должна превышать 60 секунд в безопасном MVP-режиме.");
+            errors.Add($"Длительность не должна превышать {RunProfileLimits.MaxDurationSeconds} секунд в безопасном MVP-режиме.");
         }
 
 
@@ -457,15 +457,17 @@ public class RunOrchestrator
     {
         Dictionary<string, object?>? extra = result switch
         {
-            RunResult run when !string.IsNullOrWhiteSpace(run.ScreenshotPath) => new Dictionary<string, object?>
+            RunResult run => new Dictionary<string, object?>
             {
-                ["screenshot"] = run.ScreenshotPath
+                ["screenshot"] = run.ScreenshotPath,
+                ["detailsJson"] = run.DetailsJson
             },
             StepResult step => new Dictionary<string, object?>
             {
                 ["action"] = step.Action,
                 ["selector"] = step.Selector,
-                ["screenshot"] = step.ScreenshotPath
+                ["screenshot"] = step.ScreenshotPath,
+                ["detailsJson"] = step.DetailsJson
             },
             CheckResult check when check.StatusCode.HasValue => new Dictionary<string, object?>
             {
@@ -483,7 +485,8 @@ public class RunOrchestrator
             TimingResult timing => new Dictionary<string, object?>
             {
                 ["iteration"] = timing.Iteration,
-                ["url"] = timing.Url
+                ["url"] = timing.Url,
+                ["detailsJson"] = timing.DetailsJson
             },
             _ => null
         };

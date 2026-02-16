@@ -42,7 +42,7 @@
 
     <Style Selector="Button">
         <Setter Property="MinHeight" Value="{DynamicResource ButtonHeight}" />
-        <Setter Property="Padding" Value="14,6" />
+        <Setter Property="Padding" Value="14,8" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
@@ -94,7 +94,7 @@
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="MinHeight" Value="28" />
-        <Setter Property="Padding" Value="8,2" />
+        <Setter Property="Padding" Value="8,4" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />

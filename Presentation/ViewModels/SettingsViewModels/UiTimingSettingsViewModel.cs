@@ -1,7 +1,9 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiTiming;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -13,20 +15,30 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiTimingSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public UiTimingSettingsViewModel(UiTimingSettings settings)
     {
         _settings = settings;
-        Targets = new ObservableCollection<TimingTarget>(settings.Targets);
-        waitUntil = settings.WaitUntil;
-        timeoutSeconds = settings.TimeoutSeconds;
-        Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
+        Targets = new ObservableCollection<TimingTarget>(_settings.Targets);
+        waitUntil = _settings.WaitUntil;
+        timeoutSeconds = _settings.TimeoutSeconds;
+        Targets.CollectionChanged += (_, _) => SyncTargets();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI тайминги";
+
+    public ObservableCollection<TimingTarget> Targets { get; }
+    public Array WaitUntilOptions { get; } = Enum.GetValues(typeof(UiWaitUntil));
+
+    [ObservableProperty]
+    private TimingTarget? selectedTarget;
+
+    [ObservableProperty]
+    private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
+
+    [ObservableProperty]
+    private int timeoutSeconds = 30;
+
     public override void UpdateFrom(object settings)
     {
         if (settings is not UiTimingSettings s)
@@ -42,29 +54,10 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
 
         WaitUntil = s.WaitUntil;
         TimeoutSeconds = s.TimeoutSeconds;
-        _settings.Targets = Targets.ToList();
+        SyncTargets();
     }
 
-    public ObservableCollection<TimingTarget> Targets { get; }
-
-    public string[] WaitUntilOptions { get; } = { "load", "domcontentloaded", "networkidle" };
-
-    [ObservableProperty]
-    private TimingTarget? selectedTarget;
-
-    [ObservableProperty]
-    private string waitUntil = "load";
-
-    [ObservableProperty]
-    private int timeoutSeconds = 30;
-
-    /// <summary>
-    /// Синхронизирует режим ожидания загрузки.
-    /// </summary>
-    partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
-    /// <summary>
-    /// Синхронизирует таймаут навигации.
-    /// </summary>
+    partial void OnWaitUntilChanged(UiWaitUntil value) => _settings.WaitUntil = value;
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
     [RelayCommand]
@@ -73,20 +66,55 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
         var target = new TimingTarget { Url = "https://example.com" };
         Targets.Add(target);
         SelectedTarget = target;
+        SyncTargets();
     }
 
     [RelayCommand]
     private void RemoveSelectedTarget()
     {
-        if (SelectedTarget != null)
+        if (SelectedTarget == null)
         {
-            Targets.Remove(SelectedTarget);
+            return;
+        }
+
+        Targets.Remove(SelectedTarget);
+        SyncTargets();
+    }
+
+    [RelayCommand]
+    private void MoveTargetUp()
+    {
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var index = Targets.IndexOf(SelectedTarget);
+        if (index > 0)
+        {
+            Targets.Move(index, index - 1);
+            SyncTargets();
         }
     }
 
     [RelayCommand]
-    private void ClearTargets()
+    private void MoveTargetDown()
     {
-        Targets.Clear();
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var index = Targets.IndexOf(SelectedTarget);
+        if (index >= 0 && index < Targets.Count - 1)
+        {
+            Targets.Move(index, index + 1);
+            SyncTargets();
+        }
+    }
+
+    private void SyncTargets()
+    {
+        _settings.Targets = Targets.ToList();
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -19,59 +20,53 @@ public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
     public string DisplayName => "UI тайминги";
-    public string Description => "Измеряет скорость загрузки UI и вычисляет агрегаты (avg, p95/p99 при достаточном N).";
+    public string Description => "Измеряет время загрузки целевых URL и сохраняет навигационные метрики в DetailsJson.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 
-    /// <summary>
-    /// Создаёт настройки по умолчанию.
-    /// </summary>
     public object CreateDefaultSettings()
     {
         return new UiTimingSettings
         {
             Targets = new List<TimingTarget>
             {
-                new() { Url = "https://example.com", Tag = "Example" }
+                new() { Url = "https://example.com" }
             },
-            WaitUntil = "load",
+            WaitUntil = UiWaitUntil.DomContentLoaded,
             TimeoutSeconds = 30
         };
     }
 
-    /// <summary>
-    /// Проверяет корректность настроек замеров.
-    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
         if (settings is not UiTimingSettings s)
         {
-            errors.Add("Invalid settings type");
+            errors.Add("Некорректный тип настроек UI таймингов.");
             return errors;
         }
 
         if (s.Targets.Count == 0)
         {
-            errors.Add("At least one URL is required");
+            errors.Add("Добавьте хотя бы один URL для замеров.");
         }
 
-        if (s.Targets.Any(target => !Uri.TryCreate(target.Url, UriKind.Absolute, out _)))
+        for (var i = 0; i < s.Targets.Count; i++)
         {
-            errors.Add("Each URL must be absolute");
+            if (!Uri.TryCreate(s.Targets[i].Url, UriKind.Absolute, out _))
+            {
+                errors.Add($"Цель {i + 1}: укажите абсолютный URL.");
+            }
         }
 
         if (s.TimeoutSeconds <= 0)
         {
-            errors.Add("Timeout must be positive");
+            errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
         return errors;
     }
 
-    /// <summary>
-    /// Выполняет замеры времени и формирует результат.
-    /// </summary>
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiTimingSettings)settings;
@@ -80,76 +75,148 @@ public class UiTimingModule : ITestModule
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             var browsersPath = PlaywrightFactory.GetBrowsersPath();
-            ctx.Log.Error($"[UiTiming] Chromium browser not found. Install browsers into: {browsersPath}");
+            ctx.Log.Error($"[UiTiming] Chromium не найден. Установите браузеры в: {browsersPath}");
             result.Status = TestStatus.Failed;
             result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
-                ErrorMessage = $"Chromium is not installed. Run playwright install chromium (path: {browsersPath})."
+                ErrorMessage = $"Chromium не установлен. Выполните playwright install chromium (path: {browsersPath})."
             });
             return result;
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var waitUntil = s.WaitUntil switch
-        {
-            "domcontentloaded" => WaitUntilState.DOMContentLoaded,
-            "networkidle" => WaitUntilState.NetworkIdle,
-            _ => WaitUntilState.Load
-        };
+        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
+        Directory.CreateDirectory(runProfileDir);
+
+        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(
+            runProfileDir,
+            new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
+
+        var waitUntilState = ToWaitUntilState(s.WaitUntil);
+        var timeoutMs = Math.Max(1, s.TimeoutSeconds) * 1000;
         var results = new List<ResultBase>();
-        ctx.Log.Info($"[UiTiming] Launching browser (Headless={ctx.Profile.Headless})");
         var total = s.Targets.Count;
         var completed = 0;
 
-        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
-        Directory.CreateDirectory(runProfileDir);
-        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(runProfileDir, new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
-        var index = 0;
-        foreach (var target in s.Targets)
+        for (var i = 0; i < s.Targets.Count; i++)
         {
+            ct.ThrowIfCancellationRequested();
+
+            var target = s.Targets[i];
+            var index = i + 1;
             var sw = Stopwatch.StartNew();
-            index++;
+
             try
             {
                 var page = await browser.NewPageAsync();
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
-                    WaitUntil = waitUntil,
-                    Timeout = s.TimeoutSeconds * 1000
+                    WaitUntil = waitUntilState,
+                    Timeout = timeoutMs
                 });
+
                 sw.Stop();
-                results.Add(new TimingResult(target.Tag ?? target.Url)
+                var nav = await ReadNavigationTimingAsync(page);
+                var details = JsonSerializer.Serialize(new
+                {
+                    url = target.Url,
+                    waitUntil = s.WaitUntil.ToString(),
+                    totalMs = sw.Elapsed.TotalMilliseconds,
+                    nav,
+                    timestampUtc = DateTimeOffset.UtcNow
+                });
+
+                results.Add(new TimingResult($"Timing: {GetDisplayName(target.Url)}")
                 {
                     Url = target.Url,
                     Iteration = index,
                     Success = true,
-                    DurationMs = sw.Elapsed.TotalMilliseconds
+                    DurationMs = sw.Elapsed.TotalMilliseconds,
+                    DetailsJson = details
                 });
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                results.Add(new TimingResult(target.Tag ?? target.Url)
+                var details = JsonSerializer.Serialize(new
+                {
+                    url = target.Url,
+                    waitUntil = s.WaitUntil.ToString(),
+                    totalMs = sw.Elapsed.TotalMilliseconds,
+                    timestampUtc = DateTimeOffset.UtcNow
+                });
+
+                ctx.Log.Error($"[UiTiming] Цель {index} failed: {ex.GetType().Name}: {ex.Message}");
+                results.Add(new TimingResult($"Timing: {GetDisplayName(target.Url)}")
                 {
                     Url = target.Url,
                     Iteration = index,
                     Success = false,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = ex.GetType().Name,
-                    ErrorMessage = ex.Message
+                    ErrorMessage = ex.Message,
+                    DetailsJson = details
                 });
             }
             finally
             {
                 var done = Interlocked.Increment(ref completed);
-                ctx.Progress.Report(new ProgressUpdate(done, total, "UI тайминги"));
+                ctx.Progress.Report(new ProgressUpdate(done, total, $"UI тайминги: {done}/{total}"));
             }
         }
+
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static async Task<object?> ReadNavigationTimingAsync(IPage page)
+    {
+        try
+        {
+            var nav = await page.EvaluateAsync<JsonElement>("""
+                () => {
+                  const entry = performance.getEntriesByType('navigation')[0];
+                  if (!entry) return null;
+                  return {
+                    domContentLoadedMs: entry.domContentLoadedEventEnd,
+                    loadEventMs: entry.loadEventEnd,
+                    responseEndMs: entry.responseEnd,
+                    requestStartMs: entry.requestStart,
+                    transferSize: entry.transferSize ?? null
+                  };
+                }
+            """);
+
+            return nav.ValueKind == JsonValueKind.Null ? null : nav;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string GetDisplayName(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return url;
+        }
+
+        var path = string.IsNullOrWhiteSpace(uri.AbsolutePath) || uri.AbsolutePath == "/" ? string.Empty : uri.AbsolutePath;
+        return $"{uri.Host}{path}";
+    }
+
+    private static WaitUntilState ToWaitUntilState(UiWaitUntil value)
+    {
+        return value switch
+        {
+            UiWaitUntil.DomContentLoaded => WaitUntilState.DOMContentLoaded,
+            UiWaitUntil.NetworkIdle => WaitUntilState.NetworkIdle,
+            _ => WaitUntilState.Load
+        };
     }
 }

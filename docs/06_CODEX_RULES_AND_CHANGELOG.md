@@ -1,6 +1,6 @@
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v2.11 15.02.2026
+**Версия:** v2.14 16.02.2026
 
 ## 1. Режим работы (обязательный)
 1) Перед правками — прочитать `01–03` (и при необходимости `05–07`).
@@ -38,6 +38,28 @@
 3) синхронизируем остальные документы и код.
 
 ## 6. Журнал изменений
+### v2.14 16.02.2026
+- Реализованы рабочие MVP-модули семейства UI Testing: `A2 ui.snapshot` и `A3 ui.timing` с запуском через Playwright persistent context (`runs/<RunId>/profile/`) и корректной записью результатов в общий run pipeline.
+- `ui.snapshot`: поддержаны Targets (`Url/Selector/Name`), `WaitUntil`, `TimeoutSeconds`, `FullPage`, optional `Viewport`; скриншоты сохраняются в `runs/<RunId>/screenshots/` с именами `snap_{index}_{name}_{timestamp}.png`, в результаты добавляются `ScreenshotPath` и `DetailsJson`; ошибки по целям обрабатываются в continue-on-error режиме.
+- `ui.timing`: поддержаны Targets URL, `WaitUntil`, `TimeoutSeconds`; для каждой цели снимаются total timings и best-effort navigation метрики (`performance.getEntriesByType('navigation')`), сериализуются в `DetailsJson`; ошибки по целям не прерывают прогон.
+- Для A2/A3 обновлены SettingsViewModels/Views (табличные редакторы целей + кнопки `+ / ↑ / ↓ / Удалить`), добавлен RU-конвертер для `WaitUntil`; вложенные `ScrollViewer` в карточках не добавлялись.
+- Расширены сериализация отчётов/RunItems: `detailsJson` теперь пробрасывается и для `RunResult`/`TimingResult`.
+- Обновлены README/AGENTS и якорные docs (`02`, `05`) для отражения реализованных A2/A3 и smoke-проверок.
+
+### v2.13 16.02.2026
+- Реализован MVP модуля `ui.scenario` по Variant B: шаги `Action + Selector + Value + DelayMs`, валидация сценария до запуска и выполнение через Playwright persistent context (`runs/<RunId>/profile/`).
+- Для `ui.scenario` добавлены действия `Переход / Ожидание элемента / Клик / Ввод текста / Проверка текста / Скриншот / Пауза`, обработка шагов в режиме Continue-on-error и формирование `StepResult` со `ScreenshotPath` и `DetailsJson`.
+- Реализована миграция старого формата шагов `Selector + Text` в Variant B при загрузке/валидации/выполнении (`Text -> Value`, пустой Text -> Click, заполненный Text -> Fill).
+- Обновлён UI редактор шагов `UI сценарий` (RU-лейблы, редактирование Variant B, кнопки добавить/удалить/перемещение) без вложенных `ScrollViewer`.
+- Добавлены RU-конвертеры отображения для Action шагов и `ScreenshotsPolicy` в RunProfile UI.
+
+### v2.12 16.02.2026
+- UI-A1: скорректированы базовые отступы кнопок (`Button` и `Button.link`), чтобы вертикальное выравнивание текста оставалось стабильным на всех кнопках тулбаров.
+- UI-A2/A5: в `MainWindow` и `ModuleWorkspace` убраны избыточные `Margin` у action-элементов в пользу `Spacing`, уменьшены межкарточные интервалы до 12, добавлены `ClipToBounds`/ellipsis для заголовков карточек и блока артефактов.
+- UI-A3/A4/A6: сохранён полноширинный блок `RunProfile`, удалён внутренний вложенный scroll в блоке артефактов (остаётся один scroll рабочей области вкладки); `SettingsWindow` оставлен в MVP-формате единого скролла с секциями «Пути хранения» и «Telegram».
+- UI-A7: добавлена единая агрегация ошибок запуска в `MainWindowViewModel` (подписки на изменения настроек/конфига/профиля + `ReevaluateStartAvailability`), `StartCommand` теперь стабильно блокируется при ошибках валидации.
+- UI-A8: унифицирован лимит Duration до 60 секунд через общий `RunProfileLimits` (оркестратор, предупреждения VM и `NumericUpDown.Maximum`).
+
 ### v2.11 15.02.2026
 - Переразмечена верхняя панель `ModuleWorkspace` в pinned-формат по строкам (`Row0` прогресс+статус+действия, `Row1` список модулей, `Row2` заголовок и описание), что устранило наложения и «прыжки» блоков при ширине 960–1400.
 - Карточка «Параметры запуска» перенесена на всю ширину рабочей области (`Grid.ColumnSpan=2`) отдельной строкой, убраны «дыры» в правой части сетки.

@@ -19,6 +19,7 @@ public abstract record ResultBase(string Kind)
 public record RunResult(string Name) : ResultBase("Run")
 {
     public string? ScreenshotPath { get; init; }
+    public string? DetailsJson { get; init; }
 }
 
 /// <summary>
@@ -29,6 +30,7 @@ public record StepResult(string Name) : ResultBase("Step")
     public string? Action { get; init; }
     public string? Selector { get; init; }
     public string? ScreenshotPath { get; init; }
+    public string? DetailsJson { get; init; }
 }
 
 /// <summary>
@@ -54,6 +56,7 @@ public record TimingResult(string Name) : ResultBase("Timing")
 {
     public int Iteration { get; init; }
     public string? Url { get; init; }
+    public string? DetailsJson { get; init; }
 }
 
 /// <summary>

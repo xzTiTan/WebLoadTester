@@ -1,7 +1,9 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -13,62 +15,35 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiSnapshotSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public UiSnapshotSettingsViewModel(UiSnapshotSettings settings)
     {
         _settings = settings;
-        Targets = new ObservableCollection<SnapshotTarget>(settings.Targets);
-        waitUntil = settings.WaitUntil;
-        timeoutSeconds = settings.TimeoutSeconds;
-        screenshotFormat = settings.ScreenshotFormat;
-        viewportWidth = settings.ViewportWidth;
-        viewportHeight = settings.ViewportHeight;
-        fullPage = settings.FullPage;
-        Targets.CollectionChanged += (_, _) => _settings.Targets = Targets.ToList();
+        NormalizeLegacyTargets(_settings);
+
+        Targets = new ObservableCollection<SnapshotTarget>(_settings.Targets);
+        waitUntil = _settings.WaitUntil;
+        timeoutSeconds = _settings.TimeoutSeconds;
+        viewportWidth = _settings.ViewportWidth;
+        viewportHeight = _settings.ViewportHeight;
+        fullPage = _settings.FullPage;
+
+        Targets.CollectionChanged += (_, _) => SyncTargets();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI снимки";
-    public override void UpdateFrom(object settings)
-    {
-        if (settings is not UiSnapshotSettings s)
-        {
-            return;
-        }
-
-        Targets.Clear();
-        foreach (var target in s.Targets)
-        {
-            Targets.Add(target);
-        }
-
-        WaitUntil = s.WaitUntil;
-        TimeoutSeconds = s.TimeoutSeconds;
-        ScreenshotFormat = s.ScreenshotFormat;
-        ViewportWidth = s.ViewportWidth;
-        ViewportHeight = s.ViewportHeight;
-        FullPage = s.FullPage;
-        _settings.Targets = Targets.ToList();
-    }
 
     public ObservableCollection<SnapshotTarget> Targets { get; }
-
-    public string[] WaitUntilOptions { get; } = { "load", "domcontentloaded", "networkidle" };
-    public string[] ScreenshotFormatOptions { get; } = { "png" };
+    public Array WaitUntilOptions { get; } = Enum.GetValues(typeof(UiWaitUntil));
 
     [ObservableProperty]
     private SnapshotTarget? selectedTarget;
 
     [ObservableProperty]
-    private string waitUntil = "load";
+    private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
 
     [ObservableProperty]
     private int timeoutSeconds = 30;
-
-    [ObservableProperty]
-    private string screenshotFormat = "png";
 
     [ObservableProperty]
     private int? viewportWidth;
@@ -79,51 +54,103 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private bool fullPage = true;
 
-    /// <summary>
-    /// Синхронизирует режим ожидания загрузки.
-    /// </summary>
-    partial void OnWaitUntilChanged(string value) => _settings.WaitUntil = value;
-    /// <summary>
-    /// Синхронизирует таймаут.
-    /// </summary>
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not UiSnapshotSettings s)
+        {
+            return;
+        }
+
+        NormalizeLegacyTargets(s);
+
+        Targets.Clear();
+        foreach (var target in s.Targets)
+        {
+            Targets.Add(target);
+        }
+
+        WaitUntil = s.WaitUntil;
+        TimeoutSeconds = s.TimeoutSeconds;
+        ViewportWidth = s.ViewportWidth;
+        ViewportHeight = s.ViewportHeight;
+        FullPage = s.FullPage;
+        _settings.ScreenshotFormat = "png";
+        SyncTargets();
+    }
+
+    partial void OnWaitUntilChanged(UiWaitUntil value) => _settings.WaitUntil = value;
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
-    /// <summary>
-    /// Синхронизирует формат скриншота.
-    /// </summary>
-    partial void OnScreenshotFormatChanged(string value) => _settings.ScreenshotFormat = value;
-    /// <summary>
-    /// Синхронизирует ширину viewport.
-    /// </summary>
     partial void OnViewportWidthChanged(int? value) => _settings.ViewportWidth = value;
-    /// <summary>
-    /// Синхронизирует высоту viewport.
-    /// </summary>
     partial void OnViewportHeightChanged(int? value) => _settings.ViewportHeight = value;
-    /// <summary>
-    /// Синхронизирует флаг полного снимка страницы.
-    /// </summary>
     partial void OnFullPageChanged(bool value) => _settings.FullPage = value;
 
     [RelayCommand]
     private void AddTarget()
     {
-        var target = new SnapshotTarget { Url = "https://example.com" };
+        var target = new SnapshotTarget { Url = "https://example.com", Name = "example" };
         Targets.Add(target);
         SelectedTarget = target;
+        SyncTargets();
     }
 
     [RelayCommand]
     private void RemoveSelectedTarget()
     {
-        if (SelectedTarget != null)
+        if (SelectedTarget == null)
         {
-            Targets.Remove(SelectedTarget);
+            return;
+        }
+
+        Targets.Remove(SelectedTarget);
+        SyncTargets();
+    }
+
+    [RelayCommand]
+    private void MoveTargetUp()
+    {
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var index = Targets.IndexOf(SelectedTarget);
+        if (index > 0)
+        {
+            Targets.Move(index, index - 1);
+            SyncTargets();
         }
     }
 
     [RelayCommand]
-    private void ClearTargets()
+    private void MoveTargetDown()
     {
-        Targets.Clear();
+        if (SelectedTarget == null)
+        {
+            return;
+        }
+
+        var index = Targets.IndexOf(SelectedTarget);
+        if (index >= 0 && index < Targets.Count - 1)
+        {
+            Targets.Move(index, index + 1);
+            SyncTargets();
+        }
+    }
+
+    private void SyncTargets()
+    {
+        _settings.Targets = Targets.ToList();
+        _settings.ScreenshotFormat = "png";
+    }
+
+    private static void NormalizeLegacyTargets(UiSnapshotSettings settings)
+    {
+        foreach (var target in settings.Targets)
+        {
+            if (string.IsNullOrWhiteSpace(target.Name) && !string.IsNullOrWhiteSpace(target.Tag))
+            {
+                target.Name = target.Tag;
+            }
+        }
     }
 }

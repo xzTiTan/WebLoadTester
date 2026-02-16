@@ -1,44 +1,53 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:domain="clr-namespace:WebLoadTester.Modules.UiTiming"
              xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+             xmlns:core="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiTimingSettingsView"
              x:DataType="vm:UiTimingSettingsViewModel">
     <StackPanel Spacing="16">
         <Border Classes="section">
-            <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="URL-адреса" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddTargetCommand}" />
-                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedTargetCommand}" />
-                        <Button Margin="0,0,8,8" Content="Очистить" Command="{Binding ClearTargetsCommand}" />
-                    </WrapPanel>
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" ClipToBounds="True">
+                    <TextBlock Text="Цели таймингов" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="+ Добавить" Command="{Binding AddTargetCommand}" />
+                        <Button Content="↑" Command="{Binding MoveTargetUpCommand}" />
+                        <Button Content="↓" Command="{Binding MoveTargetDownCommand}" />
+                        <Button Content="Удалить" Classes="danger" Command="{Binding RemoveSelectedTargetCommand}" />
+                    </StackPanel>
                 </Grid>
+
                 <dg:DataGrid ItemsSource="{Binding Targets}"
                              SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
                              AutoGenerateColumns="False"
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Тег" Binding="{Binding Tag}" Width="*" />
+                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="3*" />
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
-            <StackPanel Spacing="8">
+            <StackPanel Spacing="12">
                 <TextBlock Text="Параметры тайминга" Classes="section-title" />
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Событие загрузки" Classes="field-label" />
-                    <ComboBox Classes="field-control"
-                              ItemsSource="{Binding WaitUntilOptions}"
-                              SelectedItem="{Binding WaitUntil, Mode=TwoWay}" />
+                    <ComboBox Classes="field-control" ItemsSource="{Binding WaitUntilOptions}" SelectedItem="{Binding WaitUntil, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="core:UiWaitUntil">
+                                <TextBlock Text="{Binding ., Converter={StaticResource UiWaitUntilDisplayConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут, сек" Classes="field-label" />
-                    <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Maximum="300" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>

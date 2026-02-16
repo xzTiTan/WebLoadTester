@@ -8,7 +8,7 @@
     <Style Selector="TextBlock.field-label">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
     </Style>
 
     <Style Selector="Control.field-control">

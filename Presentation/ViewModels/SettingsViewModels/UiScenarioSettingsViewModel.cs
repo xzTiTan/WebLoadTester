@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiScenario;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
@@ -15,67 +15,68 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiScenarioSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public UiScenarioSettingsViewModel(UiScenarioSettings settings)
     {
         _settings = settings;
-        Steps = new ObservableCollection<UiStep>(settings.Steps);
-        targetUrl = settings.TargetUrl;
-        timeoutMs = settings.TimeoutMs;
-        errorPolicy = settings.ErrorPolicy;
-        Steps.CollectionChanged += (_, _) => _settings.Steps = Steps.ToList();
+        NormalizeLegacySteps(_settings);
+
+        Steps = new ObservableCollection<UiStep>(_settings.Steps);
+        targetUrl = _settings.TargetUrl;
+        timeoutMs = _settings.TimeoutMs;
+
+        Steps.CollectionChanged += (_, _) => SyncSteps();
+        foreach (var step in Steps)
+        {
+            step.PropertyChanged += (_, _) => SyncSteps();
+        }
     }
 
     public override object Settings => _settings;
     public override string Title => "UI сценарий";
-    public override void UpdateFrom(object settings)
-    {
-        if (settings is not UiScenarioSettings s)
-        {
-            return;
-        }
-
-        Steps.Clear();
-        foreach (var step in s.Steps)
-        {
-            Steps.Add(step);
-        }
-
-        TargetUrl = s.TargetUrl;
-        TimeoutMs = s.TimeoutMs;
-        ErrorPolicy = s.ErrorPolicy;
-        _settings.Steps = Steps.ToList();
-    }
 
     public ObservableCollection<UiStep> Steps { get; }
 
-    public StepErrorPolicy[] ErrorPolicyOptions { get; } = Enum.GetValues<StepErrorPolicy>();
+    public UiStepAction[] ActionOptions { get; } =
+    {
+        UiStepAction.Navigate,
+        UiStepAction.WaitForSelector,
+        UiStepAction.Click,
+        UiStepAction.Fill,
+        UiStepAction.AssertText,
+        UiStepAction.Screenshot,
+        UiStepAction.Delay
+    };
 
     [ObservableProperty]
-    private string targetUrl = "https://example.com";
+    private string targetUrl = string.Empty;
 
     [ObservableProperty]
     private int timeoutMs = 10000;
 
-    [ObservableProperty]
-    private StepErrorPolicy errorPolicy;
+    public override void UpdateFrom(object settings)
+    {
+        if (settings is not UiScenarioSettings incoming)
+        {
+            return;
+        }
 
-    /// <summary>
-    /// Синхронизирует URL сценария.
-    /// </summary>
+        NormalizeLegacySteps(incoming);
+
+        Steps.Clear();
+        foreach (var step in incoming.Steps)
+        {
+            Steps.Add(step);
+            step.PropertyChanged += (_, _) => SyncSteps();
+        }
+
+        TargetUrl = incoming.TargetUrl;
+        TimeoutMs = incoming.TimeoutMs;
+        SyncSteps();
+    }
+
     partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = value;
 
-    /// <summary>
-    /// Синхронизирует таймаут сценария.
-    /// </summary>
     partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
-
-    /// <summary>
-    /// Синхронизирует политику ошибок шага.
-    /// </summary>
-    partial void OnErrorPolicyChanged(StepErrorPolicy value) => _settings.ErrorPolicy = value;
 
     [RelayCommand]
     private void AddStep()
@@ -84,20 +85,25 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         {
             Action = UiStepAction.Click,
             Selector = string.Empty,
-            Text = string.Empty,
-            TimeoutMs = 0,
+            Value = string.Empty,
             DelayMs = 0
         };
+
+        step.PropertyChanged += (_, _) => SyncSteps();
         Steps.Add(step);
+        SyncSteps();
     }
 
     [RelayCommand]
     private void RemoveStep(UiStep? step)
     {
-        if (step != null)
+        if (step == null)
         {
-            Steps.Remove(step);
+            return;
         }
+
+        Steps.Remove(step);
+        SyncSteps();
     }
 
     [RelayCommand]
@@ -112,6 +118,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         if (index > 0)
         {
             Steps.Move(index, index - 1);
+            SyncSteps();
         }
     }
 
@@ -127,6 +134,37 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         if (index >= 0 && index < Steps.Count - 1)
         {
             Steps.Move(index, index + 1);
+            SyncSteps();
+        }
+    }
+
+    private void SyncSteps()
+    {
+        _settings.Steps = Steps.ToList();
+    }
+
+    private static void NormalizeLegacySteps(UiScenarioSettings settings)
+    {
+        if (settings.Steps.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var step in settings.Steps)
+        {
+            if (string.IsNullOrWhiteSpace(step.Value) && !string.IsNullOrWhiteSpace(step.Text))
+            {
+                step.Value = step.Text;
+            }
+
+            if (step.Action == UiStepAction.WaitForSelector)
+            {
+                var hasSelector = !string.IsNullOrWhiteSpace(step.Selector);
+                if (hasSelector)
+                {
+                    step.Action = string.IsNullOrWhiteSpace(step.Value) ? UiStepAction.Click : UiStepAction.Fill;
+                }
+            }
         }
     }
 }

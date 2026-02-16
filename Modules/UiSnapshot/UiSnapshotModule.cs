@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -19,196 +21,276 @@ public class UiSnapshotModule : ITestModule
 {
     public string Id => "ui.snapshot";
     public string DisplayName => "UI снимки";
-    public string Description => "Создаёт скриншоты страниц для фиксации доступности и визуального состояния.";
+    public string Description => "Снимает скриншоты целевых URL/селекторов и сохраняет артефакты в runs/<RunId>/screenshots.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiSnapshotSettings);
 
-    /// <summary>
-    /// Создаёт настройки по умолчанию.
-    /// </summary>
     public object CreateDefaultSettings()
     {
         return new UiSnapshotSettings
         {
             Targets = new List<SnapshotTarget>
             {
-                new() { Url = "https://example.com", Tag = "Example", Selector = string.Empty }
+                new() { Url = "https://example.com", Name = "example", Selector = string.Empty }
             },
-            WaitUntil = "load",
+            WaitUntil = UiWaitUntil.DomContentLoaded,
             TimeoutSeconds = 30,
-            ScreenshotFormat = "png"
+            ScreenshotFormat = "png",
+            FullPage = true
         };
     }
 
-    /// <summary>
-    /// Проверяет корректность параметров снимков.
-    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
         if (settings is not UiSnapshotSettings s)
         {
-            errors.Add("Invalid settings type");
+            errors.Add("Некорректный тип настроек UI снимков.");
             return errors;
         }
 
+        NormalizeLegacyTargets(s);
+
         if (s.Targets.Count == 0)
         {
-            errors.Add("At least one URL is required");
+            errors.Add("Добавьте хотя бы одну цель для снимка.");
         }
 
-        if (s.Targets.Any(target => !Uri.TryCreate(target.Url, UriKind.Absolute, out _)))
+        for (var i = 0; i < s.Targets.Count; i++)
         {
-            errors.Add("Each URL must be absolute");
-        }
-
-        if (s.Targets.Any(target => !string.IsNullOrWhiteSpace(target.Selector) && string.IsNullOrWhiteSpace(target.Url)))
-        {
-            errors.Add("URL is required when selector is provided");
+            var target = s.Targets[i];
+            if (!Uri.TryCreate(target.Url, UriKind.Absolute, out _))
+            {
+                errors.Add($"Цель {i + 1}: укажите абсолютный URL.");
+            }
         }
 
         if (s.TimeoutSeconds <= 0)
         {
-            errors.Add("TimeoutSeconds must be positive");
+            errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
         if (!string.Equals(s.ScreenshotFormat, "png", StringComparison.OrdinalIgnoreCase))
         {
-            errors.Add("ScreenshotFormat must be png");
+            errors.Add("ScreenshotFormat для MVP должен быть png.");
         }
 
-        if ((s.ViewportWidth.HasValue && s.ViewportWidth.Value > 0) ^
-            (s.ViewportHeight.HasValue && s.ViewportHeight.Value > 0))
+        var hasWidth = s.ViewportWidth.GetValueOrDefault() > 0;
+        var hasHeight = s.ViewportHeight.GetValueOrDefault() > 0;
+        if (hasWidth ^ hasHeight)
         {
-            errors.Add("ViewportWidth and ViewportHeight must be set together");
+            errors.Add("ViewportWidth и ViewportHeight задаются вместе.");
         }
 
         return errors;
     }
 
-    /// <summary>
-    /// Делает скриншоты указанных URL и формирует результат.
-    /// </summary>
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (UiSnapshotSettings)settings;
+        NormalizeLegacyTargets(s);
+
         var result = new ModuleResult();
 
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             var browsersPath = PlaywrightFactory.GetBrowsersPath();
-            ctx.Log.Error($"[UiSnapshot] Chromium browser not found. Install browsers into: {browsersPath}");
+            ctx.Log.Error($"[UiSnapshot] Chromium не найден. Установите браузеры в: {browsersPath}");
             result.Status = TestStatus.Failed;
             result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
-                ErrorMessage = $"Chromium is not installed. Run playwright install chromium (path: {browsersPath})."
+                ErrorMessage = $"Chromium не установлен. Выполните playwright install chromium (path: {browsersPath})."
             });
             return result;
         }
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var waitUntil = s.WaitUntil switch
-        {
-            "domcontentloaded" => WaitUntilState.DOMContentLoaded,
-            "networkidle" => WaitUntilState.NetworkIdle,
-            _ => WaitUntilState.Load
-        };
-        var results = new List<ResultBase>();
-        ctx.Log.Info($"[UiSnapshot] Launching browser (Headless={ctx.Profile.Headless})");
-        var completed = 0;
-        var total = s.Targets.Count;
         var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
         Directory.CreateDirectory(runProfileDir);
-        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(runProfileDir, new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
 
-        foreach (var target in s.Targets)
+        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(
+            runProfileDir,
+            new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
+
+        var results = new List<ResultBase>();
+        var waitUntilState = ToWaitUntilState(s.WaitUntil);
+        var timeoutMs = Math.Max(1, s.TimeoutSeconds) * 1000;
+        var total = s.Targets.Count;
+        var completed = 0;
+
+        for (var i = 0; i < s.Targets.Count; i++)
         {
+            ct.ThrowIfCancellationRequested();
+
+            var target = s.Targets[i];
+            var targetIndex = i + 1;
             var sw = Stopwatch.StartNew();
+            string? screenshotPath = null;
+
             try
             {
                 var page = await browser.NewPageAsync();
-                if (s.ViewportWidth.HasValue && s.ViewportHeight.HasValue &&
-                    s.ViewportWidth.Value > 0 && s.ViewportHeight.Value > 0)
+                if (s.ViewportWidth.GetValueOrDefault() > 0 && s.ViewportHeight.GetValueOrDefault() > 0)
                 {
-                    await page.SetViewportSizeAsync(s.ViewportWidth.Value, s.ViewportHeight.Value);
+                    await page.SetViewportSizeAsync(s.ViewportWidth!.Value, s.ViewportHeight!.Value);
                 }
 
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
-                    WaitUntil = waitUntil,
-                    Timeout = s.TimeoutSeconds * 1000
+                    WaitUntil = waitUntilState,
+                    Timeout = timeoutMs
                 });
 
-                byte[] bytes;
+                var fileName = BuildSnapshotFileName(targetIndex, target.Name, target.Url);
                 if (!string.IsNullOrWhiteSpace(target.Selector))
                 {
-                    ctx.Log.Info($"[UiSnapshot] Waiting for selector '{target.Selector}' on {target.Url}");
                     var locator = page.Locator(target.Selector);
                     await locator.WaitForAsync(new LocatorWaitForOptions
                     {
                         State = WaitForSelectorState.Visible,
-                        Timeout = s.TimeoutSeconds * 1000
+                        Timeout = timeoutMs
                     });
-                    bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions
-                    {
-                        Type = ScreenshotType.Png
-                    });
+
+                    var bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions { Type = ScreenshotType.Png });
+                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
                 }
                 else
                 {
-                    bytes = await page.ScreenshotAsync(new PageScreenshotOptions
+                    var bytes = await page.ScreenshotAsync(new PageScreenshotOptions
                     {
-                        FullPage = s.FullPage,
-                        Type = ScreenshotType.Png
+                        Type = ScreenshotType.Png,
+                        FullPage = s.FullPage
                     });
+                    screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
                 }
 
-                var fileName = $"snapshot_{Sanitize(target.Url)}.png";
-                var path = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, fileName, bytes);
                 sw.Stop();
-                results.Add(new RunResult(target.Tag ?? target.Url)
+                var details = new
+                {
+                    url = target.Url,
+                    selector = string.IsNullOrWhiteSpace(target.Selector) ? null : target.Selector,
+                    fullPage = s.FullPage,
+                    waitUntil = s.WaitUntil.ToString(),
+                    viewport = s.ViewportWidth.GetValueOrDefault() > 0 && s.ViewportHeight.GetValueOrDefault() > 0
+                        ? new { width = s.ViewportWidth, height = s.ViewportHeight }
+                        : null,
+                    elapsedMs = sw.Elapsed.TotalMilliseconds
+                };
+
+                var displayName = GetTargetDisplayName(target);
+                results.Add(new RunResult($"Snapshot: {displayName}")
                 {
                     Success = true,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
-                    ScreenshotPath = path
+                    ScreenshotPath = screenshotPath,
+                    DetailsJson = JsonSerializer.Serialize(details)
                 });
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                ctx.Log.Error($"[UiSnapshot] Failed for {target.Url}: {ex.GetType().Name}: {ex.Message}");
-                results.Add(new RunResult(target.Tag ?? target.Url)
+                var details = new
+                {
+                    url = target.Url,
+                    selector = target.Selector,
+                    fullPage = s.FullPage,
+                    waitUntil = s.WaitUntil.ToString(),
+                    viewport = s.ViewportWidth.GetValueOrDefault() > 0 && s.ViewportHeight.GetValueOrDefault() > 0
+                        ? new { width = s.ViewportWidth, height = s.ViewportHeight }
+                        : null,
+                    elapsedMs = sw.Elapsed.TotalMilliseconds
+                };
+
+                ctx.Log.Error($"[UiSnapshot] Цель {targetIndex} failed: {ex.GetType().Name}: {ex.Message}");
+                var displayName = GetTargetDisplayName(target);
+                results.Add(new RunResult($"Snapshot: {displayName}")
                 {
                     Success = false,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
                     ErrorType = ex.GetType().Name,
-                    ErrorMessage = ex.Message
+                    ErrorMessage = ex.Message,
+                    DetailsJson = JsonSerializer.Serialize(details)
                 });
             }
             finally
             {
                 var done = Interlocked.Increment(ref completed);
-                ctx.Progress.Report(new ProgressUpdate(done, total, "UI снимки"));
+                ctx.Progress.Report(new ProgressUpdate(done, total, $"UI снимки: {done}/{total}"));
             }
         }
+
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
     }
 
-    /// <summary>
-    /// Превращает URL в безопасное имя файла.
-    /// </summary>
-    private static string Sanitize(string url)
+    private static string BuildSnapshotFileName(int index, string? name, string url)
     {
-        foreach (var ch in System.IO.Path.GetInvalidFileNameChars())
-        {
-            url = url.Replace(ch, '_');
-        }
-        return url.Replace("https://", string.Empty).Replace("http://", string.Empty).Replace("/", "_");
+        var source = string.IsNullOrWhiteSpace(name) ? BuildHostPathToken(url) : name;
+        var safe = SanitizeFileToken(source);
+        return $"snap_{index:00}_{safe}_{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}.png";
     }
 
+    private static string GetTargetDisplayName(SnapshotTarget target)
+    {
+        if (!string.IsNullOrWhiteSpace(target.Name))
+        {
+            return target.Name!;
+        }
+
+        if (!Uri.TryCreate(target.Url, UriKind.Absolute, out var uri))
+        {
+            return target.Url;
+        }
+
+        var path = string.IsNullOrWhiteSpace(uri.AbsolutePath) || uri.AbsolutePath == "/" ? string.Empty : uri.AbsolutePath;
+        return $"{uri.Host}{path}";
+    }
+
+    private static string BuildHostPathToken(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return "target";
+        }
+
+        var path = uri.AbsolutePath.Trim('/').Replace('/', '_');
+        return string.IsNullOrWhiteSpace(path) ? uri.Host : $"{uri.Host}_{path}";
+    }
+
+    private static string SanitizeFileToken(string value)
+    {
+        var token = Regex.Replace(value, "[^a-zA-Z0-9._-]+", "_");
+        token = token.Trim('_');
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = "target";
+        }
+
+        return token.Length > 64 ? token[..64] : token;
+    }
+
+    private static WaitUntilState ToWaitUntilState(UiWaitUntil value)
+    {
+        return value switch
+        {
+            UiWaitUntil.DomContentLoaded => WaitUntilState.DOMContentLoaded,
+            UiWaitUntil.NetworkIdle => WaitUntilState.NetworkIdle,
+            _ => WaitUntilState.Load
+        };
+    }
+
+    private static void NormalizeLegacyTargets(UiSnapshotSettings settings)
+    {
+        foreach (var target in settings.Targets)
+        {
+            if (string.IsNullOrWhiteSpace(target.Name) && !string.IsNullOrWhiteSpace(target.Tag))
+            {
+                target.Name = target.Tag;
+            }
+        }
+    }
 }

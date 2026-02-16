@@ -7,50 +7,83 @@
              x:Name="Root">
     <StackPanel Spacing="16">
         <Border Classes="section">
-            <StackPanel Spacing="8">
+            <StackPanel Spacing="12">
                 <TextBlock Text="Параметры сценария" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Стартовый URL" Classes="field-label" />
-                    <TextBox Classes="field-control" Watermark="https://example.com" Text="{Binding TargetUrl, Mode=TwoWay}" />
+                    <TextBlock Text="TargetUrl" Classes="field-label" />
+                    <TextBox Classes="field-control"
+                             Watermark="Можно оставить пустым, если первый шаг — Переход"
+                             Text="{Binding TargetUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Политика ошибок" Classes="field-label" />
-                    <ComboBox Classes="field-control"
-                              ItemsSource="{Binding ErrorPolicyOptions}"
-                              SelectedItem="{Binding ErrorPolicy, Mode=TwoWay}" />
+                    <TextBlock Text="TimeoutMs" Classes="field-label" />
+                    <NumericUpDown Classes="field-control"
+                                   Minimum="1000"
+                                   Maximum="120000"
+                                   Increment="500"
+                                   Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
-            <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Шаги сценария" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="+ Добавить шаг" Command="{Binding AddStepCommand}" />
-                    </WrapPanel>
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" ClipToBounds="True">
+                    <TextBlock Text="Шаги сценария" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button Content="+ Добавить шаг" Command="{Binding AddStepCommand}" />
+                    </StackPanel>
                 </Grid>
-                <TextBlock Text="Если текст заполнен — выполняется ввод, иначе будет клик по селектору."
+
+                <TextBlock Text="Variant B: Action + Selector + Value + DelayMs. Ошибки шага не останавливают прогон (Continue)."
                            Classes="status-line" />
+
+                <Grid ColumnDefinitions="2*,2*,2*,Auto,Auto" ColumnSpacing="8">
+                    <TextBlock Text="Action" Classes="field-label" />
+                    <TextBlock Grid.Column="1" Text="Selector" Classes="field-label" />
+                    <TextBlock Grid.Column="2" Text="Value" Classes="field-label" />
+                    <TextBlock Grid.Column="3" Text="DelayMs" Classes="field-label" />
+                    <TextBlock Grid.Column="4" Text="Действия" Classes="field-label" />
+                </Grid>
+
                 <ItemsControl ItemsSource="{Binding Steps}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:UiStep">
                             <Border Classes="step-card">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                                    <StackPanel Spacing="8">
-                                        <TextBox Watermark="Селектор элемента (CSS/XPath)"
-                                                 Text="{Binding Selector, Mode=TwoWay}" />
-                                        <TextBox Watermark="Текст для ввода (если нужно)"
-                                                 Text="{Binding Text, Mode=TwoWay}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
-                                        <Button Content="Вверх"
+                                <Grid ColumnDefinitions="2*,2*,2*,Auto,Auto" ColumnSpacing="8">
+                                    <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
+                                              SelectedItem="{Binding Action, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="domain:UiStepAction">
+                                                <TextBlock Text="{Binding ., Converter={StaticResource UiScenarioActionDisplayConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBox Grid.Column="1"
+                                             Watermark="#id / .class / xpath"
+                                             Text="{Binding Selector, Mode=TwoWay}" />
+
+                                    <TextBox Grid.Column="2"
+                                             Watermark="URL / текст / имя скриншота"
+                                             Text="{Binding Value, Mode=TwoWay}" />
+
+                                    <NumericUpDown Grid.Column="3"
+                                                   Width="120"
+                                                   Minimum="0"
+                                                   Maximum="60000"
+                                                   Increment="100"
+                                                   Value="{Binding DelayMs, Mode=TwoWay}" />
+
+                                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
+                                        <Button Content="↑"
                                                 Command="{Binding DataContext.MoveStepUpCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}" />
-                                        <Button Content="Вниз"
+                                        <Button Content="↓"
                                                 Command="{Binding DataContext.MoveStepDownCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}" />
-                                        <Button Content="Удалить" Classes="danger"
+                                        <Button Content="Удалить"
+                                                Classes="danger"
                                                 Command="{Binding DataContext.RemoveStepCommand, ElementName=Root}"
                                                 CommandParameter="{Binding}" />
                                     </StackPanel>

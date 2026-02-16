@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Modules.UiTiming;
 
@@ -8,12 +9,11 @@ namespace WebLoadTester.Modules.UiTiming;
 public class UiTimingSettings
 {
     public List<TimingTarget> Targets { get; set; } = new();
-    public string WaitUntil { get; set; } = "load";
+    public UiWaitUntil WaitUntil { get; set; } = UiWaitUntil.DomContentLoaded;
     public int TimeoutSeconds { get; set; } = 30;
 }
 
 public class TimingTarget
 {
     public string Url { get; set; } = string.Empty;
-    public string? Tag { get; set; }
 }

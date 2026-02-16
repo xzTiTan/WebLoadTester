@@ -10,6 +10,17 @@ public enum StepErrorPolicy
     StopAll
 }
 
+
+/// <summary>
+/// Режим ожидания загрузки страницы для Playwright-навигации.
+/// </summary>
+public enum UiWaitUntil
+{
+    DomContentLoaded,
+    Load,
+    NetworkIdle
+}
+
 /// <summary>
 /// Режимы уведомлений Telegram.
 /// </summary>

@@ -1,6 +1,6 @@
 # Архитектура, данные и карта кода — WebLoadTester
 
-**Версия:** v1.10 11.02.2026
+**Версия:** v1.11 16.02.2026
 
 **Назначение:** единый документ вместо «техспеки + карты кода»: слои, ключевые классы, потоки данных, SQLite и артефакты.
 
@@ -111,6 +111,9 @@
 - Отчёты: `Core/Services/ReportWriters/JsonReportWriter.cs`, `HtmlReportWriter.cs`
 - SQLite: `Infrastructure/Storage/SqliteRunStore.cs`
 - Артефакты: `Infrastructure/Storage/ArtifactStore.cs`
+
+- A2 `ui.snapshot`: один проход по списку Targets (`Url/Selector/Name`) с сохранением снимков в `runs/{RunId}/screenshots/`, `ScreenshotPath` + `DetailsJson` идут в Results/RunItems.
+- A3 `ui.timing`: один проход по списку Targets URL; измеряется `totalMs` и best-effort navigation timings из `performance.getEntriesByType('navigation')`, данные сериализуются в `DetailsJson`.
 
 ## 7. Известные точки стабильности (последние фиксы)
 - Ранний pre-check перед стартом: `_orchestrator.Validate(...)` вызывается до `IsRunning=true`.

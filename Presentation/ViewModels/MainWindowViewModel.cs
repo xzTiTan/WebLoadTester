@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -121,6 +122,10 @@ public partial class MainWindowViewModel : ViewModelBase
         UiFamily.PropertyChanged += OnFamilyPropertyChanged;
         HttpFamily.PropertyChanged += OnFamilyPropertyChanged;
         NetFamily.PropertyChanged += OnFamilyPropertyChanged;
+        SubscribeValidationEvents(UiFamily);
+        SubscribeValidationEvents(HttpFamily);
+        SubscribeValidationEvents(NetFamily);
+        RunProfile.PropertyChanged += OnRunProfilePropertyChanged;
         UpdateRunProfileModuleFamily();
         TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
@@ -190,6 +195,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string playwrightInstallMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool hasStartValidationErrors;
+
+    [ObservableProperty]
+    private string startValidationMessage = string.Empty;
+
     private double _progressPercent;
     public double ProgressPercent
     {
@@ -234,6 +245,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedModule));
         OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
         UpdateRunProfileModuleFamily();
+        ReevaluateStartAvailability();
     }
 
     /// <summary>
@@ -248,13 +260,13 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
-        var validationErrors = _orchestrator.Validate(moduleItem.Module, moduleItem.SettingsViewModel.Settings, profile);
+        var validationErrors = GetStartValidationErrors(moduleItem);
         if (validationErrors.Count > 0)
         {
             StatusText = "Статус: ошибка валидации";
             moduleItem.ModuleConfig.StatusMessage = "Заполните обязательные поля: " + string.Join("; ", validationErrors);
             _logBus.Warn($"[Validation] {moduleItem.Module.Id}: {string.Join("; ", validationErrors)}");
+            ReevaluateStartAvailability();
             return;
         }
 
@@ -446,7 +458,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Проверяет, можно ли запускать модуль.
     /// </summary>
-    private bool CanStart() => !IsRunning;
+    private bool CanStart() => !IsRunning && !HasStartValidationErrors && GetSelectedModule() != null;
     /// <summary>
     /// Проверяет, можно ли остановить выполнение.
     /// </summary>
@@ -465,6 +477,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             RunStage = "Ожидание";
         }
+
+        ReevaluateStartAvailability();
     }
 
     partial void OnLogOnlyErrorsChanged(bool value)
@@ -682,6 +696,7 @@ public partial class MainWindowViewModel : ViewModelBase
         await RunsTab.RefreshCommand.ExecuteAsync(null);
         UpdateTelegramStatus();
         TelegramSettings.PropertyChanged += (_, _) => UpdateTelegramStatus();
+        ReevaluateStartAvailability();
     }
 
     private void UpdateTelegramStatus()
@@ -706,6 +721,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
             UpdateRunProfileModuleFamily();
+            ReevaluateStartAvailability();
         }
     }
 
@@ -714,6 +730,52 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var family = SelectedModule?.Module.Family ?? TestFamily.UiTesting;
         RunProfile.SetModuleFamily(family);
+    }
+
+
+    private void OnRunProfilePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        ReevaluateStartAvailability();
+    }
+
+    private void SubscribeValidationEvents(ModuleFamilyViewModel family)
+    {
+        foreach (var module in family.Modules)
+        {
+            module.SettingsViewModel.PropertyChanged += (_, _) => ReevaluateStartAvailability();
+            module.ModuleConfig.PropertyChanged += (_, _) => ReevaluateStartAvailability();
+        }
+    }
+
+    private IReadOnlyList<string> GetStartValidationErrors(ModuleItemViewModel moduleItem)
+    {
+        var errors = new List<string>();
+
+        if (moduleItem.ModuleConfig.SelectedConfig == null)
+        {
+            if (string.IsNullOrWhiteSpace(moduleItem.ModuleConfig.UserName))
+            {
+                errors.Add("Укажите имя конфигурации перед запуском.");
+            }
+            else if (moduleItem.ModuleConfig.UserName.Any(char.IsWhiteSpace))
+            {
+                errors.Add("Имя конфигурации должно быть без пробелов.");
+            }
+        }
+
+        var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
+        errors.AddRange(_orchestrator.Validate(moduleItem.Module, moduleItem.SettingsViewModel.Settings, profile));
+        return errors;
+    }
+
+    private void ReevaluateStartAvailability()
+    {
+        var moduleItem = GetSelectedModule();
+        var errors = moduleItem == null ? new List<string> { "Не выбран модуль." } : GetStartValidationErrors(moduleItem).ToList();
+
+        HasStartValidationErrors = errors.Count > 0;
+        StartValidationMessage = errors.Count > 0 ? string.Join("; ", errors) : string.Empty;
+        StartCommand.NotifyCanExecuteChanged();
     }
 
     private async Task SendTelegramAsync(string runId, Func<Task> action)

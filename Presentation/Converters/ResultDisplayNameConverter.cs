@@ -14,6 +14,7 @@ public sealed class ResultDisplayNameConverter : IValueConverter
             RunResult run => run.Name,
             CheckResult check => check.Name,
             ProbeResult probe => probe.Name,
+            StepResult step => step.Name,
             TimingResult timing => timing.Name,
             _ => string.Empty
         };

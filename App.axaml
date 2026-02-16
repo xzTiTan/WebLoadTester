@@ -10,8 +10,11 @@
         <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
         <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
         <conv:ResultDisplayNameConverter x:Key="ResultDisplayNameConverter" />
+        <conv:UiScenarioActionDisplayConverter x:Key="UiScenarioActionDisplayConverter" />
+        <conv:ScreenshotsPolicyDisplayConverter x:Key="ScreenshotsPolicyDisplayConverter" />
+        <conv:UiWaitUntilDisplayConverter x:Key="UiWaitUntilDisplayConverter" />
         <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </ColumnDefinitions>
     </Application.Resources>

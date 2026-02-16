@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Modules.UiScenario;
@@ -8,31 +9,55 @@ namespace WebLoadTester.Modules.UiScenario;
 /// </summary>
 public class UiScenarioSettings
 {
-    public string TargetUrl { get; set; } = "https://example.com";
+    public string TargetUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Legacy-поле (больше не используется в MVP, оставлено для обратной совместимости payload).
+    /// </summary>
     public StepErrorPolicy ErrorPolicy { get; set; } = StepErrorPolicy.SkipStep;
+
     public List<UiStep> Steps { get; set; } = new();
     public int TimeoutMs { get; set; } = 10000;
 }
 
 /// <summary>
-/// Описание одного шага UI-сценария.
+/// Описание одного шага UI-сценария (Variant B).
 /// </summary>
-public class UiStep
+public partial class UiStep : ObservableObject
 {
-    public string Selector { get; set; } = string.Empty;
-    public UiStepAction Action { get; set; } = UiStepAction.WaitForSelector;
-    public string? Text { get; set; }
-    public int TimeoutMs { get; set; } = 0;
-    public int DelayMs { get; set; } = 0;
+    [ObservableProperty]
+    private UiStepAction action = UiStepAction.Click;
+
+    [ObservableProperty]
+    private string? selector;
+
+    /// <summary>
+    /// Основное значение шага (URL/текст/имя скриншота).
+    /// </summary>
+    [ObservableProperty]
+    private string? value;
+
+    /// <summary>
+    /// Legacy-поле старого формата Selector+Text. Используется только для миграции при загрузке.
+    /// </summary>
+    [ObservableProperty]
+    private string? text;
+
+    [ObservableProperty]
+    private int delayMs;
 }
 
 /// <summary>
-/// Действия шага UI-сценария.
+/// Действия шага UI-сценария (Variant B).
+/// Важно: первые значения зафиксированы для обратной совместимости со старыми сериализованными enum-значениями.
 /// </summary>
 public enum UiStepAction
 {
-    WaitForSelector,
-    Click,
-    Fill,
-    Delay
+    WaitForSelector = 0,
+    Click = 1,
+    Fill = 2,
+    Delay = 3,
+    Navigate = 4,
+    AssertText = 5,
+    Screenshot = 6
 }

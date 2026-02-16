@@ -1,6 +1,6 @@
 # План испытаний и трассируемость — WebLoadTester
 
-**Версия:** v1.1 11.02.2026
+**Версия:** v1.2 16.02.2026
 
 **Назначение:** объединяет «план испытаний» и «матрицу трассируемости» в одном файле.
 
@@ -23,12 +23,15 @@
 - Старт → отчёт + (при политике) скрин.
 
 ### A2 ui.snapshot
-- Список URL (минимум 2).
-- Старт → скриншоты в `screenshots/`, summary в отчёте.
+- Targets (минимум 2), из них один target с `Selector`.
+- Указать `WaitUntil`, `TimeoutSeconds`, при необходимости `FullPage/Viewport`.
+- Старт → снимки в `runs/{RunId}/screenshots/`.
+- Проверить `report.json`: у результатов есть `extra.screenshot` и `extra.detailsJson`.
 
 ### A3 ui.timing
-- URL + iterations=3.
-- Старт → метрики времени загрузки.
+- Targets (минимум 1), в профиле запуска `Iterations=3`.
+- Старт → несколько timing-элементов по итерациям.
+- Проверить `report.json`/RunItems: у timing-элементов есть `extra.detailsJson` с `totalMs` и `nav` (best-effort).
 
 ### B1 http.functional
 - Endpoint + метод + expected status.

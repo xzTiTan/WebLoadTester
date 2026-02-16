@@ -16,16 +16,16 @@
                         <TextBlock Text="WebLoadTester" Classes="page-title" />
                         <TextBlock Text="Панель управления" Classes="muted" />
                     </StackPanel>
-                    <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <Button Classes="secondary toolbar-button" Margin="0,0,8,0" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                        <Button Classes="secondary toolbar-button" Margin="0,0,8,0" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
-                        <Border Classes="badge" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Classes="secondary toolbar-button" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                        <Button Classes="secondary toolbar-button" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                        <Border Classes="badge" VerticalAlignment="Center">
                             <TextBlock Text="{Binding DatabaseStatus, StringFormat='DB: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         </Border>
-                        <Border Classes="badge" Margin="0,0,0,0" VerticalAlignment="Center">
+                        <Border Classes="badge" VerticalAlignment="Center">
                             <TextBlock Text="{Binding TelegramStatus, StringFormat='Telegram: {0}'}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         </Border>
-                    </WrapPanel>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -50,28 +50,29 @@
         <Border Grid.Row="1" Margin="24,0,24,24" HorizontalAlignment="Center" MaxWidth="1400" Classes="section" Padding="12">
             <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
                 <Expander.Header>
-                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
-                        <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
-                        <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                            <CheckBox Margin="0,0,12,0" Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
-                            <CheckBox Margin="0,0,12,0" Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
-                            <Button Classes="link" Margin="0,0,8,0" Content="Очистить" Command="{Binding ClearLogCommand}" />
-                            <Button Classes="link" Margin="0,0,0,0" Content="Копировать" Command="{Binding CopyLogCommand}" />
-                        </WrapPanel>
-                    </Grid>
+                    <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </Expander.Header>
 
-                <Border Classes="log-box" MinHeight="220" MaxHeight="360" Margin="0,8,0,0">
-                    <ListBox ItemsSource="{Binding FilteredLogEntries}"
-                             Classes="loglist"
-                             behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <TextBlock Classes="logline" Text="{Binding}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Border>
+                <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="0,8,0,0" MinHeight="220" MaxHeight="360">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
+                        <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
+                        <Button Classes="link" Content="Очистить" Command="{Binding ClearLogCommand}" />
+                        <Button Classes="link" Content="Копировать" Command="{Binding CopyLogCommand}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Classes="log-box">
+                        <ListBox ItemsSource="{Binding FilteredLogEntries}"
+                                 Classes="loglist"
+                                 behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Classes="logline" Text="{Binding}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Grid>
             </Expander>
         </Border>
     </Grid>

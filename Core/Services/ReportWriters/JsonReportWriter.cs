@@ -98,12 +98,12 @@ public class JsonReportWriter
     {
         return result switch
         {
-            RunResult run => string.IsNullOrWhiteSpace(run.ScreenshotPath) ? null : new { screenshot = run.ScreenshotPath },
-            StepResult step => new { action = step.Action, selector = step.Selector, screenshot = step.ScreenshotPath },
+            RunResult run => new { screenshot = run.ScreenshotPath, detailsJson = run.DetailsJson },
+            StepResult step => new { action = step.Action, selector = step.Selector, screenshot = step.ScreenshotPath, detailsJson = step.DetailsJson },
             CheckResult check => check.StatusCode.HasValue ? new { statusCode = check.StatusCode } : null,
             PreflightResult preflight => new { statusCode = preflight.StatusCode, details = preflight.Details },
             ProbeResult probe => string.IsNullOrWhiteSpace(probe.Details) ? null : new { details = probe.Details },
-            TimingResult timing => new { iteration = timing.Iteration, url = timing.Url },
+            TimingResult timing => new { iteration = timing.Iteration, url = timing.Url, detailsJson = timing.DetailsJson },
             _ => null
         };
     }
