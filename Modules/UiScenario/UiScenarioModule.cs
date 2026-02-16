@@ -379,7 +379,7 @@ public class UiScenarioModule : ITestModule
             return "screenshot";
         }
 
-        var normalized = Regex.Replace(value.Trim(), "[^a-zA-Z0-9_\-]+", "_");
+        var normalized = Regex.Replace(value.Trim(), @"[^a-zA-Z0-9_-]+", "_");
         return normalized.Length > 40 ? normalized[..40] : normalized;
     }
 

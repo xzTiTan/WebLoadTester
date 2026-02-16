@@ -1,6 +1,6 @@
 # Правила Codex и журнал изменений — WebLoadTester
 
-**Версия:** v2.14 16.02.2026
+**Версия:** v2.15 16.02.2026
 
 ## 1. Режим работы (обязательный)
 1) Перед правками — прочитать `01–03` (и при необходимости `05–07`).
@@ -38,6 +38,10 @@
 3) синхронизируем остальные документы и код.
 
 ## 6. Журнал изменений
+### v2.15 16.02.2026
+- Исправлена ошибка компиляции CS1009 в `Modules/UiScenario/UiScenarioModule.cs`: regex-литерал санитайза имени файла переведён на verbatim-строку (`@"[^a-zA-Z0-9_-]+"`), чтобы убрать нераспознанную escape-последовательность.
+- Проверены проектные ссылки для устранения CS0006: в `WebLoadTester.Tests` подтверждён `ProjectReference` на `..\WebLoadTester.csproj`, в основном проекте отсутствуют настройки, отключающие `ProduceReferenceAssembly`; после исправления CS1009 сборка должна восстановиться в окружении с установленным .NET SDK.
+
 ### v2.14 16.02.2026
 - Реализованы рабочие MVP-модули семейства UI Testing: `A2 ui.snapshot` и `A3 ui.timing` с запуском через Playwright persistent context (`runs/<RunId>/profile/`) и корректной записью результатов в общий run pipeline.
 - `ui.snapshot`: поддержаны Targets (`Url/Selector/Name`), `WaitUntil`, `TimeoutSeconds`, `FullPage`, optional `Viewport`; скриншоты сохраняются в `runs/<RunId>/screenshots/` с именами `snap_{index}_{name}_{timestamp}.png`, в результаты добавляются `ScreenshotPath` и `DetailsJson`; ошибки по целям обрабатываются в continue-on-error режиме.
