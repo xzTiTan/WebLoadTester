@@ -1,4 +1,4 @@
-v3.12 17.02.2026
+v3.13 17.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -44,6 +44,13 @@ v3.12 17.02.2026
 
 
 
+
+## v3.13 17.02.2026
+- Prompt 13: для UI-семейства внедрены worker-scoped артефакты: `runs/{RunId}/profiles/w{WorkerId}` и `runs/{RunId}/screenshots/w{WorkerId}/it{Iteration}`.
+- Добавлено сохранение snapshots на воркер: `profile.json` и `moduleSettings.json` в `profiles/w{WorkerId}` с регистрацией в artifacts-реестре отчёта.
+- Скриншоты UI-модулей приведены к единому path-builder через worker/iteration и сохраняют относимые пути, совместимые с consumers отчётов.
+- Добавлены оффлайн unit-тесты для path-builder и регистрации profile/moduleSettings snapshots.
+- Обновлены версии `docs/INDEX.md`, `README.md`, `AGENTS.md`.
 
 ## v3.12 17.02.2026
 - Prompt 12B: добавлен детерминированный переход к первой ошибке валидации (scroll + focus) при блокировке `Старт` и `Сохранить`.

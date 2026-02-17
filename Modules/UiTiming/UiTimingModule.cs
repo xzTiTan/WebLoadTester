@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Playwright;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Core.Services;
 using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiTiming;
@@ -87,8 +88,10 @@ public class UiTimingModule : ITestModule
             return result;
         }
 
+        result.Artifacts.AddRange(await WorkerArtifactPathBuilder.EnsureWorkerProfileSnapshotsAsync(ctx, s, ct));
+
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
+        var runProfileDir = WorkerArtifactPathBuilder.GetWorkerProfilesDir(ctx.RunFolder, ctx.WorkerId);
         Directory.CreateDirectory(runProfileDir);
 
         await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(
@@ -187,7 +190,7 @@ public class UiTimingModule : ITestModule
     private static async Task<string> SaveTimingScreenshotAsync(IRunContext ctx, IPage page, string fileName, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var relative = Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+        var relative = WorkerArtifactPathBuilder.GetWorkerScreenshotStoreRelativePath(ctx.WorkerId, ctx.Iteration, fileName);
         var bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true, Type = ScreenshotType.Png });
         return await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relative, bytes);
     }

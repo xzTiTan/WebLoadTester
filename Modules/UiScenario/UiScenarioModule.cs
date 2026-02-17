@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Playwright;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Core.Services;
 using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiScenario;
@@ -147,8 +148,10 @@ public class UiScenarioModule : ITestModule
         ctx.Progress.Report(new ProgressUpdate(0, totalUnits, "Запуск браузера"));
         ctx.Log.Info($"[UiScenario] Launching browser (Headless={ctx.Profile.Headless})");
 
+        result.Artifacts.AddRange(await WorkerArtifactPathBuilder.EnsureWorkerProfileSnapshotsAsync(ctx, scenario, ct));
+
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var profileDir = Path.Combine(ctx.RunFolder, "profile");
+        var profileDir = WorkerArtifactPathBuilder.GetWorkerProfilesDir(ctx.RunFolder, ctx.WorkerId);
         Directory.CreateDirectory(profileDir);
 
         await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(profileDir, new BrowserTypeLaunchPersistentContextOptions
@@ -372,7 +375,7 @@ public class UiScenarioModule : ITestModule
             bytes = await page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
         }
 
-        var relative = Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+        var relative = WorkerArtifactPathBuilder.GetWorkerScreenshotStoreRelativePath(ctx.WorkerId, ctx.Iteration, fileName);
         return await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relative, bytes);
     }
 

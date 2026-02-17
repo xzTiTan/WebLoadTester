@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Playwright;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Core.Services;
 using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Modules.UiSnapshot;
@@ -107,8 +108,10 @@ public class UiSnapshotModule : ITestModule
             return result;
         }
 
+        result.Artifacts.AddRange(await WorkerArtifactPathBuilder.EnsureWorkerProfileSnapshotsAsync(ctx, s, ct));
+
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var runProfileDir = Path.Combine(ctx.RunFolder, "profile");
+        var runProfileDir = WorkerArtifactPathBuilder.GetWorkerProfilesDir(ctx.RunFolder, ctx.WorkerId);
         Directory.CreateDirectory(runProfileDir);
 
         await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(
@@ -236,7 +239,7 @@ public class UiSnapshotModule : ITestModule
 
     private static string BuildScreenshotRelativePath(IRunContext ctx, string fileName)
     {
-        return Path.Combine("w" + ctx.WorkerId, "it" + ctx.Iteration, fileName);
+        return WorkerArtifactPathBuilder.GetWorkerScreenshotStoreRelativePath(ctx.WorkerId, ctx.Iteration, fileName);
     }
 
     private static long? TryReadScreenshotSize(IRunContext ctx, string? relativePath)
