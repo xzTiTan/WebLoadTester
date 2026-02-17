@@ -6,32 +6,33 @@
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="WebLoadTester"
-        Width="1200"
-        Height="800"
-        MinWidth="1024"
-        MinHeight="720"
+        Width="1280"
+        Height="860"
+        MinWidth="1080"
+        MinHeight="760"
         Background="{DynamicResource PageBackground}">
     <Grid RowDefinitions="*,Auto">
         <Grid Grid.Row="0"
               Margin="{DynamicResource PagePadding}"
               HorizontalAlignment="Center"
-              MaxWidth="1400"
+              MaxWidth="1460"
               RowDefinitions="Auto,*"
               RowSpacing="{DynamicResource CardSpacing}">
             <Border Grid.Row="0" Classes="app-bar">
-                <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource FieldSpacing}">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                        <StackPanel>
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource SpacingM}">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource SpacingL}">
+                        <StackPanel Spacing="{DynamicResource SpacingXs}">
                             <TextBlock Text="WebLoadTester" Classes="page-title" />
-                            <TextBlock Text="Панель управления" Classes="muted" />
+                            <TextBlock Text="Панель управления тестовыми модулями" Classes="muted" />
                         </StackPanel>
                         <Button Grid.Column="1"
                                 Classes="secondary toolbar-button"
                                 Content="Настройки"
+                                HorizontalAlignment="Right"
                                 Command="{Binding OpenSettingsCommand}" />
                     </Grid>
 
-                    <WrapPanel Grid.Row="1" Classes="wrap-gap">
+                    <WrapPanel Grid.Row="1" Classes="wrap-gap" VerticalAlignment="Center">
                         <Button Classes="secondary toolbar-button"
                                 Content="Папка прогонов"
                                 Command="{Binding OpenRunsFolderCommand}" />
@@ -71,17 +72,17 @@
         </Grid>
 
         <Border Grid.Row="1"
-                Margin="16,0,16,16"
+                Margin="20,0,20,20"
                 HorizontalAlignment="Center"
-                MaxWidth="1400"
+                MaxWidth="1460"
                 Classes="section"
-                Padding="12">
+                Padding="14">
             <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
                 <Expander.Header>
                     <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </Expander.Header>
 
-                <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="0,8,0,0" MinHeight="200" MaxHeight="340">
+                <Grid RowDefinitions="Auto,*" RowSpacing="10" Margin="0,10,0,0" MinHeight="220" MaxHeight="360">
                     <WrapPanel Grid.Row="0" Classes="wrap-gap">
                         <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
                         <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />

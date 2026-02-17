@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
         <Setter Property="ColumnSpacing" Value="{DynamicResource FieldSpacing}" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
     <Style Selector="TextBlock.field-label">
@@ -10,6 +10,7 @@
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
+        <Setter Property="Margin" Value="0,4,0,0" />
     </Style>
 
     <Style Selector="Control.field-control">
@@ -26,7 +27,7 @@
     </Style>
 
     <Style Selector="TextBox.field-control, ComboBox.field-control">
-        <Setter Property="MinWidth" Value="240" />
+        <Setter Property="MinWidth" Value="260" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
 
@@ -37,13 +38,13 @@
     </Style>
 
     <Style Selector="TextBlock.field-control">
-        <Setter Property="MinWidth" Value="240" />
+        <Setter Property="MinWidth" Value="260" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="TextBlock.section-title">
-        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="Margin" Value="0,0,0,14" />
     </Style>
 
     <Style Selector="TextBlock.status-line">
@@ -63,20 +64,20 @@
     </Style>
 
     <Style Selector="DataGrid.list-min-180">
-        <Setter Property="MinHeight" Value="180" />
-        <Setter Property="MaxHeight" Value="320" />
+        <Setter Property="MinHeight" Value="190" />
+        <Setter Property="MaxHeight" Value="340" />
     </Style>
 
     <Style Selector="DataGrid.list-min-240">
-        <Setter Property="MinHeight" Value="240" />
-        <Setter Property="MaxHeight" Value="380" />
+        <Setter Property="MinHeight" Value="250" />
+        <Setter Property="MaxHeight" Value="400" />
     </Style>
 
     <Style Selector="Border.log-box">
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
-        <Setter Property="Padding" Value="8" />
+        <Setter Property="Padding" Value="10" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
     </Style>
 
@@ -94,9 +95,9 @@
     </Style>
 
     <Style Selector="TabControl.main-tabs > TabItem">
-        <Setter Property="MinHeight" Value="36" />
-        <Setter Property="Padding" Value="14,8" />
-        <Setter Property="Margin" Value="0,0,8,12" />
+        <Setter Property="MinHeight" Value="38" />
+        <Setter Property="Padding" Value="16,9" />
+        <Setter Property="Margin" Value="0,0,10,12" />
         <Setter Property="Background" Value="{DynamicResource CardBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
@@ -110,8 +111,8 @@
     </Style>
 
     <Style Selector="Border.step-card">
-        <Setter Property="Padding" Value="12" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
@@ -125,7 +126,7 @@
 
     <Style Selector="ListBox.settings-nav ListBoxItem">
         <Setter Property="Padding" Value="12,10" />
-        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Margin" Value="0,0,0,6" />
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="Transparent" />
