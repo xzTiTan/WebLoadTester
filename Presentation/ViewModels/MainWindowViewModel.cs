@@ -220,6 +220,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string loadedFromRunInfo = string.Empty;
 
+    [ObservableProperty]
+    private string requestedScrollToValidationKey = string.Empty;
+
+    [ObservableProperty]
+    private int requestedScrollNonce;
+
     private double _progressPercent;
     public double ProgressPercent
     {
@@ -316,6 +322,7 @@ public partial class MainWindowViewModel : ViewModelBase
             StatusText = "Статус: ошибка валидации";
             moduleItem.ModuleConfig.ShowSubmitValidation();
             RunProfile.ShowSubmitValidation();
+            RequestScrollToFirstValidation(moduleItem);
             moduleItem.ModuleConfig.StatusMessage = "Заполните обязательные поля: " + string.Join("; ", validationErrors);
             _logBus.Warn($"[Validation] {moduleItem.Module.Id}: {string.Join("; ", validationErrors)}");
             ReevaluateStartAvailability();
@@ -949,6 +956,20 @@ public partial class MainWindowViewModel : ViewModelBase
         HasStartValidationErrors = errors.Count > 0;
         StartValidationMessage = errors.Count > 0 ? string.Join("; ", errors) : string.Empty;
         StartCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RequestScrollToFirstValidation(ModuleItemViewModel moduleItem)
+    {
+        var key = moduleItem.ModuleConfig.GetFirstVisibleValidationKey()
+                  ?? RunProfile.GetFirstVisibleValidationKey();
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return;
+        }
+
+        RequestedScrollToValidationKey = key;
+        RequestedScrollNonce++;
     }
 
 

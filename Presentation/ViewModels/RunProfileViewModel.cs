@@ -299,6 +299,19 @@ public partial class RunProfileViewModel : ObservableObject
         RaiseValidationPropertiesChanged();
     }
 
+    public string? GetFirstVisibleValidationKey()
+    {
+        return Validation.GetFirstVisibleErrorKey(new[]
+        {
+            ParallelismKey,
+            IterationsKey,
+            DurationKey,
+            TimeoutKey,
+            PauseKey,
+            SummaryKey
+        });
+    }
+
     private void Revalidate()
     {
         var errors = new System.Collections.Generic.Dictionary<string, string>();

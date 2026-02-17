@@ -71,4 +71,25 @@ public sealed class ValidationState
     }
 
     public bool HasErrors => _errorsByKey.Count > 0;
+
+    public string? GetFirstVisibleErrorKey(IEnumerable<string> preferredOrder)
+    {
+        foreach (var key in preferredOrder)
+        {
+            if (HasVisibleError(key))
+            {
+                return key;
+            }
+        }
+
+        foreach (var key in _errorsByKey.Keys)
+        {
+            if (HasVisibleError(key))
+            {
+                return key;
+            }
+        }
+
+        return null;
+    }
 }

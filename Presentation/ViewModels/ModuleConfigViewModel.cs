@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
@@ -19,6 +20,11 @@ public partial class ModuleConfigViewModel : ObservableObject
     public const string ConfigNameKey = "config.name";
     public const string ConfigSummaryKey = "config.summary";
     public const string ModuleSummaryKey = "module.summary";
+    public const string TableStepsKey = "table.steps";
+    public const string TableTargetsKey = "table.targets";
+    public const string TableAssetsKey = "table.assets";
+    public const string TablePortsKey = "table.ports";
+    public const string ListEndpointsKey = "list.endpoints";
 
     private readonly IModuleConfigService _configService;
     private readonly ITestCaseRepository _testCaseRepository;
@@ -62,6 +68,8 @@ public partial class ModuleConfigViewModel : ObservableObject
     [ObservableProperty] private bool isDirtyPromptVisible;
     [ObservableProperty] private string dirtyPromptText = string.Empty;
     [ObservableProperty] private string nameValidationMessage = string.Empty;
+    [ObservableProperty] private string requestedScrollToValidationKey = string.Empty;
+    [ObservableProperty] private int requestedScrollNonce;
 
     public ValidationState ConfigValidation { get; } = new();
     public ValidationState ModuleValidation { get; } = new();
@@ -393,6 +401,29 @@ public partial class ModuleConfigViewModel : ObservableObject
         RevalidateConfigAndModule();
     }
 
+    public string? GetFirstVisibleValidationKey()
+    {
+        var key = ConfigValidation.GetFirstVisibleErrorKey(new[]
+        {
+            ConfigNameKey,
+            ConfigSummaryKey
+        });
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return key;
+        }
+
+        return ModuleValidation.GetFirstVisibleErrorKey(new[]
+        {
+            TableStepsKey,
+            TableTargetsKey,
+            ListEndpointsKey,
+            TableAssetsKey,
+            TablePortsKey,
+            ModuleSummaryKey
+        });
+    }
+
     private bool ValidateSettings()
     {
         RevalidateConfigAndModule();
@@ -400,6 +431,7 @@ public partial class ModuleConfigViewModel : ObservableObject
         {
             var errors = ConfigValidation.ErrorsByKey.Values.Concat(ModuleValidation.ErrorsByKey.Values).ToList();
             StatusMessage = "Заполните обязательные поля: " + string.Join("; ", errors);
+            RequestScrollToFirstError();
             return false;
         }
 
@@ -448,6 +480,11 @@ public partial class ModuleConfigViewModel : ObservableObject
         if (moduleErrors.Count > 0)
         {
             errors[ModuleSummaryKey] = "Есть ошибки: " + string.Join("; ", moduleErrors);
+            var tableKey = TryGetTableValidationKey(moduleErrors);
+            if (!string.IsNullOrWhiteSpace(tableKey))
+            {
+                errors[tableKey] = moduleErrors[0];
+            }
         }
 
         return errors;
@@ -460,6 +497,36 @@ public partial class ModuleConfigViewModel : ObservableObject
         OnPropertyChanged(nameof(ModuleSummaryMessage));
         OnPropertyChanged(nameof(HasConfigSummaryError));
         OnPropertyChanged(nameof(HasModuleSummaryError));
+    }
+
+    private void RequestScrollToFirstError()
+    {
+        var key = GetFirstVisibleValidationKey();
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return;
+        }
+
+        RequestedScrollToValidationKey = key;
+        RequestedScrollNonce++;
+    }
+
+    private string? TryGetTableValidationKey(IReadOnlyList<string> errors)
+    {
+        if (errors.Count == 0)
+        {
+            return null;
+        }
+
+        return _module.Id switch
+        {
+            "ui.scenario" when errors.Any(e => e.Contains("шаг", StringComparison.OrdinalIgnoreCase)) => TableStepsKey,
+            "ui.snapshot" or "ui.timing" when errors.Any(e => e.Contains("цель", StringComparison.OrdinalIgnoreCase)) => TableTargetsKey,
+            "http.assets" when errors.Any(e => e.Contains("Assets", StringComparison.OrdinalIgnoreCase) || e.Contains("ассет", StringComparison.OrdinalIgnoreCase)) => TableAssetsKey,
+            "net.diagnostics" when errors.Any(e => e.Contains("порт", StringComparison.OrdinalIgnoreCase)) => TablePortsKey,
+            "http.functional" or "http.performance" when errors.Any(e => e.Contains("Endpoints", StringComparison.OrdinalIgnoreCase) || e.Contains("Endpoint", StringComparison.OrdinalIgnoreCase)) => ListEndpointsKey,
+            _ => null
+        };
     }
 
     private static string NormalizeUserName(string value)

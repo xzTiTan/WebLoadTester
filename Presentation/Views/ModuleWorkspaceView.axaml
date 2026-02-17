@@ -131,7 +131,8 @@
 
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Имя" Classes="field-label" />
-                            <TextBox Classes="field-control"
+                            <TextBox x:Name="ConfigNameField"
+                                     Classes="field-control"
                                      Watermark="Например: DemoConfig"
                                      Text="{Binding UserName, Mode=TwoWay}"
                                      LostFocus="OnConfigNameLostFocus" />
@@ -172,7 +173,7 @@
                                    Foreground="OrangeRed"
                                    TextWrapping="Wrap"
                                    IsVisible="{Binding SelectedModule.ModuleConfig.HasModuleSummaryError}" />
-                        <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
+                        <ContentControl x:Name="SettingsContentHost" Content="{Binding SelectedModule.SettingsViewModel}" />
                     </StackPanel>
                 </Border>
 
@@ -186,7 +187,7 @@
                                    TextWrapping="NoWrap" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Параллельность" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" LostFocus="OnProfileParallelismLostFocus" />
+                            <NumericUpDown x:Name="ProfileParallelismField" Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" LostFocus="OnProfileParallelismLostFocus" />
                         </Grid>
                         <TextBlock Text="{Binding ParallelismError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasParallelismError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -195,22 +196,22 @@
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsIterationsMode}">
                             <TextBlock Text="Итерации" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" LostFocus="OnProfileIterationsLostFocus" />
+                            <NumericUpDown x:Name="ProfileIterationsField" Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" LostFocus="OnProfileIterationsLostFocus" />
                         </Grid>
                         <TextBlock Text="{Binding IterationsError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasIterationsError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsDurationMode}">
                             <TextBlock Text="Длительность (сек)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="10" Maximum="60" Value="{Binding DurationSeconds, Mode=TwoWay}" LostFocus="OnProfileDurationLostFocus" />
+                            <NumericUpDown x:Name="ProfileDurationField" Classes="field-control" Minimum="10" Maximum="60" Value="{Binding DurationSeconds, Mode=TwoWay}" LostFocus="OnProfileDurationLostFocus" />
                         </Grid>
                         <TextBlock Text="{Binding DurationError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasDurationError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" LostFocus="OnProfileTimeoutLostFocus" />
+                            <NumericUpDown x:Name="ProfileTimeoutField" Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" LostFocus="OnProfileTimeoutLostFocus" />
                         </Grid>
                         <TextBlock Text="{Binding TimeoutError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasTimeoutError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Пауза между итерациями (мс)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="0" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" LostFocus="OnProfilePauseLostFocus" />
+                            <NumericUpDown x:Name="ProfilePauseField" Classes="field-control" Minimum="0" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" LostFocus="OnProfilePauseLostFocus" />
                         </Grid>
                         <TextBlock Text="{Binding PauseError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasPauseError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">

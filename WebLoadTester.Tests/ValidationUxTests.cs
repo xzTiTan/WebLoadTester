@@ -38,6 +38,37 @@ public class ValidationUxTests
     }
 
     [Fact]
+    public void ValidationState_FirstVisibleKey_UsesPreferredOrderAfterSubmit()
+    {
+        var state = new ValidationState();
+        state.SetErrors(new System.Collections.Generic.Dictionary<string, string>
+        {
+            ["profile.timeoutSeconds"] = "timeout",
+            ["config.name"] = "name"
+        });
+
+        Assert.Null(state.GetFirstVisibleErrorKey(new[] { "config.name", "profile.timeoutSeconds" }));
+
+        state.ShowAll();
+
+        Assert.Equal("config.name", state.GetFirstVisibleErrorKey(new[] { "config.name", "profile.timeoutSeconds" }));
+    }
+
+    [Fact]
+    public void ValidationState_FirstVisibleKey_ReturnsTableKey_WhenOnlyTableErrorExists()
+    {
+        var state = new ValidationState();
+        state.SetErrors(new System.Collections.Generic.Dictionary<string, string>
+        {
+            ["table.steps"] = "Добавьте хотя бы один шаг."
+        });
+
+        state.ShowAll();
+
+        Assert.Equal("table.steps", state.GetFirstVisibleErrorKey(new[] { "config.name", "table.steps" }));
+    }
+
+    [Fact]
     public async Task StartCommand_DisabledWhenProfileOrTableErrorsExist()
     {
         var vm = new MainWindowViewModel();
