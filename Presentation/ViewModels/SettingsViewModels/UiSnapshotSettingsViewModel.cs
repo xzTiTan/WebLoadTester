@@ -39,6 +39,12 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private SnapshotTarget? selectedTarget;
 
+    partial void OnSelectedTargetChanged(SnapshotTarget? value)
+    {
+        RemoveSelectedTargetCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedTargetCommand.NotifyCanExecuteChanged();
+    }
+
     [ObservableProperty]
     private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
 
@@ -93,7 +99,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         SyncTargets();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
     private void RemoveSelectedTarget()
     {
         if (SelectedTarget == null)
@@ -106,7 +112,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     }
 
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
     private void DuplicateSelectedTarget()
     {
         if (SelectedTarget == null)
@@ -165,6 +171,8 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         _settings.Targets = Targets.ToList();
         _settings.ScreenshotFormat = "png";
     }
+
+    private bool CanMutateSelectedTarget() => SelectedTarget != null;
 
     private static void NormalizeLegacyTargets(UiSnapshotSettings settings)
     {

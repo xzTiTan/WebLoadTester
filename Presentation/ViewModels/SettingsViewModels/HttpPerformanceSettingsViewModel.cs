@@ -54,6 +54,12 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private HttpPerformanceEndpoint? selectedEndpoint;
 
+    partial void OnSelectedEndpointChanged(HttpPerformanceEndpoint? value)
+    {
+        RemoveSelectedEndpointCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedEndpointCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
@@ -71,7 +77,7 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
         SelectedEndpoint = endpoint;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedEndpoint))]
     private void DuplicateSelectedEndpoint()
     {
         if (SelectedEndpoint == null)
@@ -87,11 +93,12 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
             ExpectedStatusCode = SelectedEndpoint.ExpectedStatusCode
         };
 
-        Endpoints.Add(copy);
+        var index = Endpoints.IndexOf(SelectedEndpoint);
+        Endpoints.Insert(index + 1, copy);
         SelectedEndpoint = copy;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedEndpoint))]
     private void RemoveSelectedEndpoint()
     {
         if (SelectedEndpoint != null)
@@ -99,4 +106,6 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
             Endpoints.Remove(SelectedEndpoint);
         }
     }
+
+    private bool CanMutateSelectedEndpoint() => SelectedEndpoint != null;
 }

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              xmlns:domain="clr-namespace:WebLoadTester.Modules.UiScenario"
+             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel"
              x:Name="Root">
@@ -32,25 +33,21 @@
                     <TextBlock Text="Шаги" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
                     <WrapPanel Grid.Column="1" Classes="wrap-gap">
                         <Button Content="Добавить" Command="{Binding AddStepCommand}" />
+                        <Button Content="Удалить" Classes="danger" Command="{Binding RemoveSelectedStepCommand}" />
+                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedStepCommand}" />
+                        <Button Content="Вверх" Command="{Binding MoveSelectedStepUpCommand}" />
+                        <Button Content="Вниз" Command="{Binding MoveSelectedStepDownCommand}" />
                     </WrapPanel>
                 </Grid>
 
-                <TextBlock Text="Variant B: Action + Selector + Value + DelayMs"
-                           Classes="status-line" />
-
-                <Grid ColumnDefinitions="2*,2*,2*,Auto,Auto" ColumnSpacing="8">
-                    <TextBlock Text="Действие" Classes="field-label" />
-                    <TextBlock Grid.Column="1" Text="Selector" Classes="field-label" />
-                    <TextBlock Grid.Column="2" Text="Value" Classes="field-label" />
-                    <TextBlock Grid.Column="3" Text="DelayMs" Classes="field-label" />
-                    <TextBlock Grid.Column="4" Text="TableToolbar" Classes="field-label" />
-                </Grid>
-
-                <ItemsControl ItemsSource="{Binding Steps}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="domain:UiStep">
-                            <Border Classes="step-card">
-                                <Grid ColumnDefinitions="2*,2*,2*,Auto,Auto" ColumnSpacing="8">
+                <dg:DataGrid ItemsSource="{Binding Steps}"
+                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             Classes="list-min-180">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTemplateColumn Header="Действие" Width="2*">
+                            <dg:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="domain:UiStep">
                                     <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
                                               SelectedItem="{Binding Action, Mode=TwoWay}">
                                         <ComboBox.ItemTemplate>
@@ -59,43 +56,14 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-
-                                    <TextBox Grid.Column="1"
-                                             Watermark="#id / .class / xpath"
-                                             Text="{Binding Selector, Mode=TwoWay}" />
-
-                                    <TextBox Grid.Column="2"
-                                             Watermark="URL / текст / имя скриншота"
-                                             Text="{Binding Value, Mode=TwoWay}" />
-
-                                    <NumericUpDown Grid.Column="3"
-                                                   Width="120"
-                                                   Minimum="0"
-                                                   Maximum="60000"
-                                                   Increment="100"
-                                                   Value="{Binding DelayMs, Mode=TwoWay}" />
-
-                                    <WrapPanel Grid.Column="4" Classes="wrap-gap">
-                                        <Button Content="Дублировать"
-                                                Command="{Binding DataContext.DuplicateStepCommand, ElementName=Root}"
-                                                CommandParameter="{Binding}" />
-                                        <Button Content="↑"
-                                                Command="{Binding DataContext.MoveStepUpCommand, ElementName=Root}"
-                                                CommandParameter="{Binding}" />
-                                        <Button Content="↓"
-                                                Command="{Binding DataContext.MoveStepDownCommand, ElementName=Root}"
-                                                CommandParameter="{Binding}" />
-                                        <Button Content="Удалить"
-                                                Classes="danger"
-                                                Command="{Binding DataContext.RemoveStepCommand, ElementName=Root}"
-                                                CommandParameter="{Binding}" />
-                                    </WrapPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellTemplate>
+                        </dg:DataGridTemplateColumn>
+                        <dg:DataGridTextColumn Header="Selector" Binding="{Binding Selector}" Width="2*" />
+                        <dg:DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" />
+                        <dg:DataGridTextColumn Header="DelayMs" Binding="{Binding DelayMs}" Width="*" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
             </StackPanel>
         </Border>
     </StackPanel>

@@ -33,6 +33,12 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private TimingTarget? selectedTarget;
 
+    partial void OnSelectedTargetChanged(TimingTarget? value)
+    {
+        RemoveSelectedTargetCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedTargetCommand.NotifyCanExecuteChanged();
+    }
+
     [ObservableProperty]
     private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
 
@@ -69,7 +75,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
         SyncTargets();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
     private void RemoveSelectedTarget()
     {
         if (SelectedTarget == null)
@@ -82,7 +88,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     }
 
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
     private void DuplicateSelectedTarget()
     {
         if (SelectedTarget == null)
@@ -133,4 +139,6 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     {
         _settings.Targets = Targets.ToList();
     }
+
+    private bool CanMutateSelectedTarget() => SelectedTarget != null;
 }

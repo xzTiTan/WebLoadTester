@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -62,6 +63,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
             Ports.Add(item);
         }
 
+        SelectedPort = Ports.FirstOrDefault();
         UpdatePortsSettings();
     }
 
@@ -75,6 +77,12 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
     [ObservableProperty] private bool checkTcp;
     [ObservableProperty] private bool checkTls;
 
+    partial void OnSelectedPortChanged(PortItem? value)
+    {
+        RemoveSelectedPortCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedPortCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnHostnameChanged(string value)
     {
         _settings.Hostname = value;
@@ -83,6 +91,9 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
     partial void OnUseAutoPortsChanged(bool value)
     {
         _settings.UseAutoPorts = value;
+        RemoveSelectedPortCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedPortCommand.NotifyCanExecuteChanged();
+
         if (value)
         {
             ApplyAutoPorts();
@@ -108,7 +119,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         UpdatePortsSettings();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedPort))]
     private void DuplicateSelectedPort()
     {
         if (UseAutoPorts || SelectedPort == null)
@@ -118,12 +129,13 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
 
         var item = new PortItem { Port = SelectedPort.Port, Protocol = SelectedPort.Protocol };
         item.PropertyChanged += OnPortItemChanged;
-        Ports.Add(item);
+        var index = Ports.IndexOf(SelectedPort);
+        Ports.Insert(index + 1, item);
         SelectedPort = item;
         UpdatePortsSettings();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedPort))]
     private void RemoveSelectedPort()
     {
         if (UseAutoPorts || SelectedPort == null)
@@ -131,7 +143,9 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
             return;
         }
 
+        var index = Ports.IndexOf(SelectedPort);
         Ports.Remove(SelectedPort);
+        SelectedPort = index >= 0 && Ports.Count > 0 ? Ports[Math.Min(index, Ports.Count - 1)] : null;
         UpdatePortsSettings();
     }
 
@@ -141,6 +155,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         var item = new PortItem { Port = 443, Protocol = "Tcp" };
         item.PropertyChanged += OnPortItemChanged;
         Ports.Add(item);
+        SelectedPort = item;
         UpdatePortsSettings();
     }
 
@@ -172,6 +187,8 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
             UpdatePortsSettings();
         }
     }
+
+    private bool CanMutateSelectedPort() => !UseAutoPorts && SelectedPort != null;
 
     private void UpdatePortsSettings()
     {

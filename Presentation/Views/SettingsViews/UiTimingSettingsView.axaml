@@ -12,8 +12,8 @@
                     <TextBlock Text="Цели" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
                     <WrapPanel Grid.Column="1" Classes="wrap-gap">
                         <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
-                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedTargetCommand}" />
                         <Button Content="Удалить" Classes="danger" Command="{Binding RemoveSelectedTargetCommand}" />
+                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedTargetCommand}" />
                     </WrapPanel>
                 </Grid>
 

@@ -1,4 +1,4 @@
-v3.9 17.02.2026
+v3.10 17.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -44,6 +44,12 @@ v3.9 17.02.2026
 
 
 
+
+## v3.10 17.02.2026
+- Prompt 11: во всех целевых таблицах/списках модулей внедрён канон TableToolbar (WrapPanel + `wrap-gap`, без `WrapPanel.Spacing`).
+- Для `ui.scenario` реализованы команды Add/Delete/Duplicate/Up/Down с сохранением выделения и проверкой границ; для остальных целевых модулей — Add/Delete/Duplicate.
+- Добавлены оффлайн unit-тесты на команды TableToolbar (`ui.scenario`, `ui.snapshot`, `http.assets`).
+- Обновлены версии `docs/INDEX.md`, `README.md`, `AGENTS.md`.
 
 ## v3.9 17.02.2026
 - Prompt 10: ModuleWorkspace приведён к канону CRUD конфигов (`Загрузить/Сохранить/Удалить`), удалена кнопка «Перезаписать».

@@ -8,9 +8,6 @@ using WebLoadTester.Modules.UiScenario;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-/// <summary>
-/// ViewModel настроек UI-сценариев.
-/// </summary>
 public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiScenarioSettings _settings;
@@ -47,11 +44,17 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         UiStepAction.Delay
     };
 
-    [ObservableProperty]
-    private string targetUrl = string.Empty;
+    [ObservableProperty] private string targetUrl = string.Empty;
+    [ObservableProperty] private int timeoutMs = 10000;
+    [ObservableProperty] private UiStep? selectedStep;
 
-    [ObservableProperty]
-    private int timeoutMs = 10000;
+    partial void OnSelectedStepChanged(UiStep? value)
+    {
+        RemoveSelectedStepCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedStepCommand.NotifyCanExecuteChanged();
+        MoveSelectedStepUpCommand.NotifyCanExecuteChanged();
+        MoveSelectedStepDownCommand.NotifyCanExecuteChanged();
+    }
 
     public override void UpdateFrom(object settings)
     {
@@ -69,13 +72,13 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
             step.PropertyChanged += (_, _) => SyncSteps();
         }
 
+        SelectedStep = Steps.FirstOrDefault();
         TargetUrl = incoming.TargetUrl;
         TimeoutMs = incoming.TimeoutMs;
         SyncSteps();
     }
 
     partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = value;
-
     partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
 
     [RelayCommand]
@@ -91,80 +94,93 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
         step.PropertyChanged += (_, _) => SyncSteps();
         Steps.Add(step);
+        SelectedStep = step;
         SyncSteps();
     }
 
-    [RelayCommand]
-    private void RemoveStep(UiStep? step)
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedStep))]
+    private void RemoveSelectedStep()
     {
-        if (step == null)
+        if (SelectedStep == null)
         {
             return;
         }
 
-        Steps.Remove(step);
+        var index = Steps.IndexOf(SelectedStep);
+        Steps.Remove(SelectedStep);
+        SelectedStep = index >= 0 && Steps.Count > 0
+            ? Steps[Math.Min(index, Steps.Count - 1)]
+            : null;
         SyncSteps();
     }
 
-
-    [RelayCommand]
-    private void DuplicateStep(UiStep? step)
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedStep))]
+    private void DuplicateSelectedStep()
     {
-        if (step == null)
+        if (SelectedStep == null)
         {
             return;
         }
 
         var clone = new UiStep
         {
-            Action = step.Action,
-            Selector = step.Selector,
-            Value = step.Value,
-            Text = step.Text,
-            DelayMs = step.DelayMs
+            Action = SelectedStep.Action,
+            Selector = SelectedStep.Selector,
+            Value = SelectedStep.Value,
+            Text = SelectedStep.Text,
+            DelayMs = SelectedStep.DelayMs
         };
 
         clone.PropertyChanged += (_, _) => SyncSteps();
-        var index = Steps.IndexOf(step);
+        var index = Steps.IndexOf(SelectedStep);
         Steps.Insert(index + 1, clone);
+        SelectedStep = clone;
         SyncSteps();
     }
 
-    [RelayCommand]
-    private void MoveStepUp(UiStep? step)
+    [RelayCommand(CanExecute = nameof(CanMoveSelectedStepUp))]
+    private void MoveSelectedStepUp()
     {
-        if (step == null)
+        if (SelectedStep == null)
         {
             return;
         }
 
-        var index = Steps.IndexOf(step);
+        var index = Steps.IndexOf(SelectedStep);
         if (index > 0)
         {
             Steps.Move(index, index - 1);
+            SelectedStep = Steps[index - 1];
             SyncSteps();
         }
     }
 
-    [RelayCommand]
-    private void MoveStepDown(UiStep? step)
+    [RelayCommand(CanExecute = nameof(CanMoveSelectedStepDown))]
+    private void MoveSelectedStepDown()
     {
-        if (step == null)
+        if (SelectedStep == null)
         {
             return;
         }
 
-        var index = Steps.IndexOf(step);
+        var index = Steps.IndexOf(SelectedStep);
         if (index >= 0 && index < Steps.Count - 1)
         {
             Steps.Move(index, index + 1);
+            SelectedStep = Steps[index + 1];
             SyncSteps();
         }
     }
+
+    private bool CanMutateSelectedStep() => SelectedStep != null;
+    private bool CanMoveSelectedStepUp() => SelectedStep != null && Steps.IndexOf(SelectedStep) > 0;
+    private bool CanMoveSelectedStepDown() => SelectedStep != null && Steps.IndexOf(SelectedStep) >= 0 && Steps.IndexOf(SelectedStep) < Steps.Count - 1;
 
     private void SyncSteps()
     {
         _settings.Steps = Steps.ToList();
+        MoveSelectedStepUpCommand.NotifyCanExecuteChanged();
+        MoveSelectedStepDownCommand.NotifyCanExecuteChanged();
     }
 
     private static void NormalizeLegacySteps(UiScenarioSettings settings)

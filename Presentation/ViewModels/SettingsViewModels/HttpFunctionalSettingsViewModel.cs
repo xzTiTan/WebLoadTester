@@ -61,6 +61,12 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private HttpFunctionalEndpoint? selectedEndpoint;
 
+    partial void OnSelectedEndpointChanged(HttpFunctionalEndpoint? value)
+    {
+        RemoveSelectedEndpointCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedEndpointCommand.NotifyCanExecuteChanged();
+    }
+
     [ObservableProperty]
     private int timeoutSeconds;
 
@@ -81,7 +87,7 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
         SelectedEndpoint = endpoint;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedEndpoint))]
     private void DuplicateSelectedEndpoint()
     {
         if (SelectedEndpoint == null)
@@ -100,11 +106,12 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
             JsonFieldEquals = SelectedEndpoint.JsonFieldEquals.ToList()
         };
 
-        Endpoints.Add(copy);
+        var index = Endpoints.IndexOf(SelectedEndpoint);
+        Endpoints.Insert(index + 1, copy);
         SelectedEndpoint = copy;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedEndpoint))]
     private void RemoveSelectedEndpoint()
     {
         if (SelectedEndpoint != null)
@@ -112,4 +119,6 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
             Endpoints.Remove(SelectedEndpoint);
         }
     }
+
+    private bool CanMutateSelectedEndpoint() => SelectedEndpoint != null;
 }

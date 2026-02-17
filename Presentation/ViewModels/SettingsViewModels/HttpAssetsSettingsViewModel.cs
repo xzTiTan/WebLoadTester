@@ -56,6 +56,12 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private AssetItem? selectedAsset;
 
+    partial void OnSelectedAssetChanged(AssetItem? value)
+    {
+        RemoveSelectedAssetCommand.NotifyCanExecuteChanged();
+        DuplicateSelectedAssetCommand.NotifyCanExecuteChanged();
+    }
+
     [ObservableProperty]
     private int timeoutSeconds;
 
@@ -69,7 +75,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
         SelectedAsset = asset;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedAsset))]
     private void DuplicateSelectedAsset()
     {
         if (SelectedAsset == null)
@@ -86,11 +92,12 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
             MaxLatencyMs = SelectedAsset.MaxLatencyMs
         };
 
-        Assets.Add(copy);
+        var index = Assets.IndexOf(SelectedAsset);
+        Assets.Insert(index + 1, copy);
         SelectedAsset = copy;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanMutateSelectedAsset))]
     private void RemoveSelectedAsset()
     {
         if (SelectedAsset != null)
@@ -98,4 +105,6 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
             Assets.Remove(SelectedAsset);
         }
     }
+
+    private bool CanMutateSelectedAsset() => SelectedAsset != null;
 }
