@@ -103,9 +103,8 @@
                             <WrapPanel Grid.Column="1" Classes="wrap-gap">
                                 <Button Classes="link toolbar-button" Content="Обновить" Command="{Binding RefreshCommand}" />
                                 <Button Classes="link toolbar-button" Content="Загрузить" Command="{Binding LoadSelectedCommand}" />
-                                <Button Classes="link toolbar-button" Content="Сохранить" Command="{Binding SaveNewCommand}" />
-                                <Button Classes="link toolbar-button" Content="Перезаписать" Command="{Binding SaveOverwriteCommand}" />
-                                <Button Classes="link toolbar-button" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
+                                <Button Classes="link toolbar-button" Content="Сохранить" Command="{Binding SaveCommand}" />
+                                                                <Button Classes="link toolbar-button" Content="Удалить" Command="{Binding RequestDeleteSelectedCommand}" />
                             </WrapPanel>
                         </Grid>
 
@@ -131,19 +130,32 @@
                         </StackPanel>
 
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Имя (без пробелов)" Classes="field-label" />
+                            <TextBlock Text="Имя" Classes="field-label" />
                             <TextBox Classes="field-control" Watermark="Например: DemoConfig" Text="{Binding UserName, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Финальное имя" Classes="field-label" />
+                            <TextBlock Text="Итоговое имя" Classes="field-label" />
                             <TextBlock Classes="field-control" Text="{Binding FinalNamePreview}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Описание" Classes="field-label" />
                             <TextBox Classes="field-control" Watermark="Опишите назначение конфигурации" Text="{Binding Description, Mode=TwoWay}" />
                         </Grid>
-                        <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
-                    </StackPanel>
+                        <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                            <TextBlock Text="Статус" Classes="field-label" />
+                            <TextBlock Classes="field-control" Text="{Binding DirtyStateText}" />
+                        </Grid>
+                        <TextBlock Text="{Binding NameValidationMessage}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasNameValidationMessage}" />
+
+                        <StackPanel IsVisible="{Binding IsDirtyPromptVisible}" Spacing="8">
+                            <TextBlock Text="{Binding DirtyPromptText}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                            <WrapPanel Classes="wrap-gap">
+                                <Button Content="Сохранить" Command="{Binding SaveAndContinueGuardActionCommand}" />
+                                <Button Content="Не сохранять" Command="{Binding DiscardAndContinueGuardActionCommand}" />
+                                <Button Content="Отмена" Classes="ghost" Command="{Binding CancelGuardActionCommand}" />
+                            </WrapPanel>
+                        </StackPanel>
+                                            </StackPanel>
                 </Border>
 
                 <Border Classes="section">
@@ -213,7 +225,7 @@
                         <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
                             <TextBlock Text="{Binding WarningMessage}" />
                         </Border>
-                        <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
+<TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                     </StackPanel>
                 </Border>
 

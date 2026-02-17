@@ -78,6 +78,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource? _runCts;
     private TestRunNotificationContext? _activeTelegramContext;
     private bool _activeTelegramEnabled;
+    private bool _isApplyingGuardedSelection;
+    private int _lastConfirmedTabIndex;
+    private ModuleItemViewModel? _lastUiModule;
+    private ModuleItemViewModel? _lastHttpModule;
+    private ModuleItemViewModel? _lastNetModule;
     private int _stopRequested;
     private readonly ITelegramRunNotifier _telegramRunNotifier;
     /// <summary>
@@ -135,6 +140,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
         RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunAsync);
         RunsTab.SetModuleOptions(Registry.Modules.Select(m => m.Id));
+        _lastConfirmedTabIndex = SelectedTabIndex;
+        _lastUiModule = UiFamily.SelectedModule;
+        _lastHttpModule = HttpFamily.SelectedModule;
+        _lastNetModule = NetFamily.SelectedModule;
 
         _progressBus.ProgressChanged += OnProgressChanged;
 
@@ -252,10 +261,41 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedTabIndexChanged(int value)
     {
+        if (_isApplyingGuardedSelection)
+        {
+            OnPropertyChanged(nameof(SelectedModule));
+            OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+            UpdateRunProfileModuleFamily();
+            ReevaluateStartAvailability();
+            _lastConfirmedTabIndex = value;
+            return;
+        }
+
+        var currentModuleConfig = GetModuleConfigByTab(_lastConfirmedTabIndex);
+        if (value != _lastConfirmedTabIndex && currentModuleConfig != null)
+        {
+            var requestedTab = value;
+            var allowed = currentModuleConfig.TryRequestLeave(async () =>
+            {
+                _isApplyingGuardedSelection = true;
+                SelectedTabIndex = requestedTab;
+                _isApplyingGuardedSelection = false;
+            });
+
+            if (!allowed)
+            {
+                _isApplyingGuardedSelection = true;
+                SelectedTabIndex = _lastConfirmedTabIndex;
+                _isApplyingGuardedSelection = false;
+                return;
+            }
+        }
+
         OnPropertyChanged(nameof(SelectedModule));
         OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
         UpdateRunProfileModuleFamily();
         ReevaluateStartAvailability();
+        _lastConfirmedTabIndex = value;
     }
 
     /// <summary>
@@ -626,6 +666,26 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenSettings()
     {
+        var selected = GetSelectedModule();
+        if (selected != null)
+        {
+            var allowed = selected.ModuleConfig.TryRequestLeave(() =>
+            {
+                OpenSettingsWindow();
+                return Task.CompletedTask;
+            });
+
+            if (!allowed)
+            {
+                return;
+            }
+        }
+
+        OpenSettingsWindow();
+    }
+
+    private void OpenSettingsWindow()
+    {
         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = new WebLoadTester.Presentation.Views.SettingsWindow
@@ -754,16 +814,82 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnFamilyPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ModuleFamilyViewModel.SelectedModule))
+        if (e.PropertyName != nameof(ModuleFamilyViewModel.SelectedModule) || sender is not ModuleFamilyViewModel family)
         {
+            return;
+        }
+
+        var previous = ReferenceEquals(family, UiFamily)
+            ? _lastUiModule
+            : ReferenceEquals(family, HttpFamily)
+                ? _lastHttpModule
+                : _lastNetModule;
+
+        if (_isApplyingGuardedSelection)
+        {
+            UpdateFamilySelectionSnapshot(family, family.SelectedModule);
             OnPropertyChanged(nameof(SelectedModule));
             OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
             UpdateRunProfileModuleFamily();
             ReevaluateStartAvailability();
+            return;
+        }
+
+        var requested = family.SelectedModule;
+        if (previous != null && requested != null && !ReferenceEquals(previous, requested))
+        {
+            var allowed = previous.ModuleConfig.TryRequestLeave(async () =>
+            {
+                _isApplyingGuardedSelection = true;
+                family.SelectedModule = requested;
+                _isApplyingGuardedSelection = false;
+            });
+
+            if (!allowed)
+            {
+                _isApplyingGuardedSelection = true;
+                family.SelectedModule = previous;
+                _isApplyingGuardedSelection = false;
+                return;
+            }
+        }
+
+        UpdateFamilySelectionSnapshot(family, requested);
+        OnPropertyChanged(nameof(SelectedModule));
+        OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+        UpdateRunProfileModuleFamily();
+        ReevaluateStartAvailability();
+    }
+
+    private void UpdateFamilySelectionSnapshot(ModuleFamilyViewModel family, ModuleItemViewModel? selected)
+    {
+        if (ReferenceEquals(family, UiFamily))
+        {
+            _lastUiModule = selected;
+        }
+        else if (ReferenceEquals(family, HttpFamily))
+        {
+            _lastHttpModule = selected;
+        }
+        else if (ReferenceEquals(family, NetFamily))
+        {
+            _lastNetModule = selected;
         }
     }
 
 
+
+
+    private ModuleConfigViewModel? GetModuleConfigByTab(int tabIndex)
+    {
+        return tabIndex switch
+        {
+            0 => UiFamily.SelectedModule?.ModuleConfig,
+            1 => HttpFamily.SelectedModule?.ModuleConfig,
+            2 => NetFamily.SelectedModule?.ModuleConfig,
+            _ => null
+        };
+    }
 
     private bool IsSelectedUiModule()
     {
@@ -915,6 +1041,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     };
 
                     LoadedFromRunInfo = $"Загружено из прогона {runId}";
+                    moduleItemFromReport.ModuleConfig.MarkCleanFromExternalLoad();
                     _logBus.Info($"[Runs] Конфигурация загружена из report.json прогона {runId}. Автозапуск не выполнялся.");
                     return;
                 }
@@ -969,6 +1096,7 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         LoadedFromRunInfo = $"Загружено из прогона {runId}";
+        moduleItem.ModuleConfig.MarkCleanFromExternalLoad();
         _logBus.Info($"[Runs] Конфигурация загружена из snapshot БД прогона {runId}. Автозапуск не выполнялся.");
     }
 

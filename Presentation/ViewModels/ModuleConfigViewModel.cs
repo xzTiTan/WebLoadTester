@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,11 +13,10 @@ using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 namespace WebLoadTester.Presentation.ViewModels;
 
-/// <summary>
-/// ViewModel управления конфигурациями модуля.
-/// </summary>
 public partial class ModuleConfigViewModel : ObservableObject
 {
+    private static readonly Regex NameRegex = new("^[A-Za-z0-9_-]+$", RegexOptions.Compiled);
+
     private readonly IModuleConfigService _configService;
     private readonly ITestCaseRepository _testCaseRepository;
     private readonly ITestModule _module;
@@ -24,68 +24,105 @@ public partial class ModuleConfigViewModel : ObservableObject
     private readonly RunProfileViewModel _runProfile;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
+    private bool _suppressDirtyTracking;
+    private bool _suppressSelectionGuard;
+    private ModuleConfigSummary? _lastSelectedConfig;
+    private Func<Task>? _pendingGuardAction;
+
     public ModuleConfigViewModel(IModuleConfigService configService, ITestCaseRepository testCaseRepository, ITestModule module, SettingsViewModelBase settings, RunProfileViewModel runProfile)
     {
-        ArgumentNullException.ThrowIfNull(configService);
-        ArgumentNullException.ThrowIfNull(testCaseRepository);
-        ArgumentNullException.ThrowIfNull(module);
-        ArgumentNullException.ThrowIfNull(settings);
-        ArgumentNullException.ThrowIfNull(runProfile);
-
         _configService = configService;
         _testCaseRepository = testCaseRepository;
         _module = module;
         _settings = settings;
         _runProfile = runProfile;
-        userName = string.Empty;
+
+        _settings.PropertyChanged += (_, _) => MarkDirty();
+        _runProfile.PropertyChanged += (_, _) => MarkDirty();
     }
 
     public ObservableCollection<ModuleConfigSummary> Configs { get; } = new();
 
-    [ObservableProperty]
-    private ModuleConfigSummary? selectedConfig;
+    [ObservableProperty] private ModuleConfigSummary? selectedConfig;
+    [ObservableProperty] private string userName = string.Empty;
+    [ObservableProperty] private string description = string.Empty;
+    [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isDeleteConfirmVisible;
+    [ObservableProperty] private bool isDirty;
+    [ObservableProperty] private bool isDirtyPromptVisible;
+    [ObservableProperty] private string dirtyPromptText = string.Empty;
+    [ObservableProperty] private string nameValidationMessage = string.Empty;
 
-    partial void OnSelectedConfigChanged(ModuleConfigSummary? value)
-    {
-        if (value == null)
-        {
-            return;
-        }
-
-        Description = value.Description;
-        UserName = ParseUserName(value.FinalName);
-    }
-
-    [ObservableProperty]
-    private string userName = string.Empty;
-
-    [ObservableProperty]
-    private string description = string.Empty;
-
-    [ObservableProperty]
-    private string statusMessage = string.Empty;
-
-    [ObservableProperty]
-    private bool isBusy;
-
-    [ObservableProperty]
-    private bool isDeleteConfirmVisible;
+    public string DirtyStateText => IsDirty ? "Есть несохранённые изменения" : "Сохранено";
+    public bool HasNameValidationMessage => !string.IsNullOrWhiteSpace(NameValidationMessage);
 
     public string FinalNamePreview
     {
         get
         {
             var normalized = NormalizeUserName(UserName);
-            if (string.IsNullOrWhiteSpace(normalized))
-            {
-                return string.Empty;
-            }
-
-            return $"{normalized}_{ModuleCatalog.GetSuffix(_module.Id)}";
+            return string.IsNullOrWhiteSpace(normalized) ? string.Empty : $"{normalized}_{ModuleCatalog.GetSuffix(_module.Id)}";
         }
     }
 
-    partial void OnUserNameChanged(string value) => OnPropertyChanged(nameof(FinalNamePreview));
+    partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyStateText));
+    partial void OnNameValidationMessageChanged(string value) => OnPropertyChanged(nameof(HasNameValidationMessage));
+
+    partial void OnSelectedConfigChanged(ModuleConfigSummary? value)
+    {
+        if (_suppressSelectionGuard)
+        {
+            _lastSelectedConfig = value;
+            return;
+        }
+
+        if (value == null || _lastSelectedConfig == null || ReferenceEquals(value, _lastSelectedConfig))
+        {
+            _lastSelectedConfig = value;
+            return;
+        }
+
+        if (!IsDirty)
+        {
+            _lastSelectedConfig = value;
+            return;
+        }
+
+        _suppressSelectionGuard = true;
+        SelectedConfig = _lastSelectedConfig;
+        _suppressSelectionGuard = false;
+
+        RequestDirtyGuard(async () =>
+        {
+            _suppressSelectionGuard = true;
+            SelectedConfig = value;
+            _suppressSelectionGuard = false;
+            _lastSelectedConfig = value;
+            await LoadSelectedCoreAsync();
+        });
+    }
+
+    partial void OnUserNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(FinalNamePreview));
+        if (_suppressDirtyTracking)
+        {
+            return;
+        }
+
+        MarkDirty();
+    }
+
+    partial void OnDescriptionChanged(string value)
+    {
+        if (_suppressDirtyTracking)
+        {
+            return;
+        }
+
+        MarkDirty();
+    }
 
     [RelayCommand]
     private async Task RefreshAsync()
@@ -93,16 +130,19 @@ public partial class ModuleConfigViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            Configs.Clear();
             var items = await _configService.ListAsync(_module.Id, CancellationToken.None);
-            foreach (var item in items.OrderByDescending(item => item.UpdatedAt))
+            Configs.Clear();
+            foreach (var item in items.OrderByDescending(i => i.UpdatedAt))
             {
                 Configs.Add(item);
             }
 
             if (SelectedConfig == null && Configs.Count > 0)
             {
+                _suppressSelectionGuard = true;
                 SelectedConfig = Configs[0];
+                _suppressSelectionGuard = false;
+                _lastSelectedConfig = SelectedConfig;
             }
         }
         finally
@@ -114,37 +154,19 @@ public partial class ModuleConfigViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadSelectedAsync()
     {
-        if (SelectedConfig == null)
+        if (IsDirty)
         {
-            StatusMessage = "Выберите конфигурацию для загрузки.";
+            RequestDirtyGuard(LoadSelectedCoreAsync);
             return;
         }
 
-        var payload = await _configService.LoadAsync(SelectedConfig.FinalName, CancellationToken.None);
-        if (payload == null)
-        {
-            StatusMessage = "Не удалось загрузить выбранную конфигурацию.";
-            return;
-        }
-
-        if (payload.ModuleSettings.ValueKind != JsonValueKind.Undefined)
-        {
-            var moduleSettings = JsonSerializer.Deserialize(payload.ModuleSettings.GetRawText(), _module.SettingsType, _jsonOptions);
-            if (moduleSettings != null)
-            {
-                _settings.UpdateFrom(moduleSettings);
-            }
-        }
-
-        _runProfile.UpdateFrom(payload.RunParameters);
-        UserName = payload.Meta.UserName;
-        Description = payload.Meta.Description;
-        StatusMessage = "Конфигурация загружена.";
+        await LoadSelectedCoreAsync();
     }
 
     [RelayCommand]
-    private async Task SaveNewAsync()
+    private async Task SaveAsync()
     {
+        NameValidationMessage = string.Empty;
         if (!ValidateSettings())
         {
             return;
@@ -154,33 +176,17 @@ public partial class ModuleConfigViewModel : ObservableObject
         {
             var finalName = await _configService.SaveNewAsync(UserName, _module.Id, Description, _settings.Settings, _runProfile.BuildRunParameters(), CancellationToken.None);
             await RefreshAsync();
+            _suppressSelectionGuard = true;
             SelectedConfig = Configs.FirstOrDefault(item => string.Equals(item.FinalName, finalName, StringComparison.OrdinalIgnoreCase));
-            StatusMessage = $"Конфигурация сохранена как {finalName}.";
+            _suppressSelectionGuard = false;
+            _lastSelectedConfig = SelectedConfig;
+            IsDirty = false;
+            StatusMessage = $"Конфигурация сохранена: {finalName}.";
         }
         catch (Exception ex)
         {
             StatusMessage = $"Ошибка сохранения конфигурации: {ex.Message}";
         }
-    }
-
-    [RelayCommand]
-    private async Task SaveOverwriteAsync()
-    {
-        if (SelectedConfig == null)
-        {
-            StatusMessage = "Выберите конфигурацию для перезаписи.";
-            return;
-        }
-
-        if (!ValidateSettings())
-        {
-            return;
-        }
-
-        await _configService.SaveOverwriteAsync(SelectedConfig.FinalName, _module.Id, Description, _settings.Settings, _runProfile.BuildRunParameters(), CancellationToken.None);
-        await RefreshAsync();
-        SelectedConfig = Configs.FirstOrDefault(item => string.Equals(item.FinalName, SelectedConfig.FinalName, StringComparison.OrdinalIgnoreCase));
-        StatusMessage = "Конфигурация обновлена.";
     }
 
     [RelayCommand]
@@ -205,16 +211,61 @@ public partial class ModuleConfigViewModel : ObservableObject
 
         await _configService.DeleteAsync(SelectedConfig.FinalName, CancellationToken.None);
         IsDeleteConfirmVisible = false;
+        _suppressSelectionGuard = true;
         SelectedConfig = null;
+        _suppressSelectionGuard = false;
+        _lastSelectedConfig = null;
         StatusMessage = "Конфигурация удалена.";
         await RefreshAsync();
     }
 
+    [RelayCommand] private void CancelDeleteSelected() => IsDeleteConfirmVisible = false;
+
     [RelayCommand]
-    private void CancelDeleteSelected()
+    private async Task SaveAndContinueGuardActionAsync()
     {
-        IsDeleteConfirmVisible = false;
-        StatusMessage = string.Empty;
+        await SaveAsync();
+        if (IsDirty || !string.IsNullOrWhiteSpace(NameValidationMessage) || _pendingGuardAction == null)
+        {
+            return;
+        }
+
+        var action = _pendingGuardAction;
+        _pendingGuardAction = null;
+        IsDirtyPromptVisible = false;
+        await action();
+    }
+
+    [RelayCommand]
+    private async Task DiscardAndContinueGuardActionAsync()
+    {
+        IsDirty = false;
+        IsDirtyPromptVisible = false;
+        var action = _pendingGuardAction;
+        _pendingGuardAction = null;
+        if (action != null)
+        {
+            await action();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelGuardAction()
+    {
+        IsDirtyPromptVisible = false;
+        _pendingGuardAction = null;
+    }
+
+    public bool TryRequestLeave(Func<Task> continueAction)
+    {
+        if (!IsDirty)
+        {
+            _ = continueAction();
+            return true;
+        }
+
+        RequestDirtyGuard(continueAction);
+        return false;
     }
 
     public async Task<TestCase?> EnsureConfigForRunAsync()
@@ -226,10 +277,9 @@ public partial class ModuleConfigViewModel : ObservableObject
                 StatusMessage = "Укажите имя конфигурации перед запуском.";
                 return null;
             }
-
-            await SaveNewAsync();
         }
 
+        await SaveAsync();
         if (SelectedConfig == null)
         {
             return null;
@@ -238,11 +288,78 @@ public partial class ModuleConfigViewModel : ObservableObject
         return await _testCaseRepository.GetByNameAsync(SelectedConfig.FinalName, CancellationToken.None);
     }
 
+    public void MarkCleanFromExternalLoad()
+    {
+        IsDirty = false;
+        IsDirtyPromptVisible = false;
+    }
+
+    private async Task LoadSelectedCoreAsync()
+    {
+        if (SelectedConfig == null)
+        {
+            StatusMessage = "Выберите конфигурацию для загрузки.";
+            return;
+        }
+
+        var payload = await _configService.LoadAsync(SelectedConfig.FinalName, CancellationToken.None);
+        if (payload == null)
+        {
+            StatusMessage = "Не удалось загрузить выбранную конфигурацию.";
+            return;
+        }
+
+        _suppressDirtyTracking = true;
+        try
+        {
+            if (payload.ModuleSettings.ValueKind != JsonValueKind.Undefined)
+            {
+                var moduleSettings = JsonSerializer.Deserialize(payload.ModuleSettings.GetRawText(), _module.SettingsType, _jsonOptions);
+                if (moduleSettings != null)
+                {
+                    _settings.UpdateFrom(moduleSettings);
+                }
+            }
+
+            _runProfile.UpdateFrom(payload.RunParameters);
+            UserName = payload.Meta.UserName;
+            Description = payload.Meta.Description;
+        }
+        finally
+        {
+            _suppressDirtyTracking = false;
+        }
+
+        NameValidationMessage = string.Empty;
+        IsDirty = false;
+        _lastSelectedConfig = SelectedConfig;
+        StatusMessage = "Конфигурация загружена.";
+    }
+
+    private void RequestDirtyGuard(Func<Task> continueAction)
+    {
+        _pendingGuardAction = continueAction;
+        DirtyPromptText = "Есть несохранённые изменения. Сохранить?";
+        IsDirtyPromptVisible = true;
+    }
+
+    private void MarkDirty()
+    {
+        if (_suppressDirtyTracking)
+        {
+            return;
+        }
+
+        IsDirty = true;
+    }
+
     private bool ValidateSettings()
     {
-        if (string.IsNullOrWhiteSpace(UserName) || UserName.Any(char.IsWhiteSpace))
+        var normalized = NormalizeUserName(UserName);
+        if (string.IsNullOrWhiteSpace(normalized) || !NameRegex.IsMatch(normalized))
         {
-            StatusMessage = "Имя конфигурации должно быть без пробелов.";
+            NameValidationMessage = "Имя должно содержать только A-Z, a-z, 0-9, _ или - (без пробелов).";
+            StatusMessage = NameValidationMessage;
             return false;
         }
 
@@ -258,12 +375,6 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     private static string NormalizeUserName(string value)
     {
-        return string.Join(string.Empty, value.Where(ch => !char.IsWhiteSpace(ch))).Trim();
-    }
-
-    private static string ParseUserName(string finalName)
-    {
-        var index = finalName.IndexOf('_', StringComparison.Ordinal);
-        return index > 0 ? finalName[..index] : finalName;
+        return value.Trim();
     }
 }
