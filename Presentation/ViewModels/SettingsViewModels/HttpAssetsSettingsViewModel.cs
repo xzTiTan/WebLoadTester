@@ -13,12 +13,14 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
 {
     private readonly HttpAssetsSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public HttpAssetsSettingsViewModel(HttpAssetsSettings settings)
     {
         _settings = settings;
+        foreach (var asset in settings.Assets)
+        {
+            asset.NormalizeLegacy();
+        }
+
         Assets = new ObservableCollection<AssetItem>(settings.Assets);
         timeoutSeconds = settings.TimeoutSeconds;
         Assets.CollectionChanged += (_, _) => _settings.Assets = Assets.ToList();
@@ -26,11 +28,17 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "HTTP ассеты";
+
     public override void UpdateFrom(object settings)
     {
         if (settings is not HttpAssetsSettings s)
         {
             return;
+        }
+
+        foreach (var asset in s.Assets)
+        {
+            asset.NormalizeLegacy();
         }
 
         TimeoutSeconds = s.TimeoutSeconds;
@@ -39,6 +47,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
         {
             Assets.Add(asset);
         }
+
         _settings.Assets = Assets.ToList();
     }
 
@@ -50,17 +59,35 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
     [ObservableProperty]
     private int timeoutSeconds;
 
-    /// <summary>
-    /// Синхронизирует таймаут запросов.
-    /// </summary>
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
     [RelayCommand]
     private void AddAsset()
     {
-        var asset = new AssetItem { Url = "https://example.com" };
+        var asset = new AssetItem { Url = "https://example.com", Name = "Asset" };
         Assets.Add(asset);
         SelectedAsset = asset;
+    }
+
+    [RelayCommand]
+    private void DuplicateSelectedAsset()
+    {
+        if (SelectedAsset == null)
+        {
+            return;
+        }
+
+        var copy = new AssetItem
+        {
+            Url = SelectedAsset.Url,
+            Name = string.IsNullOrWhiteSpace(SelectedAsset.Name) ? "Asset Copy" : $"{SelectedAsset.Name} Copy",
+            ExpectedContentType = SelectedAsset.ExpectedContentType,
+            MaxSizeKb = SelectedAsset.MaxSizeKb,
+            MaxLatencyMs = SelectedAsset.MaxLatencyMs
+        };
+
+        Assets.Add(copy);
+        SelectedAsset = copy;
     }
 
     [RelayCommand]

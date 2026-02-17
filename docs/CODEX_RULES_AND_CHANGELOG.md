@@ -1,4 +1,4 @@
-v3.4 16.02.2026
+v3.8 17.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -39,6 +39,35 @@ v3.4 16.02.2026
 
 # Changelog
 
+
+
+
+
+
+## v3.8 17.02.2026
+- Prompt 9: реализованы Telegram progress-уведомления по `ProgressMode` (`Off/EveryN/EveryTSeconds`) в runtime без изменения схемы настроек.
+- Прогресс-уведомления учитывают per-run флаг профиля, глобальный `Enabled`, `RateLimitSeconds` и не влияют на итог статуса прогона при ошибках отправки.
+- Добавлены оффлайн unit-тесты на прогресс-режимы, rate-limit и safe-failure поведение (`TelegramProgressTests`).
+- Обновлены версии `docs/INDEX.md`, `README.md`, `AGENTS.md`.
+
+## v3.7 17.02.2026
+- Prompt 8B: реализованы run-уведомления Telegram (start/finish/error) с безопасной обработкой ошибок и без влияния на итог прогона.
+- Добавлен rate limit отправки по `RateLimitSeconds` в тестируемом виде (`TimeProvider`).
+- Добавлен индикатор Telegram `Выкл/Ок/Ошибка` с tooltip в верхней панели MainWindow и открытием Settings по клику.
+- Добавлены оффлайн unit-тесты на routing/gating/rate-limit Telegram-уведомлений.
+- Обновлены версии `README.md`, `AGENTS.md`, `docs/INDEX.md`.
+
+## v3.6 17.02.2026
+- Prompt 8A: добавлен MVP-раздел Telegram в SettingsWindow (Enabled/BotToken/ChatId, notify-флаги, ProgressMode/ProgressEveryN/RateLimitSeconds, кнопка тестовой отправки и статус результата).
+- Реализована персистентность Telegram-настроек в `settings.json` через `AppSettingsService` (`AppSettings.Telegram`).
+- Добавлены `ITelegramClient` + `TelegramClient` (HttpClient, безопасный результат успех/ошибка без выброса исключений наружу) и оффлайн unit-тесты на endpoint/payload/401/500.
+- Обновлены версии `README.md`, `AGENTS.md`, `docs/INDEX.md`.
+
+## v3.5 17.02.2026
+- Prompt 7B follow-up: доработана вкладка «Прогоны» (детали профиля с поддержкой `profile.timeouts.operationSeconds` и legacy `timeoutSeconds`).
+- В блоке «Топ ошибок» добавлен вывод счётчика повторений для каждой ошибки.
+- Добавлен unit-test на парсинг legacy `timeoutSeconds` в Repeat Run snapshot.
+- Обновлены версии `README.md` и `AGENTS.md` по правилу versioning.
 
 ## v3.4 16.02.2026
 - Prompt 5: доработан UI-family MVP (`ui.scenario`, `ui.snapshot`, `ui.timing`) под TO-BE из `docs/INDEX.md` (§1.1, §8.A).

@@ -12,134 +12,176 @@ using WebLoadTester.Infrastructure.Http;
 namespace WebLoadTester.Modules.HttpPerformance;
 
 /// <summary>
-/// Модуль нагрузочного теста HTTP с конкуренцией и ограничением RPS.
+/// Модуль HTTP-проверок производительности.
 /// </summary>
 public class HttpPerformanceModule : ITestModule
 {
     public string Id => "http.performance";
     public string DisplayName => "HTTP производительность";
-    public string Description => "Оценивает задержки и устойчивость HTTP при контролируемой параллельности.";
+    public string Description => "Оценивает задержки и доступность endpoint-ов.";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpPerformanceSettings);
 
-    /// <summary>
-    /// Создаёт настройки по умолчанию.
-    /// </summary>
     public object CreateDefaultSettings()
     {
         return new HttpPerformanceSettings
         {
             Endpoints = new List<HttpPerformanceEndpoint>
             {
-                new() { Name = "Example", Method = "GET", Path = "/" }
+                new() { Name = "Endpoint 1", Method = "GET", Path = "/", ExpectedStatusCode = 200 }
             }
         };
     }
 
-    /// <summary>
-    /// Проверяет корректность параметров нагрузки.
-    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
         if (settings is not HttpPerformanceSettings s)
         {
-            errors.Add("Invalid settings type");
+            errors.Add("Неверный тип настроек HTTP performance.");
             return errors;
         }
 
         if (!Uri.TryCreate(s.BaseUrl, UriKind.Absolute, out _))
         {
-            errors.Add("BaseUrl is required");
-        }
-
-        if (s.Endpoints.Count == 0)
-        {
-            errors.Add("At least one endpoint required");
-        }
-
-        foreach (var endpoint in s.Endpoints)
-        {
-            if (string.IsNullOrWhiteSpace(endpoint.Path))
-            {
-                errors.Add("Endpoint path is required");
-            }
-
-            if (string.IsNullOrWhiteSpace(endpoint.Method))
-            {
-                errors.Add("Endpoint method is required");
-            }
+            errors.Add("BaseUrl обязателен и должен быть абсолютным URL.");
         }
 
         if (s.TimeoutSeconds <= 0)
         {
-            errors.Add("TimeoutSeconds must be positive");
+            errors.Add("TimeoutSeconds должен быть больше 0.");
+        }
+
+        if (s.Endpoints.Count == 0)
+        {
+            errors.Add("Список Endpoints должен содержать хотя бы один элемент.");
+            return errors;
+        }
+
+        var duplicates = s.Endpoints
+            .Where(e => !string.IsNullOrWhiteSpace(e.Name))
+            .GroupBy(e => e.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        foreach (var duplicate in duplicates)
+        {
+            errors.Add($"Endpoint.Name должен быть уникальным: {duplicate}.");
+        }
+
+        for (var i = 0; i < s.Endpoints.Count; i++)
+        {
+            var endpoint = s.Endpoints[i];
+            var prefix = $"Endpoint #{i + 1}";
+
+            if (string.IsNullOrWhiteSpace(endpoint.Name))
+            {
+                errors.Add($"{prefix}: Name обязателен.");
+            }
+
+            if (string.IsNullOrWhiteSpace(endpoint.Method))
+            {
+                errors.Add($"{prefix}: Method обязателен.");
+            }
+
+            if (string.IsNullOrWhiteSpace(endpoint.Path))
+            {
+                errors.Add($"{prefix}: Path обязателен.");
+            }
+
+            if (endpoint.ExpectedStatusCode.HasValue && endpoint.ExpectedStatusCode is < 100 or > 599)
+            {
+                errors.Add($"{prefix}: ExpectedStatusCode должен быть в диапазоне 100..599.");
+            }
         }
 
         return errors;
     }
 
-    /// <summary>
-    /// Выполняет серию HTTP-запросов и формирует результат.
-    /// </summary>
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpPerformanceSettings)settings;
         var result = new ModuleResult();
-        ctx.Log.Info($"[HttpPerformance] BaseUrl={s.BaseUrl}, endpoints={s.Endpoints.Count}, parallelism={ctx.Profile.Parallelism}");
+        ctx.Log.Info($"[HttpPerformance] BaseUrl={s.BaseUrl}, endpoints={s.Endpoints.Count}");
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();
-        var completed = 0;
-        var total = s.Endpoints.Count;
 
-        foreach (var endpoint in s.Endpoints)
+        for (var i = 0; i < s.Endpoints.Count; i++)
         {
+            var endpoint = s.Endpoints[i];
             var sw = Stopwatch.StartNew();
+
+            var success = true;
+            string message = "Проверка прошла успешно.";
+            string? errorKind = null;
+            int? statusCode = null;
+
             try
             {
-                var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), ResolveUrl(s.BaseUrl, endpoint.Path));
+                using var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), ResolveUrl(s.BaseUrl, endpoint.Path));
                 var response = await client.SendAsync(request, ct);
                 sw.Stop();
 
-                var success = response.IsSuccessStatusCode;
-                string? error = null;
-
-                if (endpoint.ExpectedStatusCode.HasValue && (int)response.StatusCode != endpoint.ExpectedStatusCode)
+                statusCode = (int)response.StatusCode;
+                if (endpoint.ExpectedStatusCode.HasValue && statusCode != endpoint.ExpectedStatusCode.Value)
                 {
                     success = false;
-                    error = $"Status {(int)response.StatusCode} expected {endpoint.ExpectedStatusCode}";
+                    message = $"Ожидали код {endpoint.ExpectedStatusCode}, получили {statusCode}.";
+                    errorKind = "AssertFailed";
                 }
-
-                results.Add(new CheckResult(endpoint.Name)
+                else if (!response.IsSuccessStatusCode)
                 {
-                    Success = success,
-                    DurationMs = sw.Elapsed.TotalMilliseconds,
-                    StatusCode = (int)response.StatusCode,
-                    ErrorType = success ? null : "Http",
-                    ErrorMessage = error
-                });
+                    success = false;
+                    message = $"Endpoint вернул HTTP {statusCode}.";
+                    errorKind = "Http";
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (TaskCanceledException ex)
+            {
+                sw.Stop();
+                success = false;
+                message = ex.Message;
+                errorKind = "Timeout";
+            }
+            catch (HttpRequestException ex)
+            {
+                sw.Stop();
+                success = false;
+                message = ex.Message;
+                errorKind = "Network";
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                results.Add(new CheckResult(endpoint.Name)
-                {
-                    Success = false,
-                    DurationMs = sw.Elapsed.TotalMilliseconds,
-                    ErrorType = ex.GetType().Name,
-                    ErrorMessage = ex.Message
-                });
+                success = false;
+                message = ex.Message;
+                errorKind = "Exception";
             }
-            finally
+
+            results.Add(new EndpointResult(endpoint.Name)
             {
-                completed++;
-                ctx.Progress.Report(new ProgressUpdate(completed, total, "HTTP производительность"));
-            }
+                Success = success,
+                DurationMs = sw.Elapsed.TotalMilliseconds,
+                WorkerId = ctx.WorkerId,
+                IterationIndex = ctx.Iteration,
+                ItemIndex = i,
+                ErrorType = errorKind,
+                ErrorMessage = success ? "ok" : message,
+                StatusCode = statusCode,
+                LatencyMs = sw.Elapsed.TotalMilliseconds
+            });
+
+            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Endpoints.Count, "HTTP производительность"));
         }
 
         result.Results = results;
-        result.Status = result.Results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
+        result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
     }
 

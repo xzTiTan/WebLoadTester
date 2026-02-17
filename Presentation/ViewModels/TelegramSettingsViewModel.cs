@@ -1,5 +1,8 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Infrastructure.Telegram;
 
 namespace WebLoadTester.Presentation.ViewModels;
@@ -10,13 +13,27 @@ namespace WebLoadTester.Presentation.ViewModels;
 public partial class TelegramSettingsViewModel : ObservableObject
 {
     private readonly TelegramSettings _settings;
+    private readonly ITelegramClient _telegramClient;
+    private readonly Action<string> _logInfo;
+    private readonly Action<string> _logWarn;
+    private readonly Action<bool, string?> _onTestMessageResult;
 
     /// <summary>
     /// Инициализирует ViewModel и копирует значения из настроек.
     /// </summary>
-    public TelegramSettingsViewModel(TelegramSettings settings)
+    public TelegramSettingsViewModel(
+        TelegramSettings settings,
+        ITelegramClient? telegramClient = null,
+        Action<string>? logInfo = null,
+        Action<string>? logWarn = null,
+        Action<bool, string?>? onTestMessageResult = null)
     {
         _settings = settings;
+        _telegramClient = telegramClient ?? new TelegramClient();
+        _logInfo = logInfo ?? (_ => { });
+        _logWarn = logWarn ?? (_ => { });
+        _onTestMessageResult = onTestMessageResult ?? ((_, _) => { });
+
         enabled = settings.Enabled;
         botToken = settings.BotToken;
         chatId = settings.ChatId;
@@ -64,10 +81,24 @@ public partial class TelegramSettingsViewModel : ObservableObject
     [ObservableProperty]
     private int rateLimitSeconds;
 
+    [ObservableProperty]
+    private bool isSendingTestMessage;
+
+    [ObservableProperty]
+    private string testMessageStatus = string.Empty;
+
+    public bool CanSendTestMessage => Enabled && !IsSendingTestMessage;
+
     /// <summary>
     /// Синхронизирует флаг включения с моделью настроек.
     /// </summary>
-    partial void OnEnabledChanged(bool value) => _settings.Enabled = value;
+    partial void OnEnabledChanged(bool value)
+    {
+        _settings.Enabled = value;
+        OnPropertyChanged(nameof(CanSendTestMessage));
+        SendTestMessageCommand.NotifyCanExecuteChanged();
+    }
+
     /// <summary>
     /// Синхронизирует токен бота с моделью настроек.
     /// </summary>
@@ -100,4 +131,53 @@ public partial class TelegramSettingsViewModel : ObservableObject
     /// Синхронизирует ограничение частоты отправки сообщений.
     /// </summary>
     partial void OnRateLimitSecondsChanged(int value) => _settings.RateLimitSeconds = value;
+
+    partial void OnIsSendingTestMessageChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSendTestMessage));
+        SendTestMessageCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSendTestMessage))]
+    private async Task SendTestMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(BotToken))
+        {
+            TestMessageStatus = "Укажите BotToken.";
+            _logWarn("[Telegram] Тестовое сообщение не отправлено: BotToken пустой.");
+            _onTestMessageResult(false, "BotToken не задан.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ChatId))
+        {
+            TestMessageStatus = "Укажите ChatId.";
+            _logWarn("[Telegram] Тестовое сообщение не отправлено: ChatId пустой.");
+            _onTestMessageResult(false, "ChatId не задан.");
+            return;
+        }
+
+        IsSendingTestMessage = true;
+        try
+        {
+            var text = "WebLoadTester: тестовое сообщение";
+            var result = await _telegramClient.SendMessageAsync(BotToken, ChatId, text, CancellationToken.None);
+            if (result.Success)
+            {
+                TestMessageStatus = "Тестовое сообщение отправлено успешно.";
+                _logInfo("[Telegram] Тестовое сообщение отправлено успешно.");
+                _onTestMessageResult(true, null);
+            }
+            else
+            {
+                TestMessageStatus = $"Ошибка отправки: {result.Error}";
+                _logWarn($"[Telegram] Ошибка тестового сообщения: {result.Error}");
+                _onTestMessageResult(false, result.Error);
+            }
+        }
+        finally
+        {
+            IsSendingTestMessage = false;
+        }
+    }
 }

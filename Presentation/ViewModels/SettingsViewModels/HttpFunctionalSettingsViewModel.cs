@@ -13,25 +13,33 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
 {
     private readonly HttpFunctionalSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public HttpFunctionalSettingsViewModel(HttpFunctionalSettings settings)
     {
         _settings = settings;
+        foreach (var endpoint in settings.Endpoints)
+        {
+            endpoint.NormalizeLegacy();
+        }
+
         baseUrl = settings.BaseUrl;
-        Endpoints = new ObservableCollection<HttpEndpoint>(settings.Endpoints);
+        Endpoints = new ObservableCollection<HttpFunctionalEndpoint>(settings.Endpoints);
         timeoutSeconds = settings.TimeoutSeconds;
         Endpoints.CollectionChanged += (_, _) => _settings.Endpoints = Endpoints.ToList();
     }
 
     public override object Settings => _settings;
     public override string Title => "HTTP функциональные проверки";
+
     public override void UpdateFrom(object settings)
     {
         if (settings is not HttpFunctionalSettings s)
         {
             return;
+        }
+
+        foreach (var endpoint in s.Endpoints)
+        {
+            endpoint.NormalizeLegacy();
         }
 
         BaseUrl = s.BaseUrl;
@@ -41,42 +49,59 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
         {
             Endpoints.Add(endpoint);
         }
+
         _settings.Endpoints = Endpoints.ToList();
     }
 
-    public ObservableCollection<HttpEndpoint> Endpoints { get; }
-
-    public string[] MethodOptions { get; } = { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" };
+    public ObservableCollection<HttpFunctionalEndpoint> Endpoints { get; }
 
     [ObservableProperty]
     private string baseUrl = string.Empty;
 
     [ObservableProperty]
-    private HttpEndpoint? selectedEndpoint;
+    private HttpFunctionalEndpoint? selectedEndpoint;
 
     [ObservableProperty]
     private int timeoutSeconds;
 
-    /// <summary>
-    /// Синхронизирует базовый URL.
-    /// </summary>
     partial void OnBaseUrlChanged(string value) => _settings.BaseUrl = value;
-    /// <summary>
-    /// Синхронизирует таймаут запросов.
-    /// </summary>
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
     [RelayCommand]
     private void AddEndpoint()
     {
-        var endpoint = new HttpEndpoint
+        var endpoint = new HttpFunctionalEndpoint
         {
-            Name = "New endpoint",
+            Name = "Endpoint",
             Method = "GET",
-            Path = "/"
+            Path = "/",
+            ExpectedStatusCode = 200
         };
         Endpoints.Add(endpoint);
         SelectedEndpoint = endpoint;
+    }
+
+    [RelayCommand]
+    private void DuplicateSelectedEndpoint()
+    {
+        if (SelectedEndpoint == null)
+        {
+            return;
+        }
+
+        var copy = new HttpFunctionalEndpoint
+        {
+            Name = $"{SelectedEndpoint.Name} Copy",
+            Method = SelectedEndpoint.Method,
+            Path = SelectedEndpoint.Path,
+            ExpectedStatusCode = SelectedEndpoint.ExpectedStatusCode,
+            BodyContains = SelectedEndpoint.BodyContains,
+            RequiredHeaders = SelectedEndpoint.RequiredHeaders.ToList(),
+            JsonFieldEquals = SelectedEndpoint.JsonFieldEquals.ToList()
+        };
+
+        Endpoints.Add(copy);
+        SelectedEndpoint = copy;
     }
 
     [RelayCommand]

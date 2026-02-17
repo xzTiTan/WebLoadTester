@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -16,127 +18,135 @@ using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Presentation.ViewModels;
 
-/// <summary>
-/// ViewModel вкладки истории прогонов.
-/// </summary>
 public partial class RunsTabViewModel : ObservableObject
 {
     private readonly IRunStore _runStore;
     private readonly string _runsRoot;
     private readonly Func<string, Task> _repeatRun;
+    private CancellationTokenSource? _searchDebounceCts;
+    private string? _pendingDeleteRunId;
 
     public RunsTabViewModel(IRunStore runStore, string runsRoot, Func<string, Task> repeatRun)
     {
         _runStore = runStore;
         _runsRoot = runsRoot;
         _repeatRun = repeatRun;
+
+        StatusFilterOptions.Add("Все");
         StatusFilterOptions.Add("Success");
         StatusFilterOptions.Add("Failed");
-        StatusFilterOptions.Add("Partial");
         StatusFilterOptions.Add("Stopped");
         StatusFilterOptions.Add("Canceled");
+        StatusFilterOptions.Add("Running");
+
+        PeriodOptions.Add("Сегодня");
+        PeriodOptions.Add("7 дней");
+        PeriodOptions.Add("30 дней");
+        PeriodOptions.Add("Все");
+
+        SelectedStatus = "Все";
+        SelectedPeriod = "Все";
     }
 
+    public ObservableCollection<TestRunSummary> AllRuns { get; } = new();
     public ObservableCollection<TestRunSummary> Runs { get; } = new();
     public ObservableCollection<string> ModuleFilterOptions { get; } = new();
     public ObservableCollection<string> StatusFilterOptions { get; } = new();
+    public ObservableCollection<string> PeriodOptions { get; } = new();
+    public ObservableCollection<ArtifactLinkItem> ArtifactLinks { get; } = new();
+    public ObservableCollection<TopErrorItem> TopErrors { get; } = new();
 
-    [ObservableProperty]
-    private TestRunSummary? selectedRun;
+    [ObservableProperty] private TestRunSummary? selectedRun;
+    [ObservableProperty] private string? selectedModuleType;
+    [ObservableProperty] private string selectedStatus = "Все";
+    [ObservableProperty] private string selectedPeriod = "Все";
+    [ObservableProperty] private bool onlyWithErrors;
+    [ObservableProperty] private string? searchText;
+    [ObservableProperty] private string userMessage = string.Empty;
+    [ObservableProperty] private bool isDeleteConfirmVisible;
+    [ObservableProperty] private string detailsSummary = string.Empty;
+    [ObservableProperty] private string detailsProfile = string.Empty;
 
-    [ObservableProperty]
-    private string? selectedModuleType;
-
-    [ObservableProperty]
-    private string? selectedStatus;
-
-    [ObservableProperty]
-    private DateTime? fromDate;
-
-    [ObservableProperty]
-    private DateTime? toDate;
-
-    [ObservableProperty]
-    private string? searchText;
-
-    [ObservableProperty]
-    private string userMessage = string.Empty;
-
-    [ObservableProperty]
-    private bool isDeleteConfirmVisible;
-
-    private string? pendingDeleteRunId;
+    public bool HasSelectedRun => SelectedRun != null;
 
     public void SetModuleOptions(IEnumerable<string> moduleTypes)
     {
         ModuleFilterOptions.Clear();
+        ModuleFilterOptions.Add("Все");
         foreach (var moduleType in moduleTypes.OrderBy(m => m))
         {
             ModuleFilterOptions.Add(moduleType);
         }
+
+        SelectedModuleType ??= "Все";
+    }
+
+    partial void OnSelectedModuleTypeChanged(string? value) => ApplyFilters();
+    partial void OnSelectedStatusChanged(string value) => ApplyFilters();
+    partial void OnSelectedPeriodChanged(string value) => ApplyFilters();
+    partial void OnOnlyWithErrorsChanged(bool value) => ApplyFilters();
+    partial void OnSelectedRunChanged(TestRunSummary? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedRun));
+        _ = Task.Run(LoadDetailsAsync);
+    }
+
+    partial void OnSearchTextChanged(string? value)
+    {
+        _searchDebounceCts?.Cancel();
+        _searchDebounceCts = new CancellationTokenSource();
+        var token = _searchDebounceCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(350, token);
+                if (!token.IsCancellationRequested)
+                {
+                    ApplyFilters();
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // ignore debounce cancellation
+            }
+        }, token);
     }
 
     [RelayCommand]
     private async Task RefreshAsync()
     {
         var previousRunId = SelectedRun?.RunId;
-        var fromDate = NormalizeDate(FromDate);
-        var toDate = NormalizeDate(ToDate);
-        if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
-        {
-            (fromDate, toDate) = (toDate, fromDate);
-            FromDate = fromDate?.DateTime;
-            ToDate = toDate?.DateTime;
-        }
-
-        var query = new RunQuery
-        {
-            ModuleType = SelectedModuleType,
-            Status = SelectedStatus,
-            From = fromDate,
-            To = toDate,
-            Search = SearchText
-        };
-
         IsDeleteConfirmVisible = false;
-        Runs.Clear();
-        var items = await _runStore.QueryRunsAsync(query, CancellationToken.None);
+        _pendingDeleteRunId = null;
+
+        AllRuns.Clear();
+        var items = await _runStore.QueryRunsAsync(new RunQuery(), CancellationToken.None);
         foreach (var item in items)
         {
-            Runs.Add(item);
+            AllRuns.Add(item);
         }
 
-        if (Runs.Count > 0)
+        ApplyFilters();
+
+        if (!string.IsNullOrWhiteSpace(previousRunId))
         {
-            SelectedRun = Runs.FirstOrDefault(run => run.RunId == previousRunId) ?? Runs[0];
+            SelectedRun = Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault();
+        }
+        else
+        {
+            SelectedRun = Runs.FirstOrDefault();
         }
 
         UserMessage = string.Empty;
     }
 
     [RelayCommand]
-    private void OpenJson()
-    {
-        if (SelectedRun == null)
-        {
-            return;
-        }
-
-        var path = Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
-        OpenPath(path, "Файл JSON отчёта не найден.");
-    }
+    private void OpenJson() => OpenPath(GetJsonPath(), "Файл report.json не найден.");
 
     [RelayCommand]
-    private void OpenHtml()
-    {
-        if (SelectedRun == null)
-        {
-            return;
-        }
-
-        var path = Path.Combine(_runsRoot, SelectedRun.RunId, "report.html");
-        OpenPath(path, "HTML отчёт не найден.");
-    }
+    private void OpenHtml() => OpenPath(GetHtmlPath(), "Файл report.html не найден.");
 
     [RelayCommand]
     private void OpenRunFolder()
@@ -146,8 +156,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        var path = Path.Combine(_runsRoot, SelectedRun.RunId);
-        OpenPath(path, "Папка прогона не найдена.");
+        OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "Папка прогона не найдена.");
     }
 
     [RelayCommand]
@@ -177,8 +186,7 @@ public partial class RunsTabViewModel : ObservableObject
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
-            var path = Path.Combine(_runsRoot, SelectedRun.RunId);
-            await clipboard.SetTextAsync(path);
+            await clipboard.SetTextAsync(Path.Combine(_runsRoot, SelectedRun.RunId));
             UserMessage = "Путь прогона скопирован в буфер обмена.";
         }
     }
@@ -192,6 +200,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         await _repeatRun(SelectedRun.RunId);
+        UserMessage = $"Конфигурация загружена из прогона {SelectedRun.RunId}. Запуск не выполнялся.";
     }
 
     [RelayCommand]
@@ -202,72 +211,284 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        pendingDeleteRunId = SelectedRun.RunId;
+        _pendingDeleteRunId = SelectedRun.RunId;
         IsDeleteConfirmVisible = true;
-        UserMessage = $"Удалить прогон {SelectedRun.RunId}?";
+        UserMessage = $"Удалить прогон {SelectedRun.RunId}? Будут удалены запись из БД и папка runs/{SelectedRun.RunId}.";
     }
 
     [RelayCommand]
     private async Task ConfirmDeleteRunAsync()
     {
-        if (pendingDeleteRunId == null)
+        if (string.IsNullOrWhiteSpace(_pendingDeleteRunId))
         {
             return;
         }
 
+        var runId = _pendingDeleteRunId;
+
+        await _runStore.DeleteRunAsync(runId, CancellationToken.None);
+        var runFolder = Path.Combine(_runsRoot, runId);
         try
         {
-            await _runStore.DeleteRunAsync(pendingDeleteRunId, CancellationToken.None);
-            var runFolder = Path.Combine(_runsRoot, pendingDeleteRunId);
             if (Directory.Exists(runFolder))
             {
                 Directory.Delete(runFolder, recursive: true);
             }
 
-            IsDeleteConfirmVisible = false;
-            pendingDeleteRunId = null;
             UserMessage = "Прогон удалён.";
-            await RefreshAsync();
         }
         catch (Exception ex)
         {
-            UserMessage = $"Не удалось удалить прогон: {ex.Message}";
+            UserMessage = $"Запись БД удалена, но не удалось удалить папку: {ex.Message}";
         }
+
+        IsDeleteConfirmVisible = false;
+        _pendingDeleteRunId = null;
+        await RefreshAsync();
     }
 
     [RelayCommand]
     private void CancelDeleteRun()
     {
         IsDeleteConfirmVisible = false;
-        pendingDeleteRunId = null;
+        _pendingDeleteRunId = null;
         UserMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void OpenArtifact(ArtifactLinkItem? item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        OpenPath(item.FullPath, "Артефакт не найден.");
+    }
+
+    private void ApplyFilters()
+    {
+        var query = AllRuns.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Все", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(r => string.Equals(r.ModuleType, SelectedModuleType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(r => string.Equals(r.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var utcNow = DateTimeOffset.UtcNow;
+        query = SelectedPeriod switch
+        {
+            "Сегодня" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
+            "7 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-7)),
+            "30 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
+            _ => query
+        };
+
+        if (OnlyWithErrors)
+        {
+            query = query.Where(r => r.FailedItems > 0);
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var needle = SearchText.Trim();
+            query = query.Where(r =>
+                r.RunId.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || r.ModuleType.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || r.TestName.Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var filtered = query.OrderByDescending(r => r.StartedAt).ToList();
+        Runs.Clear();
+        foreach (var run in filtered)
+        {
+            Runs.Add(run);
+        }
+
+        if (SelectedRun != null && Runs.All(r => r.RunId != SelectedRun.RunId))
+        {
+            SelectedRun = Runs.FirstOrDefault();
+        }
+    }
+
+    private async Task LoadDetailsAsync()
+    {
+        ArtifactLinks.Clear();
+        TopErrors.Clear();
+        DetailsSummary = string.Empty;
+        DetailsProfile = string.Empty;
+
+        if (SelectedRun == null)
+        {
+            return;
+        }
+
+        var detail = await _runStore.GetRunDetailAsync(SelectedRun.RunId, CancellationToken.None);
+        if (detail == null)
+        {
+            return;
+        }
+
+        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · ModuleId: {detail.Run.ModuleType}";
+
+        try
+        {
+            using var profileDoc = JsonDocument.Parse(detail.Run.ProfileSnapshotJson);
+            var profile = profileDoc.RootElement;
+            var timeoutSeconds = 30;
+            if (profile.TryGetProperty("timeouts", out var timeouts)
+                && timeouts.TryGetProperty("operationSeconds", out var operationSeconds)
+                && operationSeconds.TryGetInt32(out var timeoutFromNested))
+            {
+                timeoutSeconds = timeoutFromNested;
+            }
+            else if (profile.TryGetProperty("timeoutSeconds", out var timeoutLegacy)
+                     && timeoutLegacy.TryGetInt32(out var timeoutFromLegacy))
+            {
+                timeoutSeconds = timeoutFromLegacy;
+            }
+
+            DetailsProfile = $"Mode={profile.GetProperty("mode").GetString()} · Parallelism={profile.GetProperty("parallelism").GetInt32()} · Timeout={timeoutSeconds} · Pause={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
+        }
+        catch
+        {
+            DetailsProfile = "Профиль запуска недоступен.";
+        }
+
+        AddArtifactLink("report.json", GetJsonPath());
+        AddArtifactLink("report.html", GetHtmlPath());
+        AddArtifactLink("папка прогона", Path.Combine(_runsRoot, SelectedRun.RunId));
+        AddArtifactLink("скриншоты", Path.Combine(_runsRoot, SelectedRun.RunId, "screenshots"));
+
+        var topErrors = detail.Items
+            .Where(i => !string.Equals(i.Status, "Success", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(i.ErrorMessage))
+            .GroupBy(i => i.ErrorMessage!)
+            .OrderByDescending(g => g.Count())
+            .Take(3)
+            .Select(g => new TopErrorItem(g.Key, g.Count()));
+
+        foreach (var error in topErrors)
+        {
+            TopErrors.Add(error);
+        }
+    }
+
+    private void AddArtifactLink(string name, string fullPath)
+    {
+        if (File.Exists(fullPath) || Directory.Exists(fullPath))
+        {
+            ArtifactLinks.Add(new ArtifactLinkItem(name, fullPath));
+        }
+    }
+
+    private string GetJsonPath()
+    {
+        return SelectedRun == null ? string.Empty : Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
+    }
+
+    private string GetHtmlPath()
+    {
+        return SelectedRun == null ? string.Empty : Path.Combine(_runsRoot, SelectedRun.RunId, "report.html");
     }
 
     private void OpenPath(string path, string notFoundMessage)
     {
-        if (!File.Exists(path) && !Directory.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || (!File.Exists(path) && !Directory.Exists(path)))
         {
             UserMessage = notFoundMessage;
             return;
         }
 
-        var psi = new ProcessStartInfo
+        Process.Start(new ProcessStartInfo
         {
             FileName = path,
             UseShellExecute = true
-        };
-        Process.Start(psi);
+        });
         UserMessage = string.Empty;
     }
 
-    private static DateTimeOffset? NormalizeDate(DateTime? value)
+    public string GetSelectedRunJsonPath() => GetJsonPath();
+
+    public static bool TryParseRepeatSnapshot(string reportJson, out RepeatRunSnapshot snapshot, out string error)
     {
-        if (!value.HasValue || value.Value == DateTime.MinValue)
+        snapshot = new RepeatRunSnapshot(string.Empty, new RunProfile(), JsonSerializer.SerializeToElement(new { }));
+        error = string.Empty;
+        try
         {
-            return null;
+            using var document = JsonDocument.Parse(reportJson);
+            var root = document.RootElement;
+            var moduleId = root.GetProperty("moduleId").GetString();
+            if (string.IsNullOrWhiteSpace(moduleId))
+            {
+                error = "В report.json отсутствует moduleId.";
+                return false;
+            }
+
+            if (!root.TryGetProperty("profile", out var profileElement))
+            {
+                error = "В report.json отсутствует profile.";
+                return false;
+            }
+
+            var profile = ParseProfile(profileElement);
+            var moduleSettings = root.TryGetProperty("moduleSettings", out var settingsElement)
+                ? settingsElement.Clone()
+                : JsonSerializer.SerializeToElement(new { });
+
+            snapshot = new RepeatRunSnapshot(moduleId, profile, moduleSettings);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    private static RunProfile ParseProfile(JsonElement profile)
+    {
+        var timeout = 30;
+        if (profile.TryGetProperty("timeouts", out var timeouts) && timeouts.TryGetProperty("operationSeconds", out var op) && op.TryGetInt32(out var nestedTimeout))
+        {
+            timeout = nestedTimeout;
+        }
+        else if (profile.TryGetProperty("timeoutSeconds", out var legacyTimeout) && legacyTimeout.TryGetInt32(out var legacyTimeoutValue))
+        {
+            timeout = legacyTimeoutValue;
         }
 
-        var date = DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc);
-        return new DateTimeOffset(date);
+        var screenshots = profile.TryGetProperty("screenshotsPolicy", out var sp)
+            && Enum.TryParse<ScreenshotsPolicy>(sp.GetString(), out var parsedScreenshots)
+                ? parsedScreenshots
+                : ScreenshotsPolicy.OnError;
+
+        var mode = profile.TryGetProperty("mode", out var modeElement)
+            && Enum.TryParse<RunMode>(modeElement.GetString(), true, out var parsedMode)
+                ? parsedMode
+                : RunMode.Iterations;
+
+        return new RunProfile
+        {
+            Mode = mode,
+            Parallelism = profile.TryGetProperty("parallelism", out var p) ? p.GetInt32() : 1,
+            Iterations = profile.TryGetProperty("iterations", out var it) ? it.GetInt32() : 1,
+            DurationSeconds = profile.TryGetProperty("durationSeconds", out var ds) ? ds.GetInt32() : 60,
+            TimeoutSeconds = timeout,
+            PauseBetweenIterationsMs = profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0,
+            Headless = profile.TryGetProperty("headless", out var h) && h.GetBoolean(),
+            ScreenshotsPolicy = screenshots,
+            HtmlReportEnabled = profile.TryGetProperty("htmlReportEnabled", out var html) && html.GetBoolean(),
+            TelegramEnabled = profile.TryGetProperty("telegramEnabled", out var tg) && tg.GetBoolean(),
+            PreflightEnabled = profile.TryGetProperty("preflightEnabled", out var pf) && pf.GetBoolean()
+        };
     }
 }
+
+public sealed record ArtifactLinkItem(string Name, string FullPath);
+public sealed record TopErrorItem(string Message, int Count);
+public sealed record RepeatRunSnapshot(string ModuleId, RunProfile Profile, JsonElement ModuleSettings);

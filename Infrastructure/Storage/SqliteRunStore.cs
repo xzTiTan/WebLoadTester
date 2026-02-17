@@ -719,7 +719,7 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         }
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            filters.Add("(TestName LIKE $search OR RunId LIKE $search)");
+            filters.Add("(TestName LIKE $search OR RunId LIKE $search OR ModuleType LIKE $search)");
             command.Parameters.AddWithValue("$search", $"%{query.Search}%");
         }
 

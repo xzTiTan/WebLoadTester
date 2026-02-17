@@ -7,31 +7,27 @@ using WebLoadTester.Modules.NetDiagnostics;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-/// <summary>
-/// ViewModel настроек сетевой диагностики.
-/// </summary>
 public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
 {
     private readonly NetDiagnosticsSettings _settings;
 
-    /// <summary>
-    /// Инициализирует ViewModel и копирует настройки.
-    /// </summary>
     public NetDiagnosticsSettingsViewModel(NetDiagnosticsSettings settings)
     {
         _settings = settings;
+        _settings.NormalizeLegacy();
         hostname = settings.Hostname;
-        autoPortsByScheme = settings.AutoPortsByScheme;
-        Ports = new ObservableCollection<PortItem>(settings.Ports.Select(port => new PortItem(port)));
-        enableDns = settings.EnableDns;
-        enableTcp = settings.EnableTcp;
-        enableTls = settings.EnableTls;
+        useAutoPorts = settings.UseAutoPorts;
+        checkDns = settings.CheckDns;
+        checkTcp = settings.CheckTcp;
+        checkTls = settings.CheckTls;
+        Ports = new ObservableCollection<PortItem>(settings.Ports.Select(p => new PortItem { Port = p.Port, Protocol = p.Protocol }));
         Ports.CollectionChanged += OnPortsChanged;
         foreach (var port in Ports)
         {
             port.PropertyChanged += OnPortItemChanged;
         }
-        if (AutoPortsByScheme)
+
+        if (UseAutoPorts)
         {
             ApplyAutoPorts();
         }
@@ -43,6 +39,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
 
     public override object Settings => _settings;
     public override string Title => "Сетевая диагностика";
+
     public override void UpdateFrom(object settings)
     {
         if (settings is not NetDiagnosticsSettings s)
@@ -50,105 +47,101 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
             return;
         }
 
+        s.NormalizeLegacy();
         Hostname = s.Hostname;
-        AutoPortsByScheme = s.AutoPortsByScheme;
-        EnableDns = s.EnableDns;
-        EnableTcp = s.EnableTcp;
-        EnableTls = s.EnableTls;
+        UseAutoPorts = s.UseAutoPorts;
+        CheckDns = s.CheckDns;
+        CheckTcp = s.CheckTcp;
+        CheckTls = s.CheckTls;
 
         Ports.Clear();
-        foreach (var port in s.Ports.Select(p => new PortItem(p)))
+        foreach (var port in s.Ports)
         {
-            port.PropertyChanged += OnPortItemChanged;
-            Ports.Add(port);
+            var item = new PortItem { Port = port.Port, Protocol = port.Protocol };
+            item.PropertyChanged += OnPortItemChanged;
+            Ports.Add(item);
         }
 
         UpdatePortsSettings();
     }
 
     public ObservableCollection<PortItem> Ports { get; }
+    public string[] ProtocolOptions { get; } = { "Tcp" };
 
-    [ObservableProperty]
-    private string hostname = string.Empty;
+    [ObservableProperty] private string hostname = string.Empty;
+    [ObservableProperty] private bool useAutoPorts;
+    [ObservableProperty] private PortItem? selectedPort;
+    [ObservableProperty] private bool checkDns;
+    [ObservableProperty] private bool checkTcp;
+    [ObservableProperty] private bool checkTls;
 
-    [ObservableProperty]
-    private bool autoPortsByScheme;
-
-    [ObservableProperty]
-    private PortItem? selectedPort;
-
-    [ObservableProperty]
-    private bool enableDns;
-
-    [ObservableProperty]
-    private bool enableTcp;
-
-    [ObservableProperty]
-    private bool enableTls;
-
-    /// <summary>
-    /// Синхронизирует имя хоста.
-    /// </summary>
     partial void OnHostnameChanged(string value)
     {
         _settings.Hostname = value;
-        if (AutoPortsByScheme)
-        {
-            ApplyAutoPorts();
-        }
     }
-    /// <summary>
-    /// Синхронизирует режим автопортов.
-    /// </summary>
-    partial void OnAutoPortsBySchemeChanged(bool value)
+
+    partial void OnUseAutoPortsChanged(bool value)
     {
-        _settings.AutoPortsByScheme = value;
+        _settings.UseAutoPorts = value;
         if (value)
         {
             ApplyAutoPorts();
         }
     }
-    /// <summary>
-    /// Синхронизирует флаг DNS-проверки.
-    /// </summary>
-    partial void OnEnableDnsChanged(bool value) => _settings.EnableDns = value;
-    /// <summary>
-    /// Синхронизирует флаг TCP-проверки.
-    /// </summary>
-    partial void OnEnableTcpChanged(bool value) => _settings.EnableTcp = value;
-    /// <summary>
-    /// Синхронизирует флаг TLS-проверки.
-    /// </summary>
-    partial void OnEnableTlsChanged(bool value) => _settings.EnableTls = value;
+
+    partial void OnCheckDnsChanged(bool value) => _settings.CheckDns = value;
+    partial void OnCheckTcpChanged(bool value) => _settings.CheckTcp = value;
+    partial void OnCheckTlsChanged(bool value) => _settings.CheckTls = value;
 
     [RelayCommand]
     private void AddPort()
     {
-        if (AutoPortsByScheme)
+        if (UseAutoPorts)
         {
             return;
         }
 
-        var port = new PortItem(80);
-        port.PropertyChanged += OnPortItemChanged;
-        Ports.Add(port);
-        SelectedPort = port;
+        var item = new PortItem { Port = 443, Protocol = "Tcp" };
+        item.PropertyChanged += OnPortItemChanged;
+        Ports.Add(item);
+        SelectedPort = item;
+        UpdatePortsSettings();
+    }
+
+    [RelayCommand]
+    private void DuplicateSelectedPort()
+    {
+        if (UseAutoPorts || SelectedPort == null)
+        {
+            return;
+        }
+
+        var item = new PortItem { Port = SelectedPort.Port, Protocol = SelectedPort.Protocol };
+        item.PropertyChanged += OnPortItemChanged;
+        Ports.Add(item);
+        SelectedPort = item;
         UpdatePortsSettings();
     }
 
     [RelayCommand]
     private void RemoveSelectedPort()
     {
-        if (AutoPortsByScheme)
+        if (UseAutoPorts || SelectedPort == null)
         {
             return;
         }
 
-        if (SelectedPort != null)
-        {
-            Ports.Remove(SelectedPort);
-            UpdatePortsSettings();
-        }
+        Ports.Remove(SelectedPort);
+        UpdatePortsSettings();
+    }
+
+    private void ApplyAutoPorts()
+    {
+        Ports.Clear();
+        var item = new PortItem { Port = 443, Protocol = "Tcp" };
+        item.PropertyChanged += OnPortItemChanged;
+        Ports.Add(item);
+        UpdatePortsSettings();
     }
 
     private void OnPortsChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -172,64 +165,24 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         UpdatePortsSettings();
     }
 
-    private void ApplyAutoPorts()
+    private void OnPortItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        var ports = GetDefaultPortsFromScheme();
-        Ports.Clear();
-        foreach (var port in ports)
+        if (e.PropertyName is nameof(PortItem.Port) or nameof(PortItem.Protocol))
         {
-            Ports.Add(new PortItem(port));
+            UpdatePortsSettings();
         }
-        UpdatePortsSettings();
-    }
-
-    private IEnumerable<int> GetDefaultPortsFromScheme()
-    {
-        if (Uri.TryCreate(Hostname, UriKind.Absolute, out var uri))
-        {
-            return uri.Scheme.Equals("https", System.StringComparison.OrdinalIgnoreCase)
-                ? new[] { 443 }
-                : new[] { 80 };
-        }
-
-        return new[] { 80, 443 };
     }
 
     private void UpdatePortsSettings()
     {
-        var normalized = Ports.Select(port => port.Value)
-            .Where(port => port is >= 1 and <= 65535)
-            .Distinct()
+        _settings.Ports = Ports
+            .Select(p => new DiagnosticPort { Port = p.Port, Protocol = string.IsNullOrWhiteSpace(p.Protocol) ? "Tcp" : p.Protocol })
             .ToList();
-        _settings.Ports = normalized;
-
-        if (!AutoPortsByScheme)
-        {
-            var snapshot = Ports.Select(port => port.Value).ToList();
-            if (!snapshot.SequenceEqual(normalized))
-            {
-                Ports.Clear();
-                foreach (var port in normalized)
-                {
-                    Ports.Add(new PortItem(port));
-                }
-            }
-        }
     }
 
     public partial class PortItem : ObservableObject
     {
-        public PortItem(int value) => this.value = value;
-
-        [ObservableProperty]
-        private int value;
-    }
-
-    private void OnPortItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(PortItem.Value))
-        {
-            UpdatePortsSettings();
-        }
+        [ObservableProperty] private int port;
+        [ObservableProperty] private string protocol = "Tcp";
     }
 }

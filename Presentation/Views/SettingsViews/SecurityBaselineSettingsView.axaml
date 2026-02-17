@@ -6,38 +6,30 @@
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Базовая безопасность" Classes="section-title" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBlock Text="Базовая безопасность" Classes="section-title" />
+                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
+                        <Button Content="Выбрать рекомендуемые" Command="{Binding SelectRecommendedCommand}" />
+                    </WrapPanel>
+                </Grid>
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="HSTS" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="X-Content-Type-Options" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="X-Frame-Options" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Content-Security-Policy" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Referrer-Policy" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Permissions-Policy" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="HTTP → HTTPS" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Проверять редирект" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
+                    <TextBlock Text="Проверки" Classes="field-label" />
+                    <WrapPanel Classes="field-control wrap-gap">
+                        <CheckBox Content="HSTS" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
+                        <CheckBox Content="X-Content-Type-Options" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
+                        <CheckBox Content="Frame protection" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
+                        <CheckBox Content="CSP" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
+                        <CheckBox Content="Referrer-Policy" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
+                        <CheckBox Content="Permissions-Policy" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
+                        <CheckBox Content="HTTP → HTTPS redirect" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
+                        <CheckBox Content="Cookie flags" IsChecked="{Binding CheckCookieFlags, Mode=TwoWay}" />
+                    </WrapPanel>
                 </Grid>
             </StackPanel>
         </Border>

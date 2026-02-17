@@ -52,10 +52,15 @@ public class ReportingTests
             }
         };
 
-        report.Results.Add(new CheckResult("Ping")
+        report.Results.Add(new EndpointResult("Ping")
         {
             Success = true,
-            DurationMs = 12
+            DurationMs = 12,
+            WorkerId = 1,
+            IterationIndex = 2,
+            ItemIndex = 0,
+            StatusCode = 200,
+            LatencyMs = 12
         });
         report.Metrics = MetricsCalculator.Calculate(report.Results);
 
@@ -77,6 +82,13 @@ public class ReportingTests
         Assert.True(root.TryGetProperty("moduleSettings", out var moduleSettings));
         Assert.Equal(JsonValueKind.Object, moduleSettings.ValueKind);
         Assert.Equal("https://example.com", moduleSettings.GetProperty("baseUrl").GetString());
+
+        var item = root.GetProperty("items")[0];
+        Assert.Equal("Endpoint", item.GetProperty("kind").GetString());
+        Assert.Equal(1, item.GetProperty("workerId").GetInt32());
+        Assert.Equal(2, item.GetProperty("iteration").GetInt32());
+        Assert.Equal(0, item.GetProperty("itemIndex").GetInt32());
+        Assert.Equal("Ping", item.GetProperty("name").GetString());
     }
 
     [Fact]

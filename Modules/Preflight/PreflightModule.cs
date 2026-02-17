@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
@@ -15,13 +16,13 @@ using WebLoadTester.Infrastructure.Playwright;
 namespace WebLoadTester.Modules.Preflight;
 
 /// <summary>
-/// Модуль предварительных системных и сетевых проверок.
+/// Модуль предварительных проверок окружения и цели.
 /// </summary>
 public class PreflightModule : ITestModule
 {
     public string Id => "net.preflight";
-    public string DisplayName => "Предварительные проверки";
-    public string Description => "Быстро проверяет готовность окружения и цели перед запуском.";
+    public string DisplayName => "Preflight";
+    public string Description => "Проверяет окружение перед основным запуском.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(PreflightSettings);
 
@@ -30,9 +31,21 @@ public class PreflightModule : ITestModule
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
-        if (settings is not PreflightSettings)
+        if (settings is not PreflightSettings s)
         {
-            errors.Add("Некорректный тип настроек.");
+            errors.Add("Некорректный тип настроек net.preflight.");
+            return errors;
+        }
+
+        if (!s.CheckDns && !s.CheckTcp && !s.CheckTls && !s.CheckHttp)
+        {
+            errors.Add("Включите хотя бы одну проверку preflight (DNS/TCP/TLS/HTTP).");
+        }
+
+        var target = NormalizeTarget(s.Target);
+        if (!string.IsNullOrWhiteSpace(target) && !Uri.TryCreate(target, UriKind.Absolute, out _))
+        {
+            errors.Add("Target должен быть корректным URL или hostname.");
         }
 
         return errors;
@@ -42,61 +55,30 @@ public class PreflightModule : ITestModule
     {
         var s = (PreflightSettings)settings;
         var target = NormalizeTarget(s.Target);
-
-        var checks = 3 + (s.CheckDns ? 1 : 0) + (s.CheckTcp ? 1 : 0) + (s.CheckTls ? 1 : 0) + (s.CheckHttp ? 1 : 0);
-        var current = 0;
         var results = new List<ResultBase>();
+
+        var checksCount = 3 + (string.IsNullOrWhiteSpace(target) ? 0 : (s.CheckDns ? 1 : 0) + (s.CheckTcp ? 1 : 0) + (s.CheckTls ? 1 : 0) + (s.CheckHttp ? 1 : 0));
+        var completed = 0;
 
         void ReportProgress(string stage)
         {
-            current++;
-            ctx.Progress.Report(new ProgressUpdate(current, checks, stage));
+            completed++;
+            ctx.Progress.Report(new ProgressUpdate(completed, Math.Max(checksCount, 1), stage));
         }
 
-        ctx.Progress.Report(new ProgressUpdate(0, checks, "Preflight старт"));
+        var (runsWritable, runsDuration, runsMessage) = CheckWritableDirectory(ctx.Artifacts.RunsRoot);
+        results.Add(ToResult("Preflight runs directory", runsWritable, runsDuration, runsMessage, "Environment", JsonSerializer.SerializeToElement(new { path = ctx.Artifacts.RunsRoot }), ctx.WorkerId, ctx.Iteration));
+        ReportProgress("Preflight runs directory");
 
-        // 1) Доступность каталогов данных/runs.
-        var fsCheck = CheckWritableDirectory(ctx.Artifacts.RunsRoot);
-        results.Add(new PreflightResult("Filesystem")
-        {
-            Success = fsCheck.success,
-            DurationMs = fsCheck.durationMs,
-            Details = fsCheck.message,
-            ErrorType = fsCheck.success ? null : "Warn",
-            ErrorMessage = fsCheck.success ? null : fsCheck.message
-        });
-        ReportProgress("Preflight FS");
-
-        // 2) SQLite connectivity (минимальная проверка открытия).
-        var sqliteCheck = await CheckSqliteAsync(ctx.Artifacts.RunsRoot, ct);
-        results.Add(new PreflightResult("SQLite")
-        {
-            Success = sqliteCheck.success,
-            DurationMs = sqliteCheck.durationMs,
-            Details = sqliteCheck.message,
-            ErrorType = sqliteCheck.success ? null : "Warn",
-            ErrorMessage = sqliteCheck.success ? null : sqliteCheck.message
-        });
+        var (sqliteOk, sqliteDuration, sqliteMessage) = await CheckSqliteAsync(ctx.Artifacts.RunsRoot, ct);
+        results.Add(ToResult("Preflight SQLite", sqliteOk, sqliteDuration, sqliteMessage, sqliteOk ? null : "Environment", JsonSerializer.SerializeToElement(new { database = "webloadtester.db" }), ctx.WorkerId, ctx.Iteration));
         ReportProgress("Preflight SQLite");
 
-        // 3) Доступность Chromium (warning, не фатально).
         var chromiumAvailable = PlaywrightFactory.HasBrowsersInstalled();
         var chromiumMessage = chromiumAvailable
-            ? "Chromium найден."
+            ? "Chromium установлен."
             : $"Chromium не найден. Установите браузер в {PlaywrightFactory.GetBrowsersPath()}";
-        results.Add(new PreflightResult("Chromium")
-        {
-            Success = true,
-            DurationMs = 0,
-            Details = chromiumMessage,
-            ErrorType = chromiumAvailable ? null : "Warn",
-            ErrorMessage = chromiumAvailable ? null : chromiumMessage
-        });
-        if (!chromiumAvailable)
-        {
-            ctx.Log.Warn($"[Preflight] {chromiumMessage}");
-        }
-
+        results.Add(ToResult("Preflight Chromium", true, 0, chromiumMessage, chromiumAvailable ? null : "Warn", JsonSerializer.SerializeToElement(new { browsersPath = PlaywrightFactory.GetBrowsersPath(), installed = chromiumAvailable }), ctx.WorkerId, ctx.Iteration));
         ReportProgress("Preflight Chromium");
 
         if (!string.IsNullOrWhiteSpace(target))
@@ -105,7 +87,7 @@ public class PreflightModule : ITestModule
             if (s.CheckDns)
             {
                 var (success, duration, details) = await NetworkProbes.DnsProbeAsync(targetUri.Host, ct);
-                results.Add(ToResult("DNS", success, duration, details));
+                results.Add(ToResult("Preflight DNS", success, duration, success ? "DNS-проверка успешна." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, details }), ctx.WorkerId, ctx.Iteration));
                 ReportProgress("Preflight DNS");
             }
 
@@ -113,15 +95,15 @@ public class PreflightModule : ITestModule
             {
                 var port = targetUri.Port == -1 ? (targetUri.Scheme == "https" ? 443 : 80) : targetUri.Port;
                 var (success, duration, details) = await NetworkProbes.TcpProbeAsync(targetUri.Host, port, ct);
-                results.Add(ToResult("TCP", success, duration, details));
+                results.Add(ToResult($"Preflight TCP :{port}", success, duration, success ? "TCP-подключение успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
                 ReportProgress("Preflight TCP");
             }
 
             if (s.CheckTls && targetUri.Scheme == "https")
             {
-                var (success, duration, details, days) = await NetworkProbes.TlsProbeAsync(targetUri.Host, 443, ct);
-                var tlsDetails = days.HasValue ? $"{details}; дней до истечения: {days}" : details;
-                results.Add(ToResult("TLS", success, duration, tlsDetails));
+                var port = targetUri.Port == -1 ? 443 : targetUri.Port;
+                var (success, duration, details, _) = await NetworkProbes.TlsProbeAsync(targetUri.Host, port, ct);
+                results.Add(ToResult($"Preflight TLS :{port}", success, duration, success ? "TLS-рукопожатие успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, details, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
                 ReportProgress("Preflight TLS");
             }
 
@@ -133,12 +115,15 @@ public class PreflightModule : ITestModule
                     using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(5));
                     var response = await client.GetAsync(target, ct);
                     sw.Stop();
-                    results.Add(ToResult("HTTP", response.IsSuccessStatusCode, sw.Elapsed.TotalMilliseconds, response.StatusCode.ToString()));
+                    results.Add(ToResult("Preflight HTTP", response.IsSuccessStatusCode, sw.Elapsed.TotalMilliseconds,
+                        response.IsSuccessStatusCode ? "HTTP-проверка успешна." : $"HTTP {(int)response.StatusCode}",
+                        response.IsSuccessStatusCode ? null : "Http",
+                        JsonSerializer.SerializeToElement(new { endpoint = target, statusCode = (int)response.StatusCode, latencyMs = sw.Elapsed.TotalMilliseconds }), ctx.WorkerId, ctx.Iteration));
                 }
                 catch (Exception ex)
                 {
                     sw.Stop();
-                    results.Add(ToResult("HTTP", false, sw.Elapsed.TotalMilliseconds, ex.Message));
+                    results.Add(ToResult("Preflight HTTP", false, sw.Elapsed.TotalMilliseconds, ex.Message, "Network", JsonSerializer.SerializeToElement(new { endpoint = target, latencyMs = sw.Elapsed.TotalMilliseconds }), ctx.WorkerId, ctx.Iteration));
                 }
 
                 ReportProgress("Preflight HTTP");
@@ -148,19 +133,22 @@ public class PreflightModule : ITestModule
         return new ModuleResult
         {
             Results = results,
-            Status = TestStatus.Success
+            Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success
         };
     }
 
-    private static PreflightResult ToResult(string name, bool success, double durationMs, string details)
+    private static PreflightResult ToResult(string name, bool success, double durationMs, string details, string? errorKind, JsonElement metrics, int workerId, int iteration)
     {
         return new PreflightResult(name)
         {
             Success = success,
             DurationMs = durationMs,
             Details = details,
-            ErrorType = success ? null : "Warn",
-            ErrorMessage = success ? null : details
+            ErrorType = success ? null : errorKind,
+            ErrorMessage = details,
+            WorkerId = workerId,
+            IterationIndex = iteration,
+            Metrics = metrics
         };
     }
 

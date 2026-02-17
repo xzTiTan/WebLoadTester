@@ -76,11 +76,10 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Токен отмены текущего запуска.
     /// </summary>
     private CancellationTokenSource? _runCts;
+    private TestRunNotificationContext? _activeTelegramContext;
+    private bool _activeTelegramEnabled;
     private int _stopRequested;
-    /// <summary>
-    /// Политика Telegram-уведомлений для текущего запуска.
-    /// </summary>
-    private TelegramPolicy? _telegramPolicy;
+    private readonly ITelegramRunNotifier _telegramRunNotifier;
     /// <summary>
     /// Источник завершения текущего прогона.
     /// </summary>
@@ -129,7 +128,10 @@ public partial class MainWindowViewModel : ViewModelBase
         SubscribeValidationEvents(NetFamily);
         RunProfile.PropertyChanged += OnRunProfilePropertyChanged;
         UpdateRunProfileModuleFamily();
-        TelegramSettings = new TelegramSettingsViewModel(new TelegramSettings());
+        _telegramRunNotifier = new TelegramRunNotifier(_settingsService.Settings.Telegram, new TelegramClient());
+        _telegramRunNotifier.StatusChanged += (_, _) => Dispatcher.UIThread.Post(UpdateTelegramStatus);
+        TelegramSettings = new TelegramSettingsViewModel(_settingsService.Settings.Telegram, logInfo: _logBus.Info, logWarn: _logBus.Warn,
+            onTestMessageResult: (success, error) => _telegramRunNotifier.ReportExternalResult(success, error));
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
         RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunAsync);
         RunsTab.SetModuleOptions(Registry.Modules.Select(m => m.Id));
@@ -174,13 +176,16 @@ public partial class MainWindowViewModel : ViewModelBase
     private string databaseStatus = "БД: проверка...";
 
     [ObservableProperty]
-    private string telegramStatus = "Telegram: не настроен";
+    private string telegramStatus = "Telegram: Выкл";
 
     [ObservableProperty]
     private bool isDatabaseOk;
 
     [ObservableProperty]
     private bool isTelegramConfigured;
+
+    [ObservableProperty]
+    private string telegramStatusTooltip = "Telegram выключен.";
 
     [ObservableProperty]
     private string runStage = "Ожидание";
@@ -203,6 +208,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string startValidationMessage = string.Empty;
 
+    [ObservableProperty]
+    private string loadedFromRunInfo = string.Empty;
+
     private double _progressPercent;
     public double ProgressPercent
     {
@@ -218,7 +226,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public string DatabaseStatusBadgeClass => IsDatabaseOk ? "badge ok" : "badge err";
-    public string TelegramStatusBadgeClass => IsTelegramConfigured ? "badge ok" : "badge warn";
+    public string TelegramStatusBadgeClass => TelegramStatus.Contains("Ошибка", StringComparison.OrdinalIgnoreCase) ? "badge err" : TelegramStatus.Contains("Ок", StringComparison.OrdinalIgnoreCase) ? "badge ok" : "badge";
     public bool ShowRunHint => !IsRunning;
     public bool ShowPlaywrightInstallBanner => IsSelectedUiModule() && !PlaywrightFactory.HasBrowsersInstalled();
     public bool CanInstallPlaywright => !IsInstallingPlaywright;
@@ -291,8 +299,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Interlocked.Exchange(ref _stopRequested, 0);
         var runId = Guid.NewGuid().ToString("N");
         var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
-        var notifier = profile.TelegramEnabled ? CreateTelegramNotifier() : null;
-        _telegramPolicy = new TelegramPolicy(notifier, TelegramSettings.Settings);
+        var notifier = CreateTelegramNotifier();
         var logSink = new CompositeLogSink(new ILogSink[]
         {
             _logBus,
@@ -301,10 +308,17 @@ public partial class MainWindowViewModel : ViewModelBase
         var ctx = new RunContext(logSink, _progressBus, _artifactStore, _limits, notifier,
             runId, profile, testCase.Name, testCase.Id, testCase.CurrentVersion, isStopRequested: () => Volatile.Read(ref _stopRequested) == 1);
 
-        if (_telegramPolicy.IsEnabled)
-        {
-            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyStartAsync(moduleItem.DisplayName, runId, _runCts.Token));
-        }
+        var notificationContext = new TestRunNotificationContext(
+            runId,
+            testCase.Name,
+            moduleItem.Module.Id,
+            profile,
+            $"runs/{runId}",
+            TimeProvider.System.GetUtcNow());
+        _activeTelegramContext = notificationContext;
+        _activeTelegramEnabled = profile.TelegramEnabled;
+
+        await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyStartAsync(notificationContext, profile.TelegramEnabled, _runCts.Token));
 
         var finalProgressText = ProgressText;
         var finalStatusText = "Статус: ожидание";
@@ -323,23 +337,20 @@ public partial class MainWindowViewModel : ViewModelBase
                 TestStatus.Stopped => "Статус: остановлено",
                 _ => "Статус: завершено с ошибками"
             };
-            if (_telegramPolicy.IsEnabled)
-            {
-                await SendTelegramAsync(runId, () => _telegramPolicy.NotifyFinishAsync(report, _runCts.Token));
-            }
+            await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyCompletionAsync(report, profile.TelegramEnabled, _runCts.Token));
         }
         catch (OperationCanceledException)
         {
             finalProgressText = "Прогресс: отменено";
             finalStatusText = "Статус: отменено";
-            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync("Операция отменена", CancellationToken.None));
+            await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyRunErrorAsync(notificationContext, "Операция отменена", profile.TelegramEnabled, CancellationToken.None));
         }
         catch (Exception ex)
         {
             finalProgressText = $"Прогресс: ошибка ({ex.Message})";
             finalStatusText = "Ошибка запуска: " + ex.Message;
             _logBus.Error($"Start failed: {ex}");
-            await SendTelegramAsync(runId, () => _telegramPolicy.NotifyErrorAsync(ex.Message, _runCts.Token));
+            await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyRunErrorAsync(notificationContext, ex.Message, profile.TelegramEnabled, _runCts.Token));
         }
         finally
         {
@@ -354,7 +365,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _runCts = null;
             Interlocked.Exchange(ref _stopRequested, 0);
             RunsTab.RefreshCommand.Execute(null);
-            _telegramPolicy = null;
+            _activeTelegramContext = null;
+            _activeTelegramEnabled = false;
             _runFinishedTcs?.TrySetResult(true);
         }
     }
@@ -570,9 +582,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 RunStage = update.Message;
             }
         });
-        if (_runCts != null && _telegramPolicy != null)
+        if (_runCts != null && _activeTelegramContext != null)
         {
-            _ = _telegramPolicy.NotifyProgressAsync(update, _runCts.Token);
+            _ = SendTelegramResultAsync(_activeTelegramContext.RunId,
+                () => _telegramRunNotifier.NotifyProgressAsync(_activeTelegramContext, update, _activeTelegramEnabled, _runCts.Token));
         }
     }
 
@@ -601,6 +614,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         return new TelegramNotifier(TelegramSettings.Settings.BotToken, TelegramSettings.Settings.ChatId);
+    }
+
+
+    [RelayCommand]
+    private void OpenTelegramSettings()
+    {
+        OpenSettings();
     }
 
     [RelayCommand]
@@ -709,11 +729,21 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateTelegramStatus()
     {
-        var isConfigured = TelegramSettings.Settings.Enabled &&
-                           !string.IsNullOrWhiteSpace(TelegramSettings.Settings.BotToken) &&
-                           !string.IsNullOrWhiteSpace(TelegramSettings.Settings.ChatId);
-        TelegramStatus = isConfigured ? "Telegram: настроен" : "Telegram: не настроен";
-        IsTelegramConfigured = isConfigured;
+        var status = _telegramRunNotifier.Status;
+        TelegramStatus = status.State switch
+        {
+            TelegramIndicatorState.Off => "Telegram: Выкл",
+            TelegramIndicatorState.Ok => "Telegram: Ок",
+            _ => "Telegram: Ошибка"
+        };
+
+        IsTelegramConfigured = status.State == TelegramIndicatorState.Ok;
+        TelegramStatusTooltip = status.State switch
+        {
+            TelegramIndicatorState.Off => "Telegram выключен.",
+            TelegramIndicatorState.Ok => $"ChatId: {TelegramSettings.Settings.ChatId}. Уведомления готовы.",
+            _ => $"ChatId: {TelegramSettings.Settings.ChatId}. {status.LastError ?? "Проверьте настройки Telegram."}"
+        };
     }
 
     private void SetDatabaseStatus(string status, bool isOk)
@@ -793,37 +823,50 @@ public partial class MainWindowViewModel : ViewModelBase
         StartCommand.NotifyCanExecuteChanged();
     }
 
-    private async Task SendTelegramAsync(string runId, Func<Task> action)
-    {
-        if (_telegramPolicy == null || !_telegramPolicy.IsEnabled)
-        {
-            return;
-        }
 
+    private async Task SendTelegramResultAsync(string runId, Func<Task<TelegramSendResult>> action)
+    {
         try
         {
-            await action();
-            await _runStore.AddTelegramNotificationAsync(new TelegramNotification
+            var result = await action();
+            if (result.Success)
             {
-                Id = Guid.NewGuid(),
-                RunId = runId,
-                SentAt = DateTimeOffset.Now,
-                Status = "Sent"
-            }, CancellationToken.None);
+                if (!string.Equals(result.Error, "Skipped", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(runId))
+                {
+                    await _runStore.AddTelegramNotificationAsync(new TelegramNotification
+                    {
+                        Id = Guid.NewGuid(),
+                        RunId = runId,
+                        SentAt = DateTimeOffset.Now,
+                        Status = "Sent"
+                    }, CancellationToken.None);
+                }
+            }
+            else
+            {
+                _logBus.Warn($"Telegram failed: {result.Error}");
+                if (!string.IsNullOrWhiteSpace(runId))
+                {
+                    await _runStore.AddTelegramNotificationAsync(new TelegramNotification
+                    {
+                        Id = Guid.NewGuid(),
+                        RunId = runId,
+                        SentAt = DateTimeOffset.Now,
+                        Status = "Failed",
+                        ErrorMessage = result.Error
+                    }, CancellationToken.None);
+                }
+            }
+
+            UpdateTelegramStatus();
         }
         catch (Exception ex)
         {
             _logBus.Warn($"Telegram failed: {ex.Message}");
-            await _runStore.AddTelegramNotificationAsync(new TelegramNotification
-            {
-                Id = Guid.NewGuid(),
-                RunId = runId,
-                SentAt = DateTimeOffset.Now,
-                Status = "Failed",
-                ErrorMessage = ex.Message
-            }, CancellationToken.None);
+            UpdateTelegramStatus();
         }
     }
+
 
     private ModuleItemViewModel? FindModuleItem(string moduleId)
     {
@@ -833,48 +876,88 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task RepeatRunAsync(string runId)
     {
+        var reportPath = Path.Combine(_artifactStore.RunsRoot, runId, "report.json");
+        if (File.Exists(reportPath))
+        {
+            var reportJson = await File.ReadAllTextAsync(reportPath);
+            if (RunsTabViewModel.TryParseRepeatSnapshot(reportJson, out var snapshot, out var parseError))
+            {
+                var moduleItemFromReport = FindModuleItem(snapshot.ModuleId);
+                if (moduleItemFromReport != null)
+                {
+                    var moduleSettings = System.Text.Json.JsonSerializer.Deserialize(snapshot.ModuleSettings.GetRawText(), moduleItemFromReport.Module.SettingsType);
+                    if (moduleSettings != null)
+                    {
+                        moduleItemFromReport.SettingsViewModel.UpdateFrom(moduleSettings);
+                    }
+
+                    RunProfile.UpdateFrom(new RunParametersDto
+                    {
+                        Mode = snapshot.Profile.Mode,
+                        Iterations = snapshot.Profile.Iterations,
+                        DurationSeconds = snapshot.Profile.DurationSeconds,
+                        Parallelism = snapshot.Profile.Parallelism,
+                        TimeoutSeconds = snapshot.Profile.TimeoutSeconds,
+                        PauseBetweenIterationsMs = snapshot.Profile.PauseBetweenIterationsMs,
+                        HtmlReportEnabled = snapshot.Profile.HtmlReportEnabled,
+                        TelegramEnabled = snapshot.Profile.TelegramEnabled,
+                        PreflightEnabled = snapshot.Profile.PreflightEnabled,
+                        Headless = snapshot.Profile.Headless,
+                        ScreenshotsPolicy = snapshot.Profile.ScreenshotsPolicy
+                    });
+
+                    SelectedTabIndex = moduleItemFromReport.Module.Family switch
+                    {
+                        TestFamily.UiTesting => 0,
+                        TestFamily.HttpTesting => 1,
+                        TestFamily.NetSec => 2,
+                        _ => 0
+                    };
+
+                    LoadedFromRunInfo = $"Загружено из прогона {runId}";
+                    _logBus.Info($"[Runs] Конфигурация загружена из report.json прогона {runId}. Автозапуск не выполнялся.");
+                    return;
+                }
+
+                _logBus.Warn($"[Runs] Модуль {snapshot.ModuleId} из report.json не найден в registry.");
+            }
+            else
+            {
+                _logBus.Warn($"[Runs] Не удалось разобрать report.json прогона {runId}: {parseError}");
+            }
+        }
+
         var detail = await _runStore.GetRunDetailAsync(runId, CancellationToken.None);
         if (detail == null)
         {
+            _logBus.Warn($"[Runs] Не найден прогон {runId}.");
             return;
         }
 
         var moduleItem = FindModuleItem(detail.Run.ModuleType);
         if (moduleItem == null)
         {
+            _logBus.Warn($"[Runs] Не найден модуль {detail.Run.ModuleType} для повтора прогона {runId}.");
             return;
-        }
-
-        var version = await _runStore.GetTestCaseVersionAsync(detail.Run.TestCaseId, detail.Run.TestCaseVersion, CancellationToken.None);
-        if (version != null)
-        {
-            var payload = System.Text.Json.JsonSerializer.Deserialize<ModuleConfigPayload>(version.PayloadJson);
-            if (payload != null && payload.ModuleSettings.ValueKind != System.Text.Json.JsonValueKind.Undefined)
-            {
-                var moduleSettings = System.Text.Json.JsonSerializer.Deserialize(payload.ModuleSettings.GetRawText(), moduleItem.Module.SettingsType);
-                if (moduleSettings != null)
-                {
-                    moduleItem.SettingsViewModel.UpdateFrom(moduleSettings);
-                }
-
-                RunProfile.UpdateFrom(payload.RunParameters);
-                moduleItem.ModuleConfig.SelectedConfig = moduleItem.ModuleConfig.Configs
-                    .FirstOrDefault(item => string.Equals(item.FinalName, payload.Meta.FinalName, StringComparison.OrdinalIgnoreCase));
-            }
-            else
-            {
-                var settings = System.Text.Json.JsonSerializer.Deserialize(version.PayloadJson, moduleItem.Module.SettingsType);
-                if (settings != null)
-                {
-                    moduleItem.SettingsViewModel.UpdateFrom(settings);
-                }
-            }
         }
 
         var profile = System.Text.Json.JsonSerializer.Deserialize<RunProfile>(detail.Run.ProfileSnapshotJson);
         if (profile != null)
         {
-            RunProfile.SelectedProfile = profile;
+            RunProfile.UpdateFrom(new RunParametersDto
+            {
+                Mode = profile.Mode,
+                Iterations = profile.Iterations,
+                DurationSeconds = profile.DurationSeconds,
+                Parallelism = profile.Parallelism,
+                TimeoutSeconds = profile.TimeoutSeconds,
+                PauseBetweenIterationsMs = profile.PauseBetweenIterationsMs,
+                HtmlReportEnabled = profile.HtmlReportEnabled,
+                TelegramEnabled = profile.TelegramEnabled,
+                PreflightEnabled = profile.PreflightEnabled,
+                Headless = profile.Headless,
+                ScreenshotsPolicy = profile.ScreenshotsPolicy
+            });
         }
 
         SelectedTabIndex = moduleItem.Module.Family switch
@@ -884,6 +967,9 @@ public partial class MainWindowViewModel : ViewModelBase
             TestFamily.NetSec => 2,
             _ => 0
         };
+
+        LoadedFromRunInfo = $"Загружено из прогона {runId}";
+        _logBus.Info($"[Runs] Конфигурация загружена из snapshot БД прогона {runId}. Автозапуск не выполнялся.");
     }
 
     private static PreflightSettings? CreatePreflightSettings(object settings)

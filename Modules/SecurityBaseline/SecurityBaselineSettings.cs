@@ -13,4 +13,5 @@ public class SecurityBaselineSettings
     public bool CheckReferrerPolicy { get; set; } = true;
     public bool CheckPermissionsPolicy { get; set; } = true;
     public bool CheckRedirectHttpToHttps { get; set; } = true;
+    public bool CheckCookieFlags { get; set; } = true;
 }

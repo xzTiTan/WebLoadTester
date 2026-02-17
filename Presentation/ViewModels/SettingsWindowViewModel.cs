@@ -52,6 +52,7 @@ public partial class SettingsWindowViewModel : ObservableObject
     {
         _settingsService.Settings.DataDirectory = DataDirectory;
         _settingsService.Settings.RunsDirectory = RunsDirectory;
+        _settingsService.Settings.Telegram = TelegramSettings.Settings;
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(RunsDirectory);
         await _settingsService.SaveAsync();

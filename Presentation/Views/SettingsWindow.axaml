@@ -64,7 +64,7 @@
                         <StackPanel Spacing="10">
                             <TextBlock Text="Telegram" Classes="section-title" />
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Token" Classes="field-label" />
+                                <TextBlock Text="BotToken" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Введите Bot Token" Text="{Binding TelegramSettings.BotToken, Mode=TwoWay}" PasswordChar="*" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -72,7 +72,7 @@
                                 <TextBox Classes="field-control" Watermark="Введите ChatId" Text="{Binding TelegramSettings.ChatId, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Уведомления" Classes="field-label" />
+                                <TextBlock Text="Включить Telegram" Classes="field-label" />
                                 <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramSettings.Enabled, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -94,12 +94,21 @@
                                           SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Прогресс каждые N" Classes="field-label" />
+                                <TextBlock Text="ProgressEveryN" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Например: 10" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Ограничение частоты (сек)" Classes="field-label" />
+                                <TextBlock Text="RateLimitSeconds" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Например: 5" Text="{Binding TelegramSettings.RateLimitSeconds, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Тест" Classes="field-label" />
+                                <WrapPanel Grid.Column="1" Classes="wrap-gap">
+                                    <Button Content="Тестовое сообщение"
+                                            Command="{Binding TelegramSettings.SendTestMessageCommand}"
+                                            IsEnabled="{Binding TelegramSettings.CanSendTestMessage}" />
+                                    <TextBlock Text="{Binding TelegramSettings.TestMessageStatus}" Classes="status-line" VerticalAlignment="Center" />
+                                </WrapPanel>
                             </Grid>
                         </StackPanel>
                     </Border>

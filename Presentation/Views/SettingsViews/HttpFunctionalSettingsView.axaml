@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              xmlns:modules="clr-namespace:WebLoadTester.Modules.HttpFunctional"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpFunctionalSettingsView"
              x:DataType="vm:HttpFunctionalSettingsViewModel"
              x:Name="Root">
@@ -11,49 +10,77 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Базовый URL" Classes="field-label" />
+                    <TextBlock Text="Base URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Эндпоинты" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddEndpointCommand}" />
-                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
-                    </WrapPanel>
+                <TextBlock Text="Endpoints (List + Details)" Classes="section-title" />
+                <Grid ColumnDefinitions="300,*" ColumnSpacing="12">
+                    <StackPanel Spacing="8">
+                        <WrapPanel Classes="wrap-gap">
+                            <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
+                            <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
+                            <Button Content="Дублировать" Command="{Binding DuplicateSelectedEndpointCommand}" />
+                        </WrapPanel>
+
+                        <ListBox ItemsSource="{Binding Endpoints}"
+                                 SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
+                                 MinHeight="220">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="modules:HttpFunctionalEndpoint">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Classes="section">
+                        <StackPanel Spacing="8" IsVisible="{Binding SelectedEndpoint, Converter={StaticResource NullToBoolConverter}}">
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Name" Classes="field-label" />
+                                <TextBox Classes="field-control" Text="{Binding SelectedEndpoint.Name, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Method" Classes="field-label" />
+                                <ComboBox Classes="field-control"
+                                          ItemsSource="{x:Static modules:HttpFunctionalEndpoint.MethodOptions}"
+                                          SelectedItem="{Binding SelectedEndpoint.Method, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="Path" Classes="field-label" />
+                                <TextBox Classes="field-control" Text="{Binding SelectedEndpoint.Path, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="ExpectedStatusCode" Classes="field-label" />
+                                <NumericUpDown Classes="field-control" Minimum="100" Maximum="599" Value="{Binding SelectedEndpoint.ExpectedStatusCode, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="RequiredHeaders" Classes="field-label" ToolTip.Tip="Формат: Header или Header:Value. Несколько правил через ;" />
+                                <TextBox Classes="field-control"
+                                         Watermark="Content-Type:application/json;X-Trace-Id"
+                                         Text="{Binding SelectedEndpoint.RequiredHeadersText, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="BodyContains" Classes="field-label" />
+                                <TextBox Classes="field-control" Text="{Binding SelectedEndpoint.BodyContains, Mode=TwoWay}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                                <TextBlock Text="JsonFieldEquals" Classes="field-label" ToolTip.Tip="Формат: path=value; поддерживаются items[0].id и items.0.id" />
+                                <TextBox Classes="field-control"
+                                         Watermark="data.items[0].id=42;data.items.0.type=main"
+                                         Text="{Binding SelectedEndpoint.JsonFieldEqualsText, Mode=TwoWay}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </Grid>
-                <dg:DataGrid ItemsSource="{Binding Endpoints}"
-                             SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*" />
-                        <dg:DataGridTemplateColumn Header="Метод" Width="120">
-                            <dg:DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="modules:HttpEndpoint">
-                                    <TextBlock Text="{Binding Method}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellTemplate>
-                            <dg:DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate x:DataType="modules:HttpEndpoint">
-                                    <ComboBox ItemsSource="{x:Static modules:HttpEndpoint.MethodOptions}"
-                                              SelectedItem="{Binding Method, Mode=TwoWay}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellEditingTemplate>
-                        </dg:DataGridTemplateColumn>
-                        <dg:DataGridTextColumn Header="Путь" Binding="{Binding Path}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Код ответа" Binding="{Binding StatusCodeEquals}" Width="140" />
-                        <dg:DataGridTextColumn Header="Содержит" Binding="{Binding BodyContains}" Width="2*" />
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
             </StackPanel>
         </Border>
     </StackPanel>

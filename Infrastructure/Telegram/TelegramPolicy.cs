@@ -62,7 +62,7 @@ public class TelegramPolicy
             return Task.CompletedTask;
         }
 
-        if (_settings.ProgressMode == ProgressNotifyMode.EveryNRuns && update.Current % _settings.ProgressEveryN != 0)
+        if (_settings.ProgressMode is ProgressNotifyMode.EveryN or ProgressNotifyMode.EveryNRuns && update.Current % _settings.ProgressEveryN != 0)
         {
             return Task.CompletedTask;
         }
@@ -140,6 +140,7 @@ public class TelegramSettings
 public enum ProgressNotifyMode
 {
     Off,
-    EveryNRuns,
+    EveryN,
+    EveryNRuns = EveryN,
     EveryTSeconds
 }

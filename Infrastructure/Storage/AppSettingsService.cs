@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using WebLoadTester.Infrastructure.Telegram;
 
 namespace WebLoadTester.Infrastructure.Storage;
 
@@ -38,6 +39,7 @@ public class AppSettingsService
             var loaded = JsonSerializer.Deserialize<AppSettings>(json);
             if (loaded != null)
             {
+                loaded.Telegram ??= new TelegramSettings();
                 return loaded;
             }
         }
@@ -61,6 +63,7 @@ public class AppSettings
     public string DataDirectory { get; set; } = string.Empty;
     public string RunsDirectory { get; set; } = string.Empty;
     public string BrowsersDirectory { get; set; } = string.Empty;
+    public TelegramSettings Telegram { get; set; } = new();
     public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
 
     public static AppSettings CreateDefault()
@@ -71,7 +74,8 @@ public class AppSettings
         {
             DataDirectory = dataDirectory,
             RunsDirectory = Path.Combine(root, "runs"),
-            BrowsersDirectory = Path.Combine(dataDirectory, "browsers")
+            BrowsersDirectory = Path.Combine(dataDirectory, "browsers"),
+            Telegram = new TelegramSettings()
         };
     }
 }

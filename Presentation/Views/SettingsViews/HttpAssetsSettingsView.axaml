@@ -19,9 +19,10 @@
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Ассеты" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddAssetCommand}" />
-                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
+                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
+                        <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
+                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedAssetCommand}" />
                     </WrapPanel>
                 </Grid>
                 <dg:DataGrid ItemsSource="{Binding Assets}"
@@ -30,8 +31,9 @@
                              Classes="list-min-180">
                     <dg:DataGrid.Columns>
                         <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Тип контента" Binding="{Binding ExpectedContentType}" Width="*" />
-                        <dg:DataGridTextColumn Header="Макс. размер, байт" Binding="{Binding MaxSizeBytes}" Width="*" />
+                        <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                        <dg:DataGridTextColumn Header="Ожидаемый тип" Binding="{Binding ExpectedContentType}" Width="*" />
+                        <dg:DataGridTextColumn Header="Макс. размер, КБ" Binding="{Binding MaxSizeKb}" Width="*" />
                         <dg:DataGridTextColumn Header="Макс. задержка, мс" Binding="{Binding MaxLatencyMs}" Width="*" />
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>

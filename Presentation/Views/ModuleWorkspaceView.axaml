@@ -60,6 +60,12 @@
                                x:DataType="root:MainWindowViewModel"
                                IsVisible="{Binding ShowRunHint}"
                                TextWrapping="Wrap" />
+
+                    <TextBlock Text="{Binding LoadedFromRunInfo}"
+                               DataContext="{Binding DataContext, ElementName=VmProxy}"
+                               x:DataType="root:MainWindowViewModel"
+                               Classes="status-line"
+                               TextWrapping="Wrap" />
                 </StackPanel>
 
                 <Border Classes="warning-panel"

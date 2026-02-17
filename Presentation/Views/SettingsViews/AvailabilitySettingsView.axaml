@@ -7,23 +7,30 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Доступность" Classes="section-title" />
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Цель" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding Target, Mode=TwoWay}" />
+                    <TextBlock Text="Тип проверки" Classes="field-label" />
+                    <ComboBox Classes="field-control" ItemsSource="{Binding CheckTypeOptions}" SelectedItem="{Binding CheckType, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Тип цели" Classes="field-label" />
-                    <ComboBox Classes="field-control"
-                              ItemsSource="{Binding TargetTypeOptions}"
-                              SelectedItem="{Binding TargetType, Mode=TwoWay}" />
+
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsHttp}">
+                    <TextBlock Text="Url" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Интервал (сек, опц.)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding IntervalSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsTcp}">
+                    <TextBlock Text="Host" Classes="field-label" />
+                    <TextBox Classes="field-control" Text="{Binding Host, Mode=TwoWay}" />
                 </Grid>
+
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsTcp}">
+                    <TextBlock Text="Port" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Maximum="65535" Value="{Binding Port, Mode=TwoWay}" />
+                </Grid>
+
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Таймаут (мс)" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding TimeoutMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    <TextBlock Text="TimeoutMs" Classes="field-label" />
+                    <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>

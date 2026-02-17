@@ -14,17 +14,11 @@ public class JsonReportWriter
 {
     private readonly IArtifactStore _artifactStore;
 
-    /// <summary>
-    /// Создаёт писатель с заданным хранилищем.
-    /// </summary>
     public JsonReportWriter(IArtifactStore artifactStore)
     {
         _artifactStore = artifactStore;
     }
 
-    /// <summary>
-    /// Сохраняет отчёт в JSON и возвращает путь к файлу.
-    /// </summary>
     public Task<string> WriteAsync(TestReport report, string runId)
     {
         var payload = new
@@ -65,21 +59,14 @@ public class JsonReportWriter
                 var artifactRefs = BuildArtifactRefs(result);
                 return new
                 {
-                    key = result switch
-                    {
-                        RunResult run => run.Name,
-                        StepResult step => step.Name,
-                        CheckResult check => check.Name,
-                        PreflightResult preflight => preflight.Name,
-                        ProbeResult probe => probe.Name,
-                        TimingResult timing => timing.Url ?? timing.Name,
-                        _ => result.Kind
-                    },
                     kind = result.Kind,
                     workerId = result.WorkerId,
                     iteration = result.IterationIndex,
+                    itemIndex = result.ItemIndex,
+                    name = ResolveName(result),
                     ok = result.Success,
-                    message = result.Success ? "ok" : result.ErrorMessage,
+                    severity = result.Severity,
+                    message = result.ErrorMessage,
                     errorKind = result.ErrorType,
                     durationMs = result.DurationMs,
                     artifactRefs,
@@ -97,6 +84,21 @@ public class JsonReportWriter
         return _artifactStore.SaveJsonReportAsync(runId, json);
     }
 
+    private static string ResolveName(ResultBase result)
+    {
+        return result switch
+        {
+            RunResult run => run.Name,
+            StepResult step => step.Name,
+            CheckResult check => check.Name,
+            EndpointResult endpoint => endpoint.Name,
+            AssetResult asset => asset.Name,
+            PreflightResult preflight => preflight.Name,
+            ProbeResult probe => probe.Name,
+            TimingResult timing => timing.Url ?? timing.Name,
+            _ => result.Kind
+        };
+    }
 
     private static JsonElement BuildModuleSettings(TestReport report)
     {
@@ -126,14 +128,12 @@ public class JsonReportWriter
         {
             RunResult run => new { screenshot = run.ScreenshotPath, detailsJson = run.DetailsJson },
             StepResult step => new { action = step.Action, selector = step.Selector, screenshot = step.ScreenshotPath, detailsJson = step.DetailsJson },
-            CheckResult check => check.StatusCode.HasValue ? new { statusCode = check.StatusCode } : null,
-            PreflightResult preflight => new { statusCode = preflight.StatusCode, details = preflight.Details },
+            PreflightResult preflight => preflight.StatusCode.HasValue ? new { statusCode = preflight.StatusCode, details = preflight.Details } : new { details = preflight.Details },
             ProbeResult probe => string.IsNullOrWhiteSpace(probe.Details) ? null : new { details = probe.Details },
             TimingResult timing => new { iteration = timing.Iteration, url = timing.Url, detailsJson = timing.DetailsJson },
             _ => null
         };
     }
-
 
     private static List<string> BuildArtifactRefs(ResultBase result)
     {
@@ -158,6 +158,10 @@ public class JsonReportWriter
             RunResult run => ParseDetails(run.DetailsJson),
             StepResult step => ParseDetails(step.DetailsJson),
             TimingResult timing => ParseDetails(timing.DetailsJson),
+            CheckResult check => check.Metrics ?? JsonSerializer.SerializeToElement(new { statusCode = check.StatusCode }),
+            EndpointResult endpoint => new { statusCode = endpoint.StatusCode, latencyMs = endpoint.LatencyMs },
+            AssetResult asset => new { statusCode = asset.StatusCode, latencyMs = asset.LatencyMs, bytes = asset.Bytes, contentType = asset.ContentType },
+            PreflightResult preflight => preflight.Metrics,
             _ => null
         };
     }

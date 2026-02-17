@@ -22,117 +22,166 @@ public class HttpAssetsModule : ITestModule
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpAssetsSettings);
 
-    /// <summary>
-    /// Создаёт настройки по умолчанию с примером ассета.
-    /// </summary>
     public object CreateDefaultSettings()
     {
         return new HttpAssetsSettings
         {
             Assets = new List<AssetItem>
             {
-                new() { Url = "https://example.com" }
+                new() { Url = "https://example.com", Name = "Main page" }
             }
         };
     }
 
-    /// <summary>
-    /// Проверяет корректность списка ассетов.
-    /// </summary>
     public IReadOnlyList<string> Validate(object settings)
     {
         var errors = new List<string>();
         if (settings is not HttpAssetsSettings s)
         {
-            errors.Add("Invalid settings type");
+            errors.Add("Неверный тип настроек HTTP assets.");
             return errors;
+        }
+
+        if (s.TimeoutSeconds <= 0)
+        {
+            errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
         if (s.Assets.Count == 0)
         {
-            errors.Add("At least one asset required");
+            errors.Add("Список Assets должен содержать хотя бы один элемент.");
+            return errors;
         }
 
-        foreach (var asset in s.Assets)
+        for (var i = 0; i < s.Assets.Count; i++)
         {
+            var asset = s.Assets[i];
+            asset.NormalizeLegacy();
+            var prefix = $"Asset #{i + 1}";
+
             if (!Uri.TryCreate(asset.Url, UriKind.Absolute, out _))
             {
-                errors.Add("Asset Url is required");
+                errors.Add($"{prefix}: Url обязателен и должен быть абсолютным URL.");
+            }
+
+            if (asset.MaxLatencyMs.HasValue && asset.MaxLatencyMs <= 0)
+            {
+                errors.Add($"{prefix}: MaxLatencyMs должен быть больше 0.");
+            }
+
+            if (asset.MaxSizeKb.HasValue && asset.MaxSizeKb <= 0)
+            {
+                errors.Add($"{prefix}: MaxSizeKb должен быть больше 0.");
             }
         }
 
         return errors;
     }
 
-    /// <summary>
-    /// Выполняет проверки ассетов и формирует результат.
-    /// </summary>
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (HttpAssetsSettings)settings;
+        foreach (var asset in s.Assets)
+        {
+            asset.NormalizeLegacy();
+        }
+
         var result = new ModuleResult();
         ctx.Log.Info($"[HttpAssets] Assets={s.Assets.Count}");
 
         using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(s.TimeoutSeconds));
         var results = new List<ResultBase>();
-        var current = 0;
 
-        foreach (var asset in s.Assets)
+        for (var i = 0; i < s.Assets.Count; i++)
         {
+            var asset = s.Assets[i];
             var sw = Stopwatch.StartNew();
-            var url = asset.Url;
+
+            var success = true;
+            string message = "Проверка ассета прошла успешно.";
+            string? errorKind = null;
+            int? statusCode = null;
+            long bytes = 0;
+            string? contentType = null;
+
             try
             {
-                var response = await client.GetAsync(url, ct);
-                var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+                var response = await client.GetAsync(asset.Url, ct);
+                var payload = await response.Content.ReadAsByteArrayAsync(ct);
                 sw.Stop();
-                var success = response.IsSuccessStatusCode;
-                var error = string.Empty;
 
-                if (asset.ExpectedContentType != null &&
-                    (!response.Content.Headers.ContentType?.MediaType?.Contains(asset.ExpectedContentType) ?? true))
+                statusCode = (int)response.StatusCode;
+                bytes = payload.LongLength;
+                contentType = response.Content.Headers.ContentType?.MediaType;
+
+                if (!response.IsSuccessStatusCode)
                 {
                     success = false;
-                    error = "Content-Type mismatch";
+                    message = $"Ассет вернул HTTP {statusCode}.";
+                    errorKind = "Http";
                 }
-
-                if (asset.MaxSizeBytes.HasValue && bytes.Length > asset.MaxSizeBytes)
+                else if (!string.IsNullOrWhiteSpace(asset.ExpectedContentType) &&
+                         (contentType == null || !contentType.Contains(asset.ExpectedContentType, StringComparison.OrdinalIgnoreCase)))
                 {
                     success = false;
-                    error = "Asset size exceeded";
+                    message = $"Ожидали Content-Type '{asset.ExpectedContentType}', получили '{contentType ?? "(empty)"}'.";
+                    errorKind = "AssertFailed";
                 }
-
-                if (asset.MaxLatencyMs.HasValue && sw.Elapsed.TotalMilliseconds > asset.MaxLatencyMs)
+                else if (asset.MaxSizeKb.HasValue && bytes > asset.MaxSizeKb.Value * 1024L)
                 {
                     success = false;
-                    error = "Latency exceeded";
+                    message = $"Размер {bytes} байт превышает лимит {asset.MaxSizeKb.Value} КБ.";
+                    errorKind = "AssertFailed";
                 }
-
-                results.Add(new CheckResult(url)
+                else if (asset.MaxLatencyMs.HasValue && sw.Elapsed.TotalMilliseconds > asset.MaxLatencyMs.Value)
                 {
-                    Success = success,
-                    DurationMs = sw.Elapsed.TotalMilliseconds,
-                    StatusCode = (int)response.StatusCode,
-                    ErrorType = success ? null : (response.IsSuccessStatusCode ? "Warn" : "Asset"),
-                    ErrorMessage = error
-                });
+                    success = false;
+                    message = $"Задержка {sw.Elapsed.TotalMilliseconds:F0} мс превышает лимит {asset.MaxLatencyMs.Value} мс.";
+                    errorKind = "AssertFailed";
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (TaskCanceledException ex)
+            {
+                sw.Stop();
+                success = false;
+                message = ex.Message;
+                errorKind = "Timeout";
+            }
+            catch (HttpRequestException ex)
+            {
+                sw.Stop();
+                success = false;
+                message = ex.Message;
+                errorKind = "Network";
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                results.Add(new CheckResult(url)
-                {
-                    Success = false,
-                    DurationMs = sw.Elapsed.TotalMilliseconds,
-                    ErrorType = ex.GetType().Name,
-                    ErrorMessage = ex.Message
-                });
+                success = false;
+                message = ex.Message;
+                errorKind = "Exception";
             }
-            finally
+
+            results.Add(new AssetResult(asset.Name ?? asset.Url)
             {
-                current++;
-                ctx.Progress.Report(new ProgressUpdate(current, s.Assets.Count, "HTTP ассеты"));
-            }
+                Success = success,
+                DurationMs = sw.Elapsed.TotalMilliseconds,
+                WorkerId = ctx.WorkerId,
+                IterationIndex = ctx.Iteration,
+                ItemIndex = i,
+                ErrorType = errorKind,
+                ErrorMessage = success ? "ok" : message,
+                StatusCode = statusCode,
+                LatencyMs = sw.Elapsed.TotalMilliseconds,
+                Bytes = bytes,
+                ContentType = contentType
+            });
+
+            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Assets.Count, "HTTP ассеты"));
         }
 
         result.Results = results;

@@ -38,9 +38,13 @@
                         <Border Classes="badge">
                             <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
                         </Border>
-                        <Border Classes="badge">
-                            <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
-                        </Border>
+                        <Button Classes="toolbar-button"
+                                Command="{Binding OpenTelegramSettingsCommand}"
+                                ToolTip.Tip="{Binding TelegramStatusTooltip}">
+                            <Border Classes="badge" Background="Transparent" Padding="0">
+                                <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
+                            </Border>
+                        </Button>
                         <Border Classes="badge warn">
                             <TextBlock Text="Playwright: через баннер модуля" FontSize="12" FontWeight="SemiBold" />
                         </Border>

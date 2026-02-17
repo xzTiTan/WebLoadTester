@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Infrastructure.Http;
@@ -19,7 +19,7 @@ public class AvailabilityModule : ITestModule
 {
     public string Id => "net.availability";
     public string DisplayName => "Доступность";
-    public string Description => "Проверяет доступность HTTP/TCP целевого ресурса.";
+    public string Description => "Проверяет доступность HTTP/TCP цели. Одна итерация = одна проверка.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(AvailabilitySettings);
 
@@ -30,23 +30,39 @@ public class AvailabilityModule : ITestModule
         var errors = new List<string>();
         if (settings is not AvailabilitySettings s)
         {
-            errors.Add("Некорректный тип настроек.");
+            errors.Add("Некорректный тип настроек net.availability.");
             return errors;
         }
 
-        if (string.IsNullOrWhiteSpace(s.Target))
-        {
-            errors.Add("Укажите цель проверки.");
-        }
+        s.NormalizeLegacy();
 
         if (s.TimeoutMs <= 0)
         {
-            errors.Add("Таймаут должен быть больше 0 мс.");
+            errors.Add("TimeoutMs должен быть больше 0.");
         }
 
-        if (s.IntervalSeconds < 0)
+        if (s.CheckType.Equals("HTTP", StringComparison.OrdinalIgnoreCase))
         {
-            errors.Add("Интервал не может быть отрицательным.");
+            if (!Uri.TryCreate(s.Url, UriKind.Absolute, out _))
+            {
+                errors.Add("Для HTTP-проверки поле Url обязательно и должно быть полным URL.");
+            }
+        }
+        else if (s.CheckType.Equals("TCP", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(s.Host))
+            {
+                errors.Add("Для TCP-проверки поле Host обязательно.");
+            }
+
+            if (s.Port is < 1 or > 65535)
+            {
+                errors.Add("Для TCP-проверки поле Port должно быть в диапазоне 1..65535.");
+            }
+        }
+        else
+        {
+            errors.Add("CheckType должен быть HTTP или TCP.");
         }
 
         return errors;
@@ -55,91 +71,83 @@ public class AvailabilityModule : ITestModule
     public async Task<ModuleResult> ExecuteAsync(object settings, IRunContext ctx, CancellationToken ct)
     {
         var s = (AvailabilitySettings)settings;
-        var checks = ResolveChecks(ctx.Profile);
-        var interval = TimeSpan.FromSeconds(Math.Max(0, s.IntervalSeconds));
+        s.NormalizeLegacy();
 
-        ctx.Log.Info($"[Availability] Probing {s.TargetType}:{s.Target}; checks={checks}");
-        ctx.Progress.Report(new ProgressUpdate(0, checks, "Проверка доступности"));
-
-        var results = new List<ResultBase>();
-        for (var i = 0; i < checks; i++)
-        {
-            ct.ThrowIfCancellationRequested();
-            var probe = await ProbeOnceAsync(s, i + 1, ct);
-            results.Add(probe);
-            ctx.Progress.Report(new ProgressUpdate(i + 1, checks, "Проверка доступности"));
-
-            if (i < checks - 1 && interval > TimeSpan.Zero)
-            {
-                await Task.Delay(interval, ct);
-            }
-        }
-
-        var okCount = results.Count(r => r.Success);
-        var avgLatency = results.Count == 0 ? 0 : results.Average(r => r.DurationMs);
-        ctx.Log.Info($"[Availability] uptime={(double)okCount / Math.Max(1, results.Count):P1}, avg={avgLatency:F0}ms");
-
-        return new ModuleResult
-        {
-            Results = results,
-            Status = okCount == results.Count ? TestStatus.Success : TestStatus.Failed
-        };
-    }
-
-    private static int ResolveChecks(RunProfile profile)
-    {
-        var checks = profile.Mode == RunMode.Iterations ? profile.Iterations : Math.Max(1, profile.DurationSeconds);
-        return Math.Clamp(checks, 1, 60);
-    }
-
-    private static async Task<ProbeResult> ProbeOnceAsync(AvailabilitySettings s, int index, CancellationToken ct)
-    {
         var sw = Stopwatch.StartNew();
-        var success = false;
-        string? error = null;
+        var ok = false;
+        var errorKind = (string?)null;
+        var message = "Проверка завершена успешно.";
+        int? statusCode = null;
 
         try
         {
-            if (s.TargetType.Equals("Tcp", StringComparison.OrdinalIgnoreCase))
+            if (s.CheckType.Equals("TCP", StringComparison.OrdinalIgnoreCase))
             {
-                var parts = s.Target.Split(':', 2);
-                if (parts.Length != 2 || !int.TryParse(parts[1], out var port))
-                {
-                    throw new ArgumentException("Для TCP укажите цель в формате host:port.");
-                }
-
-                using var tcp = new TcpClient();
-                await tcp.ConnectAsync(parts[0], port, ct);
-                success = true;
+                using var client = new TcpClient();
+                await client.ConnectAsync(s.Host, s.Port, ct);
+                ok = true;
             }
             else
             {
                 using var client = HttpClientProvider.Create(TimeSpan.FromMilliseconds(s.TimeoutMs));
-                using var request = new HttpRequestMessage(HttpMethod.Head, s.Target);
-                var response = await client.SendAsync(request, ct);
-                success = response.IsSuccessStatusCode;
-                if (!success)
+                using var response = await client.GetAsync(s.Url, ct);
+                statusCode = (int)response.StatusCode;
+                ok = response.IsSuccessStatusCode;
+                if (!ok)
                 {
-                    error = response.StatusCode.ToString();
+                    message = $"Сервис ответил HTTP {statusCode}.";
+                    errorKind = "Http";
                 }
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            message = ex.Message;
+            errorKind = "Timeout";
+        }
+        catch (HttpRequestException ex)
+        {
+            message = ex.Message;
+            errorKind = "Network";
+        }
         catch (Exception ex)
         {
-            error = ex.Message;
+            message = ex.Message;
+            errorKind = "Exception";
         }
         finally
         {
             sw.Stop();
         }
 
-        return new ProbeResult($"Проверка {index}")
+        var metrics = s.CheckType.Equals("TCP", StringComparison.OrdinalIgnoreCase)
+            ? JsonSerializer.SerializeToElement(new { latencyMs = sw.Elapsed.TotalMilliseconds, host = s.Host, port = s.Port })
+            : JsonSerializer.SerializeToElement(new { latencyMs = sw.Elapsed.TotalMilliseconds, endpoint = s.Url, statusCode });
+
+        var item = new CheckResult(s.CheckType.Equals("TCP", StringComparison.OrdinalIgnoreCase)
+            ? "TCP availability"
+            : "HTTP availability")
         {
-            Success = success,
+            Success = ok,
             DurationMs = sw.Elapsed.TotalMilliseconds,
-            ErrorType = success ? null : "Availability",
-            ErrorMessage = error,
-            Details = success ? "Available" : "Unavailable"
+            WorkerId = ctx.WorkerId,
+            IterationIndex = ctx.Iteration,
+            ErrorType = ok ? null : errorKind,
+            ErrorMessage = ok ? "Проверка доступности прошла успешно." : message,
+            StatusCode = statusCode,
+            Metrics = metrics
+        };
+
+        ctx.Progress.Report(new ProgressUpdate(1, 1, "Проверка доступности"));
+
+        return new ModuleResult
+        {
+            Results = new List<ResultBase> { item },
+            Status = ok ? TestStatus.Success : TestStatus.Failed
         };
     }
 }

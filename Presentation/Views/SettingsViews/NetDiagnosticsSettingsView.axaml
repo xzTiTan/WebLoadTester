@@ -9,22 +9,20 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Опции" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Имя хоста" Classes="field-label" />
+                    <TextBlock Text="Hostname" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Hostname, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Проверки" Classes="field-label" />
-                    <WrapPanel Classes="field-control">
-                        <CheckBox Margin="0,0,8,8" Content="DNS" IsChecked="{Binding EnableDns, Mode=TwoWay}" />
-                        <CheckBox Margin="0,0,8,8" Content="TCP" IsChecked="{Binding EnableTcp, Mode=TwoWay}" />
-                        <CheckBox Margin="0,0,8,8" Content="TLS" IsChecked="{Binding EnableTls, Mode=TwoWay}" />
+                    <WrapPanel Classes="field-control wrap-gap">
+                        <CheckBox Content="DNS" IsChecked="{Binding CheckDns, Mode=TwoWay}" />
+                        <CheckBox Content="TCP" IsChecked="{Binding CheckTcp, Mode=TwoWay}" />
+                        <CheckBox Content="TLS" IsChecked="{Binding CheckTls, Mode=TwoWay}" />
                     </WrapPanel>
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Автопорты по схеме URL" Classes="field-label" />
-                    <CheckBox Classes="field-control"
-                              Content="http → 80, https → 443"
-                              IsChecked="{Binding AutoPortsByScheme, Mode=TwoWay}" />
+                    <TextBlock Text="UseAutoPorts" Classes="field-label" />
+                    <CheckBox Classes="field-control" Content="Автоматически использовать :443" IsChecked="{Binding UseAutoPorts, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
@@ -32,21 +30,34 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Порты / проверки" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="toolbar-wrap">
-                        <Button Margin="0,0,8,8" Content="Добавить" Command="{Binding AddPortCommand}"
-                                IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
-                        <Button Margin="0,0,8,8" Content="Удалить" Command="{Binding RemoveSelectedPortCommand}"
-                                IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}" />
+                    <TextBlock Text="Ports" Classes="section-title" />
+                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
+                        <Button Content="Добавить" Command="{Binding AddPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
+                        <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
+                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
                     </WrapPanel>
                 </Grid>
+
                 <dg:DataGrid ItemsSource="{Binding Ports}"
                              SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
                              AutoGenerateColumns="False"
                              Classes="list-min-180"
-                             IsEnabled="{Binding AutoPortsByScheme, Converter={StaticResource BooleanNotConverter}}">
+                             IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}">
                     <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="Порт" Binding="{Binding Value}" Width="*" />
+                        <dg:DataGridTextColumn Header="Порт" Binding="{Binding Port}" Width="*" />
+                        <dg:DataGridTemplateColumn Header="Протокол" Width="*">
+                            <dg:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate >
+                                    <TextBlock Text="{Binding Protocol}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellTemplate>
+                            <dg:DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate >
+                                    <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.ProtocolOptions}"
+                                              SelectedItem="{Binding Protocol, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </dg:DataGridTemplateColumn.CellEditingTemplate>
+                        </dg:DataGridTemplateColumn>
                     </dg:DataGrid.Columns>
                 </dg:DataGrid>
             </StackPanel>
