@@ -24,7 +24,11 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase
         baseUrl = settings.BaseUrl;
         Endpoints = new ObservableCollection<HttpFunctionalEndpoint>(settings.Endpoints);
         timeoutSeconds = settings.TimeoutSeconds;
-        Endpoints.CollectionChanged += (_, _) => _settings.Endpoints = Endpoints.ToList();
+        Endpoints.CollectionChanged += (_, _) =>
+        {
+            _settings.Endpoints = Endpoints.ToList();
+            OnPropertyChanged(nameof(Endpoints));
+        };
     }
 
     public override object Settings => _settings;

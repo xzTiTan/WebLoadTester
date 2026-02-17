@@ -314,6 +314,8 @@ public partial class MainWindowViewModel : ViewModelBase
         if (validationErrors.Count > 0)
         {
             StatusText = "Статус: ошибка валидации";
+            moduleItem.ModuleConfig.ShowSubmitValidation();
+            RunProfile.ShowSubmitValidation();
             moduleItem.ModuleConfig.StatusMessage = "Заполните обязательные поля: " + string.Join("; ", validationErrors);
             _logBus.Warn($"[Validation] {moduleItem.Module.Id}: {string.Join("; ", validationErrors)}");
             ReevaluateStartAvailability();

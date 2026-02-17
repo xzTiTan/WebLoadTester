@@ -15,12 +15,22 @@ namespace WebLoadTester.Presentation.ViewModels;
 /// </summary>
 public partial class RunProfileViewModel : ObservableObject
 {
+    public const string ParallelismKey = "profile.parallelism";
+    public const string IterationsKey = "profile.iterations";
+    public const string DurationKey = "profile.durationSeconds";
+    public const string TimeoutKey = "profile.timeoutSeconds";
+    public const string PauseKey = "profile.pauseBetweenIterationsMs";
+    public const string SummaryKey = "profile.summary";
+
     private readonly IRunStore _runStore;
 
     public RunProfileViewModel(IRunStore runStore)
     {
         _runStore = runStore;
+        Revalidate();
     }
+
+    public ValidationState Validation { get; } = new();
 
     public ObservableCollection<RunProfile> Profiles { get; } = new();
 
@@ -81,6 +91,18 @@ public partial class RunProfileViewModel : ObservableObject
             : string.Empty;
 
     public bool HasWarning => !string.IsNullOrWhiteSpace(WarningMessage);
+    public bool HasValidationSummary => !string.IsNullOrWhiteSpace(ValidationSummaryMessage);
+    public string ValidationSummaryMessage => Validation.GetVisibleError(SummaryKey);
+    public string ParallelismError => Validation.GetVisibleError(ParallelismKey);
+    public string IterationsError => Validation.GetVisibleError(IterationsKey);
+    public string DurationError => Validation.GetVisibleError(DurationKey);
+    public string TimeoutError => Validation.GetVisibleError(TimeoutKey);
+    public string PauseError => Validation.GetVisibleError(PauseKey);
+    public bool HasParallelismError => !string.IsNullOrWhiteSpace(ParallelismError);
+    public bool HasIterationsError => !string.IsNullOrWhiteSpace(IterationsError);
+    public bool HasDurationError => !string.IsNullOrWhiteSpace(DurationError);
+    public bool HasTimeoutError => !string.IsNullOrWhiteSpace(TimeoutError);
+    public bool HasPauseError => !string.IsNullOrWhiteSpace(PauseError);
     public bool IsIterationsMode => Mode == RunMode.Iterations;
     public bool IsDurationMode => Mode == RunMode.Duration;
 
@@ -88,24 +110,31 @@ public partial class RunProfileViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
+        Revalidate();
     }
 
     partial void OnDurationSecondsChanged(int value)
     {
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
+        Revalidate();
     }
 
     partial void OnIterationsChanged(int value)
     {
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
+        Revalidate();
     }
     partial void OnModeChanged(RunMode value)
     {
         OnPropertyChanged(nameof(IsIterationsMode));
         OnPropertyChanged(nameof(IsDurationMode));
+        Revalidate();
     }
+
+    partial void OnTimeoutSecondsChanged(int value) => Revalidate();
+    partial void OnPauseBetweenIterationsMsChanged(int value) => Revalidate();
 
     partial void OnSelectedProfileChanged(RunProfile? value)
     {
@@ -254,6 +283,84 @@ public partial class RunProfileViewModel : ObservableObject
         PreflightEnabled = parameters.PreflightEnabled;
         Headless = parameters.Headless;
         ScreenshotsPolicy = parameters.ScreenshotsPolicy;
+        Validation.ResetVisibility();
+        Revalidate();
+    }
+
+    public void MarkFieldTouched(string key)
+    {
+        Validation.MarkTouched(key);
+        RaiseValidationPropertiesChanged();
+    }
+
+    public void ShowSubmitValidation()
+    {
+        Validation.ShowAll();
+        RaiseValidationPropertiesChanged();
+    }
+
+    private void Revalidate()
+    {
+        var errors = new System.Collections.Generic.Dictionary<string, string>();
+        if (Parallelism <= 0)
+        {
+            errors[ParallelismKey] = "Параллелизм должен быть больше 0.";
+        }
+        else if (Parallelism > RunProfileLimits.MaxParallelism)
+        {
+            errors[ParallelismKey] = $"Параллелизм не должен превышать {RunProfileLimits.MaxParallelism} для безопасного MVP-режима.";
+        }
+
+        if (Mode == RunMode.Iterations && Iterations <= 0)
+        {
+            errors[IterationsKey] = "Количество итераций должно быть больше 0.";
+        }
+
+        if (Mode == RunMode.Duration)
+        {
+            if (DurationSeconds <= 0)
+            {
+                errors[DurationKey] = "Длительность должна быть больше 0 секунд.";
+            }
+            else if (DurationSeconds > RunProfileLimits.MaxDurationSeconds)
+            {
+                errors[DurationKey] = $"Длительность не должна превышать {RunProfileLimits.MaxDurationSeconds} секунд в безопасном MVP-режиме.";
+            }
+        }
+
+        if (TimeoutSeconds <= 0)
+        {
+            errors[TimeoutKey] = "Таймаут должен быть больше 0 секунд.";
+        }
+
+        if (PauseBetweenIterationsMs < 0)
+        {
+            errors[PauseKey] = "Пауза между итерациями должна быть >= 0 мс.";
+        }
+
+        if (errors.Count > 0)
+        {
+            errors[SummaryKey] = "Есть ошибки: " + string.Join("; ", errors.Values);
+        }
+
+        Validation.SetErrors(errors);
+        RaiseValidationPropertiesChanged();
+    }
+
+    private void RaiseValidationPropertiesChanged()
+    {
+        OnPropertyChanged(nameof(ValidationSummaryMessage));
+        OnPropertyChanged(nameof(HasValidationSummary));
+        OnPropertyChanged(nameof(ParallelismError));
+        OnPropertyChanged(nameof(IterationsError));
+        OnPropertyChanged(nameof(DurationError));
+        OnPropertyChanged(nameof(TimeoutError));
+        OnPropertyChanged(nameof(PauseError));
+        OnPropertyChanged(nameof(HasParallelismError));
+        OnPropertyChanged(nameof(HasIterationsError));
+        OnPropertyChanged(nameof(HasDurationError));
+        OnPropertyChanged(nameof(HasTimeoutError));
+        OnPropertyChanged(nameof(HasPauseError));
     }
 
     public void SetModuleFamily(TestFamily family)

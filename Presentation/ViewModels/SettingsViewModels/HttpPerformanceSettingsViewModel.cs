@@ -19,7 +19,11 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
         baseUrl = settings.BaseUrl;
         Endpoints = new ObservableCollection<HttpPerformanceEndpoint>(settings.Endpoints);
         timeoutSeconds = settings.TimeoutSeconds;
-        Endpoints.CollectionChanged += (_, _) => _settings.Endpoints = Endpoints.ToList();
+        Endpoints.CollectionChanged += (_, _) =>
+        {
+            _settings.Endpoints = Endpoints.ToList();
+            OnPropertyChanged(nameof(Endpoints));
+        };
     }
 
     public override object Settings => _settings;

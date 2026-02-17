@@ -23,7 +23,11 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
 
         Assets = new ObservableCollection<AssetItem>(settings.Assets);
         timeoutSeconds = settings.TimeoutSeconds;
-        Assets.CollectionChanged += (_, _) => _settings.Assets = Assets.ToList();
+        Assets.CollectionChanged += (_, _) =>
+        {
+            _settings.Assets = Assets.ToList();
+            OnPropertyChanged(nameof(Assets));
+        };
     }
 
     public override object Settings => _settings;

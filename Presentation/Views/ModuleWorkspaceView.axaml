@@ -131,8 +131,12 @@
 
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Имя" Classes="field-label" />
-                            <TextBox Classes="field-control" Watermark="Например: DemoConfig" Text="{Binding UserName, Mode=TwoWay}" />
+                            <TextBox Classes="field-control"
+                                     Watermark="Например: DemoConfig"
+                                     Text="{Binding UserName, Mode=TwoWay}"
+                                     LostFocus="OnConfigNameLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding ConfigSummaryMessage}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasConfigSummaryError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Итоговое имя" Classes="field-label" />
                             <TextBlock Classes="field-control" Text="{Binding FinalNamePreview}" />
@@ -164,6 +168,10 @@
                                    Classes="section-title"
                                    TextTrimming="CharacterEllipsis"
                                    TextWrapping="NoWrap" />
+                        <TextBlock Text="{Binding SelectedModule.ModuleConfig.ModuleSummaryMessage}"
+                                   Foreground="OrangeRed"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding SelectedModule.ModuleConfig.HasModuleSummaryError}" />
                         <ContentControl Content="{Binding SelectedModule.SettingsViewModel}" />
                     </StackPanel>
                 </Border>
@@ -178,28 +186,33 @@
                                    TextWrapping="NoWrap" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Параллельность" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" LostFocus="OnProfileParallelismLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding ParallelismError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasParallelismError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Режим" Classes="field-label" />
                             <ComboBox Classes="field-control" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsIterationsMode}">
                             <TextBlock Text="Итерации" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+                            <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" LostFocus="OnProfileIterationsLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding IterationsError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasIterationsError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsDurationMode}">
                             <TextBlock Text="Длительность (сек)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="10" Maximum="60" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+                            <NumericUpDown Classes="field-control" Minimum="10" Maximum="60" Value="{Binding DurationSeconds, Mode=TwoWay}" LostFocus="OnProfileDurationLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding DurationError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasDurationError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Таймаут (сек)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+                            <NumericUpDown Classes="field-control" Minimum="5" Value="{Binding TimeoutSeconds, Mode=TwoWay}" LostFocus="OnProfileTimeoutLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding TimeoutError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasTimeoutError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                             <TextBlock Text="Пауза между итерациями (мс)" Classes="field-label" />
-                            <NumericUpDown Classes="field-control" Minimum="0" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" />
+                            <NumericUpDown Classes="field-control" Minimum="0" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" LostFocus="OnProfilePauseLostFocus" />
                         </Grid>
+                        <TextBlock Text="{Binding PauseError}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasPauseError}" />
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsUiFamily}">
                             <TextBlock Text="Скриншоты" Classes="field-label" />
                             <ComboBox Classes="field-control" ItemsSource="{Binding ScreenshotsPolicyOptions}" SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}">
@@ -225,6 +238,7 @@
                         <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
                             <TextBlock Text="{Binding WarningMessage}" />
                         </Border>
+                        <TextBlock Text="{Binding ValidationSummaryMessage}" Foreground="OrangeRed" TextWrapping="Wrap" IsVisible="{Binding HasValidationSummary}" />
 <TextBlock Text="{Binding StatusMessage}" Classes="status-line" />
                     </StackPanel>
                 </Border>

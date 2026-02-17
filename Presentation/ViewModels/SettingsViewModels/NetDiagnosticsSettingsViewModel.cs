@@ -178,6 +178,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         }
 
         UpdatePortsSettings();
+        OnPropertyChanged(nameof(Ports));
     }
 
     private void OnPortItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

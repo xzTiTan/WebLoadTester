@@ -16,6 +16,9 @@ namespace WebLoadTester.Presentation.ViewModels;
 public partial class ModuleConfigViewModel : ObservableObject
 {
     private static readonly Regex NameRegex = new("^[A-Za-z0-9_-]+$", RegexOptions.Compiled);
+    public const string ConfigNameKey = "config.name";
+    public const string ConfigSummaryKey = "config.summary";
+    public const string ModuleSummaryKey = "module.summary";
 
     private readonly IModuleConfigService _configService;
     private readonly ITestCaseRepository _testCaseRepository;
@@ -37,8 +40,14 @@ public partial class ModuleConfigViewModel : ObservableObject
         _settings = settings;
         _runProfile = runProfile;
 
-        _settings.PropertyChanged += (_, _) => MarkDirty();
+        _settings.PropertyChanged += (_, _) =>
+        {
+            MarkDirty();
+            RevalidateModuleSettings();
+        };
         _runProfile.PropertyChanged += (_, _) => MarkDirty();
+
+        RevalidateConfigAndModule();
     }
 
     public ObservableCollection<ModuleConfigSummary> Configs { get; } = new();
@@ -54,8 +63,15 @@ public partial class ModuleConfigViewModel : ObservableObject
     [ObservableProperty] private string dirtyPromptText = string.Empty;
     [ObservableProperty] private string nameValidationMessage = string.Empty;
 
+    public ValidationState ConfigValidation { get; } = new();
+    public ValidationState ModuleValidation { get; } = new();
+
     public string DirtyStateText => IsDirty ? "Есть несохранённые изменения" : "Сохранено";
     public bool HasNameValidationMessage => !string.IsNullOrWhiteSpace(NameValidationMessage);
+    public bool HasConfigSummaryError => !string.IsNullOrWhiteSpace(ConfigSummaryMessage);
+    public bool HasModuleSummaryError => !string.IsNullOrWhiteSpace(ModuleSummaryMessage);
+    public string ConfigSummaryMessage => ConfigValidation.GetVisibleError(ConfigSummaryKey);
+    public string ModuleSummaryMessage => ModuleValidation.GetVisibleError(ModuleSummaryKey);
 
     public string FinalNamePreview
     {
@@ -68,6 +84,7 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     partial void OnIsDirtyChanged(bool value) => OnPropertyChanged(nameof(DirtyStateText));
     partial void OnNameValidationMessageChanged(string value) => OnPropertyChanged(nameof(HasNameValidationMessage));
+    partial void OnIsBusyChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedConfigChanged(ModuleConfigSummary? value)
     {
@@ -106,6 +123,8 @@ public partial class ModuleConfigViewModel : ObservableObject
     partial void OnUserNameChanged(string value)
     {
         OnPropertyChanged(nameof(FinalNamePreview));
+        SaveCommand.NotifyCanExecuteChanged();
+        RevalidateConfigAndModule();
         if (_suppressDirtyTracking)
         {
             return;
@@ -116,6 +135,7 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     partial void OnDescriptionChanged(string value)
     {
+        RevalidateConfigAndModule();
         if (_suppressDirtyTracking)
         {
             return;
@@ -163,10 +183,10 @@ public partial class ModuleConfigViewModel : ObservableObject
         await LoadSelectedCoreAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
-        NameValidationMessage = string.Empty;
+        ShowSubmitValidation();
         if (!ValidateSettings())
         {
             return;
@@ -187,6 +207,14 @@ public partial class ModuleConfigViewModel : ObservableObject
         {
             StatusMessage = $"Ошибка сохранения конфигурации: {ex.Message}";
         }
+    }
+
+    [RelayCommand]
+    private void MarkFieldTouched(string key)
+    {
+        ConfigValidation.MarkTouched(key);
+        ModuleValidation.MarkTouched(key);
+        RefreshValidationViews();
     }
 
     [RelayCommand]
@@ -292,6 +320,9 @@ public partial class ModuleConfigViewModel : ObservableObject
     {
         IsDirty = false;
         IsDirtyPromptVisible = false;
+        ConfigValidation.ResetVisibility();
+        ModuleValidation.ResetVisibility();
+        RevalidateConfigAndModule();
     }
 
     private async Task LoadSelectedCoreAsync()
@@ -330,7 +361,9 @@ public partial class ModuleConfigViewModel : ObservableObject
             _suppressDirtyTracking = false;
         }
 
-        NameValidationMessage = string.Empty;
+        ConfigValidation.ResetVisibility();
+        ModuleValidation.ResetVisibility();
+        RevalidateConfigAndModule();
         IsDirty = false;
         _lastSelectedConfig = SelectedConfig;
         StatusMessage = "Конфигурация загружена.";
@@ -353,24 +386,80 @@ public partial class ModuleConfigViewModel : ObservableObject
         IsDirty = true;
     }
 
+    public void ShowSubmitValidation()
+    {
+        ConfigValidation.ShowAll();
+        ModuleValidation.ShowAll();
+        RevalidateConfigAndModule();
+    }
+
     private bool ValidateSettings()
     {
-        var normalized = NormalizeUserName(UserName);
-        if (string.IsNullOrWhiteSpace(normalized) || !NameRegex.IsMatch(normalized))
+        RevalidateConfigAndModule();
+        if (ConfigValidation.HasErrors || ModuleValidation.HasErrors)
         {
-            NameValidationMessage = "Имя должно содержать только A-Z, a-z, 0-9, _ или - (без пробелов).";
-            StatusMessage = NameValidationMessage;
-            return false;
-        }
-
-        var errors = _module.Validate(_settings.Settings);
-        if (errors.Count > 0)
-        {
+            var errors = ConfigValidation.ErrorsByKey.Values.Concat(ModuleValidation.ErrorsByKey.Values).ToList();
             StatusMessage = "Заполните обязательные поля: " + string.Join("; ", errors);
             return false;
         }
 
         return true;
+    }
+
+    private bool CanSave()
+    {
+        return !IsBusy && string.IsNullOrWhiteSpace(BuildConfigErrors()[ConfigNameKey]);
+    }
+
+    private void RevalidateConfigAndModule()
+    {
+        ConfigValidation.SetErrors(BuildConfigErrors());
+        ModuleValidation.SetErrors(BuildModuleErrors());
+        RefreshValidationViews();
+    }
+
+    private void RevalidateModuleSettings()
+    {
+        ModuleValidation.SetErrors(BuildModuleErrors());
+        RefreshValidationViews();
+    }
+
+    private Dictionary<string, string> BuildConfigErrors()
+    {
+        var errors = new Dictionary<string, string>();
+        var normalized = NormalizeUserName(UserName);
+        if (string.IsNullOrWhiteSpace(normalized) || !NameRegex.IsMatch(normalized))
+        {
+            errors[ConfigNameKey] = "Имя должно содержать только A-Z, a-z, 0-9, _ или - (без пробелов).";
+            errors[ConfigSummaryKey] = errors[ConfigNameKey];
+        }
+        else
+        {
+            errors[ConfigNameKey] = string.Empty;
+        }
+
+        return errors;
+    }
+
+    private Dictionary<string, string> BuildModuleErrors()
+    {
+        var errors = new Dictionary<string, string>();
+        var moduleErrors = _module.Validate(_settings.Settings);
+        if (moduleErrors.Count > 0)
+        {
+            errors[ModuleSummaryKey] = "Есть ошибки: " + string.Join("; ", moduleErrors);
+        }
+
+        return errors;
+    }
+
+    private void RefreshValidationViews()
+    {
+        NameValidationMessage = ConfigValidation.GetVisibleError(ConfigNameKey);
+        OnPropertyChanged(nameof(ConfigSummaryMessage));
+        OnPropertyChanged(nameof(ModuleSummaryMessage));
+        OnPropertyChanged(nameof(HasConfigSummaryError));
+        OnPropertyChanged(nameof(HasModuleSummaryError));
     }
 
     private static string NormalizeUserName(string value)

@@ -138,6 +138,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     private void SyncTargets()
     {
         _settings.Targets = Targets.ToList();
+        OnPropertyChanged(nameof(Targets));
     }
 
     private bool CanMutateSelectedTarget() => SelectedTarget != null;

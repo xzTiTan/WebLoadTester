@@ -179,6 +179,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     private void SyncSteps()
     {
         _settings.Steps = Steps.ToList();
+        OnPropertyChanged(nameof(Steps));
         MoveSelectedStepUpCommand.NotifyCanExecuteChanged();
         MoveSelectedStepDownCommand.NotifyCanExecuteChanged();
     }

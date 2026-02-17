@@ -170,6 +170,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     {
         _settings.Targets = Targets.ToList();
         _settings.ScreenshotFormat = "png";
+        OnPropertyChanged(nameof(Targets));
     }
 
     private bool CanMutateSelectedTarget() => SelectedTarget != null;
