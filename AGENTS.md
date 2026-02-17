@@ -1,4 +1,4 @@
-v2.26 17.02.2026
+v3.29 17.02.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -17,8 +17,8 @@ WebLoadTester — кроссплатформенное настольное пр
 - Не нарушать разделение слоёв: UI без бизнес-логики, оркестратор в Core, интеграции в Infrastructure. (docs/02, docs/03)
 
 ## Docs first
-- Перед изменениями читать: [docs/00_INDEX.md](docs/00_INDEX.md), затем ключевые якоря 01/02/03.
-- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы, `docs/08_FULL_SOFTWARE_DESCRIPTION.md` и добавь запись в журнал изменений (`docs/06_CODEX_RULES_AND_CHANGELOG.md`).
+- Перед изменениями читать: [docs/INDEX.md](docs/INDEX.md), затем проверить `docs/CODEX_RULES_AND_CHANGELOG.md`.
+- Если меняешь поведение, архитектуру или инварианты — обнови соответствующие якорные документы, `docs/INDEX.md` и добавь запись в журнал изменений (`docs/CODEX_RULES_AND_CHANGELOG.md`).
 
 ## Repo map (Core / Infrastructure / Modules / Presentation + entry points)
 - **Entry points**: `Program.cs`, `App.axaml`, `Presentation/Views/MainWindow.axaml`, `Presentation/ViewModels/MainWindowViewModel.cs`.

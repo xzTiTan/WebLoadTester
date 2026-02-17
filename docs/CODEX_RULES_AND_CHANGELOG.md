@@ -1,4 +1,4 @@
-v3.13 17.02.2026
+v3.29 17.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,11 @@ v3.13 17.02.2026
 ---
 
 # Changelog
+
+## v3.29 17.02.2026
+- Исправлен runtime-crash Avalonia `InvalidCastException` при открытии `MainWindow`: design token'ы `PagePadding` и `CardPadding` переведены в тип `Thickness`, чтобы динамические ресурсы корректно биндилась в `Margin/Padding`.
+- README приведён к актуальной структуре документации (`docs/INDEX.md` + `docs/CODEX_RULES_AND_CHANGELOG.md`) без ссылок на удалённые файлы.
+- AGENTS.md синхронизирован с текущей структурой docs и обновлён по версии/дате.
 
 
 

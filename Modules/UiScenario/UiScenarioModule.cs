@@ -426,15 +426,7 @@ public class UiScenarioModule : ITestModule
                 step.Value = step.Text;
             }
 
-            // миграция старого формата Selector+Text
-            if (step.Action == UiStepAction.WaitForSelector)
-            {
-                var hasSelector = !string.IsNullOrWhiteSpace(step.Selector);
-                if (hasSelector)
-                {
-                    step.Action = string.IsNullOrWhiteSpace(step.Value) ? UiStepAction.Click : UiStepAction.Fill;
-                }
-            }
+            // legacy-поля нормализуем только по данным, не меняя семантику явно заданного Action.
         }
     }
 }
