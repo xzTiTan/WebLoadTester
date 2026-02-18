@@ -76,7 +76,7 @@
                         <TextBlock Text="Chromium (Playwright) не установлен. UI сценарий завершится ошибкой, пока браузер не установлен."
                                    TextWrapping="Wrap" />
                         <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
-                            <Button Content="Install Chromium (Playwright)"
+                            <Button Content="Установить Chromium (Playwright)"
                                     Command="{Binding InstallPlaywrightBrowsersCommand}"
                                     IsEnabled="{Binding CanInstallPlaywright}" />
                             <TextBlock Text="{Binding PlaywrightInstallMessage}" Classes="status-line" TextWrapping="Wrap" />
@@ -133,7 +133,7 @@
                             <TextBlock Text="Имя" Classes="field-label" />
                             <TextBox x:Name="ConfigNameField"
                                      Classes="field-control"
-                                     Watermark="Например: DemoConfig"
+                                     Watermark="Например: ДемоКонфиг"
                                      Text="{Binding UserName, Mode=TwoWay}"
                                      LostFocus="OnConfigNameLostFocus" />
                         </Grid>
@@ -229,11 +229,11 @@
                             <ToggleSwitch Classes="field-control" IsChecked="{Binding HtmlReportEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Telegram" Classes="field-label" />
+                            <TextBlock Text="Телеграм" Classes="field-label" />
                             <ToggleSwitch Classes="field-control" IsChecked="{Binding TelegramEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                            <TextBlock Text="Preflight" Classes="field-label" />
+                            <TextBlock Text="Предпроверка" Classes="field-label" />
                             <ToggleSwitch Classes="field-control" IsChecked="{Binding PreflightEnabled, Mode=TwoWay}" />
                         </Grid>
                         <Border Classes="warning-panel" IsVisible="{Binding HasWarning}">
@@ -252,8 +252,8 @@
                                        Classes="wrap-gap"
                                        DataContext="{Binding DataContext, ElementName=VmProxy}"
                                        x:DataType="root:MainWindowViewModel">
-                                <Button Classes="link" Content="Открыть JSON" Command="{Binding OpenLatestJsonCommand}" />
-                                <Button Classes="link" Content="Открыть HTML" Command="{Binding OpenLatestHtmlCommand}" />
+                                <Button Classes="link" Content="Открыть JSON-отчёт" Command="{Binding OpenLatestJsonCommand}" />
+                                <Button Classes="link" Content="Открыть HTML-отчёт" Command="{Binding OpenLatestHtmlCommand}" />
                                 <Button Classes="link" Content="Открыть папку прогона" Command="{Binding OpenLatestRunFolderCommand}" />
                             </WrapPanel>
                         </Grid>

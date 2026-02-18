@@ -5,45 +5,45 @@
              x:Class="WebLoadTester.Presentation.Views.Workspace.RunProfileView"
              x:DataType="vm:RunProfileViewModel">
     <StackPanel Spacing="6">
-        <TextBlock Text="RunProfile" />
+        <TextBlock Text="Профиль запуска" />
         <StackPanel Spacing="8">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="Mode" VerticalAlignment="Center" />
+                <TextBlock Text="Режим" VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1" TabIndex="30" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsIterationsMode}">
-                <TextBlock Text="Iterations" VerticalAlignment="Center" />
+                <TextBlock Text="Итерации" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Minimum="1" TabIndex="31" Value="{Binding Iterations, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsDurationMode}">
-                <TextBlock Text="DurationSeconds" VerticalAlignment="Center" />
+                <TextBlock Text="Длительность (сек)" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Minimum="1" TabIndex="32" Value="{Binding DurationSeconds, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="Parallelism" VerticalAlignment="Center" />
+                <TextBlock Text="Параллелизм" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Minimum="1" TabIndex="33" Value="{Binding Parallelism, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="TimeoutSeconds" VerticalAlignment="Center" />
+                <TextBlock Text="Таймаут (сек)" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Minimum="1" TabIndex="34" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="PauseBetweenIterationsMs" VerticalAlignment="Center" />
+                <TextBlock Text="Пауза между итерациями (мс)" VerticalAlignment="Center" />
                 <NumericUpDown Grid.Column="1" Minimum="0" TabIndex="35" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsUiFamily}">
-                <TextBlock Text="Headless" VerticalAlignment="Center" />
+                <TextBlock Text="Без окна браузера" VerticalAlignment="Center" />
                 <CheckBox Grid.Column="1" TabIndex="36" IsChecked="{Binding Headless, Mode=TwoWay}" />
             </Grid>
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsUiFamily}">
-                <TextBlock Text="ScreenshotsPolicy" VerticalAlignment="Center" />
+                <TextBlock Text="Политика скриншотов" VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1" TabIndex="37" ItemsSource="{Binding ScreenshotsPolicyOptions}" SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:ScreenshotsPolicy">

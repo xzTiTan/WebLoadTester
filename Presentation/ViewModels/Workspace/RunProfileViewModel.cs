@@ -82,27 +82,27 @@ public partial class RunProfileViewModel : ObservableObject, IValidatable
 
         if (Mode == RunMode.Iterations && Iterations < 1)
         {
-            errors.Add("Iterations должен быть >= 1.");
+            errors.Add("Итерации должны быть >= 1.");
         }
 
         if (Mode == RunMode.Duration && DurationSeconds < 1)
         {
-            errors.Add("DurationSeconds должен быть >= 1.");
+            errors.Add("Длительность должна быть >= 1 сек.");
         }
 
         if (Parallelism < 1)
         {
-            errors.Add("Parallelism должен быть >= 1.");
+            errors.Add("Параллелизм должен быть >= 1.");
         }
 
         if (TimeoutSeconds < 1)
         {
-            errors.Add("TimeoutSeconds должен быть >= 1.");
+            errors.Add("Таймаут должен быть >= 1 сек.");
         }
 
         if (PauseBetweenIterationsMs < 0)
         {
-            errors.Add("PauseBetweenIterationsMs должен быть >= 0.");
+            errors.Add("Пауза между итерациями должна быть >= 0 мс.");
         }
 
         return errors;

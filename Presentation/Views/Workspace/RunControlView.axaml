@@ -4,7 +4,7 @@
              x:Class="WebLoadTester.Presentation.Views.Workspace.RunControlView"
              x:DataType="vm:RunControlViewModel">
     <StackPanel Spacing="6">
-        <TextBlock Text="Run Control" />
+        <TextBlock Text="Управление запуском" />
         <StackPanel Spacing="8">
             <WrapPanel Orientation="Horizontal">
                 <Button x:Name="StartButton" Content="Старт" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />

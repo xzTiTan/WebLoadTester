@@ -34,11 +34,11 @@ public partial class RunsTabViewModel : ObservableObject
         _repeatRun = repeatRun;
 
         StatusFilterOptions.Add("Все");
-        StatusFilterOptions.Add("Success");
-        StatusFilterOptions.Add("Failed");
-        StatusFilterOptions.Add("Stopped");
-        StatusFilterOptions.Add("Canceled");
-        StatusFilterOptions.Add("Running");
+        StatusFilterOptions.Add("Успешно");
+        StatusFilterOptions.Add("С ошибкой");
+        StatusFilterOptions.Add("Остановлено");
+        StatusFilterOptions.Add("Отменено");
+        StatusFilterOptions.Add("Выполняется");
 
         PeriodOptions.Add("Сегодня");
         PeriodOptions.Add("7 дней");
@@ -216,7 +216,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
-            UserMessage = "RunId скопирован в буфер обмена.";
+            UserMessage = "Идентификатор запуска скопирован в буфер обмена.";
         }
     }
 
@@ -376,7 +376,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(r => string.Equals(r.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(r => string.Equals(r.Status, MapStatusFilterToRunStatus(SelectedStatus), StringComparison.OrdinalIgnoreCase));
         }
 
         var utcNow = DateTimeOffset.UtcNow;
@@ -415,6 +415,19 @@ public partial class RunsTabViewModel : ObservableObject
         }
     }
 
+    private static string MapStatusFilterToRunStatus(string selectedStatus)
+    {
+        return selectedStatus switch
+        {
+            "Успешно" => "Success",
+            "С ошибкой" => "Failed",
+            "Остановлено" => "Stopped",
+            "Отменено" => "Canceled",
+            "Выполняется" => "Running",
+            _ => selectedStatus
+        };
+    }
+
     private async Task LoadDetailsAsync()
     {
         ArtifactLinks.Clear();
@@ -433,7 +446,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · ModuleId: {detail.Run.ModuleType}";
+        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · Модуль: {detail.Run.ModuleType}";
 
         try
         {
@@ -452,7 +465,7 @@ public partial class RunsTabViewModel : ObservableObject
                 timeoutSeconds = timeoutFromLegacy;
             }
 
-            DetailsProfile = $"Mode={profile.GetProperty("mode").GetString()} · Parallelism={profile.GetProperty("parallelism").GetInt32()} · Timeout={timeoutSeconds} · Pause={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
+            DetailsProfile = $"Режим={profile.GetProperty("mode").GetString()} · Параллелизм={profile.GetProperty("parallelism").GetInt32()} · Таймаут={timeoutSeconds} · Пауза={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
         }
         catch
         {

@@ -21,8 +21,8 @@
         <DataTemplate x:DataType="commonRows:HttpHeaderRowViewModel">
             <StackPanel Spacing="4" Margin="0,0,0,8">
                 <Grid ColumnDefinitions="220,4*" ColumnSpacing="8">
-                    <TextBox Grid.Column="0" Text="{Binding Key, Mode=TwoWay}" Watermark="Header" />
-                    <TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" Watermark="Value" />
+                    <TextBox Grid.Column="0" Text="{Binding Key, Mode=TwoWay}" Watermark="Заголовок" />
+                    <TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" Watermark="Значение" />
                 </Grid>
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
             </StackPanel>
@@ -34,7 +34,7 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Base URL" Classes="field-label" />
+                    <TextBlock Text="Базовый URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -46,14 +46,14 @@
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Endpoints" Classes="section-title" />
+                <TextBlock Text="Эндпоинты" Classes="section-title" />
                 <controls:RowListEditorView DataContext="{Binding EndpointsEditor}" />
             </StackPanel>
         </Border>
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Headers (общие)" Classes="section-title" />
+                <TextBlock Text="Заголовки (общие)" Classes="section-title" />
                 <controls:RowListEditorView DataContext="{Binding HeadersEditor}" />
             </StackPanel>
         </Border>

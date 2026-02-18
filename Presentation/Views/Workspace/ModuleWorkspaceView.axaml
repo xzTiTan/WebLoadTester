@@ -27,7 +27,7 @@
             <ScrollViewer x:Name="WorkspaceScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Spacing="12">
                     <WrapPanel>
-                        <Button Content="Details" Command="{Binding Workspace.ToggleDetailsCommand}" />
+                        <Button Content="Детали" Command="{Binding Workspace.ToggleDetailsCommand}" />
                     </WrapPanel>
 
                     <TextBlock Text="Выберите модуль слева"
@@ -45,7 +45,7 @@
                         </Border>
 
                         <StackPanel Spacing="6" IsEnabled="{Binding Workspace.IsIdle}">
-                            <TextBlock Text="Module Settings" />
+                            <TextBlock Text="Настройки модуля" />
                             <StackPanel Spacing="8">
                                 <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
                             </StackPanel>

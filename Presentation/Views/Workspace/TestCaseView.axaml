@@ -5,7 +5,7 @@
              x:Class="WebLoadTester.Presentation.Views.Workspace.TestCaseView"
              x:DataType="vm:TestCaseViewModel">
     <StackPanel Spacing="6">
-        <TextBlock Text="TestCase" />
+        <TextBlock Text="Тест-кейс" />
         <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">

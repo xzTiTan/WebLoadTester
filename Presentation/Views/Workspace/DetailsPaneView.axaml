@@ -5,7 +5,7 @@
              x:DataType="vm:DetailsPaneViewModel">
     <StackPanel Spacing="8">
         <StackPanel Spacing="6">
-            <TextBlock Text="Run summary" />
+            <TextBlock Text="Сводка прогона" />
             <StackPanel Spacing="4">
                 <TextBlock Text="{Binding IdentityLine}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding StateLine}" TextWrapping="Wrap" />
@@ -17,7 +17,7 @@
         </StackPanel>
 
         <StackPanel Spacing="6">
-            <TextBlock Text="Artifacts" />
+            <TextBlock Text="Артефакты" />
             <StackPanel Spacing="6">
                 <TextBlock Text="{Binding RunFolderPath}" TextWrapping="Wrap" />
                 <WrapPanel>
@@ -29,19 +29,19 @@
         </StackPanel>
 
         <StackPanel Spacing="6" IsEnabled="{Binding CanEditTelegram}">
-            <TextBlock Text="Telegram" />
+            <TextBlock Text="Телеграм" />
             <StackPanel Spacing="6">
-                <CheckBox Content="Enabled" IsChecked="{Binding TelegramEnabled, Mode=OneWay}" IsEnabled="False" />
-                <CheckBox Content="NotifyOnError" IsChecked="{Binding NotifyOnError, Mode=TwoWay}" />
-                <CheckBox Content="NotifyOnFinish" IsChecked="{Binding NotifyOnFinish, Mode=TwoWay}" />
+                <CheckBox Content="Включено" IsChecked="{Binding TelegramEnabled, Mode=OneWay}" IsEnabled="False" />
+                <CheckBox Content="Уведомлять об ошибках" IsChecked="{Binding NotifyOnError, Mode=TwoWay}" />
+                <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding NotifyOnFinish, Mode=TwoWay}" />
             </StackPanel>
         </StackPanel>
 
         <StackPanel Spacing="6">
-            <TextBlock Text="Hotkeys" />
+            <TextBlock Text="Горячие клавиши" />
             <StackPanel Spacing="2">
-                <TextBlock Text="F5 Start" />
-                <TextBlock Text="Shift+F5 Stop" />
+                <TextBlock Text="F5 Старт" />
+                <TextBlock Text="Shift+F5 Стоп" />
                 <TextBlock Text="Ctrl+L Лог" />
                 <TextBlock Text="Ctrl+S Сохранить" />
             </StackPanel>

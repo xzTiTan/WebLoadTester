@@ -10,7 +10,7 @@
                 <WrapPanel Classes="wrap-gap">
                     <StackPanel Spacing="4" MinWidth="260">
                         <TextBlock Text="Поиск" Classes="muted" />
-                        <TextBox Watermark="RunId / moduleId / FinalName" Text="{Binding SearchText, Mode=TwoWay}" />
+                        <TextBox Watermark="Идентификатор запуска / moduleId / имя теста" Text="{Binding SearchText, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Spacing="4" MinWidth="220">
                         <TextBlock Text="Модуль" Classes="muted" />
@@ -37,11 +37,11 @@
                 <WrapPanel Classes="wrap-gap">
                     <Button Content="Обновить" Classes="primary toolbar-button" Command="{Binding RefreshCommand}" />
                     <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Открыть report.json" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Открыть report.html" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Открыть отчёт JSON" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Открыть отчёт HTML" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
                     <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
                     <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Копировать RunId" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Копировать идентификатор запуска" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
                 </WrapPanel>
                 <TextBlock Text="{Binding RepeatRunHint}" IsVisible="{Binding HasRepeatRunHint}" />
             </StackPanel>
@@ -80,9 +80,9 @@
                 <Expander Header="Детали" IsExpanded="True">
                     <StackPanel Margin="0,8,0,0" Spacing="10">
                         <WrapPanel Classes="wrap-gap" IsVisible="{Binding HasSelectedRun}">
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.ModuleType, StringFormat='Module: {0}'}" FontSize="12" /></Border>
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.Status, StringFormat='Status: {0}'}" FontSize="12" /></Border>
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.RunId, StringFormat='RunId: {0}'}" FontSize="12" /></Border>
+                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.ModuleType, StringFormat='Модуль: {0}'}" FontSize="12" /></Border>
+                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.Status, StringFormat='Статус: {0}'}" FontSize="12" /></Border>
+                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.RunId, StringFormat='Идентификатор: {0}'}" FontSize="12" /></Border>
                         </WrapPanel>
 
                         <StackPanel Classes="empty-state" IsVisible="{Binding HasSelectedRun, Converter={StaticResource BooleanNotConverter}}">

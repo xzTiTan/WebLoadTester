@@ -14,22 +14,22 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsHttp}">
-                    <TextBlock Text="Url" Classes="field-label" />
+                    <TextBlock Text="URL" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsTcp}">
-                    <TextBlock Text="Host" Classes="field-label" />
+                    <TextBlock Text="Хост" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Host, Mode=TwoWay}" />
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsTcp}">
-                    <TextBlock Text="Port" Classes="field-label" />
+                    <TextBlock Text="Порт" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Maximum="65535" Value="{Binding Port, Mode=TwoWay}" />
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="TimeoutMs" Classes="field-label" />
+                    <TextBlock Text="Таймаут (мс)" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
