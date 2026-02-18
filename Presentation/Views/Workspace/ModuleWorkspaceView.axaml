@@ -4,14 +4,14 @@
              xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
              x:Class="WebLoadTester.Presentation.Views.Workspace.ModuleWorkspaceView"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="6">
-        <Border Grid.Column="0" Width="{Binding Workspace.LeftNavWidth}" Padding="6">
-            <StackPanel Spacing="6" IsEnabled="{Binding Workspace.IsIdle}">
+    <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="4">
+        <Border Grid.Column="0" Width="{Binding Workspace.LeftNavWidth}" Padding="4">
+            <StackPanel Spacing="4" IsEnabled="{Binding Workspace.IsIdle}">
                 <TextBox Watermark="Поиск модуля" Text="{Binding ModuleSearchText, Mode=TwoWay}" />
-                <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                <ListBox Classes="left-nav" ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:ModuleDescriptorVm">
-                            <StackPanel Spacing="2">
+                            <StackPanel Spacing="1">
                                 <TextBlock Text="{Binding DisplayName}" />
                                 <TextBlock Text="{Binding ModuleId}" />
                             </StackPanel>
@@ -23,9 +23,9 @@
 
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
-        <Border Grid.Column="2" Padding="6">
+        <Border Grid.Column="2" Padding="4">
             <ScrollViewer x:Name="WorkspaceScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Spacing="6">
+                <StackPanel Spacing="4">
                     <WrapPanel>
                         <Button Content="Детали" Command="{Binding Workspace.ToggleDetailsCommand}" />
                     </WrapPanel>
@@ -35,14 +35,14 @@
 
                     <Grid IsVisible="{Binding Workspace.HasModuleSelected}"
                           RowDefinitions="Auto,Auto,Auto"
-                          RowSpacing="6">
+                          RowSpacing="4">
                         <views:RunControlView Grid.Row="0" DataContext="{Binding Workspace.RunControl}" />
 
-                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="4">
                             <Expander Grid.Column="0"
                                       Header="Тест-кейс"
                                       IsExpanded="{Binding Workspace.IsTestCaseExpanded, Mode=TwoWay}">
-                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,4,0,0">
+                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
                                     <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
                                 </Border>
                             </Expander>
@@ -50,7 +50,7 @@
                             <Expander Grid.Column="1"
                                       Header="Профиль запуска"
                                       IsExpanded="{Binding Workspace.IsRunProfileExpanded, Mode=TwoWay}">
-                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,4,0,0">
+                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
                                     <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
                                 </Border>
                             </Expander>
@@ -59,7 +59,7 @@
                         <Expander Grid.Row="2"
                                   Header="Настройки модуля"
                                   IsExpanded="{Binding Workspace.IsModuleSettingsExpanded, Mode=TwoWay}">
-                            <StackPanel Spacing="4" IsEnabled="{Binding Workspace.IsIdle}" Margin="0,4,0,0">
+                            <StackPanel Spacing="2" IsEnabled="{Binding Workspace.IsIdle}" Margin="0,2,0,0">
                                 <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
                             </StackPanel>
                         </Expander>
@@ -72,7 +72,7 @@
 
         <Border Grid.Column="4"
                 Width="{Binding Workspace.DetailsWidth}"
-                Padding="6"
+                Padding="4"
                 IsVisible="{Binding Workspace.IsDetailsVisible}">
             <views:DetailsPaneView DataContext="{Binding Workspace.Details}" />
         </Border>

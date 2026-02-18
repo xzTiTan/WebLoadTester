@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Grid.field-row">
         <Setter Property="ColumnSpacing" Value="{DynamicResource FieldSpacing}" />
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
 
     <Style Selector="TextBlock.field-label">
@@ -10,7 +10,7 @@
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
-        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="Margin" Value="0,2,0,0" />
     </Style>
 
     <Style Selector="Control.field-control">
@@ -44,7 +44,7 @@
     </Style>
 
     <Style Selector="TextBlock.section-title">
-        <Setter Property="Margin" Value="0,0,0,14" />
+        <Setter Property="Margin" Value="0,0,0,10" />
     </Style>
 
     <Style Selector="TextBlock.status-line">
@@ -112,7 +112,7 @@
 
     <Style Selector="Border.step-card">
         <Setter Property="Padding" Value="14" />
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Margin" Value="0,0,0,8" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />

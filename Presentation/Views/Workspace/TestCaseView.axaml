@@ -6,8 +6,8 @@
              x:DataType="vm:TestCaseViewModel">
     <StackPanel Spacing="6">
         <TextBlock Text="Тест-кейс" />
-        <StackPanel Spacing="8">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                 <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:ModuleConfigSummary">
@@ -22,8 +22,8 @@
             <TextBox TabIndex="23" Watermark="Описание" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
 
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Сохранить" TabIndex="24" Command="{Binding SaveCommand}" Margin="0,0,8,0" />
-                <Button Content="Сохранить как" TabIndex="25" Command="{Binding SaveAsCommand}" Margin="0,0,8,0" />
+                <Button Content="Сохранить" TabIndex="24" Command="{Binding SaveCommand}" Margin="0,0,6,0" />
+                <Button Content="Сохранить как" TabIndex="25" Command="{Binding SaveAsCommand}" Margin="0,0,6,0" />
                 <Button Content="Удалить" TabIndex="26" Command="{Binding DeleteCommand}" />
             </WrapPanel>
 

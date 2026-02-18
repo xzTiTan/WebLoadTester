@@ -8,8 +8,8 @@
              x:DataType="vm:UiSnapshotSettingsViewModel">
     <UserControl.DataTemplates>
         <DataTemplate x:DataType="rows:SnapshotTargetRowViewModel">
-            <StackPanel Spacing="4" Margin="0,0,0,8">
-                <Grid ColumnDefinitions="160,3*,2*" ColumnSpacing="8">
+            <StackPanel Spacing="2" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="160,3*,2*" ColumnSpacing="6">
                     <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя" />
                     <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://пример.рф" />
                     <TextBox Grid.Column="2"

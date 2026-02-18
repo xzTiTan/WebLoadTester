@@ -8,8 +8,8 @@
              x:DataType="vm:HttpPerformanceSettingsViewModel">
     <UserControl.DataTemplates>
         <DataTemplate x:DataType="rows:HttpPerformanceEndpointRowViewModel">
-            <StackPanel Spacing="4" Margin="0,0,0,8">
-                <Grid ColumnDefinitions="140,4*" ColumnSpacing="8">
+            <StackPanel Spacing="2" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="140,4*" ColumnSpacing="6">
                     <ComboBox Grid.Column="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding Method, Mode=TwoWay}" />
                     <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="/api/точка" />
                 </Grid>
@@ -18,8 +18,8 @@
         </DataTemplate>
 
         <DataTemplate x:DataType="commonRows:HttpHeaderRowViewModel">
-            <StackPanel Spacing="4" Margin="0,0,0,8">
-                <Grid ColumnDefinitions="220,4*" ColumnSpacing="8">
+            <StackPanel Spacing="2" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="220,4*" ColumnSpacing="6">
                     <TextBox Grid.Column="0" Text="{Binding Key, Mode=TwoWay}" Watermark="Заголовок" />
                     <TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" Watermark="Значение" />
                 </Grid>

@@ -3,13 +3,13 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Controls"
              x:Class="WebLoadTester.Presentation.Views.Controls.RowListEditorView"
              x:DataType="vm:RowListEditorViewModel">
-    <StackPanel Spacing="8">
+    <StackPanel Spacing="6">
         <WrapPanel Orientation="Horizontal">
-            <Button Content="Добавить" Command="{Binding AddCommand}" Margin="0,0,8,0" />
-            <Button Content="Удалить" Command="{Binding RemoveCommand}" IsEnabled="{Binding CanRemove}" Margin="0,0,8,0" />
-            <Button Content="Вверх" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanMoveUp}" Margin="0,0,8,0" />
-            <Button Content="Вниз" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanMoveDown}" Margin="0,0,8,0" />
-            <Button Content="Дублировать" Command="{Binding DuplicateCommand}" IsEnabled="{Binding CanDuplicate}" />
+            <Button Classes="rowlist-tool" Content="Добавить" Command="{Binding AddCommand}" Margin="0,0,6,0" />
+            <Button Classes="rowlist-tool" Content="Удалить" Command="{Binding RemoveCommand}" IsEnabled="{Binding CanRemove}" Margin="0,0,6,0" />
+            <Button Classes="rowlist-tool" Content="Вверх" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanMoveUp}" Margin="0,0,6,0" />
+            <Button Classes="rowlist-tool" Content="Вниз" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanMoveDown}" Margin="0,0,6,0" />
+            <Button Classes="rowlist-tool" Content="Дублировать" Command="{Binding DuplicateCommand}" IsEnabled="{Binding CanDuplicate}" />
         </WrapPanel>
 
         <ItemsControl ItemsSource="{Binding ValidationErrors}">
