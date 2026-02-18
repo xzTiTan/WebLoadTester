@@ -21,6 +21,9 @@ public partial class RowListEditorViewModel : ObservableObject
     [ObservableProperty]
     private object? selectedItem;
 
+    [ObservableProperty]
+    private int focusRequestToken;
+
     public IEnumerable<string> ValidationErrors => _validationProvider?.Invoke() ?? [];
 
     public bool CanRemove => RemoveCommand.CanExecute(null);
@@ -94,6 +97,7 @@ public partial class RowListEditorViewModel : ObservableObject
         if (item != null)
         {
             SelectedItem = item;
+            FocusRequestToken++;
         }
 
         RaiseCommandState();
@@ -109,7 +113,16 @@ public partial class RowListEditorViewModel : ObservableObject
     private void MoveDown() => _moveDown?.Invoke(SelectedItem);
 
     [RelayCommand(CanExecute = nameof(CanMutateSelected))]
-    private void Duplicate() => _duplicate?.Invoke(SelectedItem);
+    private void Duplicate()
+    {
+        var previousSelection = SelectedItem;
+        _duplicate?.Invoke(SelectedItem);
+
+        if (SelectedItem != null && !ReferenceEquals(previousSelection, SelectedItem))
+        {
+            FocusRequestToken++;
+        }
+    }
 
     private bool CanMutateSelected() => SelectedItem != null;
 }
