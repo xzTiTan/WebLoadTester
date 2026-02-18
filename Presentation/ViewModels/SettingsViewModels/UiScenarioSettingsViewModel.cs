@@ -13,10 +13,14 @@ namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly UiScenarioSettings _settings;
+    private bool _isInitializing;
+    private int _suspendSync;
 
     public UiScenarioSettingsViewModel(UiScenarioSettings settings)
     {
+        _isInitializing = true;
         _settings = settings;
+        _settings.Steps ??= new List<UiStep>();
         NormalizeLegacySteps(_settings);
 
         targetUrl = _settings.TargetUrl;
@@ -37,6 +41,8 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
 
         RefreshEditorItems();
         SelectedStepRow = StepRows.FirstOrDefault();
+        _isInitializing = false;
+        SyncSteps();
     }
 
     public override object Settings => _settings;
@@ -69,8 +75,10 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
             return;
         }
 
+        incoming.Steps ??= new List<UiStep>();
         NormalizeLegacySteps(incoming);
 
+        _isInitializing = true;
         Steps.Clear();
         StepRows.Clear();
 
@@ -83,6 +91,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         SelectedStepRow = StepRows.FirstOrDefault();
         TargetUrl = incoming.TargetUrl;
         TimeoutMs = incoming.TimeoutMs;
+        _isInitializing = false;
         SyncSteps();
     }
 
@@ -171,7 +180,15 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         }
 
         var clone = row.Clone();
-        clone.NormalizeForAction();
+        SuspendSync();
+        try
+        {
+            clone.NormalizeForAction();
+        }
+        finally
+        {
+            ResumeSync();
+        }
 
         var index = StepRows.IndexOf(row);
         if (index < 0)
@@ -265,6 +282,11 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         var row = new UiStepRowViewModel(step);
         row.PropertyChanged += (_, _) =>
         {
+            if (_isInitializing || _suspendSync > 0)
+            {
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(step.Value))
             {
                 step.Text = step.Value;
@@ -273,7 +295,15 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
             SyncSteps();
         };
 
-        row.NormalizeForAction();
+        SuspendSync();
+        try
+        {
+            row.NormalizeForAction();
+        }
+        finally
+        {
+            ResumeSync();
+        }
         return row;
     }
 
@@ -292,8 +322,20 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         RefreshEditorItems();
     }
 
+    private void SuspendSync() => _suspendSync++;
+
+    private void ResumeSync()
+    {
+        if (_suspendSync > 0)
+        {
+            _suspendSync--;
+        }
+    }
+
     private static void NormalizeLegacySteps(UiScenarioSettings settings)
     {
+        settings.Steps ??= new List<UiStep>();
+
         if (settings.Steps.Count == 0)
         {
             return;
