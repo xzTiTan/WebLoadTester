@@ -50,7 +50,8 @@
                 <DataGrid x:Name="RunsGrid"
                           ItemsSource="{Binding Runs}"
                           SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
-                          AutoGenerateColumns="False">
+                          AutoGenerateColumns="False"
+                          IsVisible="{Binding HasRuns}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
                         <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
@@ -61,6 +62,7 @@
                         <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
+                <TextBlock Text="Нет запусков" IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}" Margin="8" />
             </Border>
 
             <GridSplitter Grid.Row="1"

@@ -1187,6 +1187,27 @@ public partial class MainWindowViewModel : ViewModelBase
         return finalName;
     }
 
+
+    public UiLayoutState GetUiLayoutStateSnapshot()
+    {
+        var state = _settingsService.Settings.UiLayout ?? new UiLayoutState();
+        return new UiLayoutState
+        {
+            LeftNavWidth = state.LeftNavWidth,
+            DetailsWidth = state.DetailsWidth,
+            IsDetailsVisible = state.IsDetailsVisible,
+            IsLogExpanded = state.IsLogExpanded,
+            IsLogOnlyErrors = state.IsLogOnlyErrors,
+            LogFilterText = state.LogFilterText
+        };
+    }
+
+    public async Task SaveUiLayoutStateAsync(UiLayoutState state)
+    {
+        _settingsService.Settings.UiLayout = state;
+        await _settingsService.SaveAsync();
+    }
+
     private static PreflightSettings? CreatePreflightSettings(object settings)
     {
         string? target = settings switch

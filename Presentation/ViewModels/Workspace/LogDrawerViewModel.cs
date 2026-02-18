@@ -8,6 +8,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Presentation.ViewModels.Controls;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
@@ -19,15 +20,25 @@ public partial class LogDrawerViewModel : ObservableObject
 
     private readonly ObservableCollection<LogLineViewModel> _allLines = new();
     private readonly DispatcherTimer _filterDebounceTimer;
+    private readonly Action? _onStateChanged;
 
-    public LogDrawerViewModel()
+    public LogDrawerViewModel(UiLayoutState? initialState = null, Action? onStateChanged = null)
     {
+        _onStateChanged = onStateChanged;
         _filterDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _filterDebounceTimer.Tick += (_, _) =>
         {
             _filterDebounceTimer.Stop();
             RebuildVisibleLines();
+            _onStateChanged?.Invoke();
         };
+
+        if (initialState != null)
+        {
+            isExpanded = initialState.IsLogExpanded;
+            onlyErrors = initialState.IsLogOnlyErrors;
+            filterText = initialState.LogFilterText ?? string.Empty;
+        }
     }
 
     public ObservableCollection<LogLineViewModel> VisibleLines { get; } = new();
@@ -140,7 +151,13 @@ public partial class LogDrawerViewModel : ObservableObject
         VisibleLines.Clear();
     }
 
-    partial void OnOnlyErrorsChanged(bool value) => RebuildVisibleLines();
+    partial void OnIsExpandedChanged(bool value) => _onStateChanged?.Invoke();
+
+    partial void OnOnlyErrorsChanged(bool value)
+    {
+        RebuildVisibleLines();
+        _onStateChanged?.Invoke();
+    }
 
     partial void OnFilterTextChanged(string value)
     {

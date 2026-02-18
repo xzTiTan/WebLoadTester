@@ -6,8 +6,8 @@
     <GroupBox Header="Run Control">
         <StackPanel Margin="8" Spacing="8">
             <WrapPanel Orientation="Horizontal">
-                <Button x:Name="StartButton" Content="Старт" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
-                <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" />
+                <Button x:Name="StartButton" Content="Старт" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
+                <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" />
             </WrapPanel>
 
             <TextBlock Text="{Binding StatusText}" />
@@ -22,10 +22,11 @@
             </ItemsControl>
 
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />
-                <Button Content="HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,8,0" />
-                <Button Content="JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" />
+                <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" TabIndex="10" />
+                <Button Content="HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,8,0" TabIndex="11" />
+                <Button Content="JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" TabIndex="12" />
             </WrapPanel>
+            <TextBlock Text="Артефактов нет" IsVisible="{Binding HasRunFolder, Converter={StaticResource BooleanNotConverter}}" />
         </StackPanel>
     </GroupBox>
 </UserControl>

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using WebLoadTester.Infrastructure.Storage;
 using LegacyFamilyViewModel = WebLoadTester.Presentation.ViewModels.Tabs.ModuleFamilyViewModel;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
@@ -16,7 +17,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
     private ModuleDescriptorVm? _lastConfirmedSelection;
     private bool _isSyncingSelection;
 
-    public ModuleFamilyViewModel(string title, MainWindowViewModel backend, LegacyFamilyViewModel legacyFamily, LogDrawerViewModel logDrawer)
+    public ModuleFamilyViewModel(string title, MainWindowViewModel backend, LegacyFamilyViewModel legacyFamily, LogDrawerViewModel logDrawer, UiLayoutState? initialLayoutState = null, Action? onLayoutStateChanged = null)
     {
         Title = title;
         _backend = backend;
@@ -36,7 +37,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
         selectedModule = selectedDescriptor;
         _lastConfirmedSelection = selectedDescriptor;
 
-        Workspace = new ModuleWorkspaceViewModel(_backend, logDrawer);
+        Workspace = new ModuleWorkspaceViewModel(_backend, logDrawer, initialLayoutState, onLayoutStateChanged);
         UpdateWorkspaceFromSelection(selectedDescriptor);
 
         _legacyFamily.PropertyChanged += OnLegacyFamilyPropertyChanged;

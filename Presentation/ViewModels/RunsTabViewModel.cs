@@ -71,6 +71,7 @@ public partial class RunsTabViewModel : ObservableObject
     [ObservableProperty] private string repeatRunHint = string.Empty;
 
     public bool HasSelectedRun => SelectedRun != null;
+    public bool HasRuns => Runs.Count > 0;
     public bool CanRepeatRun => RepeatRunCommand.CanExecute(null);
     public bool HasRepeatRunHint => !string.IsNullOrWhiteSpace(RepeatRunHint);
 

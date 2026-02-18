@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
@@ -11,13 +14,22 @@ namespace WebLoadTester.Presentation.ViewModels.Workspace;
 public partial class ModuleWorkspaceViewModel : ObservableObject
 {
     private readonly MainWindowViewModel _backend;
+    private readonly Action? _onLayoutStateChanged;
     private INotifyPropertyChanged? _currentValidatableSettings;
 
-    public ModuleWorkspaceViewModel(MainWindowViewModel backend, LogDrawerViewModel logDrawer)
+    public ModuleWorkspaceViewModel(MainWindowViewModel backend, LogDrawerViewModel logDrawer, UiLayoutState? initialState = null, Action? onLayoutStateChanged = null)
     {
         _backend = backend;
+        _onLayoutStateChanged = onLayoutStateChanged;
         IsRunning = backend.IsRunning;
         _backend.PropertyChanged += OnBackendPropertyChanged;
+
+        if (initialState != null)
+        {
+            leftNavWidth = initialState.LeftNavWidth;
+            detailsWidth = initialState.DetailsWidth;
+            isDetailsVisible = initialState.IsDetailsVisible;
+        }
 
         WorkspaceValidationErrors = new ObservableCollection<string>();
         WorkspaceValidationErrors.CollectionChanged += OnWorkspaceValidationErrorsChanged;
@@ -59,11 +71,16 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     private bool isDetailsVisible = true;
 
+    [ObservableProperty]
+    private int scrollToTopRequestToken;
+
     public ObservableCollection<string> WorkspaceValidationErrors { get; }
 
     public bool HasWorkspaceValidationErrors => WorkspaceValidationErrors.Count > 0;
 
     public bool IsIdle => !IsRunning;
+
+    public bool HasModuleSelected => !string.IsNullOrWhiteSpace(ModuleId);
 
     public void SetSelectedModule(ModuleDescriptorVm? descriptor)
     {
@@ -78,6 +95,7 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
 
         SubscribeSettingsValidationSource();
         RefreshWorkspaceValidationErrors();
+        OnPropertyChanged(nameof(HasModuleSelected));
     }
 
     public IReadOnlyList<string> GetWorkspaceValidationErrors()
@@ -112,15 +130,30 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         OnPropertyChanged(nameof(HasWorkspaceValidationErrors));
     }
 
-
     public void RequestRunControlFocus()
     {
         RunControl.RequestStartFocus();
     }
+
+    public void RequestScrollToTop()
+    {
+        ScrollToTopRequestToken++;
+    }
+
+    [RelayCommand]
+    private void ToggleDetails()
+    {
+        IsDetailsVisible = !IsDetailsVisible;
+    }
+
     partial void OnIsRunningChanged(bool value)
     {
         OnPropertyChanged(nameof(IsIdle));
     }
+
+    partial void OnLeftNavWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
+    partial void OnDetailsWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
+    partial void OnIsDetailsVisibleChanged(bool value) => _onLayoutStateChanged?.Invoke();
 
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

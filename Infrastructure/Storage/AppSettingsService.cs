@@ -35,12 +35,20 @@ public class AppSettingsService
     {
         if (File.Exists(_settingsPath))
         {
-            var json = File.ReadAllText(_settingsPath);
-            var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-            if (loaded != null)
+            try
             {
-                loaded.Telegram ??= new TelegramSettings();
-                return loaded;
+                var json = File.ReadAllText(_settingsPath);
+                var loaded = JsonSerializer.Deserialize<AppSettings>(json);
+                if (loaded != null)
+                {
+                    loaded.Telegram ??= new TelegramSettings();
+                    loaded.UiLayout ??= new UiLayoutState();
+                    return loaded;
+                }
+            }
+            catch
+            {
+                // fallback to defaults when settings file is corrupted
             }
         }
 
@@ -64,6 +72,7 @@ public class AppSettings
     public string RunsDirectory { get; set; } = string.Empty;
     public string BrowsersDirectory { get; set; } = string.Empty;
     public TelegramSettings Telegram { get; set; } = new();
+    public UiLayoutState UiLayout { get; set; } = new();
     public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
 
     public static AppSettings CreateDefault()
@@ -75,7 +84,8 @@ public class AppSettings
             DataDirectory = dataDirectory,
             RunsDirectory = Path.Combine(root, "runs"),
             BrowsersDirectory = Path.Combine(dataDirectory, "browsers"),
-            Telegram = new TelegramSettings()
+            Telegram = new TelegramSettings(),
+            UiLayout = new UiLayoutState()
         };
     }
 }

@@ -24,23 +24,32 @@
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
         <Border Grid.Column="2" Padding="8">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer x:Name="WorkspaceScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Spacing="12">
-                    <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
+                    <WrapPanel>
+                        <Button Content="Details" Command="{Binding Workspace.ToggleDetailsCommand}" />
+                    </WrapPanel>
 
-                    <Border IsEnabled="{Binding Workspace.IsIdle}">
-                        <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
-                    </Border>
+                    <TextBlock Text="Выберите модуль слева"
+                               IsVisible="{Binding Workspace.HasModuleSelected, Converter={StaticResource BooleanNotConverter}}" />
 
-                    <Border IsEnabled="{Binding Workspace.IsIdle}">
-                        <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
-                    </Border>
+                    <StackPanel IsVisible="{Binding Workspace.HasModuleSelected}" Spacing="12">
+                        <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
 
-                    <GroupBox Header="Module Settings" IsEnabled="{Binding Workspace.IsIdle}">
-                        <StackPanel Margin="8" Spacing="8">
-                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
-                        </StackPanel>
-                    </GroupBox>
+                        <Border IsEnabled="{Binding Workspace.IsIdle}">
+                            <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                        </Border>
+
+                        <Border IsEnabled="{Binding Workspace.IsIdle}">
+                            <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                        </Border>
+
+                        <GroupBox Header="Module Settings" IsEnabled="{Binding Workspace.IsIdle}">
+                            <StackPanel Margin="8" Spacing="8">
+                                <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

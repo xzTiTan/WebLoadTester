@@ -7,23 +7,23 @@
     <GroupBox Header="TestCase">
         <StackPanel Margin="8" Spacing="8">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <ComboBox ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
+                <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:ModuleConfigSummary">
                             <TextBlock Text="{Binding FinalName}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button Grid.Column="1" Content="Загрузить" Command="{Binding LoadCommand}" />
+                <Button Grid.Column="1" Content="Загрузить" TabIndex="21" Command="{Binding LoadCommand}" />
             </Grid>
 
-            <TextBox Watermark="Имя (обяз.)" Text="{Binding Name, Mode=TwoWay}" />
-            <TextBox Watermark="Описание" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
+            <TextBox TabIndex="22" Watermark="Имя (обяз.)" Text="{Binding Name, Mode=TwoWay}" />
+            <TextBox TabIndex="23" Watermark="Описание" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
 
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Сохранить" Command="{Binding SaveCommand}" Margin="0,0,8,0" />
-                <Button Content="Сохранить как" Command="{Binding SaveAsCommand}" Margin="0,0,8,0" />
-                <Button Content="Удалить" Command="{Binding DeleteCommand}" />
+                <Button Content="Сохранить" TabIndex="24" Command="{Binding SaveCommand}" Margin="0,0,8,0" />
+                <Button Content="Сохранить как" TabIndex="25" Command="{Binding SaveAsCommand}" Margin="0,0,8,0" />
+                <Button Content="Удалить" TabIndex="26" Command="{Binding DeleteCommand}" />
             </WrapPanel>
 
             <TextBlock Text="{Binding DirtyMark}" />

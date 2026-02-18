@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Presentation.ViewModels.Controls;
 using WebLoadTester.Presentation.ViewModels.Workspace;
 
@@ -13,6 +15,8 @@ namespace WebLoadTester.Presentation.ViewModels.Shell;
 public partial class AppShellViewModel : ViewModelBase
 {
     private readonly MainWindowViewModel _backend;
+    private readonly UiLayoutState _layoutState;
+    private readonly DispatcherTimer _layoutSaveDebounce;
     private int _processedBackendLogCount;
 
     public AppShellViewModel()
@@ -23,11 +27,20 @@ public partial class AppShellViewModel : ViewModelBase
     public AppShellViewModel(MainWindowViewModel backend)
     {
         _backend = backend;
-        LogDrawer = new LogDrawerViewModel();
+        _layoutState = _backend.GetUiLayoutStateSnapshot();
 
-        UiModules = new ModuleFamilyViewModel("UI тестирование", _backend, _backend.UiFamily, LogDrawer);
-        HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily, LogDrawer);
-        NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily, LogDrawer);
+        _layoutSaveDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
+        _layoutSaveDebounce.Tick += async (_, _) =>
+        {
+            _layoutSaveDebounce.Stop();
+            await PersistLayoutStateAsync();
+        };
+
+        LogDrawer = new LogDrawerViewModel(_layoutState, ScheduleLayoutSave);
+
+        UiModules = new ModuleFamilyViewModel("UI тестирование", _backend, _backend.UiFamily, LogDrawer, _layoutState, ScheduleLayoutSave);
+        HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily, LogDrawer, _layoutState, ScheduleLayoutSave);
+        NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily, LogDrawer, _layoutState, ScheduleLayoutSave);
 
         Tabs = new ObservableCollection<TabViewModel>
         {
@@ -155,6 +168,7 @@ public partial class AppShellViewModel : ViewModelBase
         }
 
         family.Workspace.RefreshWorkspaceValidationErrors();
+        family.Workspace.RequestScrollToTop();
         family.Workspace.RequestRunControlFocus();
     }
 
@@ -170,6 +184,26 @@ public partial class AppShellViewModel : ViewModelBase
             var raw = _backend.LogEntries[_processedBackendLogCount++];
             LogDrawer.Append(ToLogLine(raw));
         }
+    }
+
+    private void ScheduleLayoutSave()
+    {
+        _layoutSaveDebounce.Stop();
+        _layoutSaveDebounce.Start();
+    }
+
+    private async Task PersistLayoutStateAsync()
+    {
+        var activeWorkspace = SelectedTab.ContentVm is ModuleFamilyViewModel family ? family.Workspace : UiModules.Workspace;
+
+        _layoutState.LeftNavWidth = activeWorkspace.LeftNavWidth;
+        _layoutState.DetailsWidth = activeWorkspace.DetailsWidth;
+        _layoutState.IsDetailsVisible = activeWorkspace.IsDetailsVisible;
+        _layoutState.IsLogExpanded = LogDrawer.IsExpanded;
+        _layoutState.IsLogOnlyErrors = LogDrawer.OnlyErrors;
+        _layoutState.LogFilterText = LogDrawer.FilterText;
+
+        await _backend.SaveUiLayoutStateAsync(_layoutState);
     }
 
     private static LogLineViewModel ToLogLine(string raw)
