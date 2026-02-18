@@ -7,7 +7,7 @@
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel"
              x:Name="Root">
-    <UserControl.Resources>
+    <UserControl.DataTemplates>
         <DataTemplate DataType="{x:Type rowVm:UiStepRowViewModel}">
             <StackPanel Spacing="4" Margin="0,0,0,8">
                 <Grid ColumnDefinitions="140,2*,2*,96" ColumnSpacing="8">
@@ -42,7 +42,7 @@
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" TextWrapping="Wrap" />
             </StackPanel>
         </DataTemplate>
-    </UserControl.Resources>
+    </UserControl.DataTemplates>
 
     <StackPanel Spacing="16">
         <Border Classes="section">

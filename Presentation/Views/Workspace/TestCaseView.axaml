@@ -4,8 +4,9 @@
              xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.Workspace.TestCaseView"
              x:DataType="vm:TestCaseViewModel">
-    <GroupBox Header="TestCase">
-        <StackPanel Margin="8" Spacing="8">
+    <StackPanel Spacing="6">
+        <TextBlock Text="TestCase" />
+        <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
@@ -39,5 +40,5 @@
 
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
         </StackPanel>
-    </GroupBox>
+    </StackPanel>
 </UserControl>

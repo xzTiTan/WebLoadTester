@@ -33,36 +33,40 @@
         </Border>
 
         <Border Grid.Row="1" Classes="section">
-            <WrapPanel Classes="wrap-gap">
-                <Button Content="Обновить" Classes="primary toolbar-button" Command="{Binding RefreshCommand}" />
-                <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                <Button Content="Открыть report.json" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                <Button Content="Открыть report.html" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
-                <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                <Button Content="Копировать RunId" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
-            </WrapPanel>
-            <TextBlock Text="{Binding RepeatRunHint}" IsVisible="{Binding HasRepeatRunHint}" />
+            <StackPanel Spacing="8">
+                <WrapPanel Classes="wrap-gap">
+                    <Button Content="Обновить" Classes="primary toolbar-button" Command="{Binding RefreshCommand}" />
+                    <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Открыть report.json" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Открыть report.html" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
+                    <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Копировать RunId" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                </WrapPanel>
+                <TextBlock Text="{Binding RepeatRunHint}" IsVisible="{Binding HasRepeatRunHint}" />
+            </StackPanel>
         </Border>
 
         <Grid Grid.Row="2" RowDefinitions="*,Auto,*" RowSpacing="8">
             <Border Grid.Row="0" Classes="section" Padding="0">
-                <DataGrid x:Name="RunsGrid"
-                          ItemsSource="{Binding Runs}"
-                          SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
-                          AutoGenerateColumns="False"
-                          IsVisible="{Binding HasRuns}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
-                        <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
-                        <DataGridTextColumn Header="FinalName" Binding="{Binding TestName}" Width="2*" />
-                        <DataGridTextColumn Header="ModuleId" Binding="{Binding ModuleType}" Width="1.5*" />
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
-                        <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
-                        <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-                <TextBlock Text="Нет запусков" IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}" Margin="8" />
+                <Grid>
+                    <DataGrid x:Name="RunsGrid"
+                              ItemsSource="{Binding Runs}"
+                              SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              IsVisible="{Binding HasRuns}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
+                            <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
+                            <DataGridTextColumn Header="FinalName" Binding="{Binding TestName}" Width="2*" />
+                            <DataGridTextColumn Header="ModuleId" Binding="{Binding ModuleType}" Width="1.5*" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                            <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
+                            <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="Нет запусков" IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}" Margin="8" />
+                </Grid>
             </Border>
 
             <GridSplitter Grid.Row="1"

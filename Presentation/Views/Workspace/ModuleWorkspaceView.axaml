@@ -44,11 +44,12 @@
                             <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
                         </Border>
 
-                        <GroupBox Header="Module Settings" IsEnabled="{Binding Workspace.IsIdle}">
-                            <StackPanel Margin="8" Spacing="8">
+                        <StackPanel Spacing="6" IsEnabled="{Binding Workspace.IsIdle}">
+                            <TextBlock Text="Module Settings" />
+                            <StackPanel Spacing="8">
                                 <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
                             </StackPanel>
-                        </GroupBox>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>

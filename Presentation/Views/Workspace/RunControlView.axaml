@@ -3,8 +3,9 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
              x:Class="WebLoadTester.Presentation.Views.Workspace.RunControlView"
              x:DataType="vm:RunControlViewModel">
-    <GroupBox Header="Run Control">
-        <StackPanel Margin="8" Spacing="8">
+    <StackPanel Spacing="6">
+        <TextBlock Text="Run Control" />
+        <StackPanel Spacing="8">
             <WrapPanel Orientation="Horizontal">
                 <Button x:Name="StartButton" Content="Старт" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
                 <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" />
@@ -28,5 +29,5 @@
             </WrapPanel>
             <TextBlock Text="Артефактов нет" IsVisible="{Binding HasRunFolder, Converter={StaticResource BooleanNotConverter}}" />
         </StackPanel>
-    </GroupBox>
+    </StackPanel>
 </UserControl>

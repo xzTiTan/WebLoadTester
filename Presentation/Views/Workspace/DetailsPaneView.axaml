@@ -4,8 +4,9 @@
              x:Class="WebLoadTester.Presentation.Views.Workspace.DetailsPaneView"
              x:DataType="vm:DetailsPaneViewModel">
     <StackPanel Spacing="8">
-        <GroupBox Header="Run summary">
-            <StackPanel Margin="8" Spacing="4">
+        <StackPanel Spacing="6">
+            <TextBlock Text="Run summary" />
+            <StackPanel Spacing="4">
                 <TextBlock Text="{Binding IdentityLine}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding StateLine}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding MetricLine1}" TextWrapping="Wrap" />
@@ -13,10 +14,11 @@
                 <TextBlock Text="{Binding LastErrorShort}" IsVisible="{Binding HasError}" TextWrapping="Wrap" />
                 <Button Content="Показать в логе" Command="{Binding ShowInLogCommand}" />
             </StackPanel>
-        </GroupBox>
+        </StackPanel>
 
-        <GroupBox Header="Artifacts">
-            <StackPanel Margin="8" Spacing="6">
+        <StackPanel Spacing="6">
+            <TextBlock Text="Artifacts" />
+            <StackPanel Spacing="6">
                 <TextBlock Text="{Binding RunFolderPath}" TextWrapping="Wrap" />
                 <WrapPanel>
                     <Button Content="Открыть папку" Command="{Binding OpenFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />
@@ -24,23 +26,25 @@
                     <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasJson}" />
                 </WrapPanel>
             </StackPanel>
-        </GroupBox>
+        </StackPanel>
 
-        <GroupBox Header="Telegram">
-            <StackPanel Margin="8" Spacing="6" IsEnabled="{Binding CanEditTelegram}">
+        <StackPanel Spacing="6" IsEnabled="{Binding CanEditTelegram}">
+            <TextBlock Text="Telegram" />
+            <StackPanel Spacing="6">
                 <CheckBox Content="Enabled" IsChecked="{Binding TelegramEnabled, Mode=OneWay}" IsEnabled="False" />
                 <CheckBox Content="NotifyOnError" IsChecked="{Binding NotifyOnError, Mode=TwoWay}" />
                 <CheckBox Content="NotifyOnFinish" IsChecked="{Binding NotifyOnFinish, Mode=TwoWay}" />
             </StackPanel>
-        </GroupBox>
+        </StackPanel>
 
-        <GroupBox Header="Hotkeys">
-            <StackPanel Margin="8" Spacing="2">
+        <StackPanel Spacing="6">
+            <TextBlock Text="Hotkeys" />
+            <StackPanel Spacing="2">
                 <TextBlock Text="F5 Start" />
                 <TextBlock Text="Shift+F5 Stop" />
                 <TextBlock Text="Ctrl+L Лог" />
                 <TextBlock Text="Ctrl+S Сохранить" />
             </StackPanel>
-        </GroupBox>
+        </StackPanel>
     </StackPanel>
 </UserControl>
