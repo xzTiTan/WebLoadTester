@@ -143,17 +143,17 @@ public partial class TelegramSettingsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(BotToken))
         {
-            TestMessageStatus = "Укажите BotToken.";
+            TestMessageStatus = "Укажите токен бота.";
             _logWarn("[Telegram] Тестовое сообщение не отправлено: BotToken пустой.");
-            _onTestMessageResult(false, "BotToken не задан.");
+            _onTestMessageResult(false, "Токен бота не задан.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(ChatId))
         {
-            TestMessageStatus = "Укажите ChatId.";
+            TestMessageStatus = "Укажите идентификатор чата.";
             _logWarn("[Telegram] Тестовое сообщение не отправлено: ChatId пустой.");
-            _onTestMessageResult(false, "ChatId не задан.");
+            _onTestMessageResult(false, "Идентификатор чата не задан.");
             return;
         }
 

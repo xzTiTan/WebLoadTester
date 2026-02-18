@@ -11,10 +11,10 @@
             <StackPanel Spacing="4" Margin="0,0,0,8">
                 <Grid ColumnDefinitions="160,3*,2*" ColumnSpacing="8">
                     <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя" />
-                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://example.com" />
+                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://пример.рф" />
                     <TextBox Grid.Column="2"
                              Text="{Binding Selector, Mode=TwoWay}"
-                             Watermark="#app .widget"
+                             Watermark="#селектор .элемент"
                              IsEnabled="{Binding $parent[UserControl].DataContext.FullPage, Converter={StaticResource BooleanNotConverter}}" />
                 </Grid>
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
@@ -56,12 +56,12 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Viewport width" Classes="field-label" />
+                    <TextBlock Text="Ширина области" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="0" Maximum="4096" Value="{Binding ViewportWidth, Mode=TwoWay}" />
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Viewport height" Classes="field-label" />
+                    <TextBlock Text="Высота области" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="0" Maximum="4096" Value="{Binding ViewportHeight, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>

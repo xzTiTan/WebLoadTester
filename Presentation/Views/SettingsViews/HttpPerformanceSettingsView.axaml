@@ -11,7 +11,7 @@
             <StackPanel Spacing="4" Margin="0,0,0,8">
                 <Grid ColumnDefinitions="140,4*" ColumnSpacing="8">
                     <ComboBox Grid.Column="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding Method, Mode=TwoWay}" />
-                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="/api/endpoint" />
+                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="/api/точка" />
                 </Grid>
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
             </StackPanel>
@@ -33,7 +33,7 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Базовые настройки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Базовый URL" Classes="field-label" />
+                    <TextBlock Text="Базовый адрес" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding BaseUrl, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">

@@ -15,7 +15,7 @@ public partial class HttpHeaderRowViewModel : ObservableObject
         {
             if (string.IsNullOrWhiteSpace(Key) || string.IsNullOrWhiteSpace(Value))
             {
-                return "Header: Key/Value обязателен";
+                return "Заголовок: ключ и значение обязательны";
             }
 
             return string.Empty;

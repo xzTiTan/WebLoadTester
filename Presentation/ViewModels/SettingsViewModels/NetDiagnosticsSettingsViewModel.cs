@@ -221,7 +221,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
 
         if (string.IsNullOrWhiteSpace(Hostname))
         {
-            errors.Add("Hostname обязателен.");
+            errors.Add("Имя хоста обязательно.");
         }
 
         if (!UseAutoPorts)

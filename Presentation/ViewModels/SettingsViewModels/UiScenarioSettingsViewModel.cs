@@ -257,7 +257,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
 
         if (TimeoutMs < 1000)
         {
-            errors.Add("TimeoutMs должен быть >= 1000.");
+            errors.Add("Таймаут в миллисекундах должен быть >= 1000.");
         }
 
         errors.AddRange(GetStepValidationErrors());

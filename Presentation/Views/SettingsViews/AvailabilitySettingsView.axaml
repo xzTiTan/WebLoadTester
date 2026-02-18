@@ -14,7 +14,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row" IsVisible="{Binding IsHttp}">
-                    <TextBlock Text="URL" Classes="field-label" />
+                    <TextBlock Text="Адрес" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
 

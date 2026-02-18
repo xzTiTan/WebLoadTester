@@ -20,7 +20,7 @@ public partial class SnapshotTargetRowViewModel : ObservableObject
     [ObservableProperty] private string selector = string.Empty;
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
-    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Target: Url обязателен" : string.Empty;
+    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Цель: адрес обязателен" : string.Empty;
 
     partial void OnNameChanged(string value)
     {

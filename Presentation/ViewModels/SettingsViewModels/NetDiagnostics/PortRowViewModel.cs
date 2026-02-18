@@ -18,7 +18,7 @@ public partial class PortRowViewModel : ObservableObject
     [ObservableProperty] private string label = string.Empty;
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
-    public string RowErrorText => Port is < 1 or > 65535 ? "Port: допустимый диапазон 1..65535" : string.Empty;
+    public string RowErrorText => Port is < 1 or > 65535 ? "Порт: допустимый диапазон 1..65535" : string.Empty;
 
     partial void OnPortChanged(int value)
     {

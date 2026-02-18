@@ -24,7 +24,7 @@ public partial class AssetRowViewModel : ObservableObject
     [ObservableProperty] private int? maxLatencyMs;
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
-    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Asset: Url обязателен" : string.Empty;
+    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Ресурс: адрес обязателен" : string.Empty;
 
     partial void OnNameChanged(string value) => Model.Name = string.IsNullOrWhiteSpace(value) ? null : value;
     partial void OnUrlChanged(string value)

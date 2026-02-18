@@ -14,7 +14,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="URL" Classes="field-label" />
+                    <TextBlock Text="Адрес" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
                 </Grid>
 
@@ -23,12 +23,12 @@
                     <WrapPanel Classes="field-control wrap-gap">
                         <CheckBox Content="HSTS" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
                         <CheckBox Content="X-Content-Type-Options" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
-                        <CheckBox Content="Frame protection" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
+                        <CheckBox Content="Защита фреймов" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
                         <CheckBox Content="CSP" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
                         <CheckBox Content="Referrer-Policy" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
                         <CheckBox Content="Permissions-Policy" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
-                        <CheckBox Content="HTTP → HTTPS redirect" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
-                        <CheckBox Content="Cookie flags" IsChecked="{Binding CheckCookieFlags, Mode=TwoWay}" />
+                        <CheckBox Content="Перенаправление HTTP → HTTPS" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
+                        <CheckBox Content="Флаги куки" IsChecked="{Binding CheckCookieFlags, Mode=TwoWay}" />
                     </WrapPanel>
                 </Grid>
             </StackPanel>

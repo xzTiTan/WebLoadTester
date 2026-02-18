@@ -20,7 +20,7 @@ public partial class HttpPerformanceEndpointRowViewModel : ObservableObject
     [ObservableProperty] private string url = "/";
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
-    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Endpoint: Url обязателен" : string.Empty;
+    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Точка запроса: адрес обязателен" : string.Empty;
 
     partial void OnMethodChanged(string value)
     {

@@ -24,8 +24,8 @@
 
             <WrapPanel Orientation="Horizontal">
                 <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" TabIndex="10" />
-                <Button Content="HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,8,0" TabIndex="11" />
-                <Button Content="JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" TabIndex="12" />
+                <Button Content="Открыть HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,8,0" TabIndex="11" />
+                <Button Content="Открыть JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" TabIndex="12" />
             </WrapPanel>
             <TextBlock Text="Артефактов нет" IsVisible="{Binding HasRunFolder, Converter={StaticResource BooleanNotConverter}}" />
         </StackPanel>

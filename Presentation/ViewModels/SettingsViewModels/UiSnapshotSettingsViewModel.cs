@@ -29,7 +29,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         TargetRows = new ObservableCollection<SnapshotTargetRowViewModel>(_settings.Targets.Select(CreateRow));
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" }));
         }
         TargetsEditor = new RowListEditorViewModel();
         TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
@@ -75,7 +75,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
 
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" }));
         }
 
         TargetsEditor.SetItems(TargetRows.Cast<object>());
@@ -105,7 +105,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
 
     private object? AddTargetInternal()
     {
-        var row = CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" });
+        var row = CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" });
         var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
         if (insertIndex < 0 || insertIndex > TargetRows.Count)
         {
@@ -196,7 +196,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
 
         if (TimeoutSeconds < 1)
         {
-            errors.Add("TimeoutSeconds должен быть >= 1.");
+            errors.Add("Таймаут в секундах должен быть >= 1.");
         }
 
         errors.AddRange(GetTargetErrors());

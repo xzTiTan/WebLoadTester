@@ -41,7 +41,7 @@ public partial class RunProfileViewModel : ObservableObject
     private RunProfile? selectedProfile;
 
     [ObservableProperty]
-    private string profileName = "Default";
+    private string profileName = "По умолчанию";
 
     [ObservableProperty]
     private int parallelism = 2;
@@ -173,7 +173,7 @@ public partial class RunProfileViewModel : ObservableObject
     private async Task SaveProfileAsync()
     {
         var profile = BuildProfileSnapshot(SelectedProfile?.Id ?? Guid.Empty);
-        profile.Name = string.IsNullOrWhiteSpace(ProfileName) ? "Profile" : ProfileName;
+        profile.Name = string.IsNullOrWhiteSpace(ProfileName) ? "Профиль" : ProfileName;
         var saved = await _runStore.SaveRunProfileAsync(profile, CancellationToken.None);
         await RefreshAsync();
         SelectedProfile = Profiles.FirstOrDefault(p => p.Id == saved.Id) ?? saved;
@@ -183,7 +183,7 @@ public partial class RunProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsProfileAsync()
     {
-        var name = string.IsNullOrWhiteSpace(ProfileName) ? "Profile" : ProfileName;
+        var name = string.IsNullOrWhiteSpace(ProfileName) ? "Профиль" : ProfileName;
         if (Profiles.Any(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
             StatusMessage = "Профиль с таким именем уже существует. Укажите новое имя для сохранения.";

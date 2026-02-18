@@ -94,7 +94,7 @@
                                           SelectedItem="{Binding TelegramSettings.ProgressMode, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Прогресс каждые N" Classes="field-label" />
+                                <TextBlock Text="Прогресс каждый N-й шаг" Classes="field-label" />
                                 <TextBox Classes="field-control" Watermark="Например: 10" Text="{Binding TelegramSettings.ProgressEveryN, Mode=TwoWay}" />
                             </Grid>
                             <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">

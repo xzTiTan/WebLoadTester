@@ -10,7 +10,7 @@
                 <WrapPanel Classes="wrap-gap">
                     <StackPanel Spacing="4" MinWidth="260">
                         <TextBlock Text="Поиск" Classes="muted" />
-                        <TextBox Watermark="Идентификатор запуска / moduleId / имя теста" Text="{Binding SearchText, Mode=TwoWay}" />
+                        <TextBox Watermark="Идентификатор запуска / код модуля / имя теста" Text="{Binding SearchText, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Spacing="4" MinWidth="220">
                         <TextBlock Text="Модуль" Classes="muted" />

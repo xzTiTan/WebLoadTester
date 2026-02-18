@@ -316,12 +316,12 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase, IV
 
         if (string.IsNullOrWhiteSpace(BaseUrl))
         {
-            errors.Add("BaseUrl обязателен.");
+            errors.Add("Базовый адрес обязателен.");
         }
 
         if (TimeoutSeconds < 1)
         {
-            errors.Add("TimeoutSeconds должен быть >= 1.");
+            errors.Add("Таймаут в секундах должен быть >= 1.");
         }
 
         errors.AddRange(GetEndpointErrors());

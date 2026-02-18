@@ -55,7 +55,7 @@
                 <StackPanel Spacing="4">
                     <TextBlock Text="{Binding SelectedModule.DisplayName}" Classes="section-title" FontSize="22" />
                     <TextBlock Text="{Binding SelectedModule.Description}" Classes="status-line" TextWrapping="Wrap" />
-                    <TextBlock Text="Нажмите Старт для запуска. report.json создаётся всегда; report.html — по флагу."
+                    <TextBlock Text="Нажмите «Старт» для запуска. JSON-отчёт создаётся всегда; HTML-отчёт — по флагу."
                                DataContext="{Binding DataContext, ElementName=VmProxy}"
                                x:DataType="root:MainWindowViewModel"
                                IsVisible="{Binding ShowRunHint}"

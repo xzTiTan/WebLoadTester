@@ -17,7 +17,7 @@ public partial class TimingTargetRowViewModel : ObservableObject
     [ObservableProperty] private string url = string.Empty;
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
-    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Target: Url обязателен" : string.Empty;
+    public string RowErrorText => string.IsNullOrWhiteSpace(Url) ? "Цель: адрес обязателен" : string.Empty;
 
     partial void OnUrlChanged(string value)
     {
