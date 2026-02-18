@@ -6,7 +6,8 @@
               xmlns:conv="clr-namespace:WebLoadTester.Presentation.Converters"
               xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.SettingsViews"
               xmlns:tabViews="clr-namespace:WebLoadTester.Presentation.Views.Tabs"
-              xmlns:tabsVm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+              xmlns:workspaceViews="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
+              xmlns:workspaceVm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
               xmlns:rootVm="clr-namespace:WebLoadTester.Presentation.ViewModels"
               RequestedThemeVariant="Light">
     <Application.Resources>
@@ -23,8 +24,8 @@
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
-        <DataTemplate DataType="{x:Type tabsVm:ModuleFamilyViewModel}">
-            <tabViews:UiTestingTab/>
+        <DataTemplate DataType="{x:Type workspaceVm:ModuleFamilyViewModel}">
+            <workspaceViews:ModuleWorkspaceView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type rootVm:RunsTabViewModel}">
             <tabViews:RunsTab/>

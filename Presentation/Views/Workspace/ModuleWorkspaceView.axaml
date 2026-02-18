@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             x:Class="WebLoadTester.Presentation.Views.Workspace.ModuleWorkspaceView"
+             x:DataType="vm:ModuleFamilyViewModel">
+    <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="8">
+        <Border Grid.Column="0" Width="{Binding Workspace.LeftNavWidth}" Padding="8">
+            <StackPanel Spacing="8" IsEnabled="{Binding Workspace.IsIdle}">
+                <TextBox Watermark="Поиск модуля" Text="{Binding ModuleSearchText, Mode=TwoWay}" />
+                <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ModuleDescriptorVm">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding DisplayName}" />
+                                <TextBlock Text="{Binding ModuleId}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <GridSplitter Grid.Column="1"
+                      Width="5"
+                      HorizontalAlignment="Stretch"
+                      ResizeDirection="Columns"
+                      ResizeBehavior="PreviousAndNext" />
+
+        <Border Grid.Column="2" Padding="8">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="12">
+                    <GroupBox Header="Run Control">
+                        <StackPanel Spacing="4" Margin="8">
+                            <TextBlock Text="{Binding Workspace.ModuleDisplayName, StringFormat='Модуль: {0}'}" />
+                            <TextBlock Text="{Binding Workspace.ModuleId, StringFormat='Id: {0}'}" />
+                            <TextBlock Text="{Binding Workspace.IsRunning, StringFormat='Running: {0}'}" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="TestCase">
+                        <TextBlock Margin="8" Text="Плейсхолдер секции TestCase (Этап 3)." />
+                    </GroupBox>
+
+                    <GroupBox Header="RunProfile">
+                        <TextBlock Margin="8" Text="Плейсхолдер секции RunProfile (Этап 3)." />
+                    </GroupBox>
+
+                    <GroupBox Header="Module Settings">
+                        <StackPanel Margin="8" Spacing="8">
+                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <GridSplitter Grid.Column="3"
+                      Width="5"
+                      HorizontalAlignment="Stretch"
+                      ResizeDirection="Columns"
+                      ResizeBehavior="PreviousAndNext" />
+
+        <Border Grid.Column="4"
+                Width="{Binding Workspace.DetailsWidth}"
+                Padding="8"
+                IsVisible="{Binding Workspace.IsDetailsVisible}">
+            <GroupBox Header="Details">
+                <StackPanel Margin="8" Spacing="6">
+                    <TextBlock Text="Панель деталей (stub, Этап 2)." />
+                    <TextBlock Text="Summary/Artifacts/Telegram будут вынесены позже." />
+                </StackPanel>
+            </GroupBox>
+        </Border>
+    </Grid>
+</UserControl>

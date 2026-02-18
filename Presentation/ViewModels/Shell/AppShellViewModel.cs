@@ -24,11 +24,15 @@ public partial class AppShellViewModel : ViewModelBase
         _backend = backend;
         LogDrawer = new LogDrawerViewModel();
 
+        UiModules = new ModuleFamilyViewModel("UI тестирование", _backend, _backend.UiFamily);
+        HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily);
+        NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily);
+
         Tabs = new ObservableCollection<TabViewModel>
         {
-            new("UI тестирование", _backend.UiFamily),
-            new("HTTP тестирование", _backend.HttpFamily),
-            new("Сеть и безопасность", _backend.NetFamily),
+            new("UI тестирование", UiModules),
+            new("HTTP тестирование", HttpModules),
+            new("Сеть и безопасность", NetSecModules),
             new("Прогоны", _backend.RunsTab)
         };
 
@@ -44,6 +48,9 @@ public partial class AppShellViewModel : ViewModelBase
     }
 
     public ObservableCollection<TabViewModel> Tabs { get; }
+    public ModuleFamilyViewModel UiModules { get; }
+    public ModuleFamilyViewModel HttpModules { get; }
+    public ModuleFamilyViewModel NetSecModules { get; }
 
     [ObservableProperty]
     private TabViewModel selectedTab;
