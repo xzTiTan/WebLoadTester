@@ -9,6 +9,11 @@
         Height="860"
         MinWidth="1080"
         MinHeight="760">
+    <Window.KeyBindings>
+        <KeyBinding Gesture="F5" Command="{Binding StartHotkeyCommand}" />
+        <KeyBinding Gesture="Shift+F5" Command="{Binding StopHotkeyCommand}" />
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding ToggleLogDrawerCommand}" />
+    </Window.KeyBindings>
     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="12">
         <Border Grid.Row="0" Padding="8">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">

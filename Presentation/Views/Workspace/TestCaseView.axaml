@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
+             x:Class="WebLoadTester.Presentation.Views.Workspace.TestCaseView"
+             x:DataType="vm:TestCaseViewModel">
+    <GroupBox Header="TestCase">
+        <StackPanel Margin="8" Spacing="8">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <ComboBox ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="domain:ModuleConfigSummary">
+                            <TextBlock Text="{Binding FinalName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="1" Content="Загрузить" Command="{Binding LoadCommand}" />
+            </Grid>
+
+            <TextBox Watermark="Имя (обяз.)" Text="{Binding Name, Mode=TwoWay}" />
+            <TextBox Watermark="Описание" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
+
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="Сохранить" Command="{Binding SaveCommand}" Margin="0,0,8,0" />
+                <Button Content="Сохранить как" Command="{Binding SaveAsCommand}" Margin="0,0,8,0" />
+                <Button Content="Удалить" Command="{Binding DeleteCommand}" />
+            </WrapPanel>
+
+            <TextBlock Text="{Binding DirtyMark}" />
+            <TextBlock Text="{Binding FinalNamePreview, StringFormat='Будет сохранено как: {0}'}" />
+
+            <ItemsControl ItemsSource="{Binding ValidationErrors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+        </StackPanel>
+    </GroupBox>
+</UserControl>

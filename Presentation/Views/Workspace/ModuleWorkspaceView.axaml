@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
              x:Class="WebLoadTester.Presentation.Views.Workspace.ModuleWorkspaceView"
              x:DataType="vm:ModuleFamilyViewModel">
     <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="8">
@@ -20,32 +21,22 @@
             </StackPanel>
         </Border>
 
-        <GridSplitter Grid.Column="1"
-                      Width="5"
-                      HorizontalAlignment="Stretch"
-                      ResizeDirection="Columns"
-                      ResizeBehavior="PreviousAndNext" />
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
         <Border Grid.Column="2" Padding="8">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Spacing="12">
-                    <GroupBox Header="Run Control">
-                        <StackPanel Spacing="4" Margin="8">
-                            <TextBlock Text="{Binding Workspace.ModuleDisplayName, StringFormat='Модуль: {0}'}" />
-                            <TextBlock Text="{Binding Workspace.ModuleId, StringFormat='Id: {0}'}" />
-                            <TextBlock Text="{Binding Workspace.IsRunning, StringFormat='Running: {0}'}" />
-                        </StackPanel>
-                    </GroupBox>
+                    <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
 
-                    <GroupBox Header="TestCase">
-                        <TextBlock Margin="8" Text="Плейсхолдер секции TestCase (Этап 3)." />
-                    </GroupBox>
+                    <Border IsEnabled="{Binding Workspace.IsIdle}">
+                        <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                    </Border>
 
-                    <GroupBox Header="RunProfile">
-                        <TextBlock Margin="8" Text="Плейсхолдер секции RunProfile (Этап 3)." />
-                    </GroupBox>
+                    <Border IsEnabled="{Binding Workspace.IsIdle}">
+                        <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                    </Border>
 
-                    <GroupBox Header="Module Settings">
+                    <GroupBox Header="Module Settings" IsEnabled="{Binding Workspace.IsIdle}">
                         <StackPanel Margin="8" Spacing="8">
                             <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
                         </StackPanel>
@@ -54,22 +45,13 @@
             </ScrollViewer>
         </Border>
 
-        <GridSplitter Grid.Column="3"
-                      Width="5"
-                      HorizontalAlignment="Stretch"
-                      ResizeDirection="Columns"
-                      ResizeBehavior="PreviousAndNext" />
+        <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
         <Border Grid.Column="4"
                 Width="{Binding Workspace.DetailsWidth}"
                 Padding="8"
                 IsVisible="{Binding Workspace.IsDetailsVisible}">
-            <GroupBox Header="Details">
-                <StackPanel Margin="8" Spacing="6">
-                    <TextBlock Text="Панель деталей (stub, Этап 2)." />
-                    <TextBlock Text="Summary/Artifacts/Telegram будут вынесены позже." />
-                </StackPanel>
-            </GroupBox>
+            <views:DetailsPaneView DataContext="{Binding Workspace.Details}" />
         </Border>
     </Grid>
 </UserControl>

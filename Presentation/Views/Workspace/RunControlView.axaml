@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             x:Class="WebLoadTester.Presentation.Views.Workspace.RunControlView"
+             x:DataType="vm:RunControlViewModel">
+    <GroupBox Header="Run Control">
+        <StackPanel Margin="8" Spacing="8">
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="Старт" Command="{Binding StartCommand}" Margin="0,0,8,0" />
+                <Button Content="Стоп" Command="{Binding StopCommand}" />
+            </WrapPanel>
+
+            <TextBlock Text="{Binding StatusText}" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" Height="10" />
+
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />
+                <Button Content="HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,8,0" />
+                <Button Content="JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" />
+            </WrapPanel>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

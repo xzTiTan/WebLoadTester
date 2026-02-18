@@ -24,9 +24,9 @@ public partial class AppShellViewModel : ViewModelBase
         _backend = backend;
         LogDrawer = new LogDrawerViewModel();
 
-        UiModules = new ModuleFamilyViewModel("UI тестирование", _backend, _backend.UiFamily);
-        HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily);
-        NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily);
+        UiModules = new ModuleFamilyViewModel("UI тестирование", _backend, _backend.UiFamily, LogDrawer);
+        HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily, LogDrawer);
+        NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily, LogDrawer);
 
         Tabs = new ObservableCollection<TabViewModel>
         {
@@ -41,6 +41,9 @@ public partial class AppShellViewModel : ViewModelBase
 
         OpenSettingsCommand = _backend.OpenSettingsCommand;
         OpenRunsFolderCommand = _backend.OpenRunsFolderCommand;
+        ToggleLogDrawerCommand = new RelayCommand(() => LogDrawer.IsExpanded = !LogDrawer.IsExpanded);
+        StartHotkeyCommand = new AsyncRelayCommand(() => _backend.StartCommand.ExecuteAsync(null));
+        StopHotkeyCommand = new RelayCommand(() => _backend.StopCommand.Execute(null));
 
         AppendPendingLogs();
         _backend.LogEntries.CollectionChanged += OnBackendLogEntriesChanged;
@@ -62,6 +65,9 @@ public partial class AppShellViewModel : ViewModelBase
 
     public IRelayCommand OpenSettingsCommand { get; }
     public IRelayCommand OpenRunsFolderCommand { get; }
+    public IRelayCommand ToggleLogDrawerCommand { get; }
+    public IAsyncRelayCommand StartHotkeyCommand { get; }
+    public IRelayCommand StopHotkeyCommand { get; }
 
     partial void OnSelectedTabChanged(TabViewModel value)
     {

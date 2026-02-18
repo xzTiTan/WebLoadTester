@@ -16,7 +16,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
     private ModuleDescriptorVm? _lastConfirmedSelection;
     private bool _isSyncingSelection;
 
-    public ModuleFamilyViewModel(string title, MainWindowViewModel backend, LegacyFamilyViewModel legacyFamily)
+    public ModuleFamilyViewModel(string title, MainWindowViewModel backend, LegacyFamilyViewModel legacyFamily, LogDrawerViewModel logDrawer)
     {
         Title = title;
         _backend = backend;
@@ -36,7 +36,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
         selectedModule = selectedDescriptor;
         _lastConfirmedSelection = selectedDescriptor;
 
-        Workspace = new ModuleWorkspaceViewModel(_backend, selectedDescriptor?.ModuleSettingsVm);
+        Workspace = new ModuleWorkspaceViewModel(_backend, logDrawer);
         UpdateWorkspaceFromSelection(selectedDescriptor);
 
         _legacyFamily.PropertyChanged += OnLegacyFamilyPropertyChanged;
@@ -134,9 +134,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
 
     private void UpdateWorkspaceFromSelection(ModuleDescriptorVm? descriptor)
     {
-        Workspace.ModuleSettingsVm = descriptor?.ModuleSettingsVm;
-        Workspace.ModuleDisplayName = descriptor?.DisplayName ?? string.Empty;
-        Workspace.ModuleId = descriptor?.ModuleId ?? string.Empty;
+        Workspace.SetSelectedModule(descriptor);
     }
 }
 
@@ -149,6 +147,7 @@ public class ModuleDescriptorVm
         Description = backend.Description;
         ModuleId = backend.Module.Id;
         ModuleSettingsVm = backend.SettingsViewModel;
+        ModuleConfig = backend.ModuleConfig;
     }
 
     public ModuleItemViewModel Backend { get; }
@@ -156,4 +155,5 @@ public class ModuleDescriptorVm
     public string Description { get; }
     public string ModuleId { get; }
     public object ModuleSettingsVm { get; }
+    public ModuleConfigViewModel ModuleConfig { get; }
 }

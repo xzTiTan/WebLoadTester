@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
+             x:Class="WebLoadTester.Presentation.Views.Workspace.RunProfileView"
+             x:DataType="vm:RunProfileViewModel">
+    <GroupBox Header="RunProfile">
+        <StackPanel Margin="8" Spacing="8">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="Mode" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsIterationsMode}">
+                <TextBlock Text="Iterations" VerticalAlignment="Center" />
+                <NumericUpDown Grid.Column="1" Minimum="1" Value="{Binding Iterations, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsDurationMode}">
+                <TextBlock Text="DurationSeconds" VerticalAlignment="Center" />
+                <NumericUpDown Grid.Column="1" Minimum="1" Value="{Binding DurationSeconds, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="Parallelism" VerticalAlignment="Center" />
+                <NumericUpDown Grid.Column="1" Minimum="1" Value="{Binding Parallelism, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="TimeoutSeconds" VerticalAlignment="Center" />
+                <NumericUpDown Grid.Column="1" Minimum="1" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="PauseBetweenIterationsMs" VerticalAlignment="Center" />
+                <NumericUpDown Grid.Column="1" Minimum="0" Value="{Binding PauseBetweenIterationsMs, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsUiFamily}">
+                <TextBlock Text="Headless" VerticalAlignment="Center" />
+                <CheckBox Grid.Column="1" IsChecked="{Binding Headless, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding IsUiFamily}">
+                <TextBlock Text="ScreenshotsPolicy" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ScreenshotsPolicyOptions}" SelectedItem="{Binding ScreenshotsPolicy, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="domain:ScreenshotsPolicy">
+                            <TextBlock Text="{Binding ., Converter={StaticResource ScreenshotsPolicyDisplayConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

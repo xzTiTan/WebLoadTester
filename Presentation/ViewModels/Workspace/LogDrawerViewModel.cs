@@ -70,6 +70,51 @@ public partial class LogDrawerViewModel : ObservableObject
         }
     }
 
+
+    public void ShowInLog(string moduleId)
+    {
+        IsExpanded = true;
+        if (!string.IsNullOrWhiteSpace(moduleId))
+        {
+            FilterText = moduleId;
+        }
+
+        _filterDebounceTimer.Stop();
+        RebuildVisibleLines();
+    }
+
+    public string LastErrorLine(string? moduleId = null)
+    {
+        for (var i = _allLines.Count - 1; i >= 0; i--)
+        {
+            var line = _allLines[i];
+            if (!string.Equals(line.Level, "ERROR", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(moduleId) ||
+                line.ModuleId.Contains(moduleId, StringComparison.OrdinalIgnoreCase) ||
+                line.RenderedText.Contains(moduleId, StringComparison.OrdinalIgnoreCase))
+            {
+                return line.RenderedText;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    public string GetLastErrorShort(string? moduleId = null)
+    {
+        var line = LastErrorLine(moduleId);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return string.Empty;
+        }
+
+        return line.Length > 220 ? line[..220] + "…" : line;
+    }
+
     [RelayCommand]
     private async System.Threading.Tasks.Task CopyAsync()
     {
