@@ -1,108 +1,40 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
-        xmlns:tabs="clr-namespace:WebLoadTester.Presentation.Views.Tabs"
-        xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
+        xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Shell"
+        xmlns:workspace="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:AppShellViewModel"
         Title="WebLoadTester"
         Width="1280"
         Height="860"
         MinWidth="1080"
-        MinHeight="760"
-        Background="{DynamicResource PageBackground}">
-    <Grid RowDefinitions="*,Auto">
-        <Grid Grid.Row="0"
-              Margin="{DynamicResource PagePadding}"
-              HorizontalAlignment="Center"
-              MaxWidth="1460"
-              RowDefinitions="Auto,*"
-              RowSpacing="{DynamicResource CardSpacing}">
-            <Border Grid.Row="0" Classes="app-bar">
-                <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource SpacingM}">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource SpacingL}">
-                        <StackPanel Spacing="{DynamicResource SpacingXs}">
-                            <TextBlock Text="WebLoadTester" Classes="page-title" />
-                            <TextBlock Text="Панель управления тестовыми модулями" Classes="muted" />
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Classes="secondary toolbar-button"
-                                Content="Настройки"
-                                HorizontalAlignment="Right"
-                                Command="{Binding OpenSettingsCommand}" />
-                    </Grid>
+        MinHeight="760">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="12">
+        <Border Grid.Row="0" Padding="8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <TextBlock Text="WebLoadTester" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                <Button Grid.Column="2" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+            </Grid>
+        </Border>
 
-                    <WrapPanel Grid.Row="1" Classes="wrap-gap" VerticalAlignment="Center">
-                        <Button Classes="secondary toolbar-button"
-                                Content="Папка прогонов"
-                                Command="{Binding OpenRunsFolderCommand}" />
-                        <Border Classes="badge">
-                            <TextBlock Text="{Binding DatabaseStatus}" FontSize="12" FontWeight="SemiBold" />
-                        </Border>
-                        <Button Classes="toolbar-button"
-                                Command="{Binding OpenTelegramSettingsCommand}"
-                                ToolTip.Tip="{Binding TelegramStatusTooltip}">
-                            <Border Classes="badge" Background="Transparent" Padding="0">
-                                <TextBlock Text="{Binding TelegramStatus}" FontSize="12" FontWeight="SemiBold" />
-                            </Border>
-                        </Button>
-                        <Border Classes="badge warn">
-                            <TextBlock Text="Playwright: через баннер модуля" FontSize="12" FontWeight="SemiBold" />
-                        </Border>
-                    </WrapPanel>
-                </Grid>
-            </Border>
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="8">
+            <TabControl Grid.Row="0"
+                        ItemsSource="{Binding Tabs}"
+                        SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                        IsEnabled="{Binding IsRunning, Converter={StaticResource BooleanNotConverter}}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TabViewModel">
+                        <TextBlock Text="{Binding Title}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+            </TabControl>
 
-            <Border Grid.Row="1" Classes="section" Padding="{DynamicResource CardPadding}">
-                <TabControl Classes="main-tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                    <TabItem Header="UI тестирование">
-                        <tabs:UiTestingTab DataContext="{Binding UiFamily}" />
-                    </TabItem>
-                    <TabItem Header="HTTP тестирование">
-                        <tabs:HttpTestingTab DataContext="{Binding HttpFamily}" />
-                    </TabItem>
-                    <TabItem Header="Сеть и безопасность">
-                        <tabs:NetSecTab DataContext="{Binding NetFamily}" />
-                    </TabItem>
-                    <TabItem Header="Прогоны">
-                        <tabs:RunsTab DataContext="{Binding RunsTab}" />
-                    </TabItem>
-                </TabControl>
+            <Border Grid.Row="1" Padding="4">
+                <ContentControl Content="{Binding SelectedTab.ContentVm}" />
             </Border>
         </Grid>
 
-        <Border Grid.Row="1"
-                Margin="20,0,20,20"
-                HorizontalAlignment="Center"
-                MaxWidth="1460"
-                Classes="section"
-                Padding="14">
-            <Expander IsExpanded="{Binding IsLogDrawerExpanded}">
-                <Expander.Header>
-                    <TextBlock Text="Лог выполнения" VerticalAlignment="Center" FontWeight="SemiBold" />
-                </Expander.Header>
-
-                <Grid RowDefinitions="Auto,*" RowSpacing="10" Margin="0,10,0,0" MinHeight="220" MaxHeight="360">
-                    <WrapPanel Grid.Row="0" Classes="wrap-gap">
-                        <CheckBox Content="Автоскролл" IsChecked="{Binding LogAutoScroll, Mode=TwoWay}" />
-                        <CheckBox Content="Только ошибки" IsChecked="{Binding LogOnlyErrors, Mode=TwoWay}" />
-                        <Button Classes="link" Content="Очистить" Command="{Binding ClearLogCommand}" />
-                        <Button Classes="link" Content="Копировать" Command="{Binding CopyLogCommand}" />
-                    </WrapPanel>
-
-                    <Border Grid.Row="1" Classes="log-box">
-                        <ListBox ItemsSource="{Binding FilteredLogEntries}"
-                                 Classes="loglist"
-                                 behaviors:AutoScrollBehavior.IsEnabled="{Binding LogAutoScroll}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <TextBlock Classes="logline" Text="{Binding}" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Border>
-                </Grid>
-            </Expander>
-        </Border>
+        <workspace:LogDrawerView Grid.Row="2" DataContext="{Binding LogDrawer}" />
     </Grid>
 </Window>

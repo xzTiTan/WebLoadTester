@@ -5,6 +5,9 @@
               xmlns:settings="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
               xmlns:conv="clr-namespace:WebLoadTester.Presentation.Converters"
               xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.SettingsViews"
+              xmlns:tabViews="clr-namespace:WebLoadTester.Presentation.Views.Tabs"
+              xmlns:tabsVm="clr-namespace:WebLoadTester.Presentation.ViewModels.Tabs"
+              xmlns:rootVm="clr-namespace:WebLoadTester.Presentation.ViewModels"
               RequestedThemeVariant="Light">
     <Application.Resources>
         <conv:BooleanNotConverter x:Key="BooleanNotConverter" />
@@ -20,6 +23,12 @@
     </Application.Resources>
     <Application.DataTemplates>
         <local:ViewLocator/>
+        <DataTemplate DataType="{x:Type tabsVm:ModuleFamilyViewModel}">
+            <tabViews:UiTestingTab/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type rootVm:RunsTabViewModel}">
+            <tabViews:RunsTab/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type settings:UiScenarioSettingsViewModel}">
             <views:UiScenarioSettingsView/>
         </DataTemplate>
