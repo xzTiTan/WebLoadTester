@@ -4,6 +4,7 @@
         xmlns:workspace="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
         x:Class="WebLoadTester.Presentation.Views.MainWindow"
         x:DataType="vm:AppShellViewModel"
+        x:Name="RootWindow"
         Title="WebLoadTester"
         Width="1280"
         Height="860"
@@ -16,10 +17,13 @@
     </Window.KeyBindings>
     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="12">
         <Border Grid.Row="0" Padding="8">
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                 <TextBlock Text="WebLoadTester" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                <Button Grid.Column="2" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusText}"
+                           VerticalAlignment="Center" />
+                <Button Grid.Column="2" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                <Button Grid.Column="3" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
             </Grid>
         </Border>
 
@@ -27,7 +31,7 @@
             <TabControl Grid.Row="0"
                         ItemsSource="{Binding Tabs}"
                         SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
-                        IsEnabled="{Binding IsRunning, Converter={StaticResource BooleanNotConverter}}">
+                        IsEnabled="{Binding DataContext.IsIdle, ElementName=RootWindow}">
                 <TabControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:TabViewModel">
                         <TextBlock Text="{Binding Title}" />

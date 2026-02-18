@@ -4,9 +4,9 @@
              xmlns:views="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
              x:Class="WebLoadTester.Presentation.Views.Workspace.ModuleWorkspaceView"
              x:DataType="vm:ModuleFamilyViewModel">
-    <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="8">
-        <Border Grid.Column="0" Width="{Binding Workspace.LeftNavWidth}" Padding="8">
-            <StackPanel Spacing="8" IsEnabled="{Binding Workspace.IsIdle}">
+    <Grid ColumnDefinitions="Auto,5,*,5,Auto" RowDefinitions="*" ColumnSpacing="6">
+        <Border Grid.Column="0" Width="{Binding Workspace.LeftNavWidth}" Padding="6">
+            <StackPanel Spacing="6" IsEnabled="{Binding Workspace.IsIdle}">
                 <TextBox Watermark="Поиск модуля" Text="{Binding ModuleSearchText, Mode=TwoWay}" />
                 <ListBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
@@ -23,9 +23,9 @@
 
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
-        <Border Grid.Column="2" Padding="8">
+        <Border Grid.Column="2" Padding="6">
             <ScrollViewer x:Name="WorkspaceScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="6">
                     <WrapPanel>
                         <Button Content="Детали" Command="{Binding Workspace.ToggleDetailsCommand}" />
                     </WrapPanel>
@@ -33,24 +33,26 @@
                     <TextBlock Text="Выберите модуль слева"
                                IsVisible="{Binding Workspace.HasModuleSelected, Converter={StaticResource BooleanNotConverter}}" />
 
-                    <StackPanel IsVisible="{Binding Workspace.HasModuleSelected}" Spacing="12">
-                        <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
+                    <Grid IsVisible="{Binding Workspace.HasModuleSelected}"
+                          RowDefinitions="Auto,Auto,Auto"
+                          RowSpacing="6">
+                        <views:RunControlView Grid.Row="0" DataContext="{Binding Workspace.RunControl}" />
 
-                        <Border IsEnabled="{Binding Workspace.IsIdle}">
-                            <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
-                        </Border>
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="6">
+                            <Border Grid.Column="0" IsEnabled="{Binding Workspace.IsIdle}">
+                                <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                            </Border>
 
-                        <Border IsEnabled="{Binding Workspace.IsIdle}">
-                            <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
-                        </Border>
+                            <Border Grid.Column="1" IsEnabled="{Binding Workspace.IsIdle}">
+                                <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                            </Border>
+                        </Grid>
 
-                        <StackPanel Spacing="6" IsEnabled="{Binding Workspace.IsIdle}">
+                        <StackPanel Grid.Row="2" Spacing="4" IsEnabled="{Binding Workspace.IsIdle}">
                             <TextBlock Text="Настройки модуля" />
-                            <StackPanel Spacing="8">
-                                <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
-                            </StackPanel>
+                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
                         </StackPanel>
-                    </StackPanel>
+                    </Grid>
                 </StackPanel>
             </ScrollViewer>
         </Border>
@@ -59,7 +61,7 @@
 
         <Border Grid.Column="4"
                 Width="{Binding Workspace.DetailsWidth}"
-                Padding="8"
+                Padding="6"
                 IsVisible="{Binding Workspace.IsDetailsVisible}">
             <views:DetailsPaneView DataContext="{Binding Workspace.Details}" />
         </Border>

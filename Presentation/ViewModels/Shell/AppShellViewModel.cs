@@ -79,6 +79,9 @@ public partial class AppShellViewModel : ViewModelBase
     [ObservableProperty]
     private bool isRunning;
 
+    public bool IsIdle => !IsRunning;
+    public string StatusText => IsRunning ? "Выполняется" : "Ожидание";
+
     public LogDrawerViewModel LogDrawer { get; }
 
     public IRelayCommand OpenSettingsCommand { get; }
@@ -175,6 +178,13 @@ public partial class AppShellViewModel : ViewModelBase
     private void OnBackendLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         AppendPendingLogs();
+    }
+
+
+    partial void OnIsRunningChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsIdle));
+        OnPropertyChanged(nameof(StatusText));
     }
 
     private void AppendPendingLogs()
