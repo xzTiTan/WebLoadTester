@@ -1,30 +1,28 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+             xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiTiming"
+             xmlns:controls="clr-namespace:WebLoadTester.Presentation.Views.Controls"
              xmlns:core="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiTimingSettingsView"
              x:DataType="vm:UiTimingSettingsViewModel">
+    <UserControl.DataTemplates>
+        <DataTemplate x:DataType="rows:TimingTargetRowViewModel">
+            <StackPanel Spacing="4" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="160,4*" ColumnSpacing="8">
+                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя" />
+                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://example.com" />
+                </Grid>
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" ClipToBounds="True">
-                    <TextBlock Text="Цели" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
-                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
-                        <Button Content="Добавить" Command="{Binding AddTargetCommand}" />
-                        <Button Content="Удалить" Classes="danger" Command="{Binding RemoveSelectedTargetCommand}" />
-                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedTargetCommand}" />
-                    </WrapPanel>
-                </Grid>
-
-                <dg:DataGrid ItemsSource="{Binding Targets}"
-                             SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="3*" />
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
+                <TextBlock Text="Цели" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
             </StackPanel>
         </Border>
 

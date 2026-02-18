@@ -1,10 +1,33 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:modules="clr-namespace:WebLoadTester.Modules.HttpPerformance"
+             xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpFunctional"
+             xmlns:commonRows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpCommon"
+             xmlns:controls="clr-namespace:WebLoadTester.Presentation.Views.Controls"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpPerformanceSettingsView"
-             x:DataType="vm:HttpPerformanceSettingsViewModel"
-             x:Name="Root">
+             x:DataType="vm:HttpPerformanceSettingsViewModel">
+    <UserControl.DataTemplates>
+        <DataTemplate x:DataType="rows:HttpPerformanceEndpointRowViewModel">
+            <StackPanel Spacing="4" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="140,4*" ColumnSpacing="8">
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding Method, Mode=TwoWay}" />
+                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="/api/endpoint" />
+                </Grid>
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:DataType="commonRows:HttpHeaderRowViewModel">
+            <StackPanel Spacing="4" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="220,4*" ColumnSpacing="8">
+                    <TextBox Grid.Column="0" Text="{Binding Key, Mode=TwoWay}" Watermark="Header" />
+                    <TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" Watermark="Value" />
+                </Grid>
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
@@ -22,49 +45,15 @@
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <TextBlock Text="Endpoints (List + Details)" Classes="section-title" />
-                <Grid ColumnDefinitions="300,*" ColumnSpacing="12">
-                    <StackPanel Spacing="8">
-                        <WrapPanel Classes="wrap-gap">
-                            <Button Content="Добавить" Command="{Binding AddEndpointCommand}" />
-                            <Button Content="Удалить" Command="{Binding RemoveSelectedEndpointCommand}" />
-                            <Button Content="Дублировать" Command="{Binding DuplicateSelectedEndpointCommand}" />
-                        </WrapPanel>
+                <TextBlock Text="Endpoints" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding EndpointsEditor}" />
+            </StackPanel>
+        </Border>
 
-                        <ListBox ItemsSource="{Binding Endpoints}"
-                                 SelectedItem="{Binding SelectedEndpoint, Mode=TwoWay}"
-                                 MinHeight="220">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="modules:HttpPerformanceEndpoint">
-                                    <TextBlock Text="{Binding Name}" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-
-                    <Border Grid.Column="1" Classes="section">
-                        <StackPanel Spacing="8" IsVisible="{Binding SelectedEndpoint, Converter={StaticResource NullToBoolConverter}}">
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Name" Classes="field-label" />
-                                <TextBox Classes="field-control" Text="{Binding SelectedEndpoint.Name, Mode=TwoWay}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Method" Classes="field-label" />
-                                <ComboBox Classes="field-control"
-                                          ItemsSource="{x:Static modules:HttpPerformanceEndpoint.MethodOptions}"
-                                          SelectedItem="{Binding SelectedEndpoint.Method, Mode=TwoWay}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="Path" Classes="field-label" />
-                                <TextBox Classes="field-control" Text="{Binding SelectedEndpoint.Path, Mode=TwoWay}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                                <TextBlock Text="ExpectedStatusCode" Classes="field-label" />
-                                <NumericUpDown Classes="field-control" Minimum="100" Maximum="599" Value="{Binding SelectedEndpoint.ExpectedStatusCode, Mode=TwoWay}" />
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+        <Border Classes="section">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Headers (общие)" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding HeadersEditor}" />
             </StackPanel>
         </Border>
     </StackPanel>

@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiSnapshot;
+using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-/// <summary>
-/// ViewModel настроек UI-снимков.
-/// </summary>
 public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiSnapshotSettings _settings;
@@ -20,45 +19,44 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         _settings = settings;
         NormalizeLegacyTargets(_settings);
 
-        Targets = new ObservableCollection<SnapshotTarget>(_settings.Targets);
         waitUntil = _settings.WaitUntil;
         timeoutSeconds = _settings.TimeoutSeconds;
         viewportWidth = _settings.ViewportWidth;
         viewportHeight = _settings.ViewportHeight;
         fullPage = _settings.FullPage;
 
-        Targets.CollectionChanged += (_, _) => SyncTargets();
+        TargetRows = new ObservableCollection<SnapshotTargetRowViewModel>(_settings.Targets.Select(CreateRow));
+        if (TargetRows.Count == 0)
+        {
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
+        }
+        TargetsEditor = new RowListEditorViewModel();
+        TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
+            selectedItemChanged: item => SelectedTargetRow = item as SnapshotTargetRowViewModel);
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        SelectedTargetRow = TargetRows.FirstOrDefault();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI снимки";
 
-    public ObservableCollection<SnapshotTarget> Targets { get; }
+    public ObservableCollection<SnapshotTargetRowViewModel> TargetRows { get; }
+    public RowListEditorViewModel TargetsEditor { get; }
     public Array WaitUntilOptions { get; } = Enum.GetValues(typeof(UiWaitUntil));
 
-    [ObservableProperty]
-    private SnapshotTarget? selectedTarget;
+    [ObservableProperty] private SnapshotTargetRowViewModel? selectedTargetRow;
+    [ObservableProperty] private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
+    [ObservableProperty] private int timeoutSeconds = 30;
+    [ObservableProperty] private int? viewportWidth;
+    [ObservableProperty] private int? viewportHeight;
+    [ObservableProperty] private bool fullPage = true;
 
-    partial void OnSelectedTargetChanged(SnapshotTarget? value)
+    partial void OnSelectedTargetRowChanged(SnapshotTargetRowViewModel? value)
     {
-        RemoveSelectedTargetCommand.NotifyCanExecuteChanged();
-        DuplicateSelectedTargetCommand.NotifyCanExecuteChanged();
+        TargetsEditor.SelectedItem = value;
+        TargetsEditor.RaiseCommandState();
+        TargetsEditor.NotifyValidationChanged();
     }
-
-    [ObservableProperty]
-    private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
-
-    [ObservableProperty]
-    private int timeoutSeconds = 30;
-
-    [ObservableProperty]
-    private int? viewportWidth;
-
-    [ObservableProperty]
-    private int? viewportHeight;
-
-    [ObservableProperty]
-    private bool fullPage = true;
 
     public override void UpdateFrom(object settings)
     {
@@ -68,12 +66,19 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         }
 
         NormalizeLegacyTargets(s);
-
-        Targets.Clear();
+        TargetRows.Clear();
         foreach (var target in s.Targets)
         {
-            Targets.Add(target);
+            TargetRows.Add(CreateRow(target));
         }
+
+        if (TargetRows.Count == 0)
+        {
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
+        }
+
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        SelectedTargetRow = TargetRows.FirstOrDefault();
 
         WaitUntil = s.WaitUntil;
         TimeoutSeconds = s.TimeoutSeconds;
@@ -88,92 +93,118 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
     partial void OnViewportWidthChanged(int? value) => _settings.ViewportWidth = value;
     partial void OnViewportHeightChanged(int? value) => _settings.ViewportHeight = value;
-    partial void OnFullPageChanged(bool value) => _settings.FullPage = value;
-
-    [RelayCommand]
-    private void AddTarget()
+    partial void OnFullPageChanged(bool value)
     {
-        var target = new SnapshotTarget { Url = "https://example.com", Name = "example" };
-        Targets.Add(target);
-        SelectedTarget = target;
-        SyncTargets();
+        _settings.FullPage = value;
+        foreach (var row in TargetRows)
+        {
+            row.OnPropertyChanged(nameof(row.Selector));
+        }
     }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
-    private void RemoveSelectedTarget()
+    private object? AddTargetInternal()
     {
-        if (SelectedTarget == null)
+        var row = CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" });
+        var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
+        if (insertIndex < 0 || insertIndex > TargetRows.Count)
+        {
+            insertIndex = TargetRows.Count;
+        }
+
+        TargetRows.Insert(insertIndex, row);
+        SelectedTargetRow = row;
+        SyncTargets();
+        return row;
+    }
+
+    private void RemoveTargetInternal(object? selected)
+    {
+        if (selected is not SnapshotTargetRowViewModel row)
         {
             return;
         }
 
-        Targets.Remove(SelectedTarget);
-        SyncTargets();
-    }
+        if (TargetRows.Count <= 1)
+        {
+            row.Clear();
+            SyncTargets();
+            return;
+        }
 
-
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
-    private void DuplicateSelectedTarget()
-    {
-        if (SelectedTarget == null)
+        var index = TargetRows.IndexOf(row);
+        if (index < 0)
         {
             return;
         }
 
-        var clone = new SnapshotTarget
-        {
-            Url = SelectedTarget.Url,
-            Selector = SelectedTarget.Selector,
-            Name = SelectedTarget.Name,
-            Tag = SelectedTarget.Tag
-        };
-
-        var index = Targets.IndexOf(SelectedTarget);
-        Targets.Insert(index + 1, clone);
-        SelectedTarget = clone;
+        TargetRows.RemoveAt(index);
+        SelectedTargetRow = TargetRows.Count > 0 ? TargetRows[Math.Min(index, TargetRows.Count - 1)] : null;
         SyncTargets();
     }
 
-    [RelayCommand]
-    private void MoveTargetUp()
+    private void DuplicateTargetInternal(object? selected)
     {
-        if (SelectedTarget == null)
+        if (selected is not SnapshotTargetRowViewModel row)
         {
             return;
         }
 
-        var index = Targets.IndexOf(SelectedTarget);
+        var clone = row.Clone();
+        var index = TargetRows.IndexOf(row);
+        TargetRows.Insert(index + 1, clone);
+        SelectedTargetRow = clone;
+        SyncTargets();
+    }
+
+    private void MoveTargetUpInternal(object? selected)
+    {
+        if (selected is not SnapshotTargetRowViewModel row)
+        {
+            return;
+        }
+
+        var index = TargetRows.IndexOf(row);
         if (index > 0)
         {
-            Targets.Move(index, index - 1);
+            TargetRows.Move(index, index - 1);
+            SelectedTargetRow = TargetRows[index - 1];
             SyncTargets();
         }
     }
 
-    [RelayCommand]
-    private void MoveTargetDown()
+    private void MoveTargetDownInternal(object? selected)
     {
-        if (SelectedTarget == null)
+        if (selected is not SnapshotTargetRowViewModel row)
         {
             return;
         }
 
-        var index = Targets.IndexOf(SelectedTarget);
-        if (index >= 0 && index < Targets.Count - 1)
+        var index = TargetRows.IndexOf(row);
+        if (index >= 0 && index < TargetRows.Count - 1)
         {
-            Targets.Move(index, index + 1);
+            TargetRows.Move(index, index + 1);
+            SelectedTargetRow = TargetRows[index + 1];
             SyncTargets();
         }
+    }
+
+    private IEnumerable<string> GetTargetErrors() => TargetRows.Select(r => r.RowErrorText).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct();
+
+    private SnapshotTargetRowViewModel CreateRow(SnapshotTarget target)
+    {
+        var row = new SnapshotTargetRowViewModel(target);
+        row.PropertyChanged += (_, _) => SyncTargets();
+        return row;
     }
 
     private void SyncTargets()
     {
-        _settings.Targets = Targets.ToList();
+        _settings.Targets = TargetRows.Select(r => r.Model).ToList();
         _settings.ScreenshotFormat = "png";
-        OnPropertyChanged(nameof(Targets));
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        TargetsEditor.NotifyValidationChanged();
+        TargetsEditor.RaiseCommandState();
     }
-
-    private bool CanMutateSelectedTarget() => SelectedTarget != null;
 
     private static void NormalizeLegacyTargets(UiSnapshotSettings settings)
     {

@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.NetDiagnostics;
+using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels.NetDiagnostics;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
@@ -16,17 +17,24 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
     {
         _settings = settings;
         _settings.NormalizeLegacy();
+
         hostname = settings.Hostname;
         useAutoPorts = settings.UseAutoPorts;
         checkDns = settings.CheckDns;
         checkTcp = settings.CheckTcp;
         checkTls = settings.CheckTls;
-        Ports = new ObservableCollection<PortItem>(settings.Ports.Select(p => new PortItem { Port = p.Port, Protocol = p.Protocol }));
-        Ports.CollectionChanged += OnPortsChanged;
-        foreach (var port in Ports)
+
+        PortRows = new ObservableCollection<PortRowViewModel>(settings.Ports.Select(CreateRow));
+        if (PortRows.Count == 0)
         {
-            port.PropertyChanged += OnPortItemChanged;
+            PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
         }
+
+        PortsEditor = new RowListEditorViewModel();
+        PortsEditor.Configure(AddPortInternal, RemovePortInternal, MovePortUpInternal, MovePortDownInternal, DuplicatePortInternal, GetPortErrors,
+            selectedItemChanged: item => SelectedPortRow = item as PortRowViewModel);
+        PortsEditor.SetItems(PortRows.Cast<object>());
+        SelectedPortRow = PortRows.FirstOrDefault();
 
         if (UseAutoPorts)
         {
@@ -34,12 +42,46 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         }
         else
         {
-            UpdatePortsSettings();
+            SyncPorts();
         }
     }
 
     public override object Settings => _settings;
     public override string Title => "Сетевая диагностика";
+
+    public ObservableCollection<PortRowViewModel> PortRows { get; }
+    public RowListEditorViewModel PortsEditor { get; }
+
+    [ObservableProperty] private string hostname = string.Empty;
+    [ObservableProperty] private bool useAutoPorts;
+    [ObservableProperty] private PortRowViewModel? selectedPortRow;
+    [ObservableProperty] private bool checkDns;
+    [ObservableProperty] private bool checkTcp;
+    [ObservableProperty] private bool checkTls;
+
+    partial void OnSelectedPortRowChanged(PortRowViewModel? value)
+    {
+        PortsEditor.SelectedItem = value;
+        PortsEditor.RaiseCommandState();
+        PortsEditor.NotifyValidationChanged();
+    }
+
+    partial void OnHostnameChanged(string value) => _settings.Hostname = value;
+    partial void OnCheckDnsChanged(bool value) => _settings.CheckDns = value;
+    partial void OnCheckTcpChanged(bool value) => _settings.CheckTcp = value;
+    partial void OnCheckTlsChanged(bool value) => _settings.CheckTls = value;
+
+    partial void OnUseAutoPortsChanged(bool value)
+    {
+        _settings.UseAutoPorts = value;
+        if (value)
+        {
+            ApplyAutoPorts();
+            return;
+        }
+
+        SyncPorts();
+    }
 
     public override void UpdateFrom(object settings)
     {
@@ -49,158 +91,158 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         }
 
         s.NormalizeLegacy();
+
         Hostname = s.Hostname;
         UseAutoPorts = s.UseAutoPorts;
         CheckDns = s.CheckDns;
         CheckTcp = s.CheckTcp;
         CheckTls = s.CheckTls;
 
-        Ports.Clear();
+        PortRows.Clear();
         foreach (var port in s.Ports)
         {
-            var item = new PortItem { Port = port.Port, Protocol = port.Protocol };
-            item.PropertyChanged += OnPortItemChanged;
-            Ports.Add(item);
+            PortRows.Add(CreateRow(port));
         }
 
-        SelectedPort = Ports.FirstOrDefault();
-        UpdatePortsSettings();
-    }
+        if (PortRows.Count == 0)
+        {
+            PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
+        }
 
-    public ObservableCollection<PortItem> Ports { get; }
-    public string[] ProtocolOptions { get; } = { "Tcp" };
+        PortsEditor.SetItems(PortRows.Cast<object>());
+        SelectedPortRow = PortRows.FirstOrDefault();
 
-    [ObservableProperty] private string hostname = string.Empty;
-    [ObservableProperty] private bool useAutoPorts;
-    [ObservableProperty] private PortItem? selectedPort;
-    [ObservableProperty] private bool checkDns;
-    [ObservableProperty] private bool checkTcp;
-    [ObservableProperty] private bool checkTls;
-
-    partial void OnSelectedPortChanged(PortItem? value)
-    {
-        RemoveSelectedPortCommand.NotifyCanExecuteChanged();
-        DuplicateSelectedPortCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnHostnameChanged(string value)
-    {
-        _settings.Hostname = value;
-    }
-
-    partial void OnUseAutoPortsChanged(bool value)
-    {
-        _settings.UseAutoPorts = value;
-        RemoveSelectedPortCommand.NotifyCanExecuteChanged();
-        DuplicateSelectedPortCommand.NotifyCanExecuteChanged();
-
-        if (value)
+        if (UseAutoPorts)
         {
             ApplyAutoPorts();
         }
+        else
+        {
+            SyncPorts();
+        }
     }
 
-    partial void OnCheckDnsChanged(bool value) => _settings.CheckDns = value;
-    partial void OnCheckTcpChanged(bool value) => _settings.CheckTcp = value;
-    partial void OnCheckTlsChanged(bool value) => _settings.CheckTls = value;
-
-    [RelayCommand]
-    private void AddPort()
+    private object? AddPortInternal()
     {
         if (UseAutoPorts)
         {
-            return;
+            return null;
         }
 
-        var item = new PortItem { Port = 443, Protocol = "Tcp" };
-        item.PropertyChanged += OnPortItemChanged;
-        Ports.Add(item);
-        SelectedPort = item;
-        UpdatePortsSettings();
+        var row = CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" });
+        var insertIndex = SelectedPortRow != null ? PortRows.IndexOf(SelectedPortRow) + 1 : PortRows.Count;
+        if (insertIndex < 0 || insertIndex > PortRows.Count)
+        {
+            insertIndex = PortRows.Count;
+        }
+
+        PortRows.Insert(insertIndex, row);
+        SelectedPortRow = row;
+        SyncPorts();
+        return row;
     }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedPort))]
-    private void DuplicateSelectedPort()
+    private void RemovePortInternal(object? selected)
     {
-        if (UseAutoPorts || SelectedPort == null)
+        if (UseAutoPorts || selected is not PortRowViewModel row)
         {
             return;
         }
 
-        var item = new PortItem { Port = SelectedPort.Port, Protocol = SelectedPort.Protocol };
-        item.PropertyChanged += OnPortItemChanged;
-        var index = Ports.IndexOf(SelectedPort);
-        Ports.Insert(index + 1, item);
-        SelectedPort = item;
-        UpdatePortsSettings();
-    }
+        if (PortRows.Count <= 1)
+        {
+            row.Clear();
+            SyncPorts();
+            return;
+        }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedPort))]
-    private void RemoveSelectedPort()
-    {
-        if (UseAutoPorts || SelectedPort == null)
+        var index = PortRows.IndexOf(row);
+        if (index < 0)
         {
             return;
         }
 
-        var index = Ports.IndexOf(SelectedPort);
-        Ports.Remove(SelectedPort);
-        SelectedPort = index >= 0 && Ports.Count > 0 ? Ports[Math.Min(index, Ports.Count - 1)] : null;
-        UpdatePortsSettings();
+        PortRows.RemoveAt(index);
+        SelectedPortRow = PortRows.Count > 0 ? PortRows[Math.Min(index, PortRows.Count - 1)] : null;
+        SyncPorts();
+    }
+
+    private void MovePortUpInternal(object? selected)
+    {
+        if (UseAutoPorts || selected is not PortRowViewModel row)
+        {
+            return;
+        }
+
+        var index = PortRows.IndexOf(row);
+        if (index > 0)
+        {
+            PortRows.Move(index, index - 1);
+            SelectedPortRow = PortRows[index - 1];
+            SyncPorts();
+        }
+    }
+
+    private void MovePortDownInternal(object? selected)
+    {
+        if (UseAutoPorts || selected is not PortRowViewModel row)
+        {
+            return;
+        }
+
+        var index = PortRows.IndexOf(row);
+        if (index >= 0 && index < PortRows.Count - 1)
+        {
+            PortRows.Move(index, index + 1);
+            SelectedPortRow = PortRows[index + 1];
+            SyncPorts();
+        }
+    }
+
+    private void DuplicatePortInternal(object? selected)
+    {
+        if (UseAutoPorts || selected is not PortRowViewModel row)
+        {
+            return;
+        }
+
+        var clone = row.Clone();
+        var index = PortRows.IndexOf(row);
+        PortRows.Insert(index + 1, clone);
+        SelectedPortRow = clone;
+        SyncPorts();
+    }
+
+    private IEnumerable<string> GetPortErrors() => PortRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+
+    private PortRowViewModel CreateRow(DiagnosticPort port)
+    {
+        var row = new PortRowViewModel(port);
+        row.PropertyChanged += (_, _) =>
+        {
+            if (!UseAutoPorts)
+            {
+                SyncPorts();
+            }
+        };
+        return row;
     }
 
     private void ApplyAutoPorts()
     {
-        Ports.Clear();
-        var item = new PortItem { Port = 443, Protocol = "Tcp" };
-        item.PropertyChanged += OnPortItemChanged;
-        Ports.Add(item);
-        SelectedPort = item;
-        UpdatePortsSettings();
+        PortRows.Clear();
+        PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
+        SelectedPortRow = PortRows.FirstOrDefault();
+        SyncPorts();
     }
 
-    private void OnPortsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void SyncPorts()
     {
-        if (e.NewItems != null)
-        {
-            foreach (PortItem item in e.NewItems)
-            {
-                item.PropertyChanged += OnPortItemChanged;
-            }
-        }
+        _settings.Ports = PortRows.Select(r => r.Model).ToList();
+        _settings.UseAutoPorts = UseAutoPorts;
 
-        if (e.OldItems != null)
-        {
-            foreach (PortItem item in e.OldItems)
-            {
-                item.PropertyChanged -= OnPortItemChanged;
-            }
-        }
-
-        UpdatePortsSettings();
-        OnPropertyChanged(nameof(Ports));
-    }
-
-    private void OnPortItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(PortItem.Port) or nameof(PortItem.Protocol))
-        {
-            UpdatePortsSettings();
-        }
-    }
-
-    private bool CanMutateSelectedPort() => !UseAutoPorts && SelectedPort != null;
-
-    private void UpdatePortsSettings()
-    {
-        _settings.Ports = Ports
-            .Select(p => new DiagnosticPort { Port = p.Port, Protocol = string.IsNullOrWhiteSpace(p.Protocol) ? "Tcp" : p.Protocol })
-            .ToList();
-    }
-
-    public partial class PortItem : ObservableObject
-    {
-        [ObservableProperty] private int port;
-        [ObservableProperty] private string protocol = "Tcp";
+        PortsEditor.SetItems(PortRows.Cast<object>());
+        PortsEditor.NotifyValidationChanged();
+        PortsEditor.RaiseCommandState();
     }
 }

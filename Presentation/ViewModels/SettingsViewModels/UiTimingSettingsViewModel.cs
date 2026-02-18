@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiTiming;
+using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiTiming;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-/// <summary>
-/// ViewModel настроек UI-таймингов.
-/// </summary>
 public partial class UiTimingSettingsViewModel : SettingsViewModelBase
 {
     private readonly UiTimingSettings _settings;
@@ -18,32 +17,38 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     public UiTimingSettingsViewModel(UiTimingSettings settings)
     {
         _settings = settings;
-        Targets = new ObservableCollection<TimingTarget>(_settings.Targets);
         waitUntil = _settings.WaitUntil;
         timeoutSeconds = _settings.TimeoutSeconds;
-        Targets.CollectionChanged += (_, _) => SyncTargets();
+
+        TargetRows = new ObservableCollection<TimingTargetRowViewModel>(_settings.Targets.Select(CreateRow));
+        if (TargetRows.Count == 0)
+        {
+            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://example.com" }));
+        }
+        TargetsEditor = new RowListEditorViewModel();
+        TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
+            selectedItemChanged: item => SelectedTargetRow = item as TimingTargetRowViewModel);
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        SelectedTargetRow = TargetRows.FirstOrDefault();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI тайминги";
 
-    public ObservableCollection<TimingTarget> Targets { get; }
+    public ObservableCollection<TimingTargetRowViewModel> TargetRows { get; }
+    public RowListEditorViewModel TargetsEditor { get; }
     public Array WaitUntilOptions { get; } = Enum.GetValues(typeof(UiWaitUntil));
 
-    [ObservableProperty]
-    private TimingTarget? selectedTarget;
+    [ObservableProperty] private TimingTargetRowViewModel? selectedTargetRow;
+    [ObservableProperty] private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
+    [ObservableProperty] private int timeoutSeconds = 30;
 
-    partial void OnSelectedTargetChanged(TimingTarget? value)
+    partial void OnSelectedTargetRowChanged(TimingTargetRowViewModel? value)
     {
-        RemoveSelectedTargetCommand.NotifyCanExecuteChanged();
-        DuplicateSelectedTargetCommand.NotifyCanExecuteChanged();
+        TargetsEditor.SelectedItem = value;
+        TargetsEditor.RaiseCommandState();
+        TargetsEditor.NotifyValidationChanged();
     }
-
-    [ObservableProperty]
-    private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
-
-    [ObservableProperty]
-    private int timeoutSeconds = 30;
 
     public override void UpdateFrom(object settings)
     {
@@ -52,11 +57,19 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
             return;
         }
 
-        Targets.Clear();
+        TargetRows.Clear();
         foreach (var target in s.Targets)
         {
-            Targets.Add(target);
+            TargetRows.Add(CreateRow(target));
         }
+
+        if (TargetRows.Count == 0)
+        {
+            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://example.com" }));
+        }
+
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        SelectedTargetRow = TargetRows.FirstOrDefault();
 
         WaitUntil = s.WaitUntil;
         TimeoutSeconds = s.TimeoutSeconds;
@@ -66,80 +79,106 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
     partial void OnWaitUntilChanged(UiWaitUntil value) => _settings.WaitUntil = value;
     partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
 
-    [RelayCommand]
-    private void AddTarget()
+    private object? AddTargetInternal()
     {
-        var target = new TimingTarget { Url = "https://example.com" };
-        Targets.Add(target);
-        SelectedTarget = target;
+        var row = CreateRow(new TimingTarget { Url = "https://example.com" });
+        var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
+        if (insertIndex < 0 || insertIndex > TargetRows.Count)
+        {
+            insertIndex = TargetRows.Count;
+        }
+
+        TargetRows.Insert(insertIndex, row);
+        SelectedTargetRow = row;
         SyncTargets();
+        return row;
     }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
-    private void RemoveSelectedTarget()
+    private void RemoveTargetInternal(object? selected)
     {
-        if (SelectedTarget == null)
+        if (selected is not TimingTargetRowViewModel row)
         {
             return;
         }
 
-        Targets.Remove(SelectedTarget);
-        SyncTargets();
-    }
+        if (TargetRows.Count <= 1)
+        {
+            row.Clear();
+            SyncTargets();
+            return;
+        }
 
-
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedTarget))]
-    private void DuplicateSelectedTarget()
-    {
-        if (SelectedTarget == null)
+        var index = TargetRows.IndexOf(row);
+        if (index < 0)
         {
             return;
         }
 
-        var clone = new TimingTarget { Url = SelectedTarget.Url };
-        var index = Targets.IndexOf(SelectedTarget);
-        Targets.Insert(index + 1, clone);
-        SelectedTarget = clone;
+        TargetRows.RemoveAt(index);
+        SelectedTargetRow = TargetRows.Count > 0 ? TargetRows[Math.Min(index, TargetRows.Count - 1)] : null;
         SyncTargets();
     }
 
-    [RelayCommand]
-    private void MoveTargetUp()
+    private void DuplicateTargetInternal(object? selected)
     {
-        if (SelectedTarget == null)
+        if (selected is not TimingTargetRowViewModel row)
         {
             return;
         }
 
-        var index = Targets.IndexOf(SelectedTarget);
+        var clone = row.Clone();
+        var index = TargetRows.IndexOf(row);
+        TargetRows.Insert(index + 1, clone);
+        SelectedTargetRow = clone;
+        SyncTargets();
+    }
+
+    private void MoveTargetUpInternal(object? selected)
+    {
+        if (selected is not TimingTargetRowViewModel row)
+        {
+            return;
+        }
+
+        var index = TargetRows.IndexOf(row);
         if (index > 0)
         {
-            Targets.Move(index, index - 1);
+            TargetRows.Move(index, index - 1);
+            SelectedTargetRow = TargetRows[index - 1];
             SyncTargets();
         }
     }
 
-    [RelayCommand]
-    private void MoveTargetDown()
+    private void MoveTargetDownInternal(object? selected)
     {
-        if (SelectedTarget == null)
+        if (selected is not TimingTargetRowViewModel row)
         {
             return;
         }
 
-        var index = Targets.IndexOf(SelectedTarget);
-        if (index >= 0 && index < Targets.Count - 1)
+        var index = TargetRows.IndexOf(row);
+        if (index >= 0 && index < TargetRows.Count - 1)
         {
-            Targets.Move(index, index + 1);
+            TargetRows.Move(index, index + 1);
+            SelectedTargetRow = TargetRows[index + 1];
             SyncTargets();
         }
+    }
+
+    private IEnumerable<string> GetTargetErrors() => TargetRows.Select(r => r.RowErrorText).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct();
+
+    private TimingTargetRowViewModel CreateRow(TimingTarget target)
+    {
+        var row = new TimingTargetRowViewModel(target);
+        row.PropertyChanged += (_, _) => SyncTargets();
+        return row;
     }
 
     private void SyncTargets()
     {
-        _settings.Targets = Targets.ToList();
-        OnPropertyChanged(nameof(Targets));
+        _settings.Targets = TargetRows.Select(r => r.Model).ToList();
+        TargetsEditor.SetItems(TargetRows.Cast<object>());
+        TargetsEditor.NotifyValidationChanged();
+        TargetsEditor.RaiseCommandState();
     }
-
-    private bool CanMutateSelectedTarget() => SelectedTarget != null;
 }

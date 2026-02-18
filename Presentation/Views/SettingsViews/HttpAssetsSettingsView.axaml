@@ -1,9 +1,25 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+             xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpAssets"
+             xmlns:controls="clr-namespace:WebLoadTester.Presentation.Views.Controls"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.HttpAssetsSettingsView"
              x:DataType="vm:HttpAssetsSettingsViewModel">
+    <UserControl.DataTemplates>
+        <DataTemplate x:DataType="rows:AssetRowViewModel">
+            <StackPanel Spacing="4" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="160,3*,180,96,110" ColumnSpacing="8">
+                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя" />
+                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://example.com/asset" />
+                    <TextBox Grid.Column="2" Text="{Binding ExpectedContentType, Mode=TwoWay}" Watermark="image/png" />
+                    <NumericUpDown Grid.Column="3" Minimum="0" Maximum="1048576" Value="{Binding MaxSizeKb, Mode=TwoWay}" />
+                    <NumericUpDown Grid.Column="4" Minimum="0" Maximum="600000" Value="{Binding MaxLatencyMs, Mode=TwoWay}" />
+                </Grid>
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
@@ -17,26 +33,8 @@
 
         <Border Classes="section">
             <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Ассеты" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
-                        <Button Content="Добавить" Command="{Binding AddAssetCommand}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedAssetCommand}" />
-                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedAssetCommand}" />
-                    </WrapPanel>
-                </Grid>
-                <dg:DataGrid ItemsSource="{Binding Assets}"
-                             SelectedItem="{Binding SelectedAsset, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
-                        <dg:DataGridTextColumn Header="Ожидаемый тип" Binding="{Binding ExpectedContentType}" Width="*" />
-                        <dg:DataGridTextColumn Header="Макс. размер, КБ" Binding="{Binding MaxSizeKb}" Width="*" />
-                        <dg:DataGridTextColumn Header="Макс. задержка, мс" Binding="{Binding MaxLatencyMs}" Width="*" />
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
+                <TextBlock Text="Ассеты" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding AssetsEditor}" />
             </StackPanel>
         </Border>
     </StackPanel>
