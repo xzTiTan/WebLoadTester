@@ -32,7 +32,7 @@ public partial class UiStepRowViewModel : ObservableObject
 
     public string Selector
     {
-        get => Model.Selector;
+        get => Model.Selector ?? string.Empty;
         set
         {
             if (Model.Selector == value)
@@ -40,14 +40,14 @@ public partial class UiStepRowViewModel : ObservableObject
                 return;
             }
 
-            Model.Selector = value;
+            Model.Selector = value ?? string.Empty;
             RaiseComputed();
         }
     }
 
     public string Value
     {
-        get => Model.Value;
+        get => Model.Value ?? string.Empty;
         set
         {
             if (Model.Value == value)
@@ -55,7 +55,7 @@ public partial class UiStepRowViewModel : ObservableObject
                 return;
             }
 
-            Model.Value = value;
+            Model.Value = value ?? string.Empty;
             RaiseComputed();
         }
     }

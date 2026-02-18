@@ -99,7 +99,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         _settings.FullPage = value;
         foreach (var row in TargetRows)
         {
-            row.OnPropertyChanged(nameof(row.Selector));
+            row.RefreshComputed();
         }
     }
 

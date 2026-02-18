@@ -93,7 +93,7 @@ public partial class TestCaseViewModel : ObservableObject, IValidatable
 
     public IAsyncRelayCommand? LoadCommand => _moduleConfig?.LoadSelectedCommand;
     public IAsyncRelayCommand? SaveCommand => _moduleConfig?.SaveCommand;
-    public IAsyncRelayCommand? SaveAsCommand => _moduleConfig?.SaveAsNewCommand;
+    public IAsyncRelayCommand? SaveAsCommand => _moduleConfig?.SaveCommand;
     public IRelayCommand? DeleteCommand => _moduleConfig?.RequestDeleteSelectedCommand;
 
     public IReadOnlyList<string> Validate()

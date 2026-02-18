@@ -39,6 +39,12 @@ public partial class SnapshotTargetRowViewModel : ObservableObject
         Model.Selector = string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
+    public void RefreshComputed()
+    {
+        OnPropertyChanged(nameof(RowErrorText));
+        OnPropertyChanged(nameof(HasRowError));
+    }
+
     public SnapshotTargetRowViewModel Clone() => new(new SnapshotTarget
     {
         Name = Name,
