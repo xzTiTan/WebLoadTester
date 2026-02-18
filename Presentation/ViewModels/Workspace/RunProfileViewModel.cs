@@ -1,11 +1,13 @@
 using System;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Generic;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
 
-public partial class RunProfileViewModel : ObservableObject
+public partial class RunProfileViewModel : ObservableObject, IValidatable
 {
     private readonly WebLoadTester.Presentation.ViewModels.RunProfileViewModel _legacy;
 
@@ -73,6 +75,38 @@ public partial class RunProfileViewModel : ObservableObject
 
     public bool IsIterationsMode => _legacy.IsIterationsMode;
     public bool IsDurationMode => _legacy.IsDurationMode;
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (Mode == RunMode.Iterations && Iterations < 1)
+        {
+            errors.Add("Iterations должен быть >= 1.");
+        }
+
+        if (Mode == RunMode.Duration && DurationSeconds < 1)
+        {
+            errors.Add("DurationSeconds должен быть >= 1.");
+        }
+
+        if (Parallelism < 1)
+        {
+            errors.Add("Parallelism должен быть >= 1.");
+        }
+
+        if (TimeoutSeconds < 1)
+        {
+            errors.Add("TimeoutSeconds должен быть >= 1.");
+        }
+
+        if (PauseBetweenIterationsMs < 0)
+        {
+            errors.Add("PauseBetweenIterationsMs должен быть >= 0.");
+        }
+
+        return errors;
+    }
 
     private void OnLegacyPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

@@ -5,11 +5,12 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.HttpAssets;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpAssets;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
+public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly HttpAssetsSettings _settings;
 
@@ -171,6 +172,24 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
         SyncAssets();
     }
 
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (TimeoutSeconds < 1)
+        {
+            errors.Add("TimeoutSeconds должен быть >= 1.");
+        }
+
+        errors.AddRange(GetAssetErrors());
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetAssetErrors() => AssetRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
 
     private AssetRowViewModel CreateRow(AssetItem model)
@@ -187,5 +206,6 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase
         AssetsEditor.SetItems(AssetRows.Cast<object>());
         AssetsEditor.NotifyValidationChanged();
         AssetsEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
     }
 }

@@ -6,11 +6,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiTiming;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiTiming;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class UiTimingSettingsViewModel : SettingsViewModelBase
+public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly UiTimingSettings _settings;
 
@@ -165,6 +166,24 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
         }
     }
 
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (TimeoutSeconds < 1)
+        {
+            errors.Add("TimeoutSeconds должен быть >= 1.");
+        }
+
+        errors.AddRange(GetTargetErrors());
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetTargetErrors() => TargetRows.Select(r => r.RowErrorText).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct();
 
     private TimingTargetRowViewModel CreateRow(TimingTarget target)
@@ -180,5 +199,6 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase
         TargetsEditor.SetItems(TargetRows.Cast<object>());
         TargetsEditor.NotifyValidationChanged();
         TargetsEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
     }
 }

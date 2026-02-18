@@ -3,14 +3,6 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Controls"
              x:Class="WebLoadTester.Presentation.Views.Controls.RowListEditorView"
              x:DataType="vm:RowListEditorViewModel">
-    <UserControl.KeyBindings>
-        <KeyBinding Gesture="Ctrl+N" Command="{Binding AddCommand}" />
-        <KeyBinding Gesture="Delete" Command="{Binding RemoveCommand}" />
-        <KeyBinding Gesture="Ctrl+D" Command="{Binding DuplicateCommand}" />
-        <KeyBinding Gesture="Alt+Up" Command="{Binding MoveUpCommand}" />
-        <KeyBinding Gesture="Alt+Down" Command="{Binding MoveDownCommand}" />
-    </UserControl.KeyBindings>
-
     <StackPanel Spacing="8">
         <WrapPanel Orientation="Horizontal">
             <Button Content="Добавить" Command="{Binding AddCommand}" Margin="0,0,8,0" />
@@ -28,6 +20,17 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+        <ListBox x:Name="ItemsList"
+                 ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+            <ListBox.KeyBindings>
+                <KeyBinding Gesture="Ctrl+N" Command="{Binding AddCommand}" />
+                <KeyBinding Gesture="Delete" Command="{Binding RemoveCommand}" />
+                <KeyBinding Gesture="Ctrl+D" Command="{Binding DuplicateCommand}" />
+                <KeyBinding Gesture="Alt+Up" Command="{Binding MoveUpCommand}" />
+                <KeyBinding Gesture="Alt+Down" Command="{Binding MoveDownCommand}" />
+            </ListBox.KeyBindings>
+        </ListBox>
     </StackPanel>
 </UserControl>

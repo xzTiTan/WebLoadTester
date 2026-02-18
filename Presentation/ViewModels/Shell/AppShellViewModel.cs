@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Presentation.ViewModels.Controls;
@@ -42,8 +43,8 @@ public partial class AppShellViewModel : ViewModelBase
         OpenSettingsCommand = _backend.OpenSettingsCommand;
         OpenRunsFolderCommand = _backend.OpenRunsFolderCommand;
         ToggleLogDrawerCommand = new RelayCommand(() => LogDrawer.IsExpanded = !LogDrawer.IsExpanded);
-        StartHotkeyCommand = new AsyncRelayCommand(() => _backend.StartCommand.ExecuteAsync(null));
-        StopHotkeyCommand = new RelayCommand(() => _backend.StopCommand.Execute(null));
+        StartHotkeyCommand = new AsyncRelayCommand(StartFromHotkeyAsync);
+        StopHotkeyCommand = new RelayCommand(StopFromHotkey);
 
         AppendPendingLogs();
         _backend.LogEntries.CollectionChanged += OnBackendLogEntriesChanged;
@@ -76,6 +77,7 @@ public partial class AppShellViewModel : ViewModelBase
         {
             _backend.SelectedTabIndex = index;
         }
+
     }
 
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -94,6 +96,45 @@ public partial class AppShellViewModel : ViewModelBase
                 SelectedTab = Tabs[index];
             }
         }
+    }
+
+    private async Task StartFromHotkeyAsync()
+    {
+        var runControl = GetSelectedRunControl();
+        if (runControl != null)
+        {
+            await runControl.StartCommand.ExecuteAsync(null);
+            return;
+        }
+
+        if (_backend.StartCommand.CanExecute(null))
+        {
+            await _backend.StartCommand.ExecuteAsync(null);
+        }
+    }
+
+    private void StopFromHotkey()
+    {
+        var runControl = GetSelectedRunControl();
+        if (runControl != null && runControl.CanStop)
+        {
+            runControl.StopCommand.Execute(null);
+            return;
+        }
+
+        if (_backend.StopCommand.CanExecute(null))
+        {
+            _backend.StopCommand.Execute(null);
+        }
+    }
+
+    private RunControlViewModel? GetSelectedRunControl()
+    {
+        return SelectedTab.ContentVm switch
+        {
+            ModuleFamilyViewModel family => family.Workspace.RunControl,
+            _ => null
+        };
     }
 
     private void OnBackendLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)

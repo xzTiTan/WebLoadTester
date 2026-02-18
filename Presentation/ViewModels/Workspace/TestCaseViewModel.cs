@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Core.Domain;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
 
-public partial class TestCaseViewModel : ObservableObject
+public partial class TestCaseViewModel : ObservableObject, IValidatable
 {
     private readonly MainWindowViewModel _backend;
     private ModuleConfigViewModel? _moduleConfig;
@@ -93,6 +95,14 @@ public partial class TestCaseViewModel : ObservableObject
     public IAsyncRelayCommand? SaveCommand => _moduleConfig?.SaveCommand;
     public IAsyncRelayCommand? SaveAsCommand => _moduleConfig?.SaveAsNewCommand;
     public IRelayCommand? DeleteCommand => _moduleConfig?.RequestDeleteSelectedCommand;
+
+    public IReadOnlyList<string> Validate()
+    {
+        return ValidationErrors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
 
     public void SetModuleConfig(ModuleConfigViewModel? moduleConfig)
     {

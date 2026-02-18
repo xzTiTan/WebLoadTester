@@ -5,11 +5,12 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.NetDiagnostics;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.NetDiagnostics;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
+public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly NetDiagnosticsSettings _settings;
 
@@ -213,6 +214,27 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         SyncPorts();
     }
 
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(Hostname))
+        {
+            errors.Add("Hostname обязателен.");
+        }
+
+        if (!UseAutoPorts)
+        {
+            errors.AddRange(GetPortErrors());
+        }
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetPortErrors() => PortRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
 
     private PortRowViewModel CreateRow(DiagnosticPort port)
@@ -244,5 +266,6 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase
         PortsEditor.SetItems(PortRows.Cast<object>());
         PortsEditor.NotifyValidationChanged();
         PortsEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
     }
 }

@@ -6,11 +6,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiSnapshot;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
+public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly UiSnapshotSettings _settings;
 
@@ -188,6 +189,24 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         }
     }
 
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (TimeoutSeconds < 1)
+        {
+            errors.Add("TimeoutSeconds должен быть >= 1.");
+        }
+
+        errors.AddRange(GetTargetErrors());
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetTargetErrors() => TargetRows.Select(r => r.RowErrorText).Where(e => !string.IsNullOrWhiteSpace(e)).Distinct();
 
     private SnapshotTargetRowViewModel CreateRow(SnapshotTarget target)
@@ -204,6 +223,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase
         TargetsEditor.SetItems(TargetRows.Cast<object>());
         TargetsEditor.NotifyValidationChanged();
         TargetsEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
     }
 
     private static void NormalizeLegacyTargets(UiSnapshotSettings settings)

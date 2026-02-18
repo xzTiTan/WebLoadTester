@@ -5,12 +5,13 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.HttpPerformance;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpCommon;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpFunctional;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
+public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly HttpPerformanceSettings _settings;
 
@@ -290,6 +291,30 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
         SyncAll();
     }
 
+
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(BaseUrl))
+        {
+            errors.Add("BaseUrl обязателен.");
+        }
+
+        if (TimeoutSeconds < 1)
+        {
+            errors.Add("TimeoutSeconds должен быть >= 1.");
+        }
+
+        errors.AddRange(GetEndpointErrors());
+        errors.AddRange(GetHeaderErrors());
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetEndpointErrors() => EndpointRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
     private IEnumerable<string> GetHeaderErrors() => HeaderRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
 
@@ -323,5 +348,6 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase
         HeadersEditor.SetItems(HeaderRows.Cast<object>());
         HeadersEditor.NotifyValidationChanged();
         HeadersEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
     }
 }

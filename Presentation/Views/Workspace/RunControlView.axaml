@@ -6,12 +6,20 @@
     <GroupBox Header="Run Control">
         <StackPanel Margin="8" Spacing="8">
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Старт" Command="{Binding StartCommand}" Margin="0,0,8,0" />
-                <Button Content="Стоп" Command="{Binding StopCommand}" />
+                <Button Content="Старт" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
+                <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" />
             </WrapPanel>
 
             <TextBlock Text="{Binding StatusText}" />
-            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" Height="10" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+
+            <ItemsControl ItemsSource="{Binding ValidationErrors}" IsVisible="{Binding HasValidationErrors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <WrapPanel Orientation="Horizontal">
                 <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />

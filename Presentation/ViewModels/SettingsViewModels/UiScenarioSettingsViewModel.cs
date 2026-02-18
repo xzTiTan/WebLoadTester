@@ -5,11 +5,12 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.UiScenario;
 using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiScenario;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
-public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
+public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValidatable
 {
     private readonly UiScenarioSettings _settings;
 
@@ -233,6 +234,23 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         StepsEditor.NotifyValidationChanged();
     }
 
+    public IReadOnlyList<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (TimeoutMs < 1000)
+        {
+            errors.Add("TimeoutMs должен быть >= 1000.");
+        }
+
+        errors.AddRange(GetStepValidationErrors());
+
+        return errors
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+    }
+
     private IEnumerable<string> GetStepValidationErrors()
     {
         return StepRows
@@ -270,6 +288,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         OnPropertyChanged(nameof(Steps));
         StepsEditor.NotifyValidationChanged();
         StepsEditor.RaiseCommandState();
+        OnPropertyChanged(nameof(Settings));
         RefreshEditorItems();
     }
 
