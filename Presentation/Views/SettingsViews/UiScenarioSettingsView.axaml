@@ -1,11 +1,49 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
+             xmlns:rowVm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiScenario"
+             xmlns:controls="clr-namespace:WebLoadTester.Presentation.Views.Controls"
              xmlns:domain="clr-namespace:WebLoadTester.Modules.UiScenario"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.UiScenarioSettingsView"
              x:DataType="vm:UiScenarioSettingsViewModel"
              x:Name="Root">
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type rowVm:UiStepRowViewModel}">
+            <StackPanel Spacing="4" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="140,2*,2*,96" ColumnSpacing="8">
+                    <ComboBox Grid.Column="0"
+                              ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
+                              SelectedItem="{Binding Action, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:UiStepAction">
+                                <TextBlock Text="{Binding ., Converter={StaticResource UiScenarioActionDisplayConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBox Grid.Column="1"
+                             Text="{Binding Selector, Mode=TwoWay}"
+                             IsEnabled="{Binding IsSelectorEnabled}"
+                             Watermark="{Binding SelectorWatermark}" />
+
+                    <TextBox Grid.Column="2"
+                             Text="{Binding Value, Mode=TwoWay}"
+                             IsEnabled="{Binding IsValueEnabled}"
+                             Watermark="{Binding ValueWatermark}" />
+
+                    <NumericUpDown Grid.Column="3"
+                                   Minimum="0"
+                                   Maximum="600000"
+                                   Increment="100"
+                                   Value="{Binding DelayMs, Mode=TwoWay}"
+                                   IsEnabled="{Binding IsDelayMsEnabled}" />
+                </Grid>
+
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" TextWrapping="Wrap" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="12">
@@ -29,41 +67,8 @@
 
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" ClipToBounds="True">
-                    <TextBlock Text="Шаги" Classes="section-title" TextTrimming="CharacterEllipsis" MaxLines="1" />
-                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
-                        <Button Content="Добавить" Command="{Binding AddStepCommand}" />
-                        <Button Content="Удалить" Classes="danger" Command="{Binding RemoveSelectedStepCommand}" />
-                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedStepCommand}" />
-                        <Button Content="Вверх" Command="{Binding MoveSelectedStepUpCommand}" />
-                        <Button Content="Вниз" Command="{Binding MoveSelectedStepDownCommand}" />
-                    </WrapPanel>
-                </Grid>
-
-                <dg:DataGrid ItemsSource="{Binding Steps}"
-                             SelectedItem="{Binding SelectedStep, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTemplateColumn Header="Действие" Width="2*">
-                            <dg:DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate x:DataType="domain:UiStep">
-                                    <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
-                                              SelectedItem="{Binding Action, Mode=TwoWay}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="domain:UiStepAction">
-                                                <TextBlock Text="{Binding ., Converter={StaticResource UiScenarioActionDisplayConverter}}" />
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellTemplate>
-                        </dg:DataGridTemplateColumn>
-                        <dg:DataGridTextColumn Header="Selector" Binding="{Binding Selector}" Width="2*" />
-                        <dg:DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" />
-                        <dg:DataGridTextColumn Header="DelayMs" Binding="{Binding DelayMs}" Width="*" />
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
+                <TextBlock Text="Шаги" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding StepsEditor}" />
             </StackPanel>
         </Border>
     </StackPanel>

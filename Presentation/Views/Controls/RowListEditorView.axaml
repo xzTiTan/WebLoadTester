@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Controls"
+             x:Class="WebLoadTester.Presentation.Views.Controls.RowListEditorView"
+             x:DataType="vm:RowListEditorViewModel">
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding AddCommand}" />
+        <KeyBinding Gesture="Delete" Command="{Binding RemoveCommand}" />
+        <KeyBinding Gesture="Ctrl+D" Command="{Binding DuplicateCommand}" />
+        <KeyBinding Gesture="Alt+Up" Command="{Binding MoveUpCommand}" />
+        <KeyBinding Gesture="Alt+Down" Command="{Binding MoveDownCommand}" />
+    </UserControl.KeyBindings>
+
+    <StackPanel Spacing="8">
+        <WrapPanel Orientation="Horizontal">
+            <Button Content="Добавить" Command="{Binding AddCommand}" Margin="0,0,8,0" />
+            <Button Content="Удалить" Command="{Binding RemoveCommand}" IsEnabled="{Binding CanRemove}" Margin="0,0,8,0" />
+            <Button Content="Вверх" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanMoveUp}" Margin="0,0,8,0" />
+            <Button Content="Вниз" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanMoveDown}" Margin="0,0,8,0" />
+            <Button Content="Дублировать" Command="{Binding DuplicateCommand}" IsEnabled="{Binding CanDuplicate}" />
+        </WrapPanel>
+
+        <ItemsControl ItemsSource="{Binding ValidationErrors}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+    </StackPanel>
+</UserControl>

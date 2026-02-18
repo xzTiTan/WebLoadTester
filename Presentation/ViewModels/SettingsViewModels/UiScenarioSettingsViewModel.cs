@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Modules.UiScenario;
+using WebLoadTester.Presentation.ViewModels.Controls;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiScenario;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
@@ -17,21 +18,33 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         _settings = settings;
         NormalizeLegacySteps(_settings);
 
-        Steps = new ObservableCollection<UiStep>(_settings.Steps);
         targetUrl = _settings.TargetUrl;
         timeoutMs = _settings.TimeoutMs;
 
-        Steps.CollectionChanged += (_, _) => SyncSteps();
-        foreach (var step in Steps)
-        {
-            step.PropertyChanged += (_, _) => SyncSteps();
-        }
+        Steps = new ObservableCollection<UiStep>(_settings.Steps);
+        StepRows = new ObservableCollection<UiStepRowViewModel>(Steps.Select(CreateRow));
+
+        StepsEditor = new RowListEditorViewModel();
+        StepsEditor.Configure(
+            createItem: AddStepInternal,
+            removeItem: RemoveStepInternal,
+            moveUp: MoveStepUpInternal,
+            moveDown: MoveStepDownInternal,
+            duplicate: DuplicateStepInternal,
+            validationProvider: GetStepValidationErrors,
+            selectedItemChanged: item => SelectedStepRow = item as UiStepRowViewModel);
+
+        RefreshEditorItems();
+        SelectedStepRow = StepRows.FirstOrDefault();
     }
 
     public override object Settings => _settings;
     public override string Title => "UI сценарий";
 
     public ObservableCollection<UiStep> Steps { get; }
+    public ObservableCollection<UiStepRowViewModel> StepRows { get; }
+
+    public RowListEditorViewModel StepsEditor { get; }
 
     public UiStepAction[] ActionOptions { get; } =
     {
@@ -46,15 +59,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
     [ObservableProperty] private string targetUrl = string.Empty;
     [ObservableProperty] private int timeoutMs = 10000;
-    [ObservableProperty] private UiStep? selectedStep;
-
-    partial void OnSelectedStepChanged(UiStep? value)
-    {
-        RemoveSelectedStepCommand.NotifyCanExecuteChanged();
-        DuplicateSelectedStepCommand.NotifyCanExecuteChanged();
-        MoveSelectedStepUpCommand.NotifyCanExecuteChanged();
-        MoveSelectedStepDownCommand.NotifyCanExecuteChanged();
-    }
+    [ObservableProperty] private UiStepRowViewModel? selectedStepRow;
 
     public override void UpdateFrom(object settings)
     {
@@ -66,13 +71,15 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
         NormalizeLegacySteps(incoming);
 
         Steps.Clear();
+        StepRows.Clear();
+
         foreach (var step in incoming.Steps)
         {
             Steps.Add(step);
-            step.PropertyChanged += (_, _) => SyncSteps();
+            StepRows.Add(CreateRow(step));
         }
 
-        SelectedStep = Steps.FirstOrDefault();
+        SelectedStepRow = StepRows.FirstOrDefault();
         TargetUrl = incoming.TargetUrl;
         TimeoutMs = incoming.TimeoutMs;
         SyncSteps();
@@ -81,8 +88,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
     partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = value;
     partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
 
-    [RelayCommand]
-    private void AddStep()
+    private object? AddStepInternal()
     {
         var step = new UiStep
         {
@@ -92,96 +98,179 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
             DelayMs = 0
         };
 
-        step.PropertyChanged += (_, _) => SyncSteps();
-        Steps.Add(step);
-        SelectedStep = step;
+        var row = CreateRow(step);
+
+        if (SelectedStepRow != null)
+        {
+            var selectedIndex = StepRows.IndexOf(SelectedStepRow);
+            if (selectedIndex >= 0)
+            {
+                var insertIndex = selectedIndex + 1;
+                StepRows.Insert(insertIndex, row);
+                Steps.Insert(insertIndex, step);
+            }
+            else
+            {
+                StepRows.Add(row);
+                Steps.Add(step);
+            }
+        }
+        else
+        {
+            StepRows.Add(row);
+            Steps.Add(step);
+        }
+
+        SelectedStepRow = row;
         SyncSteps();
+        return row;
     }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedStep))]
-    private void RemoveSelectedStep()
+    private void RemoveStepInternal(object? selected)
     {
-        if (SelectedStep == null)
+        if (selected is not UiStepRowViewModel row)
         {
             return;
         }
 
-        var index = Steps.IndexOf(SelectedStep);
-        Steps.Remove(SelectedStep);
-        SelectedStep = index >= 0 && Steps.Count > 0
-            ? Steps[Math.Min(index, Steps.Count - 1)]
-            : null;
-        SyncSteps();
-    }
+        if (StepRows.Count <= 1)
+        {
+            row.Clear();
+            SelectedStepRow = row;
+            SyncSteps();
+            return;
+        }
 
-    [RelayCommand(CanExecute = nameof(CanMutateSelectedStep))]
-    private void DuplicateSelectedStep()
-    {
-        if (SelectedStep == null)
+        var index = StepRows.IndexOf(row);
+        if (index < 0)
         {
             return;
         }
 
-        var clone = new UiStep
+        StepRows.RemoveAt(index);
+        Steps.RemoveAt(index);
+
+        if (StepRows.Count > 0)
         {
-            Action = SelectedStep.Action,
-            Selector = SelectedStep.Selector,
-            Value = SelectedStep.Value,
-            Text = SelectedStep.Text,
-            DelayMs = SelectedStep.DelayMs
+            SelectedStepRow = StepRows[Math.Min(index, StepRows.Count - 1)];
+        }
+        else
+        {
+            SelectedStepRow = null;
+        }
+
+        SyncSteps();
+    }
+
+    private void DuplicateStepInternal(object? selected)
+    {
+        if (selected is not UiStepRowViewModel row)
+        {
+            return;
+        }
+
+        var clone = row.Clone();
+        clone.NormalizeForAction();
+
+        var index = StepRows.IndexOf(row);
+        if (index < 0)
+        {
+            StepRows.Add(clone);
+            Steps.Add(clone.Model);
+        }
+        else
+        {
+            StepRows.Insert(index + 1, clone);
+            Steps.Insert(index + 1, clone.Model);
+        }
+
+        SelectedStepRow = clone;
+        SyncSteps();
+    }
+
+    private void MoveStepUpInternal(object? selected)
+    {
+        if (selected is not UiStepRowViewModel row)
+        {
+            return;
+        }
+
+        var index = StepRows.IndexOf(row);
+        if (index <= 0)
+        {
+            return;
+        }
+
+        StepRows.Move(index, index - 1);
+        Steps.Move(index, index - 1);
+        SelectedStepRow = StepRows[index - 1];
+        SyncSteps();
+    }
+
+    private void MoveStepDownInternal(object? selected)
+    {
+        if (selected is not UiStepRowViewModel row)
+        {
+            return;
+        }
+
+        var index = StepRows.IndexOf(row);
+        if (index < 0 || index >= StepRows.Count - 1)
+        {
+            return;
+        }
+
+        StepRows.Move(index, index + 1);
+        Steps.Move(index, index + 1);
+        SelectedStepRow = StepRows[index + 1];
+        SyncSteps();
+    }
+
+    partial void OnSelectedStepRowChanged(UiStepRowViewModel? value)
+    {
+        StepsEditor.SelectedItem = value;
+        StepsEditor.RaiseCommandState();
+        StepsEditor.NotifyValidationChanged();
+    }
+
+    private IEnumerable<string> GetStepValidationErrors()
+    {
+        return StepRows
+            .Select(step => step.RowErrorText)
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .Distinct(StringComparer.Ordinal)
+            .Cast<string>();
+    }
+
+    private UiStepRowViewModel CreateRow(UiStep step)
+    {
+        var row = new UiStepRowViewModel(step);
+        row.PropertyChanged += (_, _) =>
+        {
+            if (!string.IsNullOrWhiteSpace(step.Value))
+            {
+                step.Text = step.Value;
+            }
+
+            SyncSteps();
         };
 
-        clone.PropertyChanged += (_, _) => SyncSteps();
-        var index = Steps.IndexOf(SelectedStep);
-        Steps.Insert(index + 1, clone);
-        SelectedStep = clone;
-        SyncSteps();
+        row.NormalizeForAction();
+        return row;
     }
 
-    [RelayCommand(CanExecute = nameof(CanMoveSelectedStepUp))]
-    private void MoveSelectedStepUp()
+    private void RefreshEditorItems()
     {
-        if (SelectedStep == null)
-        {
-            return;
-        }
-
-        var index = Steps.IndexOf(SelectedStep);
-        if (index > 0)
-        {
-            Steps.Move(index, index - 1);
-            SelectedStep = Steps[index - 1];
-            SyncSteps();
-        }
+        StepsEditor.SetItems(StepRows.Cast<object>());
     }
-
-    [RelayCommand(CanExecute = nameof(CanMoveSelectedStepDown))]
-    private void MoveSelectedStepDown()
-    {
-        if (SelectedStep == null)
-        {
-            return;
-        }
-
-        var index = Steps.IndexOf(SelectedStep);
-        if (index >= 0 && index < Steps.Count - 1)
-        {
-            Steps.Move(index, index + 1);
-            SelectedStep = Steps[index + 1];
-            SyncSteps();
-        }
-    }
-
-    private bool CanMutateSelectedStep() => SelectedStep != null;
-    private bool CanMoveSelectedStepUp() => SelectedStep != null && Steps.IndexOf(SelectedStep) > 0;
-    private bool CanMoveSelectedStepDown() => SelectedStep != null && Steps.IndexOf(SelectedStep) >= 0 && Steps.IndexOf(SelectedStep) < Steps.Count - 1;
 
     private void SyncSteps()
     {
-        _settings.Steps = Steps.ToList();
+        _settings.Steps = StepRows.Select(r => r.Model).ToList();
         OnPropertyChanged(nameof(Steps));
-        MoveSelectedStepUpCommand.NotifyCanExecuteChanged();
-        MoveSelectedStepDownCommand.NotifyCanExecuteChanged();
+        StepsEditor.NotifyValidationChanged();
+        StepsEditor.RaiseCommandState();
+        RefreshEditorItems();
     }
 
     private static void NormalizeLegacySteps(UiScenarioSettings settings)
@@ -200,11 +289,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase
 
             if (step.Action == UiStepAction.WaitForSelector)
             {
-                var hasSelector = !string.IsNullOrWhiteSpace(step.Selector);
-                if (hasSelector)
-                {
-                    step.Action = string.IsNullOrWhiteSpace(step.Value) ? UiStepAction.Click : UiStepAction.Fill;
-                }
+                step.Value = string.Empty;
             }
         }
     }
