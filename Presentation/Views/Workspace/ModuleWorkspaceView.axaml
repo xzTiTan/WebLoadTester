@@ -39,19 +39,30 @@
                         <views:RunControlView Grid.Row="0" DataContext="{Binding Workspace.RunControl}" />
 
                         <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="6">
-                            <Border Grid.Column="0" IsEnabled="{Binding Workspace.IsIdle}">
-                                <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
-                            </Border>
+                            <Expander Grid.Column="0"
+                                      Header="Тест-кейс"
+                                      IsExpanded="{Binding Workspace.IsTestCaseExpanded, Mode=TwoWay}">
+                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,4,0,0">
+                                    <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                                </Border>
+                            </Expander>
 
-                            <Border Grid.Column="1" IsEnabled="{Binding Workspace.IsIdle}">
-                                <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
-                            </Border>
+                            <Expander Grid.Column="1"
+                                      Header="Профиль запуска"
+                                      IsExpanded="{Binding Workspace.IsRunProfileExpanded, Mode=TwoWay}">
+                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,4,0,0">
+                                    <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                                </Border>
+                            </Expander>
                         </Grid>
 
-                        <StackPanel Grid.Row="2" Spacing="4" IsEnabled="{Binding Workspace.IsIdle}">
-                            <TextBlock Text="Настройки модуля" />
-                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
-                        </StackPanel>
+                        <Expander Grid.Row="2"
+                                  Header="Настройки модуля"
+                                  IsExpanded="{Binding Workspace.IsModuleSettingsExpanded, Mode=TwoWay}">
+                            <StackPanel Spacing="4" IsEnabled="{Binding Workspace.IsIdle}" Margin="0,4,0,0">
+                                <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                            </StackPanel>
+                        </Expander>
                     </Grid>
                 </StackPanel>
             </ScrollViewer>

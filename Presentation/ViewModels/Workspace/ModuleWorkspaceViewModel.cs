@@ -29,6 +29,9 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
             leftNavWidth = initialState.LeftNavWidth;
             detailsWidth = initialState.DetailsWidth;
             isDetailsVisible = initialState.IsDetailsVisible;
+            isTestCaseExpanded = initialState.IsTestCaseExpanded;
+            isRunProfileExpanded = initialState.IsRunProfileExpanded;
+            isModuleSettingsExpanded = initialState.IsModuleSettingsExpanded;
         }
 
         WorkspaceValidationErrors = new ObservableCollection<string>();
@@ -70,6 +73,15 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isDetailsVisible = true;
+
+    [ObservableProperty]
+    private bool isTestCaseExpanded = true;
+
+    [ObservableProperty]
+    private bool isRunProfileExpanded = true;
+
+    [ObservableProperty]
+    private bool isModuleSettingsExpanded = true;
 
     [ObservableProperty]
     private int scrollToTopRequestToken;
@@ -154,6 +166,9 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     partial void OnLeftNavWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
     partial void OnDetailsWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
     partial void OnIsDetailsVisibleChanged(bool value) => _onLayoutStateChanged?.Invoke();
+    partial void OnIsTestCaseExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
+    partial void OnIsRunProfileExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
+    partial void OnIsModuleSettingsExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
 
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
