@@ -22,7 +22,8 @@ public partial class RunsTabViewModel : ObservableObject
 {
     private readonly IRunStore _runStore;
     private readonly string _runsRoot;
-    private readonly Func<string, Task> _repeatRun;
+    private Func<string, Task> _repeatRun;
+    private Func<bool>? _isRunningProvider;
     private CancellationTokenSource? _searchDebounceCts;
     private string? _pendingDeleteRunId;
 
@@ -33,11 +34,11 @@ public partial class RunsTabViewModel : ObservableObject
         _repeatRun = repeatRun;
 
         StatusFilterOptions.Add("Все");
-        StatusFilterOptions.Add("Success");
-        StatusFilterOptions.Add("Failed");
-        StatusFilterOptions.Add("Stopped");
-        StatusFilterOptions.Add("Canceled");
-        StatusFilterOptions.Add("Running");
+        StatusFilterOptions.Add("Успешно");
+        StatusFilterOptions.Add("С ошибкой");
+        StatusFilterOptions.Add("Остановлено");
+        StatusFilterOptions.Add("Отменено");
+        StatusFilterOptions.Add("Выполняется");
 
         PeriodOptions.Add("Сегодня");
         PeriodOptions.Add("7 дней");
@@ -66,8 +67,13 @@ public partial class RunsTabViewModel : ObservableObject
     [ObservableProperty] private bool isDeleteConfirmVisible;
     [ObservableProperty] private string detailsSummary = string.Empty;
     [ObservableProperty] private string detailsProfile = string.Empty;
+    [ObservableProperty] private bool isRunning;
+    [ObservableProperty] private string repeatRunHint = string.Empty;
 
     public bool HasSelectedRun => SelectedRun != null;
+    public bool HasRuns => Runs.Count > 0;
+    public bool CanRepeatRun => RepeatRunCommand.CanExecute(null);
+    public bool HasRepeatRunHint => !string.IsNullOrWhiteSpace(RepeatRunHint);
 
     public void SetModuleOptions(IEnumerable<string> moduleTypes)
     {
@@ -81,6 +87,26 @@ public partial class RunsTabViewModel : ObservableObject
         SelectedModuleType ??= "Все";
     }
 
+
+    public void ConfigureRepeatRun(Func<string, Task> repeatRun)
+    {
+        _repeatRun = repeatRun;
+    }
+
+    public void SetRunningStateProvider(Func<bool> isRunningProvider)
+    {
+        _isRunningProvider = isRunningProvider;
+        IsRunning = _isRunningProvider();
+    }
+
+    public void RefreshRunningState()
+    {
+        if (_isRunningProvider != null)
+        {
+            IsRunning = _isRunningProvider();
+        }
+    }
+
     partial void OnSelectedModuleTypeChanged(string? value) => ApplyFilters();
     partial void OnSelectedStatusChanged(string value) => ApplyFilters();
     partial void OnSelectedPeriodChanged(string value) => ApplyFilters();
@@ -88,7 +114,25 @@ public partial class RunsTabViewModel : ObservableObject
     partial void OnSelectedRunChanged(TestRunSummary? value)
     {
         OnPropertyChanged(nameof(HasSelectedRun));
+        RepeatRunCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanRepeatRun));
+        OnPropertyChanged(nameof(HasRepeatRunHint));
         _ = Task.Run(LoadDetailsAsync);
+        _ = Task.Run(UpdateRepeatRunAvailabilityAsync);
+    }
+
+    partial void OnIsRunningChanged(bool value)
+    {
+        RepeatRunCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanRepeatRun));
+        OnPropertyChanged(nameof(HasRepeatRunHint));
+        if (value)
+        {
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+            return;
+        }
+
+        _ = Task.Run(UpdateRepeatRunAvailabilityAsync);
     }
 
     partial void OnSearchTextChanged(string? value)
@@ -140,6 +184,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         UserMessage = string.Empty;
+        await UpdateRepeatRunAvailabilityAsync();
     }
 
     [RelayCommand]
@@ -171,7 +216,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
-            UserMessage = "RunId скопирован в буфер обмена.";
+            UserMessage = "Идентификатор запуска скопирован в буфер обмена.";
         }
     }
 
@@ -191,7 +236,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteRepeatRun))]
     private async Task RepeatRunAsync()
     {
         if (SelectedRun == null)
@@ -199,8 +244,21 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
+        RefreshRunningState();
+        if (IsRunning)
+        {
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+            return;
+        }
+
         await _repeatRun(SelectedRun.RunId);
         UserMessage = $"Конфигурация загружена из прогона {SelectedRun.RunId}. Запуск не выполнялся.";
+        await UpdateRepeatRunAvailabilityAsync();
+    }
+
+    private bool CanExecuteRepeatRun()
+    {
+        return HasSelectedRun && !IsRunning && string.IsNullOrWhiteSpace(RepeatRunHint);
     }
 
     [RelayCommand]
@@ -266,6 +324,47 @@ public partial class RunsTabViewModel : ObservableObject
         OpenPath(item.FullPath, "Артефакт не найден.");
     }
 
+
+    private async Task UpdateRepeatRunAvailabilityAsync()
+    {
+        RefreshRunningState();
+
+        if (SelectedRun == null)
+        {
+            RepeatRunHint = string.Empty;
+        }
+        else if (IsRunning)
+        {
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+        }
+        else
+        {
+            var reportPath = Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
+            if (!File.Exists(reportPath))
+            {
+                RepeatRunHint = "report.json не найден для выбранного прогона.";
+            }
+            else
+            {
+                try
+                {
+                    var reportJson = await File.ReadAllTextAsync(reportPath);
+                    RepeatRunHint = TryParseRepeatSnapshot(reportJson, out _, out var parseError)
+                        ? string.Empty
+                        : $"report.json повреждён: {parseError}";
+                }
+                catch (Exception ex)
+                {
+                    RepeatRunHint = $"Не удалось прочитать report.json: {ex.Message}";
+                }
+            }
+        }
+
+        RepeatRunCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanRepeatRun));
+        OnPropertyChanged(nameof(HasRepeatRunHint));
+    }
+
     private void ApplyFilters()
     {
         var query = AllRuns.AsEnumerable();
@@ -277,7 +376,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(r => string.Equals(r.Status, SelectedStatus, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(r => string.Equals(r.Status, MapStatusFilterToRunStatus(SelectedStatus), StringComparison.OrdinalIgnoreCase));
         }
 
         var utcNow = DateTimeOffset.UtcNow;
@@ -316,6 +415,19 @@ public partial class RunsTabViewModel : ObservableObject
         }
     }
 
+    private static string MapStatusFilterToRunStatus(string selectedStatus)
+    {
+        return selectedStatus switch
+        {
+            "Успешно" => "Success",
+            "С ошибкой" => "Failed",
+            "Остановлено" => "Stopped",
+            "Отменено" => "Canceled",
+            "Выполняется" => "Running",
+            _ => selectedStatus
+        };
+    }
+
     private async Task LoadDetailsAsync()
     {
         ArtifactLinks.Clear();
@@ -334,7 +446,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · ModuleId: {detail.Run.ModuleType}";
+        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · Модуль: {detail.Run.ModuleType}";
 
         try
         {
@@ -353,7 +465,7 @@ public partial class RunsTabViewModel : ObservableObject
                 timeoutSeconds = timeoutFromLegacy;
             }
 
-            DetailsProfile = $"Mode={profile.GetProperty("mode").GetString()} · Parallelism={profile.GetProperty("parallelism").GetInt32()} · Timeout={timeoutSeconds} · Pause={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
+            DetailsProfile = $"Режим={profile.GetProperty("mode").GetString()} · Параллелизм={profile.GetProperty("parallelism").GetInt32()} · Таймаут={timeoutSeconds} · Пауза={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
         }
         catch
         {
@@ -416,7 +528,7 @@ public partial class RunsTabViewModel : ObservableObject
 
     public static bool TryParseRepeatSnapshot(string reportJson, out RepeatRunSnapshot snapshot, out string error)
     {
-        snapshot = new RepeatRunSnapshot(string.Empty, new RunProfile(), JsonSerializer.SerializeToElement(new { }));
+        snapshot = new RepeatRunSnapshot(string.Empty, new RunProfile(), JsonSerializer.SerializeToElement(new { }), string.Empty);
         error = string.Empty;
         try
         {
@@ -440,7 +552,13 @@ public partial class RunsTabViewModel : ObservableObject
                 ? settingsElement.Clone()
                 : JsonSerializer.SerializeToElement(new { });
 
-            snapshot = new RepeatRunSnapshot(moduleId, profile, moduleSettings);
+            var finalName = root.TryGetProperty("finalName", out var finalNameElement)
+                ? finalNameElement.GetString()
+                : root.TryGetProperty("testName", out var testNameElement)
+                    ? testNameElement.GetString()
+                    : string.Empty;
+
+            snapshot = new RepeatRunSnapshot(moduleId, profile, moduleSettings, finalName ?? string.Empty);
             return true;
         }
         catch (Exception ex)
@@ -491,4 +609,4 @@ public partial class RunsTabViewModel : ObservableObject
 
 public sealed record ArtifactLinkItem(string Name, string FullPath);
 public sealed record TopErrorItem(string Message, int Count);
-public sealed record RepeatRunSnapshot(string ModuleId, RunProfile Profile, JsonElement ModuleSettings);
+public sealed record RepeatRunSnapshot(string ModuleId, RunProfile Profile, JsonElement ModuleSettings, string FinalName);

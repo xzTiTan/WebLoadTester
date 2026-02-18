@@ -119,6 +119,12 @@
         <Setter Property="MinWidth" Value="{DynamicResource ButtonMinWidth}" />
     </Style>
 
+    <Style Selector="Button.rowlist-tool">
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="MinWidth" Value="74" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+
     <Style Selector="TextBox, ComboBox, NumericUpDown, DatePicker">
         <Setter Property="MinHeight" Value="{DynamicResource ControlHeight}" />
         <Setter Property="FontSize" Value="{DynamicResource ControlFontSize}" />
@@ -129,7 +135,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
-        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Padding" Value="10,6" />
     </Style>
 
     <Style Selector="ComboBox">
@@ -203,8 +209,8 @@
 
     <Style Selector="ListBox.segmented-bar ListBoxItem">
         <Setter Property="MinHeight" Value="{DynamicResource ChipHeight}" />
-        <Setter Property="Padding" Value="12,6" />
-        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="Margin" Value="0,0,6,6" />
         <Setter Property="CornerRadius" Value="{DynamicResource ChipCornerRadius}" />
         <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
@@ -221,5 +227,21 @@
         <Setter Property="Background" Value="{DynamicResource PrimaryBgBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
+    <Style Selector="ListBox.left-nav">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBox.left-nav ListBoxItem">
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style Selector="ListBox.left-nav ListBoxItem TextBlock">
+        <Setter Property="Margin" Value="0,0,0,1" />
     </Style>
 </Styles>

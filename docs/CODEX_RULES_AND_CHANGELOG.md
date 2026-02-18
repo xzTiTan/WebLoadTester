@@ -1,4 +1,4 @@
-v3.30 17.02.2026
+v3.31 18.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,13 @@ v3.30 17.02.2026
 ---
 
 # Changelog
+
+## v3.31 18.02.2026
+- Stage 2 UI-shell: добавлен новый `ModuleWorkspaceView` (3 колонки LeftNav/Workspace/Details) с рабочими `GridSplitter` и единственным вертикальным `ScrollViewer` в центральной рабочей области.
+- Добавлены `ModuleFamilyViewModel` и `ModuleWorkspaceViewModel` (bridge к существующему `MainWindowViewModel`) для прокидывания списков модулей, выбранного module settings VM и состояния Running без изменения логики модулей/раннера.
+- Вкладки UI/HTTP/Сеть переведены на новый workspace-контент через DataTemplate (`ModuleFamilyViewModel -> ModuleWorkspaceView`); вкладка `Прогоны` оставлена без изменений.
+- В LeftNav добавлены поиск по модулям и блокировка изменения выбора при Running (UI disabled + VM guard).
+- Обновлены версии `README.md` и `AGENTS.md`.
 
 ## v3.30 17.02.2026
 - Выполнен визуальный refresh основного окна и общих стилей Avalonia без изменения бизнес-функционала: обновлены токены отступов, радиусов, типографики и палитры для более современного интерфейса.

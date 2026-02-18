@@ -14,7 +14,7 @@ public partial class RunsTab : UserControl
 
     private void OnRunsGridDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is RunsTabViewModel vm && vm.HasSelectedRun)
+        if (DataContext is RunsTabViewModel vm && vm.HasSelectedRun && !vm.IsRunning)
         {
             vm.OpenJsonCommand.Execute(null);
             e.Handled = true;

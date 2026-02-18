@@ -1,15 +1,28 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
-             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+             xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.NetDiagnostics"
+             xmlns:controls="clr-namespace:WebLoadTester.Presentation.Views.Controls"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.NetDiagnosticsSettingsView"
              x:DataType="vm:NetDiagnosticsSettingsViewModel">
+    <UserControl.DataTemplates>
+        <DataTemplate x:DataType="rows:PortRowViewModel">
+            <StackPanel Spacing="2" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="120,2*" ColumnSpacing="6">
+                    <NumericUpDown Grid.Column="0" Minimum="1" Maximum="65535" Value="{Binding Port, Mode=TwoWay}" />
+                    <TextBox Grid.Column="1" Text="{Binding Label, Mode=TwoWay}" Watermark="Метка" />
+                </Grid>
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Опции" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Hostname" Classes="field-label" />
+                    <TextBlock Text="Имя хоста" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Hostname, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
@@ -21,45 +34,16 @@
                     </WrapPanel>
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="UseAutoPorts" Classes="field-label" />
+                    <TextBlock Text="Автоподбор портов" Classes="field-label" />
                     <CheckBox Classes="field-control" Content="Автоматически использовать :443" IsChecked="{Binding UseAutoPorts, Mode=TwoWay}" />
                 </Grid>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
-            <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Ports" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
-                        <Button Content="Добавить" Command="{Binding AddPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
-                        <Button Content="Удалить" Command="{Binding RemoveSelectedPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
-                        <Button Content="Дублировать" Command="{Binding DuplicateSelectedPortCommand}" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}" />
-                    </WrapPanel>
-                </Grid>
-
-                <dg:DataGrid ItemsSource="{Binding Ports}"
-                             SelectedItem="{Binding SelectedPort, Mode=TwoWay}"
-                             AutoGenerateColumns="False"
-                             Classes="list-min-180"
-                             IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}">
-                    <dg:DataGrid.Columns>
-                        <dg:DataGridTextColumn Header="Порт" Binding="{Binding Port}" Width="*" />
-                        <dg:DataGridTemplateColumn Header="Протокол" Width="*">
-                            <dg:DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate >
-                                    <TextBlock Text="{Binding Protocol}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellTemplate>
-                            <dg:DataGridTemplateColumn.CellEditingTemplate>
-                                <DataTemplate >
-                                    <ComboBox ItemsSource="{Binding $parent[UserControl].DataContext.ProtocolOptions}"
-                                              SelectedItem="{Binding Protocol, Mode=TwoWay}" />
-                                </DataTemplate>
-                            </dg:DataGridTemplateColumn.CellEditingTemplate>
-                        </dg:DataGridTemplateColumn>
-                    </dg:DataGrid.Columns>
-                </dg:DataGrid>
+            <StackPanel Spacing="8" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}">
+                <TextBlock Text="Порты" Classes="section-title" />
+                <controls:RowListEditorView DataContext="{Binding PortsEditor}" />
             </StackPanel>
         </Border>
     </StackPanel>

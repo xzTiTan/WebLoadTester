@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
+             xmlns:log="clr-namespace:WebLoadTester.Presentation.ViewModels.Controls"
+             xmlns:behaviors="clr-namespace:WebLoadTester.Presentation.Common.Behaviors"
+             x:Class="WebLoadTester.Presentation.Views.Workspace.LogDrawerView"
+             x:DataType="vm:LogDrawerViewModel">
+    <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+        <Expander.Header>
+            <TextBlock Text="Лог" />
+        </Expander.Header>
+
+        <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="0,8,0,0" MinHeight="160" MaxHeight="320">
+            <WrapPanel Grid.Row="0" Orientation="Horizontal">
+                <CheckBox Content="Автоскролл" IsChecked="{Binding AutoScroll, Mode=TwoWay}" Margin="0,0,8,0" />
+                <CheckBox Content="Только ошибки" IsChecked="{Binding OnlyErrors, Mode=TwoWay}" Margin="0,0,8,0" />
+                <TextBox Width="280" Watermark="Фильтр" Text="{Binding FilterText, Mode=TwoWay}" Margin="0,0,8,0" />
+                <Button Content="Очистить" Command="{Binding ClearCommand}" Margin="0,0,8,0" />
+                <Button Content="Копировать" Command="{Binding CopyCommand}" />
+            </WrapPanel>
+
+            <Border Grid.Row="1" Padding="4">
+                <ListBox ItemsSource="{Binding VisibleLines}"
+                         behaviors:AutoScrollBehavior.IsEnabled="{Binding AutoScroll}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="log:LogLineViewModel">
+                            <TextBlock Text="{Binding RenderedText}" TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+    </Expander>
+</UserControl>

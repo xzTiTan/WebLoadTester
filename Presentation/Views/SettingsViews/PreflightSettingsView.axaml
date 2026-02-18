@@ -8,7 +8,7 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Предварительные проверки" Classes="section-title" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Target (опционально)" Classes="field-label" />
+                    <TextBlock Text="Цель (необязательно)" Classes="field-label" />
                     <TextBox Classes="field-control" Text="{Binding Target, Mode=TwoWay}" />
                 </Grid>
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">

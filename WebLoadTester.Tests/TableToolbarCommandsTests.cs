@@ -21,24 +21,23 @@ public class TableToolbarCommandsTests
                 new UiStep { Value = "third" }
             }
         };
-        var vm = new UiScenarioSettingsViewModel(settings)
-        {
-            SelectedStep = settings.Steps[1]
-        };
 
-        vm.DuplicateSelectedStepCommand.Execute(null);
+        var vm = new UiScenarioSettingsViewModel(settings);
+        vm.SelectedStepRow = vm.StepRows[1];
 
-        Assert.Equal(4, vm.Steps.Count);
-        Assert.Equal("second", vm.Steps[2].Value);
-        Assert.Same(vm.Steps[2], vm.SelectedStep);
+        vm.StepsEditor.DuplicateCommand.Execute(null);
 
-        vm.MoveSelectedStepUpCommand.Execute(null);
-        Assert.Equal(new[] { "first", "second", "second", "third" }, vm.Steps.Select(s => s.Value));
-        Assert.Same(vm.Steps[1], vm.SelectedStep);
+        Assert.Equal(4, vm.StepRows.Count);
+        Assert.Equal("second", vm.StepRows[2].Value);
+        Assert.Same(vm.StepRows[2], vm.SelectedStepRow);
 
-        vm.MoveSelectedStepDownCommand.Execute(null);
-        Assert.Equal(new[] { "first", "second", "second", "third" }, vm.Steps.Select(s => s.Value));
-        Assert.Same(vm.Steps[2], vm.SelectedStep);
+        vm.StepsEditor.MoveUpCommand.Execute(null);
+        Assert.Equal(new[] { "first", "second", "second", "third" }, vm.StepRows.Select(s => s.Value));
+        Assert.Same(vm.StepRows[1], vm.SelectedStepRow);
+
+        vm.StepsEditor.MoveDownCommand.Execute(null);
+        Assert.Equal(new[] { "first", "second", "second", "third" }, vm.StepRows.Select(s => s.Value));
+        Assert.Same(vm.StepRows[2], vm.SelectedStepRow);
     }
 
     [Fact]
@@ -47,16 +46,20 @@ public class TableToolbarCommandsTests
         var settings = new UiSnapshotSettings();
         var vm = new UiSnapshotSettingsViewModel(settings);
 
-        vm.AddTargetCommand.Execute(null);
-        Assert.Single(vm.Targets);
-        Assert.Same(vm.Targets[0], vm.SelectedTarget);
+        vm.TargetRows.Clear();
+        vm.TargetsEditor.SetItems(vm.TargetRows.Cast<object>());
+        vm.SelectedTargetRow = null;
 
-        vm.DuplicateSelectedTargetCommand.Execute(null);
-        Assert.Equal(2, vm.Targets.Count);
-        Assert.Same(vm.Targets[1], vm.SelectedTarget);
+        vm.TargetsEditor.AddCommand.Execute(null);
+        Assert.Single(vm.TargetRows);
+        Assert.Same(vm.TargetRows[0], vm.SelectedTargetRow);
 
-        vm.RemoveSelectedTargetCommand.Execute(null);
-        Assert.Single(vm.Targets);
+        vm.TargetsEditor.DuplicateCommand.Execute(null);
+        Assert.Equal(2, vm.TargetRows.Count);
+        Assert.Same(vm.TargetRows[1], vm.SelectedTargetRow);
+
+        vm.TargetsEditor.RemoveCommand.Execute(null);
+        Assert.Single(vm.TargetRows);
     }
 
     [Fact]
@@ -71,15 +74,13 @@ public class TableToolbarCommandsTests
             }
         };
 
-        var vm = new HttpAssetsSettingsViewModel(settings)
-        {
-            SelectedAsset = settings.Assets[0]
-        };
+        var vm = new HttpAssetsSettingsViewModel(settings);
+        vm.SelectedAssetRow = vm.AssetRows[0];
 
-        vm.DuplicateSelectedAssetCommand.Execute(null);
+        vm.AssetsEditor.DuplicateCommand.Execute(null);
 
-        Assert.Equal(3, vm.Assets.Count);
-        Assert.Equal(new[] { "A", "A Copy", "B" }, vm.Assets.Select(a => a.Name));
-        Assert.Same(vm.Assets[1], vm.SelectedAsset);
+        Assert.Equal(3, vm.AssetRows.Count);
+        Assert.Equal(new[] { "A", "A", "B" }, vm.AssetRows.Select(a => a.Name));
+        Assert.Same(vm.AssetRows[1], vm.SelectedAssetRow);
     }
 }
