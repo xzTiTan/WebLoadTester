@@ -44,10 +44,10 @@ public partial class AppShellViewModel : ViewModelBase
 
         Tabs = new ObservableCollection<TabViewModel>
         {
-            new("UI тестирование", UiModules),
-            new("HTTP тестирование", HttpModules),
-            new("Сеть и безопасность", NetSecModules),
-            new("Прогоны", _backend.RunsTab)
+            new("UI", "UI тестирование", UiModules),
+            new("HTTP", "HTTP тестирование", HttpModules),
+            new("Сеть", "Сеть и безопасность", NetSecModules),
+            new("Прогоны", "Прогоны", _backend.RunsTab)
         };
 
         selectedTab = Tabs[Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1)];

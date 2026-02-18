@@ -15,26 +15,26 @@
         <KeyBinding Gesture="Shift+F5" Command="{Binding StopHotkeyCommand}" />
         <KeyBinding Gesture="Ctrl+L" Command="{Binding ToggleLogDrawerCommand}" />
     </Window.KeyBindings>
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="12">
-        <Border Grid.Row="0" Padding="8">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="6" Margin="8">
+        <Border Grid.Row="0" Padding="4">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
                 <TextBlock Text="WebLoadTester" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1"
                            Text="{Binding StatusText}"
                            VerticalAlignment="Center" />
-                <Button Grid.Column="2" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                <Button Grid.Column="3" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                <Button Grid.Column="2" Padding="10,4" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
+                <Button Grid.Column="3" Padding="10,4" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="8">
-            <TabControl Grid.Row="0"
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="6">
+            <TabControl Grid.Row="0" Margin="0"
                         ItemsSource="{Binding Tabs}"
                         SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                         IsEnabled="{Binding DataContext.IsIdle, ElementName=RootWindow}">
                 <TabControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:TabViewModel">
-                        <TextBlock Text="{Binding Title}" />
+                        <TextBlock Text="{Binding Title}" ToolTip.Tip="{Binding FullTitle}" />
                     </DataTemplate>
                 </TabControl.ItemTemplate>
             </TabControl>
