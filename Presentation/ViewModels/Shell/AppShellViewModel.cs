@@ -40,6 +40,9 @@ public partial class AppShellViewModel : ViewModelBase
         selectedTab = Tabs[Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1)];
         IsRunning = _backend.IsRunning;
 
+        _backend.RunsTab.ConfigureRepeatRun(RepeatRunFromReportAsync);
+        _backend.RunsTab.SetRunningStateProvider(() => IsRunning);
+
         OpenSettingsCommand = _backend.OpenSettingsCommand;
         OpenRunsFolderCommand = _backend.OpenRunsFolderCommand;
         ToggleLogDrawerCommand = new RelayCommand(() => LogDrawer.IsExpanded = !LogDrawer.IsExpanded);
@@ -49,6 +52,7 @@ public partial class AppShellViewModel : ViewModelBase
         AppendPendingLogs();
         _backend.LogEntries.CollectionChanged += OnBackendLogEntriesChanged;
         _backend.PropertyChanged += OnBackendPropertyChanged;
+        _backend.RepeatRunPrepared += OnRepeatRunPrepared;
     }
 
     public ObservableCollection<TabViewModel> Tabs { get; }
@@ -85,6 +89,7 @@ public partial class AppShellViewModel : ViewModelBase
         if (e.PropertyName == nameof(MainWindowViewModel.IsRunning))
         {
             IsRunning = _backend.IsRunning;
+            _backend.RunsTab.RefreshRunningState();
             return;
         }
 
@@ -135,6 +140,22 @@ public partial class AppShellViewModel : ViewModelBase
             ModuleFamilyViewModel family => family.Workspace.RunControl,
             _ => null
         };
+    }
+
+    public async Task RepeatRunFromReportAsync(string runId)
+    {
+        await _backend.RepeatRunFromReportAsync(runId);
+    }
+
+    private void OnRepeatRunPrepared()
+    {
+        if (SelectedTab.ContentVm is not ModuleFamilyViewModel family)
+        {
+            return;
+        }
+
+        family.Workspace.RefreshWorkspaceValidationErrors();
+        family.Workspace.RequestRunControlFocus();
     }
 
     private void OnBackendLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)

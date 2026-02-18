@@ -42,6 +42,14 @@ public partial class RunControlViewModel : ObservableObject
     public ObservableCollection<string> ValidationErrors => _workspace.WorkspaceValidationErrors;
     public bool HasValidationErrors => ValidationErrors.Count > 0;
 
+    [ObservableProperty]
+    private int focusRequestToken;
+
+    public void RequestStartFocus()
+    {
+        FocusRequestToken++;
+    }
+
     private async Task StartAsync()
     {
         if (!CanStartRun())

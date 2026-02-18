@@ -38,10 +38,11 @@
                 <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
                 <Button Content="Открыть report.json" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
                 <Button Content="Открыть report.html" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
                 <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
                 <Button Content="Копировать RunId" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
             </WrapPanel>
+            <TextBlock Text="{Binding RepeatRunHint}" IsVisible="{Binding HasRepeatRunHint}" />
         </Border>
 
         <Grid Grid.Row="2" RowDefinitions="*,Auto,*" RowSpacing="8">

@@ -112,6 +112,11 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         OnPropertyChanged(nameof(HasWorkspaceValidationErrors));
     }
 
+
+    public void RequestRunControlFocus()
+    {
+        RunControl.RequestStartFocus();
+    }
     partial void OnIsRunningChanged(bool value)
     {
         OnPropertyChanged(nameof(IsIdle));

@@ -6,7 +6,7 @@
     <GroupBox Header="Run Control">
         <StackPanel Margin="8" Spacing="8">
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Старт" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
+                <Button x:Name="StartButton" Content="Старт" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,8,0" />
                 <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" />
             </WrapPanel>
 

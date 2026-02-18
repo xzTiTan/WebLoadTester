@@ -91,6 +91,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private TaskCompletionSource<bool>? _runFinishedTcs;
     private Task CurrentRunFinishedTask => _runFinishedTcs?.Task ?? Task.CompletedTask;
 
+    public event Action? RepeatRunPrepared;
+
     /// <summary>
     /// Инициализирует модули, вкладки и сервисы запуска.
     /// </summary>
@@ -138,7 +140,7 @@ public partial class MainWindowViewModel : ViewModelBase
         TelegramSettings = new TelegramSettingsViewModel(_settingsService.Settings.Telegram, logInfo: _logBus.Info, logWarn: _logBus.Warn,
             onTestMessageResult: (success, error) => _telegramRunNotifier.ReportExternalResult(success, error));
         Settings = new SettingsWindowViewModel(_settingsService, TelegramSettings);
-        RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunAsync);
+        RunsTab = new RunsTabViewModel(_runStore, _artifactStore.RunsRoot, RepeatRunFromReportAsync);
         RunsTab.SetModuleOptions(Registry.Modules.Select(m => m.Id));
         _lastConfirmedTabIndex = SelectedTabIndex;
         _lastUiModule = UiFamily.SelectedModule;
@@ -1023,8 +1025,14 @@ public partial class MainWindowViewModel : ViewModelBase
             .FirstOrDefault(item => item.Module.Id == moduleId);
     }
 
-    private async Task RepeatRunAsync(string runId)
+    public async Task RepeatRunFromReportAsync(string runId)
     {
+        if (IsRunning)
+        {
+            _logBus.Warn("[Runs] Повтор запуска недоступен во время активного прогона.");
+            return;
+        }
+
         var reportPath = Path.Combine(_artifactStore.RunsRoot, runId, "report.json");
         if (File.Exists(reportPath))
         {
@@ -1055,16 +1063,23 @@ public partial class MainWindowViewModel : ViewModelBase
                         ScreenshotsPolicy = snapshot.Profile.ScreenshotsPolicy
                     });
 
-                    SelectedTabIndex = moduleItemFromReport.Module.Family switch
+                    ApplyModuleSelection(moduleItemFromReport);
+
+                    if (string.IsNullOrWhiteSpace(snapshot.FinalName))
                     {
-                        TestFamily.UiTesting => 0,
-                        TestFamily.HttpTesting => 1,
-                        TestFamily.NetSec => 2,
-                        _ => 0
-                    };
+                        _logBus.Warn($"[Runs] В report.json прогона {runId} отсутствует finalName/testName; имя повтора сформировано по fallback-правилу.");
+                    }
+
+                    var baseName = BuildRepeatUserName(snapshot.FinalName, moduleItemFromReport.Module.Id);
+                    if (!string.IsNullOrWhiteSpace(baseName))
+                    {
+                        moduleItemFromReport.ModuleConfig.UserName = baseName + "_repeat";
+                    }
+
+                    moduleItemFromReport.ModuleConfig.Description = $"Повтор из прогона {runId}";
 
                     LoadedFromRunInfo = $"Загружено из прогона {runId}";
-                    moduleItemFromReport.ModuleConfig.MarkCleanFromExternalLoad();
+                    RepeatRunPrepared?.Invoke();
                     _logBus.Info($"[Runs] Конфигурация загружена из report.json прогона {runId}. Автозапуск не выполнялся.");
                     return;
                 }
@@ -1110,6 +1125,24 @@ public partial class MainWindowViewModel : ViewModelBase
             });
         }
 
+        ApplyModuleSelection(moduleItem);
+
+        var fallbackName = BuildRepeatUserName(detail.Run.TestName, moduleItem.Module.Id);
+        if (!string.IsNullOrWhiteSpace(fallbackName))
+        {
+            moduleItem.ModuleConfig.UserName = fallbackName + "_repeat";
+        }
+
+        moduleItem.ModuleConfig.Description = $"Повтор из прогона {runId}";
+
+        LoadedFromRunInfo = $"Загружено из прогона {runId}";
+        RepeatRunPrepared?.Invoke();
+        _logBus.Info($"[Runs] Конфигурация загружена из snapshot БД прогона {runId}. Автозапуск не выполнялся.");
+    }
+
+
+    private void ApplyModuleSelection(ModuleItemViewModel moduleItem)
+    {
         SelectedTabIndex = moduleItem.Module.Family switch
         {
             TestFamily.UiTesting => 0,
@@ -1118,9 +1151,40 @@ public partial class MainWindowViewModel : ViewModelBase
             _ => 0
         };
 
-        LoadedFromRunInfo = $"Загружено из прогона {runId}";
-        moduleItem.ModuleConfig.MarkCleanFromExternalLoad();
-        _logBus.Info($"[Runs] Конфигурация загружена из snapshot БД прогона {runId}. Автозапуск не выполнялся.");
+        switch (moduleItem.Module.Family)
+        {
+            case TestFamily.UiTesting:
+                UiFamily.SelectedModule = moduleItem;
+                break;
+            case TestFamily.HttpTesting:
+                HttpFamily.SelectedModule = moduleItem;
+                break;
+            case TestFamily.NetSec:
+                NetFamily.SelectedModule = moduleItem;
+                break;
+        }
+    }
+
+    private static string BuildRepeatUserName(string? finalName, string moduleId)
+    {
+        if (string.IsNullOrWhiteSpace(finalName))
+        {
+            return string.Empty;
+        }
+
+        var suffix = "_" + ModuleCatalog.GetSuffix(moduleId);
+        if (finalName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return finalName[..^suffix.Length];
+        }
+
+        var idx = finalName.LastIndexOf('_');
+        if (idx > 0)
+        {
+            return finalName[..idx];
+        }
+
+        return finalName;
     }
 
     private static PreflightSettings? CreatePreflightSettings(object settings)
