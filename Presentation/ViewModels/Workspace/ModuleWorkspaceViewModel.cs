@@ -6,8 +6,10 @@ using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Core.Contracts;
 using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Presentation.Common;
+using WebLoadTester.Presentation.ViewModels.SettingsViewModels;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
 
@@ -17,6 +19,7 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private readonly Action? _onLayoutStateChanged;
     private INotifyPropertyChanged? _currentValidatableSettings;
     private bool _isApplyingWidthClamp;
+    private ITestModule? _currentModule;
 
     private const double MinLeftNavWidth = 220;
     private const double MaxLeftNavWidth = 420;
@@ -94,6 +97,7 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     {
         UnsubscribeSettingsValidationSource();
 
+        _currentModule = descriptor?.Backend.Module;
         ModuleSettingsVm = descriptor?.ModuleSettingsVm;
         ModuleDisplayName = descriptor?.DisplayName ?? string.Empty;
         ModuleId = descriptor?.ModuleId ?? string.Empty;
@@ -116,6 +120,22 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         if (ModuleSettingsVm is IValidatable validatable)
         {
             errors.AddRange(validatable.Validate());
+        }
+
+        if (_currentModule != null)
+        {
+            if (ModuleSettingsVm is SettingsViewModelBase svm)
+            {
+                errors.AddRange(_currentModule.Validate(svm.Settings));
+            }
+            else if (ModuleSettingsVm is { } vm)
+            {
+                var settingsProperty = vm.GetType().GetProperty("Settings");
+                if (settingsProperty?.GetValue(vm) is { } settings)
+                {
+                    errors.AddRange(_currentModule.Validate(settings));
+                }
+            }
         }
 
         return errors

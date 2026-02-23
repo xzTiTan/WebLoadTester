@@ -39,6 +39,12 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.36 23.02.2026
+- В `ModuleWorkspaceViewModel` workspace-валидация расширена проверкой `ITestModule.Validate(settings)` для текущего выбранного модуля.
+- В `SetSelectedModule` добавлено сохранение ссылки на текущий модуль (`_currentModule`), чтобы включать module-level ошибки в `WorkspaceValidationErrors`.
+- При получении settings используется приоритетно `SettingsViewModelBase.Settings`, а при ином VM — fallback через свойство `Settings` (reflection) при наличии.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.35 23.02.2026
 - UX запуска: в `MainWindowViewModel.StartAsync` зафиксирован порядок, при котором при validation-failure запуск немедленно завершается без перехода в Running-состояние (навигация/LeftNav остаются доступными).
 - В `RunControlViewModel` добавлены прокси-свойства `InstallChromiumCommand`, `HasChromiumValidationError`, `CanInstallChromium` для отображения действия установки Chromium в зоне валидации.
