@@ -17,7 +17,7 @@
             <ItemsControl ItemsSource="{Binding ValidationErrors}" IsVisible="{Binding HasValidationErrors}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" Classes="error" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

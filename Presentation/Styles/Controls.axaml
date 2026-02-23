@@ -244,4 +244,7 @@
     <Style Selector="ListBox.left-nav ListBoxItem TextBlock">
         <Setter Property="Margin" Value="0,0,0,1" />
     </Style>
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="Red"/>
+    </Style>
 </Styles>

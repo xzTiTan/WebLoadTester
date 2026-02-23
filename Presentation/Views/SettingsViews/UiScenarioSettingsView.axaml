@@ -39,7 +39,7 @@
                                    IsEnabled="{Binding IsDelayMsEnabled}" />
                 </Grid>
 
-                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" TextWrapping="Wrap" Classes="error" />
             </StackPanel>
         </DataTemplate>
     </UserControl.DataTemplates>

@@ -17,7 +17,7 @@
                              Watermark="#селектор .элемент"
                              IsEnabled="{Binding $parent[UserControl].DataContext.FullPage, Converter={StaticResource BooleanNotConverter}}" />
                 </Grid>
-                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
         </DataTemplate>
     </UserControl.DataTemplates>

@@ -13,7 +13,7 @@
                     <ComboBox Grid.Column="0" ItemsSource="{Binding Methods}" SelectedItem="{Binding Method, Mode=TwoWay}" />
                     <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="/api/точка" />
                 </Grid>
-                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
         </DataTemplate>
 
@@ -23,7 +23,7 @@
                     <TextBox Grid.Column="0" Text="{Binding Key, Mode=TwoWay}" Watermark="Заголовок" />
                     <TextBox Grid.Column="1" Text="{Binding Value, Mode=TwoWay}" Watermark="Значение" />
                 </Grid>
-                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
         </DataTemplate>
     </UserControl.DataTemplates>

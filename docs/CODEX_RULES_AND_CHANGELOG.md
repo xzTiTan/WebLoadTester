@@ -39,6 +39,11 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.33 23.02.2026
+- Добавлен стиль `TextBlock.error` в `Presentation/Styles/Controls.axaml` с красным цветом (`Foreground=Red`) для единообразного отображения валидационных ошибок.
+- Во view-файлах, выводящих `ValidationErrors`, `WorkspaceValidationErrors` и `RowErrorText`, добавлен `Classes="error"` для всех error `TextBlock`.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.32 23.02.2026
 - Исправлена ложная пометка dirty при смене верхней вкладки: в `ModuleConfigViewModel` игнорируются UI-only/computed изменения `RunProfileViewModel` (включая `IsUiFamily`), поэтому переход между семьями вкладок без редактирования больше не блокируется guard-диалогом.
 - В `MainWindowViewModel` добавлен диагностический лог `[NavGuard] ...` при блокировке перехода guard-механизмом для упрощения дальнейшей диагностики.

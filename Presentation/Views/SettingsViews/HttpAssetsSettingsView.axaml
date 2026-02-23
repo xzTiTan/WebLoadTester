@@ -15,7 +15,7 @@
                     <NumericUpDown Grid.Column="3" Minimum="0" Maximum="1048576" Value="{Binding MaxSizeKb, Mode=TwoWay}" />
                     <NumericUpDown Grid.Column="4" Minimum="0" Maximum="600000" Value="{Binding MaxLatencyMs, Mode=TwoWay}" />
                 </Grid>
-                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" />
+                <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
         </DataTemplate>
     </UserControl.DataTemplates>
