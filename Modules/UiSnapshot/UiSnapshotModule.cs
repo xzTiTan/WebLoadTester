@@ -83,6 +83,11 @@ public class UiSnapshotModule : ITestModule
             errors.Add("ViewportWidth и ViewportHeight задаются вместе.");
         }
 
+        if (!PlaywrightFactory.HasBrowsersInstalled())
+        {
+            errors.Add($"Chromium не установлен. Нажмите «Установить Chromium» в приложении (или выполните playwright install chromium). Путь: {PlaywrightFactory.GetBrowsersPath()}");
+        }
+
         return errors;
     }
 

@@ -29,13 +29,14 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         TargetRows = new ObservableCollection<SnapshotTargetRowViewModel>(_settings.Targets.Select(CreateRow));
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" }));
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
         }
         TargetsEditor = new RowListEditorViewModel();
         TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
             selectedItemChanged: item => SelectedTargetRow = item as SnapshotTargetRowViewModel);
         TargetsEditor.SetItems(TargetRows.Cast<object>());
         SelectedTargetRow = TargetRows.FirstOrDefault();
+        SyncTargets();
     }
 
     public override object Settings => _settings;
@@ -75,7 +76,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
 
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" }));
+            TargetRows.Add(CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" }));
         }
 
         TargetsEditor.SetItems(TargetRows.Cast<object>());
@@ -105,7 +106,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
 
     private object? AddTargetInternal()
     {
-        var row = CreateRow(new SnapshotTarget { Url = "https://пример.рф", Name = "пример" });
+        var row = CreateRow(new SnapshotTarget { Url = "https://example.com", Name = "example" });
         var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
         if (insertIndex < 0 || insertIndex > TargetRows.Count)
         {

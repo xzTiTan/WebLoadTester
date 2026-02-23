@@ -65,6 +65,11 @@ public class UiTimingModule : ITestModule
             errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
+        if (!PlaywrightFactory.HasBrowsersInstalled())
+        {
+            errors.Add($"Chromium не установлен. Нажмите «Установить Chromium» в приложении (или выполните playwright install chromium). Путь: {PlaywrightFactory.GetBrowsersPath()}");
+        }
+
         return errors;
     }
 

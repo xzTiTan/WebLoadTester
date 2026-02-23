@@ -52,6 +52,7 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase, IV
 
         SelectedEndpointRow = EndpointRows.FirstOrDefault();
         SelectedHeaderRow = HeaderRows.FirstOrDefault();
+        SyncAll();
     }
 
     public override object Settings => _settings;

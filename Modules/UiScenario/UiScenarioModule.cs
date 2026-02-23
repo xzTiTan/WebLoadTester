@@ -115,6 +115,11 @@ public class UiScenarioModule : ITestModule
             }
         }
 
+        if (!PlaywrightFactory.HasBrowsersInstalled())
+        {
+            errors.Add($"Chromium не установлен. Нажмите «Установить Chromium» в приложении (или выполните playwright install chromium). Путь: {PlaywrightFactory.GetBrowsersPath()}");
+        }
+
         return errors;
     }
 

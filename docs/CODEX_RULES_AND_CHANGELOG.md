@@ -39,6 +39,12 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.34 23.02.2026
+- Исправлены runtime-дефолты в settings VM: URL `https://пример.рф` заменены на `https://example.com`, а имя `пример` на `example` в `HttpAssetsSettingsViewModel`, `UiSnapshotSettingsViewModel`, `UiTimingSettingsViewModel`.
+- Добавлена синхронизация списков в конструкторах: `SyncTargets()` в `UiSnapshotSettingsViewModel` и `UiTimingSettingsViewModel`, `SyncAll()` в `HttpFunctionalSettingsViewModel` для немедленного соответствия UI-строк и `_settings`.
+- В `Validate()` модулей `UiSnapshot`, `UiTiming`, `UiScenario` добавлена проверка наличия Chromium через `PlaywrightFactory.HasBrowsersInstalled()` с понятной инструкцией по установке и путём browsers.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.33 23.02.2026
 - Добавлен стиль `TextBlock.error` в `Presentation/Styles/Controls.axaml` с красным цветом (`Foreground=Red`) для единообразного отображения валидационных ошибок.
 - Во view-файлах, выводящих `ValidationErrors`, `WorkspaceValidationErrors` и `RowErrorText`, добавлен `Classes="error"` для всех error `TextBlock`.
