@@ -292,6 +292,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
+                _logBus.Info($"[NavGuard] Tab change blocked: module={SelectedModule?.Module.Id}, dirty={currentModuleConfig.IsDirty}");
                 _isApplyingGuardedSelection = true;
                 SelectedTabIndex = _lastConfirmedTabIndex;
                 _isApplyingGuardedSelection = false;

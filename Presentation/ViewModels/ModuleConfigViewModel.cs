@@ -51,7 +51,29 @@ public partial class ModuleConfigViewModel : ObservableObject
             MarkDirty();
             RevalidateModuleSettings();
         };
-        _runProfile.PropertyChanged += (_, _) => MarkDirty();
+        _runProfile.PropertyChanged += (_, e) =>
+        {
+            var propertyName = e.PropertyName;
+            if (propertyName == nameof(RunProfileViewModel.IsUiFamily) ||
+                propertyName == nameof(RunProfileViewModel.StatusMessage) ||
+                propertyName == nameof(RunProfileViewModel.WarningMessage) ||
+                propertyName == nameof(RunProfileViewModel.HasWarning) ||
+                propertyName == nameof(RunProfileViewModel.ValidationSummaryMessage) ||
+                propertyName == nameof(RunProfileViewModel.HasValidationSummary))
+            {
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(propertyName) &&
+                (propertyName.StartsWith("Has", StringComparison.Ordinal) ||
+                 propertyName.EndsWith("Error", StringComparison.Ordinal) ||
+                 propertyName.Contains("Validation", StringComparison.Ordinal)))
+            {
+                return;
+            }
+
+            MarkDirty();
+        };
 
         RevalidateConfigAndModule();
     }

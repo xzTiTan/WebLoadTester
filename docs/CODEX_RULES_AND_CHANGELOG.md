@@ -39,6 +39,12 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.32 23.02.2026
+- Исправлена ложная пометка dirty при смене верхней вкладки: в `ModuleConfigViewModel` игнорируются UI-only/computed изменения `RunProfileViewModel` (включая `IsUiFamily`), поэтому переход между семьями вкладок без редактирования больше не блокируется guard-диалогом.
+- В `MainWindowViewModel` добавлен диагностический лог `[NavGuard] ...` при блокировке перехода guard-механизмом для упрощения дальнейшей диагностики.
+- Обновлён UX-чеклист: зафиксировано требование, что переключение вкладки не должно само выставлять dirty-состояние.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.31 18.02.2026
 - Stage 2 UI-shell: добавлен новый `ModuleWorkspaceView` (3 колонки LeftNav/Workspace/Details) с рабочими `GridSplitter` и единственным вертикальным `ScrollViewer` в центральной рабочей области.
 - Добавлены `ModuleFamilyViewModel` и `ModuleWorkspaceViewModel` (bridge к существующему `MainWindowViewModel`) для прокидывания списков модулей, выбранного module settings VM и состояния Running без изменения логики модулей/раннера.
