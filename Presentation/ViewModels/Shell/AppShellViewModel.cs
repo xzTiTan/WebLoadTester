@@ -209,9 +209,6 @@ public partial class AppShellViewModel : ViewModelBase
         _layoutState.LeftNavWidth = activeWorkspace.LeftNavWidth;
         _layoutState.DetailsWidth = activeWorkspace.DetailsWidth;
         _layoutState.IsDetailsVisible = activeWorkspace.IsDetailsVisible;
-        _layoutState.IsTestCaseExpanded = activeWorkspace.IsTestCaseExpanded;
-        _layoutState.IsRunProfileExpanded = activeWorkspace.IsRunProfileExpanded;
-        _layoutState.IsModuleSettingsExpanded = activeWorkspace.IsModuleSettingsExpanded;
         _layoutState.IsLogExpanded = LogDrawer.IsExpanded;
         _layoutState.IsLogOnlyErrors = LogDrawer.OnlyErrors;
         _layoutState.LogFilterText = LogDrawer.FilterText;

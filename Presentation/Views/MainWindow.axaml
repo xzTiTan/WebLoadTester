@@ -30,8 +30,7 @@
         <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="6">
             <TabControl Grid.Row="0" Margin="0"
                         ItemsSource="{Binding Tabs}"
-                        SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
-                        IsEnabled="{Binding DataContext.IsIdle, ElementName=RootWindow}">
+                        SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
                 <TabControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:TabViewModel">
                         <TextBlock Text="{Binding Title}" ToolTip.Tip="{Binding FullTitle}" />

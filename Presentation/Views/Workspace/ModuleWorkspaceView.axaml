@@ -33,37 +33,24 @@
                     <TextBlock Text="Выберите модуль слева"
                                IsVisible="{Binding Workspace.HasModuleSelected, Converter={StaticResource BooleanNotConverter}}" />
 
-                    <Grid IsVisible="{Binding Workspace.HasModuleSelected}"
-                          RowDefinitions="Auto,Auto,Auto"
-                          RowSpacing="4">
-                        <views:RunControlView Grid.Row="0" DataContext="{Binding Workspace.RunControl}" />
+                    <StackPanel IsVisible="{Binding Workspace.HasModuleSelected}" Spacing="4">
+                        <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
 
-                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="4">
-                            <Expander Grid.Column="0"
-                                      Header="Тест-кейс"
-                                      IsExpanded="{Binding Workspace.IsTestCaseExpanded, Mode=TwoWay}">
-                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
-                                    <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
-                                </Border>
-                            </Expander>
+                        <TextBlock Text="Тест-кейс" />
+                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
+                            <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                        </Border>
 
-                            <Expander Grid.Column="1"
-                                      Header="Профиль запуска"
-                                      IsExpanded="{Binding Workspace.IsRunProfileExpanded, Mode=TwoWay}">
-                                <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
-                                    <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
-                                </Border>
-                            </Expander>
-                        </Grid>
+                        <TextBlock Text="Профиль запуска" />
+                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
+                            <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                        </Border>
 
-                        <Expander Grid.Row="2"
-                                  Header="Настройки модуля"
-                                  IsExpanded="{Binding Workspace.IsModuleSettingsExpanded, Mode=TwoWay}">
-                            <StackPanel Spacing="2" IsEnabled="{Binding Workspace.IsIdle}" Margin="0,2,0,0">
-                                <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
-                            </StackPanel>
-                        </Expander>
-                    </Grid>
+                        <TextBlock Text="Настройки модуля" />
+                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
+                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

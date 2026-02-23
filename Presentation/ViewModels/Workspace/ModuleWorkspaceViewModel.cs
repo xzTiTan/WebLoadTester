@@ -16,6 +16,12 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private readonly MainWindowViewModel _backend;
     private readonly Action? _onLayoutStateChanged;
     private INotifyPropertyChanged? _currentValidatableSettings;
+    private bool _isApplyingWidthClamp;
+
+    private const double MinLeftNavWidth = 220;
+    private const double MaxLeftNavWidth = 420;
+    private const double MinDetailsWidth = 280;
+    private const double MaxDetailsWidth = 520;
 
     public ModuleWorkspaceViewModel(MainWindowViewModel backend, LogDrawerViewModel logDrawer, UiLayoutState? initialState = null, Action? onLayoutStateChanged = null)
     {
@@ -26,12 +32,9 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
 
         if (initialState != null)
         {
-            leftNavWidth = initialState.LeftNavWidth;
-            detailsWidth = initialState.DetailsWidth;
+            leftNavWidth = ClampLeftNavWidth(initialState.LeftNavWidth);
+            detailsWidth = ClampDetailsWidth(initialState.DetailsWidth);
             isDetailsVisible = initialState.IsDetailsVisible;
-            isTestCaseExpanded = initialState.IsTestCaseExpanded;
-            isRunProfileExpanded = initialState.IsRunProfileExpanded;
-            isModuleSettingsExpanded = initialState.IsModuleSettingsExpanded;
         }
 
         WorkspaceValidationErrors = new ObservableCollection<string>();
@@ -75,14 +78,6 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     [ObservableProperty]
     private bool isDetailsVisible = true;
 
-    [ObservableProperty]
-    private bool isTestCaseExpanded = true;
-
-    [ObservableProperty]
-    private bool isRunProfileExpanded = true;
-
-    [ObservableProperty]
-    private bool isModuleSettingsExpanded = true;
 
     [ObservableProperty]
     private int scrollToTopRequestToken;
@@ -164,12 +159,45 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         OnPropertyChanged(nameof(IsIdle));
     }
 
-    partial void OnLeftNavWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
-    partial void OnDetailsWidthChanged(double value) => _onLayoutStateChanged?.Invoke();
+    partial void OnLeftNavWidthChanged(double value)
+    {
+        if (_isApplyingWidthClamp)
+        {
+            return;
+        }
+
+        var clamped = ClampLeftNavWidth(value);
+        if (!clamped.Equals(value))
+        {
+            _isApplyingWidthClamp = true;
+            LeftNavWidth = clamped;
+            _isApplyingWidthClamp = false;
+            return;
+        }
+
+        _onLayoutStateChanged?.Invoke();
+    }
+
+    partial void OnDetailsWidthChanged(double value)
+    {
+        if (_isApplyingWidthClamp)
+        {
+            return;
+        }
+
+        var clamped = ClampDetailsWidth(value);
+        if (!clamped.Equals(value))
+        {
+            _isApplyingWidthClamp = true;
+            DetailsWidth = clamped;
+            _isApplyingWidthClamp = false;
+            return;
+        }
+
+        _onLayoutStateChanged?.Invoke();
+    }
+
     partial void OnIsDetailsVisibleChanged(bool value) => _onLayoutStateChanged?.Invoke();
-    partial void OnIsTestCaseExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
-    partial void OnIsRunProfileExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
-    partial void OnIsModuleSettingsExpandedChanged(bool value) => _onLayoutStateChanged?.Invoke();
 
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -195,7 +223,6 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
 
         if (TestCase.IsDirtyPromptVisible || TestCase.IsDeleteConfirmVisible)
         {
-            IsTestCaseExpanded = true;
             RequestScrollToTop();
         }
     }
@@ -223,5 +250,15 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private void OnWorkspaceValidationErrorsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HasWorkspaceValidationErrors));
+    }
+
+    private static double ClampLeftNavWidth(double value)
+    {
+        return Math.Clamp(value, MinLeftNavWidth, MaxLeftNavWidth);
+    }
+
+    private static double ClampDetailsWidth(double value)
+    {
+        return Math.Clamp(value, MinDetailsWidth, MaxDetailsWidth);
     }
 }
