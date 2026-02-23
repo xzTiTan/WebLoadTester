@@ -11,7 +11,7 @@ namespace WebLoadTester.Modules.HttpFunctional;
 /// </summary>
 public class HttpFunctionalSettings
 {
-    public string BaseUrl { get; set; } = "https://example.com";
+    public string BaseUrl { get; set; } = "https://www.google.com/";
     public List<HttpFunctionalEndpoint> Endpoints { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 15;
 }

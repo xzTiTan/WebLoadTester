@@ -28,7 +28,7 @@ public class HttpAssetsModule : ITestModule
         {
             Assets = new List<AssetItem>
             {
-                new() { Url = "https://example.com", Name = "Main page" }
+                new() { Url = "https://www.google.com/favicon.ico", Name = "Google favicon" }
             }
         };
     }

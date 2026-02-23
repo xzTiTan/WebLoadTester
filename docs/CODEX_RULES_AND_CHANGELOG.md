@@ -39,6 +39,13 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.38 23.02.2026
+- Дефолты модулей переведены на `https://www.google.com/` (и `www.google.com` для host): обновлены настройки Availability/HTTP Functional/HTTP Performance/UiScenario/UiSnapshot/UiTiming, а также ассеты `https://www.google.com/favicon.ico`.
+- Для NetDiagnostics дефолтные порты приведены к `80, 443` (в settings и auto-ports UI-профиле), host по умолчанию `www.google.com`.
+- В row-based SettingsViewModel дефолтные fallback/Add-row URL обновлены на google-значения и сохранена синхронизация `Sync...()` после операций.
+- В `UiScenarioModule` добавлен мягкий fallback для шага Click: при недоступности основного селектора выполняется попытка `input[name="btnK"]` или `Enter` в `input[name="q"]`.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.37 23.02.2026
 - Возвращена OLD-логика локального пути браузеров Playwright: при старте приложения устанавливается `PLAYWRIGHT_BROWSERS_PATH` в `AppContext.BaseDirectory/playwright-browsers` до первого использования Playwright.
 - `PlaywrightFactory` переведён на `playwright-browsers` по умолчанию; `HasBrowsersInstalled()` проверяет Chromium в локальном каталоге по маркерам `chromium-*` и наличию бинарников/файлов chrome.

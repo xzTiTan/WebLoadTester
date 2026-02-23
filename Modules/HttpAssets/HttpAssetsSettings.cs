@@ -19,7 +19,7 @@ public class HttpAssetsSettings
 /// </summary>
 public class AssetItem
 {
-    public string Url { get; set; } = "https://example.com";
+    public string Url { get; set; } = "https://www.google.com/favicon.ico";
     public string? Name { get; set; }
     public string? ExpectedContentType { get; set; }
     public int? MaxSizeKb { get; set; }

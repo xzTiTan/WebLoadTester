@@ -10,12 +10,12 @@ namespace WebLoadTester.Modules.NetDiagnostics;
 /// </summary>
 public class NetDiagnosticsSettings
 {
-    public string Hostname { get; set; } = "example.com";
+    public string Hostname { get; set; } = "www.google.com";
     public bool CheckDns { get; set; } = true;
     public bool CheckTcp { get; set; } = true;
     public bool CheckTls { get; set; } = true;
-    public bool UseAutoPorts { get; set; } = true;
-    public List<DiagnosticPort> Ports { get; set; } = new() { new() { Port = 443 } };
+    public bool UseAutoPorts { get; set; } = false;
+    public List<DiagnosticPort> Ports { get; set; } = new() { new() { Port = 80 }, new() { Port = 443 } };
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? LegacyData { get; set; }

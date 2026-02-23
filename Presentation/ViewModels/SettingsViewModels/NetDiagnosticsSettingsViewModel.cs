@@ -28,6 +28,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
         PortRows = new ObservableCollection<PortRowViewModel>(settings.Ports.Select(CreateRow));
         if (PortRows.Count == 0)
         {
+            PortRows.Add(CreateRow(new DiagnosticPort { Port = 80, Protocol = "Tcp" }));
             PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
         }
 
@@ -53,7 +54,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
     public ObservableCollection<PortRowViewModel> PortRows { get; }
     public RowListEditorViewModel PortsEditor { get; }
 
-    [ObservableProperty] private string hostname = string.Empty;
+    [ObservableProperty] private string hostname = "www.google.com";
     [ObservableProperty] private bool useAutoPorts;
     [ObservableProperty] private PortRowViewModel? selectedPortRow;
     [ObservableProperty] private bool checkDns;
@@ -107,6 +108,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
 
         if (PortRows.Count == 0)
         {
+            PortRows.Add(CreateRow(new DiagnosticPort { Port = 80, Protocol = "Tcp" }));
             PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
         }
 
@@ -130,7 +132,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
             return null;
         }
 
-        var row = CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" });
+        var row = CreateRow(new DiagnosticPort { Port = 80, Protocol = "Tcp" });
         var insertIndex = SelectedPortRow != null ? PortRows.IndexOf(SelectedPortRow) + 1 : PortRows.Count;
         if (insertIndex < 0 || insertIndex > PortRows.Count)
         {
@@ -253,6 +255,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
     private void ApplyAutoPorts()
     {
         PortRows.Clear();
+        PortRows.Add(CreateRow(new DiagnosticPort { Port = 80, Protocol = "Tcp" }));
         PortRows.Add(CreateRow(new DiagnosticPort { Port = 443, Protocol = "Tcp" }));
         SelectedPortRow = PortRows.FirstOrDefault();
         SyncPorts();

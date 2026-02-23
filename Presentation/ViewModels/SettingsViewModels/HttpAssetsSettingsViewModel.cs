@@ -27,7 +27,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase, IValid
         AssetRows = new ObservableCollection<AssetRowViewModel>(settings.Assets.Select(CreateRow));
         if (AssetRows.Count == 0)
         {
-            AssetRows.Add(CreateRow(new AssetItem { Url = "https://example.com" }));
+            AssetRows.Add(CreateRow(new AssetItem { Url = "https://www.google.com/favicon.ico" }));
         }
 
         AssetsEditor = new RowListEditorViewModel();
@@ -78,7 +78,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase, IValid
 
         if (AssetRows.Count == 0)
         {
-            AssetRows.Add(CreateRow(new AssetItem { Url = "https://example.com" }));
+            AssetRows.Add(CreateRow(new AssetItem { Url = "https://www.google.com/favicon.ico" }));
         }
 
         AssetsEditor.SetItems(AssetRows.Cast<object>());
@@ -88,7 +88,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase, IValid
 
     private object? AddAssetInternal()
     {
-        var row = CreateRow(new AssetItem { Url = "https://example.com" });
+        var row = CreateRow(new AssetItem { Url = "https://www.google.com/favicon.ico" });
         var insertIndex = SelectedAssetRow != null ? AssetRows.IndexOf(SelectedAssetRow) + 1 : AssetRows.Count;
         if (insertIndex < 0 || insertIndex > AssetRows.Count)
         {

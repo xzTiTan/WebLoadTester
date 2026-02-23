@@ -5,7 +5,7 @@ namespace WebLoadTester.Modules.Preflight;
 /// </summary>
 public class PreflightSettings
 {
-    public string Target { get; set; } = "https://example.com";
+    public string Target { get; set; } = "https://www.google.com/";
     public bool CheckDns { get; set; } = true;
     public bool CheckTcp { get; set; } = true;
     public bool CheckTls { get; set; } = true;

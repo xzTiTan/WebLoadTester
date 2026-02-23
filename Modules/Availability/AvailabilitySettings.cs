@@ -10,10 +10,10 @@ namespace WebLoadTester.Modules.Availability;
 public class AvailabilitySettings
 {
     public string CheckType { get; set; } = "HTTP";
-    public string Url { get; set; } = "https://example.com";
-    public string Host { get; set; } = "example.com";
+    public string Url { get; set; } = "https://www.google.com/";
+    public string Host { get; set; } = "www.google.com";
     public int Port { get; set; } = 443;
-    public int TimeoutMs { get; set; } = 5000;
+    public int TimeoutMs { get; set; } = 10000;
 
     [JsonIgnore]
     public string Target

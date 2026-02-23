@@ -8,7 +8,7 @@ namespace WebLoadTester.Modules.HttpPerformance;
 /// </summary>
 public class HttpPerformanceSettings
 {
-    public string BaseUrl { get; set; } = "https://example.com";
+    public string BaseUrl { get; set; } = "https://www.google.com/";
     public List<HttpPerformanceEndpoint> Endpoints { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 10;
 }

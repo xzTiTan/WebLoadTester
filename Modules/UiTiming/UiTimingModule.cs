@@ -31,7 +31,7 @@ public class UiTimingModule : ITestModule
         {
             Targets = new List<TimingTarget>
             {
-                new() { Url = "https://example.com" }
+                new() { Url = "https://www.google.com/" }
             },
             WaitUntil = UiWaitUntil.DomContentLoaded,
             TimeoutSeconds = 30

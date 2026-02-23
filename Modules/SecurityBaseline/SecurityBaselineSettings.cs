@@ -5,7 +5,7 @@ namespace WebLoadTester.Modules.SecurityBaseline;
 /// </summary>
 public class SecurityBaselineSettings
 {
-    public string Url { get; set; } = "https://example.com";
+    public string Url { get; set; } = "https://www.google.com/";
     public bool CheckHsts { get; set; } = true;
     public bool CheckContentTypeOptions { get; set; } = true;
     public bool CheckFrameOptions { get; set; } = true;

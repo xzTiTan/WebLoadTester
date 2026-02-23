@@ -24,7 +24,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
         TargetRows = new ObservableCollection<TimingTargetRowViewModel>(_settings.Targets.Select(CreateRow));
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://example.com" }));
+            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://www.google.com/" }));
         }
         TargetsEditor = new RowListEditorViewModel();
         TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
@@ -67,7 +67,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://example.com" }));
+            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://www.google.com/" }));
         }
 
         TargetsEditor.SetItems(TargetRows.Cast<object>());
@@ -83,7 +83,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
     private object? AddTargetInternal()
     {
-        var row = CreateRow(new TimingTarget { Url = "https://example.com" });
+        var row = CreateRow(new TimingTarget { Url = "https://www.google.com/" });
         var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
         if (insertIndex < 0 || insertIndex > TargetRows.Count)
         {

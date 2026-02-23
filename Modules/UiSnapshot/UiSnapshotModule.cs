@@ -32,7 +32,7 @@ public class UiSnapshotModule : ITestModule
         {
             Targets = new List<SnapshotTarget>
             {
-                new() { Url = "https://example.com", Name = "example", Selector = string.Empty }
+                new() { Url = "https://www.google.com/", Name = "google", Selector = string.Empty }
             },
             WaitUntil = UiWaitUntil.DomContentLoaded,
             TimeoutSeconds = 30,

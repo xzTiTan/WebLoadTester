@@ -32,8 +32,11 @@ public class UiScenarioModule : ITestModule
         {
             Steps = new List<UiStep>
             {
-                new() { Action = UiStepAction.Navigate, Value = "https://example.com", DelayMs = 0 },
-                new() { Action = UiStepAction.WaitForSelector, Selector = "body", DelayMs = 0 }
+                new() { Action = UiStepAction.Navigate, Value = "https://www.google.com/", DelayMs = 0 },
+                new() { Action = UiStepAction.WaitForSelector, Selector = "input[name=q]", DelayMs = 0 },
+                new() { Action = UiStepAction.Fill, Selector = "input[name=q]", Value = "test", DelayMs = 0 },
+                new() { Action = UiStepAction.Click, Selector = "body > div.L3eUgb > div.o3j99.ikrT4e.om7nvf > form > div:nth-child(1) > div.A8SBwf > div.FPdoLc.lJ9FBc > center > input.RNmpXc", DelayMs = 0 },
+                new() { Action = UiStepAction.WaitForSelector, Selector = "#search", DelayMs = 0 }
             }
         };
     }
@@ -233,12 +236,30 @@ public class UiScenarioModule : ITestModule
                         break;
 
                     case UiStepAction.Click:
-                        await page.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
+                        try
                         {
-                            State = WaitForSelectorState.Visible,
-                            Timeout = effectiveTimeoutMs
-                        });
-                        await page.ClickAsync(selector, new PageClickOptions { Timeout = effectiveTimeoutMs });
+                            await page.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
+                            {
+                                State = WaitForSelectorState.Visible,
+                                Timeout = effectiveTimeoutMs
+                            });
+                            await page.ClickAsync(selector, new PageClickOptions { Timeout = effectiveTimeoutMs });
+                        }
+                        catch
+                        {
+                            var fallbackClicked = false;
+                            if (await page.Locator("input[name=btnK]").CountAsync() > 0)
+                            {
+                                await page.ClickAsync("input[name=btnK]", new PageClickOptions { Timeout = effectiveTimeoutMs });
+                                fallbackClicked = true;
+                            }
+
+                            if (!fallbackClicked)
+                            {
+                                await page.PressAsync("input[name=q]", "Enter", new PagePressOptions { Timeout = effectiveTimeoutMs });
+                            }
+                        }
+
                         await TryWaitForNetworkIdleAsync(page);
                         currentUrl = page.Url;
                         break;
