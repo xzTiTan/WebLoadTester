@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -29,6 +30,7 @@ public partial class RunControlViewModel : ObservableObject
     public IRelayCommand OpenRunFolderCommand => _backend.OpenLatestRunFolderCommand;
     public IRelayCommand OpenHtmlReportCommand => _backend.OpenLatestHtmlCommand;
     public IRelayCommand OpenJsonReportCommand => _backend.OpenLatestJsonCommand;
+    public IAsyncRelayCommand InstallChromiumCommand => _backend.InstallPlaywrightBrowsersCommand;
 
     public string StatusText => _backend.StatusText;
     public double ProgressValue => _backend.ProgressPercent;
@@ -41,6 +43,8 @@ public partial class RunControlViewModel : ObservableObject
 
     public ObservableCollection<string> ValidationErrors => _workspace.WorkspaceValidationErrors;
     public bool HasValidationErrors => ValidationErrors.Count > 0;
+    public bool HasChromiumValidationError => ValidationErrors.Any(x => x.Contains("Chromium", StringComparison.OrdinalIgnoreCase));
+    public bool CanInstallChromium => HasChromiumValidationError && _backend.CanInstallPlaywright;
 
     [ObservableProperty]
     private int focusRequestToken;
@@ -94,5 +98,7 @@ public partial class RunControlViewModel : ObservableObject
         OnPropertyChanged(nameof(HasJsonReport));
         OnPropertyChanged(nameof(ValidationErrors));
         OnPropertyChanged(nameof(HasValidationErrors));
+        OnPropertyChanged(nameof(HasChromiumValidationError));
+        OnPropertyChanged(nameof(CanInstallChromium));
     }
 }

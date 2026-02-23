@@ -22,6 +22,11 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
+            <Button Content="Установить Chromium"
+                    Command="{Binding InstallChromiumCommand}"
+                    IsEnabled="{Binding CanInstallChromium}"
+                    IsVisible="{Binding HasChromiumValidationError}" />
+
             <WrapPanel Orientation="Horizontal">
                 <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,6,0" TabIndex="10" />
                 <Button Content="Открыть HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,6,0" TabIndex="11" />

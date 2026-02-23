@@ -39,6 +39,12 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.35 23.02.2026
+- UX запуска: в `MainWindowViewModel.StartAsync` зафиксирован порядок, при котором при validation-failure запуск немедленно завершается без перехода в Running-состояние (навигация/LeftNav остаются доступными).
+- В `RunControlViewModel` добавлены прокси-свойства `InstallChromiumCommand`, `HasChromiumValidationError`, `CanInstallChromium` для отображения действия установки Chromium в зоне валидации.
+- В `RunControlView.axaml` добавлена кнопка «Установить Chromium», видимая только при ошибках валидации, содержащих `Chromium`, и привязанная к существующей `InstallPlaywrightBrowsersCommand`.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.34 23.02.2026
 - Исправлены runtime-дефолты в settings VM: URL `https://пример.рф` заменены на `https://example.com`, а имя `пример` на `example` в `HttpAssetsSettingsViewModel`, `UiSnapshotSettingsViewModel`, `UiTimingSettingsViewModel`.
 - Добавлена синхронизация списков в конструкторах: `SyncTargets()` в `UiSnapshotSettingsViewModel` и `UiTimingSettingsViewModel`, `SyncAll()` в `HttpFunctionalSettingsViewModel` для немедленного соответствия UI-строк и `_settings`.

@@ -322,6 +322,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var validationErrors = GetStartValidationErrors(moduleItem);
         if (validationErrors.Count > 0)
         {
+            IsRunning = false;
             StatusText = "Статус: ошибка валидации";
             moduleItem.ModuleConfig.ShowSubmitValidation();
             RunProfile.ShowSubmitValidation();
