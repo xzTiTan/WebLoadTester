@@ -30,13 +30,11 @@
         <TabControl Grid.Row="1"
                     Margin="0"
                     ZIndex="10"
-                    ItemsSource="{Binding Tabs}"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-            <TabControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:TabViewModel">
-                    <TextBlock Text="{Binding Title}" ToolTip.Tip="{Binding FullTitle}" />
-                </DataTemplate>
-            </TabControl.ItemTemplate>
+            <TabItem Header="UI" />
+            <TabItem Header="HTTP" />
+            <TabItem Header="Сеть" />
+            <TabItem Header="Прогоны" />
         </TabControl>
 
         <Border Grid.Row="2"
@@ -44,7 +42,7 @@
                 ZIndex="0"
                 ClipToBounds="True"
                 IsHitTestVisible="True">
-            <ContentControl Content="{Binding SelectedTab.ContentVm}" />
+            <ContentControl Content="{Binding CurrentTabContent}" />
         </Border>
 
         <workspace:LogDrawerView Grid.Row="3" DataContext="{Binding LogDrawer}" />

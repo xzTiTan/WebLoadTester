@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -18,7 +17,6 @@ public partial class AppShellViewModel : ViewModelBase
     private readonly UiLayoutState _layoutState;
     private readonly DispatcherTimer _layoutSaveDebounce;
     private int _processedBackendLogCount;
-    private bool _isApplyingTabSync;
 
     public AppShellViewModel()
         : this(new MainWindowViewModel())
@@ -43,17 +41,6 @@ public partial class AppShellViewModel : ViewModelBase
         HttpModules = new ModuleFamilyViewModel("HTTP тестирование", _backend, _backend.HttpFamily, LogDrawer, _layoutState, ScheduleLayoutSave);
         NetSecModules = new ModuleFamilyViewModel("Сеть и безопасность", _backend, _backend.NetFamily, LogDrawer, _layoutState, ScheduleLayoutSave);
 
-        Tabs = new ObservableCollection<TabViewModel>
-        {
-            new("UI", "UI тестирование", UiModules),
-            new("HTTP", "HTTP тестирование", HttpModules),
-            new("Сеть", "Сеть и безопасность", NetSecModules),
-            new("Прогоны", "Прогоны", _backend.RunsTab)
-        };
-
-        var initialTabIndex = Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1);
-        selectedTab = Tabs[initialTabIndex];
-        selectedTabIndex = initialTabIndex;
         IsRunning = _backend.IsRunning;
 
         _backend.RunsTab.ConfigureRepeatRun(RepeatRunFromReportAsync);
@@ -71,16 +58,33 @@ public partial class AppShellViewModel : ViewModelBase
         _backend.RepeatRunPrepared += OnRepeatRunPrepared;
     }
 
-    public ObservableCollection<TabViewModel> Tabs { get; }
     public ModuleFamilyViewModel UiModules { get; }
     public ModuleFamilyViewModel HttpModules { get; }
     public ModuleFamilyViewModel NetSecModules { get; }
 
-    [ObservableProperty]
-    private TabViewModel selectedTab;
+    public int SelectedTabIndex
+    {
+        get => _backend.SelectedTabIndex;
+        set
+        {
+            if (_backend.SelectedTabIndex == value)
+            {
+                return;
+            }
 
-    [ObservableProperty]
-    private int selectedTabIndex;
+            _backend.SelectedTabIndex = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CurrentTabContent));
+        }
+    }
+
+    public object CurrentTabContent => SelectedTabIndex switch
+    {
+        0 => UiModules,
+        1 => HttpModules,
+        2 => NetSecModules,
+        _ => _backend.RunsTab
+    };
 
     [ObservableProperty]
     private bool isRunning;
@@ -96,58 +100,6 @@ public partial class AppShellViewModel : ViewModelBase
     public IAsyncRelayCommand StartHotkeyCommand { get; }
     public IRelayCommand StopHotkeyCommand { get; }
 
-    partial void OnSelectedTabChanged(TabViewModel value)
-    {
-        if (_isApplyingTabSync)
-        {
-            return;
-        }
-
-        var index = Tabs.IndexOf(value);
-        if (index < 0)
-        {
-            return;
-        }
-
-        _isApplyingTabSync = true;
-
-        if (SelectedTabIndex != index)
-        {
-            SelectedTabIndex = index;
-        }
-
-        if (_backend.SelectedTabIndex != index)
-        {
-            _backend.SelectedTabIndex = index;
-        }
-
-        _isApplyingTabSync = false;
-    }
-
-    partial void OnSelectedTabIndexChanged(int value)
-    {
-        if (_isApplyingTabSync)
-        {
-            return;
-        }
-
-        var index = Math.Clamp(value, 0, Tabs.Count - 1);
-
-        _isApplyingTabSync = true;
-
-        if (!ReferenceEquals(SelectedTab, Tabs[index]))
-        {
-            SelectedTab = Tabs[index];
-        }
-
-        if (_backend.SelectedTabIndex != index)
-        {
-            _backend.SelectedTabIndex = index;
-        }
-
-        _isApplyingTabSync = false;
-    }
-
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainWindowViewModel.IsRunning))
@@ -159,20 +111,8 @@ public partial class AppShellViewModel : ViewModelBase
 
         if (e.PropertyName == nameof(MainWindowViewModel.SelectedTabIndex))
         {
-            var index = Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1);
-            _isApplyingTabSync = true;
-
-            if (SelectedTabIndex != index)
-            {
-                SelectedTabIndex = index;
-            }
-
-            if (!ReferenceEquals(SelectedTab, Tabs[index]))
-            {
-                SelectedTab = Tabs[index];
-            }
-
-            _isApplyingTabSync = false;
+            OnPropertyChanged(nameof(SelectedTabIndex));
+            OnPropertyChanged(nameof(CurrentTabContent));
         }
     }
 
@@ -208,9 +148,11 @@ public partial class AppShellViewModel : ViewModelBase
 
     private RunControlViewModel? GetSelectedRunControl()
     {
-        return SelectedTab.ContentVm switch
+        return SelectedTabIndex switch
         {
-            ModuleFamilyViewModel family => family.Workspace.RunControl,
+            0 => UiModules.Workspace.RunControl,
+            1 => HttpModules.Workspace.RunControl,
+            2 => NetSecModules.Workspace.RunControl,
             _ => null
         };
     }
@@ -222,7 +164,15 @@ public partial class AppShellViewModel : ViewModelBase
 
     private void OnRepeatRunPrepared()
     {
-        if (SelectedTab.ContentVm is not ModuleFamilyViewModel family)
+        var family = SelectedTabIndex switch
+        {
+            0 => UiModules,
+            1 => HttpModules,
+            2 => NetSecModules,
+            _ => null
+        };
+
+        if (family == null)
         {
             return;
         }
@@ -236,7 +186,6 @@ public partial class AppShellViewModel : ViewModelBase
     {
         AppendPendingLogs();
     }
-
 
     partial void OnIsRunningChanged(bool value)
     {
@@ -261,7 +210,13 @@ public partial class AppShellViewModel : ViewModelBase
 
     private async Task PersistLayoutStateAsync()
     {
-        var activeWorkspace = SelectedTab.ContentVm is ModuleFamilyViewModel family ? family.Workspace : UiModules.Workspace;
+        var activeWorkspace = SelectedTabIndex switch
+        {
+            0 => UiModules.Workspace,
+            1 => HttpModules.Workspace,
+            2 => NetSecModules.Workspace,
+            _ => UiModules.Workspace
+        };
 
         _layoutState.LeftNavWidth = activeWorkspace.LeftNavWidth;
         _layoutState.DetailsWidth = activeWorkspace.DetailsWidth;
