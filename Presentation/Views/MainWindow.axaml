@@ -15,7 +15,7 @@
         <KeyBinding Gesture="Shift+F5" Command="{Binding StopHotkeyCommand}" />
         <KeyBinding Gesture="Ctrl+L" Command="{Binding ToggleLogDrawerCommand}" />
     </Window.KeyBindings>
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="6" Margin="8">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="6" Margin="8">
         <Border Grid.Row="0" Padding="4">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
                 <TextBlock Text="WebLoadTester" VerticalAlignment="Center" />
@@ -27,22 +27,26 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="6">
-            <TabControl Grid.Row="0" Margin="0"
-                        ItemsSource="{Binding Tabs}"
-                        SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TabViewModel">
-                        <TextBlock Text="{Binding Title}" ToolTip.Tip="{Binding FullTitle}" />
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
-            </TabControl>
+        <TabControl Grid.Row="1"
+                    Margin="0"
+                    Panel.ZIndex="10"
+                    ItemsSource="{Binding Tabs}"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+            <TabControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TabViewModel">
+                    <TextBlock Text="{Binding Title}" ToolTip.Tip="{Binding FullTitle}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+        </TabControl>
 
-            <Border Grid.Row="1" Padding="4">
-                <ContentControl Content="{Binding SelectedTab.ContentVm}" />
-            </Border>
-        </Grid>
+        <Border Grid.Row="2"
+                Padding="4"
+                Panel.ZIndex="0"
+                ClipToBounds="True"
+                IsHitTestVisible="True">
+            <ContentControl Content="{Binding SelectedTab.ContentVm}" />
+        </Border>
 
-        <workspace:LogDrawerView Grid.Row="2" DataContext="{Binding LogDrawer}" />
+        <workspace:LogDrawerView Grid.Row="3" DataContext="{Binding LogDrawer}" />
     </Grid>
 </Window>

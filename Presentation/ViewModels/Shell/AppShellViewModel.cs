@@ -18,6 +18,7 @@ public partial class AppShellViewModel : ViewModelBase
     private readonly UiLayoutState _layoutState;
     private readonly DispatcherTimer _layoutSaveDebounce;
     private int _processedBackendLogCount;
+    private bool _isApplyingTabSync;
 
     public AppShellViewModel()
         : this(new MainWindowViewModel())
@@ -50,7 +51,9 @@ public partial class AppShellViewModel : ViewModelBase
             new("Прогоны", "Прогоны", _backend.RunsTab)
         };
 
-        selectedTab = Tabs[Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1)];
+        var initialTabIndex = Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1);
+        selectedTab = Tabs[initialTabIndex];
+        selectedTabIndex = initialTabIndex;
         IsRunning = _backend.IsRunning;
 
         _backend.RunsTab.ConfigureRepeatRun(RepeatRunFromReportAsync);
@@ -77,6 +80,9 @@ public partial class AppShellViewModel : ViewModelBase
     private TabViewModel selectedTab;
 
     [ObservableProperty]
+    private int selectedTabIndex;
+
+    [ObservableProperty]
     private bool isRunning;
 
     public bool IsIdle => !IsRunning;
@@ -92,12 +98,54 @@ public partial class AppShellViewModel : ViewModelBase
 
     partial void OnSelectedTabChanged(TabViewModel value)
     {
+        if (_isApplyingTabSync)
+        {
+            return;
+        }
+
         var index = Tabs.IndexOf(value);
-        if (index >= 0 && _backend.SelectedTabIndex != index)
+        if (index < 0)
+        {
+            return;
+        }
+
+        _isApplyingTabSync = true;
+
+        if (SelectedTabIndex != index)
+        {
+            SelectedTabIndex = index;
+        }
+
+        if (_backend.SelectedTabIndex != index)
         {
             _backend.SelectedTabIndex = index;
         }
 
+        _isApplyingTabSync = false;
+    }
+
+    partial void OnSelectedTabIndexChanged(int value)
+    {
+        if (_isApplyingTabSync)
+        {
+            return;
+        }
+
+        var index = Math.Clamp(value, 0, Tabs.Count - 1);
+
+        _isApplyingTabSync = true;
+
+        if (!ReferenceEquals(SelectedTab, Tabs[index]))
+        {
+            SelectedTab = Tabs[index];
+        }
+
+        if (_backend.SelectedTabIndex != index)
+        {
+            _backend.SelectedTabIndex = index;
+        }
+
+        _isApplyingTabSync = false;
     }
 
     private void OnBackendPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -112,10 +160,19 @@ public partial class AppShellViewModel : ViewModelBase
         if (e.PropertyName == nameof(MainWindowViewModel.SelectedTabIndex))
         {
             var index = Math.Clamp(_backend.SelectedTabIndex, 0, Tabs.Count - 1);
+            _isApplyingTabSync = true;
+
+            if (SelectedTabIndex != index)
+            {
+                SelectedTabIndex = index;
+            }
+
             if (!ReferenceEquals(SelectedTab, Tabs[index]))
             {
                 SelectedTab = Tabs[index];
             }
+
+            _isApplyingTabSync = false;
         }
     }
 
