@@ -29,7 +29,7 @@
 
         <TabControl Grid.Row="1"
                     Margin="0"
-                    Panel.ZIndex="10"
+                    ZIndex="10"
                     ItemsSource="{Binding Tabs}"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
             <TabControl.ItemTemplate>
@@ -41,7 +41,7 @@
 
         <Border Grid.Row="2"
                 Padding="4"
-                Panel.ZIndex="0"
+                ZIndex="0"
                 ClipToBounds="True"
                 IsHitTestVisible="True">
             <ContentControl Content="{Binding SelectedTab.ContentVm}" />
