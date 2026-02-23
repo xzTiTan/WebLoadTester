@@ -1,7 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -13,7 +12,7 @@ namespace WebLoadTester.Infrastructure.Playwright;
 /// </summary>
 public static class PlaywrightFactory
 {
-    private static string _browsersPath = Path.Combine(AppContext.BaseDirectory, "browsers");
+    private static string _browsersPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
 
     public static string BrowsersPath => _browsersPath;
 
@@ -26,6 +25,7 @@ public static class PlaywrightFactory
 
         _browsersPath = browsersPath;
         Directory.CreateDirectory(_browsersPath);
+        Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", _browsersPath);
     }
 
     /// <summary>
@@ -50,7 +50,20 @@ public static class PlaywrightFactory
         foreach (var directory in Directory.GetDirectories(BrowsersPath))
         {
             var name = Path.GetFileName(directory).ToLowerInvariant();
-            if (name.Contains("chrom"))
+            if (!name.StartsWith("chromium-", StringComparison.Ordinal) &&
+                !name.Contains("chromium", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (File.Exists(Path.Combine(directory, "chrome-linux", "chrome")) ||
+                File.Exists(Path.Combine(directory, "chrome-win", "chrome.exe")) ||
+                File.Exists(Path.Combine(directory, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium")))
+            {
+                return true;
+            }
+
+            if (Directory.EnumerateFiles(directory, "*chrome*", SearchOption.AllDirectories).Any())
             {
                 return true;
             }
@@ -63,62 +76,21 @@ public static class PlaywrightFactory
 
     public static async Task InstallChromiumAsync(CancellationToken ct, Action<string>? onOutput = null)
     {
-        var script = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "playwright.ps1" : "playwright.sh";
-        var scriptPath = Path.Combine(AppContext.BaseDirectory, script);
-        if (!File.Exists(scriptPath))
-        {
-            throw new FileNotFoundException($"Playwright installer script not found: {scriptPath}");
-        }
+        Directory.CreateDirectory(BrowsersPath);
+        Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", BrowsersPath);
+        onOutput?.Invoke($"PLAYWRIGHT_BROWSERS_PATH={BrowsersPath}");
+        onOutput?.Invoke("Installing chromium via Microsoft.Playwright.Program...");
 
-        var psi = new ProcessStartInfo
+        await Task.Run(() =>
         {
-            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pwsh" : "bash",
-            WorkingDirectory = AppContext.BaseDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            psi.ArgumentList.Add(scriptPath);
-        }
-        else
-        {
-            psi.ArgumentList.Add(scriptPath);
-        }
-
-        psi.ArgumentList.Add("install");
-        psi.ArgumentList.Add("chromium");
-        psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = BrowsersPath;
-
-        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (!string.IsNullOrWhiteSpace(e.Data))
+            ct.ThrowIfCancellationRequested();
+            var exitCode = Microsoft.Playwright.Program.Main(new[] { "install", "chromium" });
+            if (exitCode != 0)
             {
-                onOutput?.Invoke(e.Data);
+                throw new InvalidOperationException($"Playwright install failed with code {exitCode}.");
             }
-        };
+        }, ct);
 
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (!string.IsNullOrWhiteSpace(e.Data))
-            {
-                onOutput?.Invoke(e.Data);
-            }
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(ct);
-
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException($"Playwright install failed with code {process.ExitCode}.");
-        }
+        onOutput?.Invoke("Chromium install completed.");
     }
 }

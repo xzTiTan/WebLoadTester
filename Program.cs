@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using System;
+using System.IO;
+using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester;
 
@@ -15,8 +17,15 @@ sealed class Program
     /// Запускает приложение с классическим жизненным циклом окна.
     /// </summary>
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        var browsersPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
+        Directory.CreateDirectory(browsersPath);
+        Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browsersPath);
+        PlaywrightFactory.ConfigureBrowsersPath(browsersPath);
+
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     /// <summary>

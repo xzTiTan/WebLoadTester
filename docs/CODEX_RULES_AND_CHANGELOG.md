@@ -39,6 +39,13 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.37 23.02.2026
+- Возвращена OLD-логика локального пути браузеров Playwright: при старте приложения устанавливается `PLAYWRIGHT_BROWSERS_PATH` в `AppContext.BaseDirectory/playwright-browsers` до первого использования Playwright.
+- `PlaywrightFactory` переведён на `playwright-browsers` по умолчанию; `HasBrowsersInstalled()` проверяет Chromium в локальном каталоге по маркерам `chromium-*` и наличию бинарников/файлов chrome.
+- `InstallChromiumAsync()` теперь устанавливает Chromium через `Microsoft.Playwright.Program.Main(["install", "chromium"])` с логированием выбранного `BrowsersPath`.
+- UI/UX не менялся; существующие validation-ошибки UI-модулей и кнопка установки Chromium продолжают работать через обновлённую фабрику.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.36 23.02.2026
 - В `ModuleWorkspaceViewModel` workspace-валидация расширена проверкой `ITestModule.Validate(settings)` для текущего выбранного модуля.
 - В `SetSelectedModule` добавлено сохранение ссылки на текущий модуль (`_currentModule`), чтобы включать module-level ошибки в `WorkspaceValidationErrors`.
