@@ -43,6 +43,7 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         Details = new DetailsPaneViewModel(_backend, logDrawer, this);
 
         TestCase.PropertyChanged += OnChildValidationSourceChanged;
+        TestCase.PropertyChanged += OnTestCasePromptStateChanged;
         RunProfile.PropertyChanged += OnChildValidationSourceChanged;
 
         RefreshWorkspaceValidationErrors();
@@ -181,6 +182,22 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private void OnChildValidationSourceChanged(object? sender, PropertyChangedEventArgs e)
     {
         RefreshWorkspaceValidationErrors();
+    }
+
+
+    private void OnTestCasePromptStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(TestCaseViewModel.IsDirtyPromptVisible) &&
+            e.PropertyName != nameof(TestCaseViewModel.IsDeleteConfirmVisible))
+        {
+            return;
+        }
+
+        if (TestCase.IsDirtyPromptVisible || TestCase.IsDeleteConfirmVisible)
+        {
+            IsTestCaseExpanded = true;
+            RequestScrollToTop();
+        }
     }
 
     private void SubscribeSettingsValidationSource()

@@ -96,6 +96,16 @@ public partial class TestCaseViewModel : ObservableObject, IValidatable
     public IAsyncRelayCommand? SaveAsCommand => _moduleConfig?.SaveCommand;
     public IRelayCommand? DeleteCommand => _moduleConfig?.RequestDeleteSelectedCommand;
 
+    public bool IsDeleteConfirmVisible => _moduleConfig?.IsDeleteConfirmVisible ?? false;
+    public IAsyncRelayCommand? ConfirmDeleteSelectedCommand => _moduleConfig?.ConfirmDeleteSelectedCommand;
+    public IRelayCommand? CancelDeleteSelectedCommand => _moduleConfig?.CancelDeleteSelectedCommand;
+
+    public bool IsDirtyPromptVisible => _moduleConfig?.IsDirtyPromptVisible ?? false;
+    public string DirtyPromptText => _moduleConfig?.DirtyPromptText ?? string.Empty;
+    public IAsyncRelayCommand? SaveAndContinueGuardActionCommand => _moduleConfig?.SaveAndContinueGuardActionCommand;
+    public IAsyncRelayCommand? DiscardAndContinueGuardActionCommand => _moduleConfig?.DiscardAndContinueGuardActionCommand;
+    public IRelayCommand? CancelGuardActionCommand => _moduleConfig?.CancelGuardActionCommand;
+
     public IReadOnlyList<string> Validate()
     {
         return ValidationErrors
@@ -141,5 +151,13 @@ public partial class TestCaseViewModel : ObservableObject, IValidatable
         OnPropertyChanged(nameof(SaveCommand));
         OnPropertyChanged(nameof(SaveAsCommand));
         OnPropertyChanged(nameof(DeleteCommand));
+        OnPropertyChanged(nameof(IsDeleteConfirmVisible));
+        OnPropertyChanged(nameof(ConfirmDeleteSelectedCommand));
+        OnPropertyChanged(nameof(CancelDeleteSelectedCommand));
+        OnPropertyChanged(nameof(IsDirtyPromptVisible));
+        OnPropertyChanged(nameof(DirtyPromptText));
+        OnPropertyChanged(nameof(SaveAndContinueGuardActionCommand));
+        OnPropertyChanged(nameof(DiscardAndContinueGuardActionCommand));
+        OnPropertyChanged(nameof(CancelGuardActionCommand));
     }
 }

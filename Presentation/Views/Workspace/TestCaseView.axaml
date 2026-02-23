@@ -39,6 +39,24 @@
             </ItemsControl>
 
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+
+            <StackPanel Spacing="6" IsVisible="{Binding IsDeleteConfirmVisible}">
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal">
+                    <Button Content="Подтвердить удаление" Command="{Binding ConfirmDeleteSelectedCommand}" Margin="0,0,6,0" />
+                    <Button Content="Отмена" Command="{Binding CancelDeleteSelectedCommand}" />
+                </WrapPanel>
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding IsDirtyPromptVisible}">
+                <TextBlock Text="{Binding DirtyPromptText}" TextWrapping="Wrap" />
+                <WrapPanel Orientation="Horizontal">
+                    <Button Content="Сохранить" Command="{Binding SaveAndContinueGuardActionCommand}" Margin="0,0,6,0" />
+                    <Button Content="Не сохранять" Command="{Binding DiscardAndContinueGuardActionCommand}" Margin="0,0,6,0" />
+                    <Button Content="Отмена" Command="{Binding CancelGuardActionCommand}" />
+                </WrapPanel>
+            </StackPanel>
+
         </StackPanel>
     </StackPanel>
 </UserControl>
