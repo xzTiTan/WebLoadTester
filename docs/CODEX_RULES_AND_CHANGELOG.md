@@ -1,4 +1,4 @@
-v3.41 24.02.2026
+v3.42 24.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,13 @@ v3.41 24.02.2026
 ---
 
 # Changelog
+
+## v3.42 24.02.2026
+- Эпик #7: UTC-консистентность timestamp-полей в оркестраторе/репорте/SQLite-записях без изменения структуры контрактов.
+- `RunContext.Now` переведён на `DateTimeOffset.UtcNow`; финализация `FinishedAt` и `ArtifactRecord.CreatedAt` в `RunOrchestrator` теперь формируются в UTC.
+- В `MainWindowViewModel` журнал `TelegramNotifications.SentAt` записывается в UTC.
+- Добавлены тесты на UTC offsets в `ReportingTests` и `OrchestratorSemanticsTests`.
+- Обновлены версии `README.md` и `AGENTS.md`.
 
 ## v3.41 24.02.2026
 - Эпик #6: финализация статуса прогона в `RunOrchestrator` приведена к канону INDEX: при наличии хотя бы одного failure (и не cancel) итоговый статус `Failed`.

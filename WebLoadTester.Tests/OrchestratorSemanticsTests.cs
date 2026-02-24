@@ -41,6 +41,8 @@ public class OrchestratorSemanticsTests
         var report = await harness.Orchestrator.StartAsync(module, new FakeSettings(), harness.Context, CancellationToken.None);
         sw.Stop();
 
+        Assert.Equal(TimeSpan.Zero, report.StartedAt.Offset);
+        Assert.Equal(TimeSpan.Zero, report.FinishedAt.Offset);
         Assert.Equal(TestStatus.Success, report.Status);
         Assert.Equal(3, seen.Count);
         Assert.All(seen, item =>

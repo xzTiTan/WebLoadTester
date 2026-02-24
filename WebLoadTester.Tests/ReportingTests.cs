@@ -76,6 +76,11 @@ public class ReportingTests
         Assert.Equal(report.ModuleId, root.GetProperty("moduleId").GetString());
         Assert.Equal(report.FinalName, root.GetProperty("finalName").GetString());
 
+        var startedAtUtc = root.GetProperty("startedAtUtc").GetDateTimeOffset();
+        var finishedAtUtc = root.GetProperty("finishedAtUtc").GetDateTimeOffset();
+        Assert.Equal(TimeSpan.Zero, startedAtUtc.Offset);
+        Assert.Equal(TimeSpan.Zero, finishedAtUtc.Offset);
+
         Assert.True(root.TryGetProperty("profile", out var profile));
         Assert.Equal(report.ProfileSnapshot.Parallelism, profile.GetProperty("parallelism").GetInt32());
 

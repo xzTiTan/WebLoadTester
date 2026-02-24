@@ -1016,7 +1016,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     {
                         Id = Guid.NewGuid(),
                         RunId = runId,
-                        SentAt = DateTimeOffset.Now,
+                        SentAt = DateTimeOffset.UtcNow,
                         Status = "Sent"
                     }, CancellationToken.None);
                 }
@@ -1030,7 +1030,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     {
                         Id = Guid.NewGuid(),
                         RunId = runId,
-                        SentAt = DateTimeOffset.Now,
+                        SentAt = DateTimeOffset.UtcNow,
                         Status = "Failed",
                         ErrorMessage = result.Error
                     }, CancellationToken.None);

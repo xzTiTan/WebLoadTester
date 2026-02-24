@@ -373,7 +373,7 @@ public class RunOrchestrator
         report.Status = ResolveStatus(report.Status, report.Results, context.IsStopRequested, ct);
         if (report.FinishedAt == default)
         {
-            report.FinishedAt = DateTimeOffset.Now;
+            report.FinishedAt = DateTimeOffset.UtcNow;
         }
 
         report.Artifacts.LogPath = context.Artifacts.GetLogPath(report.RunId);
@@ -528,7 +528,7 @@ public class RunOrchestrator
                 RunId = report.RunId,
                 ArtifactType = "JsonReport",
                 RelativePath = "report.json",
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.UtcNow
             },
             new()
             {
@@ -536,7 +536,7 @@ public class RunOrchestrator
                 RunId = report.RunId,
                 ArtifactType = "Log",
                 RelativePath = "logs/run.log",
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.UtcNow
             }
         };
 
@@ -548,7 +548,7 @@ public class RunOrchestrator
                 RunId = report.RunId,
                 ArtifactType = "HtmlReport",
                 RelativePath = "report.html",
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.UtcNow
             });
         }
 
@@ -571,7 +571,7 @@ public class RunOrchestrator
                 RunId = report.RunId,
                 ArtifactType = "Screenshot",
                 RelativePath = path!,
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.UtcNow
             });
         }
 
@@ -583,7 +583,7 @@ public class RunOrchestrator
                 RunId = report.RunId,
                 ArtifactType = artifact.Type,
                 RelativePath = artifact.RelativePath,
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.UtcNow
             });
         }
 

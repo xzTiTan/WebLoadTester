@@ -50,7 +50,7 @@ public class RunContext : IRunContext
     /// <summary>
     /// Возвращает текущее время запуска.
     /// </summary>
-    public DateTimeOffset Now => DateTimeOffset.Now;
+    public DateTimeOffset Now => DateTimeOffset.UtcNow;
 
     /// <summary>
     /// Инициализирует папку прогона для артефактов.

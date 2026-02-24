@@ -1,6 +1,6 @@
 # 02 — Архитектура и данные (якорный документ)
 
-**Версия:** v3.39 23.02.2026
+**Версия:** v3.42 24.02.2026
 **Статус:** TO-BE детализация для `docs/INDEX.md`.
 
 > Источник истины: `docs/INDEX.md`. Этот документ детализирует архитектуру, слои, данные и артефакты без изменения канонических инвариантов.
@@ -30,6 +30,7 @@
 - Основное хранилище: SQLite.
 - Логическая схема (минимум): `TestCases`, `TestCaseVersions`, `RunProfiles`, `TestRuns`, `RunItems`, `Artifacts`, `TelegramNotifications`.
 - Snapshot-правила:
+  - Все timestamps хранения и `startedAtUtc/finishedAtUtc` фиксируются в UTC.
   - `TestRuns.ProfileSnapshotJson` хранит snapshot профиля.
   - `runs/{RunId}/report.json` хранит `moduleSettings` для repeat-run.
 
