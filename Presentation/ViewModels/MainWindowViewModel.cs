@@ -371,12 +371,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _activeTelegramContext = notificationContext;
         _activeTelegramEnabled = profile.TelegramEnabled;
 
-        await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyStartAsync(notificationContext, profile.TelegramEnabled, _runCts.Token));
-
         var finalProgressText = ProgressText;
         var finalStatusText = "Статус: ожидание";
         try
         {
+            await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyStartAsync(notificationContext, profile.TelegramEnabled, _runCts.Token));
+
             var preflight = CreatePreflightSettings(moduleItem.SettingsViewModel.Settings);
             var preflightModule = profile.PreflightEnabled ? Registry.Modules.FirstOrDefault(m => m.Id == "net.preflight") : null;
             var report = await _orchestrator.StartAsync(moduleItem.Module, moduleItem.SettingsViewModel.Settings, ctx, _runCts.Token,
@@ -407,7 +407,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         finally
         {
-            await logSink.CompleteAsync();
+            try
+            {
+                await logSink.CompleteAsync();
+            }
+            catch (Exception ex)
+            {
+                _logBus.Warn($"Log sink completion failed: {ex.Message}");
+            }
+
             IsRunning = false;
             IsProgressIndeterminate = false;
             ProgressPercent = 0;
@@ -704,8 +712,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
+                _logBus.Info($"[NavGuard] Settings blocked: module={selected.Module.Id}, dirty={selected.ModuleConfig.IsDirty}");
                 return;
             }
+
+            return;
         }
 
         OpenSettingsWindow();
@@ -874,6 +885,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
+                _logBus.Info($"[NavGuard] Module change blocked: from={previous.Module.Id}, to={requested.Module.Id}, dirty={previous.ModuleConfig.IsDirty}");
                 _isApplyingGuardedSelection = true;
                 family.SelectedModule = previous;
                 _isApplyingGuardedSelection = false;
@@ -1154,6 +1166,11 @@ public partial class MainWindowViewModel : ViewModelBase
         LoadedFromRunInfo = $"Загружено из прогона {runId}";
         RepeatRunPrepared?.Invoke();
         _logBus.Info($"[Runs] Конфигурация загружена из snapshot БД прогона {runId}. Автозапуск не выполнялся.");
+    }
+
+    public void LogNavigationGuard(string message)
+    {
+        _logBus.Info(message);
     }
 
 

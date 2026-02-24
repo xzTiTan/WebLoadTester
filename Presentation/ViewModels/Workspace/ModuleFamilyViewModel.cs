@@ -67,6 +67,7 @@ public partial class ModuleFamilyViewModel : ObservableObject
 
         if (_backend.IsRunning)
         {
+            _backend.LogNavigationGuard($"[NavGuard] Workspace module change blocked while running: requested={value.ModuleId}, current={_lastConfirmedSelection?.ModuleId ?? "n/a"}");
             _isSyncingSelection = true;
             SelectedModule = _lastConfirmedSelection;
             _isSyncingSelection = false;
