@@ -39,6 +39,13 @@ v3.31 18.02.2026
 
 # Changelog
 
+## v3.39 23.02.2026
+- Усилена установка Chromium из UI-кнопки: `PlaywrightFactory.InstallChromiumAsync` теперь гарантирует локальный путь `AppContext.BaseDirectory/playwright-browsers`, выставляет `PLAYWRIGHT_BROWSERS_PATH`, логирует этапы и защищена от повторного параллельного запуска (`IsInstalling`, interlocked).
+- Добавлен fallback-режим установки через отдельный процесс при неуспехе встроенного вызова `Microsoft.Playwright.Program.Main(...)`: запуск `dotnet Microsoft.Playwright.CLI.dll install chromium` или `playwright`-скрипта из output-каталога.
+- В `MainWindowViewModel` команда установки учитывает блокировку повторного запуска, логирует путь/итог и обрабатывает результат установки (`detected/not detected`).
+- В `RunControlViewModel` прокси-команда установки Chromium теперь имеет собственный `CanExecute`, учитывает состояние backend-команды и после завершения обновляет `WorkspaceValidationErrors`, чтобы ошибка о неустановленном Chromium исчезала без перезапуска.
+- Обновлены версии `README.md` и `AGENTS.md`.
+
 ## v3.38 23.02.2026
 - Дефолты модулей переведены на `https://www.google.com/` (и `www.google.com` для host): обновлены настройки Availability/HTTP Functional/HTTP Performance/UiScenario/UiSnapshot/UiTiming, а также ассеты `https://www.google.com/favicon.ico`.
 - Для NetDiagnostics дефолтные порты приведены к `80, 443` (в settings и auto-ports UI-профиле), host по умолчанию `www.google.com`.

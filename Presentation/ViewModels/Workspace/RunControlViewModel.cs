@@ -19,6 +19,7 @@ public partial class RunControlViewModel : ObservableObject
         _workspace = workspace;
 
         StartCommand = new AsyncRelayCommand(StartAsync, CanStartRun);
+        InstallChromiumCommand = new AsyncRelayCommand(InstallChromiumAsync, CanInstallChromiumNow);
 
         _backend.PropertyChanged += OnBackendPropertyChanged;
         _workspace.PropertyChanged += OnWorkspacePropertyChanged;
@@ -30,7 +31,7 @@ public partial class RunControlViewModel : ObservableObject
     public IRelayCommand OpenRunFolderCommand => _backend.OpenLatestRunFolderCommand;
     public IRelayCommand OpenHtmlReportCommand => _backend.OpenLatestHtmlCommand;
     public IRelayCommand OpenJsonReportCommand => _backend.OpenLatestJsonCommand;
-    public IAsyncRelayCommand InstallChromiumCommand => _backend.InstallPlaywrightBrowsersCommand;
+    public IAsyncRelayCommand InstallChromiumCommand { get; }
 
     public string StatusText => _backend.StatusText;
     public double ProgressValue => _backend.ProgressPercent;
@@ -44,7 +45,7 @@ public partial class RunControlViewModel : ObservableObject
     public ObservableCollection<string> ValidationErrors => _workspace.WorkspaceValidationErrors;
     public bool HasValidationErrors => ValidationErrors.Count > 0;
     public bool HasChromiumValidationError => ValidationErrors.Any(x => x.Contains("Chromium", StringComparison.OrdinalIgnoreCase));
-    public bool CanInstallChromium => HasChromiumValidationError && _backend.CanInstallPlaywright;
+    public bool CanInstallChromium => CanInstallChromiumNow();
 
     [ObservableProperty]
     private int focusRequestToken;
@@ -54,6 +55,24 @@ public partial class RunControlViewModel : ObservableObject
         FocusRequestToken++;
     }
 
+
+    private async Task InstallChromiumAsync()
+    {
+        if (!CanInstallChromiumNow())
+        {
+            return;
+        }
+
+        await _backend.InstallPlaywrightBrowsersCommand.ExecuteAsync(null);
+        _workspace.RefreshWorkspaceValidationErrors();
+    }
+
+    private bool CanInstallChromiumNow()
+    {
+        return HasChromiumValidationError
+               && _backend.InstallPlaywrightBrowsersCommand.CanExecute(null)
+               && _backend.CanInstallPlaywright;
+    }
     private async Task StartAsync()
     {
         if (!CanStartRun())
@@ -89,6 +108,7 @@ public partial class RunControlViewModel : ObservableObject
     private void RaiseState()
     {
         StartCommand.NotifyCanExecuteChanged();
+        InstallChromiumCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(ProgressValue));
         OnPropertyChanged(nameof(CanStart));

@@ -246,7 +246,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public string TelegramStatusBadgeClass => TelegramStatus.Contains("Ошибка", StringComparison.OrdinalIgnoreCase) ? "badge err" : TelegramStatus.Contains("Ок", StringComparison.OrdinalIgnoreCase) ? "badge ok" : "badge";
     public bool ShowRunHint => !IsRunning;
     public bool ShowPlaywrightInstallBanner => IsSelectedUiModule() && !PlaywrightFactory.HasBrowsersInstalled();
-    public bool CanInstallPlaywright => !IsInstallingPlaywright;
+    public bool CanInstallPlaywright => !IsInstallingPlaywright && !PlaywrightFactory.IsInstalling;
 
     partial void OnIsDatabaseOkChanged(bool value) => OnPropertyChanged(nameof(DatabaseStatusBadgeClass));
     partial void OnIsTelegramConfiguredChanged(bool value) => OnPropertyChanged(nameof(TelegramStatusBadgeClass));
@@ -472,25 +472,39 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanInstallPlaywright))]
     private async Task InstallPlaywrightBrowsersAsync()
     {
+        if (IsInstallingPlaywright || PlaywrightFactory.IsInstalling)
+        {
+            return;
+        }
+
         IsInstallingPlaywright = true;
         PlaywrightInstallMessage = "Установка Chromium...";
-        _logBus.Info("[Playwright] Installing Chromium browser...");
+        _logBus.Info($"[Playwright] Installing Chromium browser. Path: {PlaywrightFactory.GetBrowsersPath()}");
 
         try
         {
-            await PlaywrightFactory.InstallChromiumAsync(CancellationToken.None, line => _logBus.Info($"[Playwright] {line}"));
-            PlaywrightInstallMessage = "Chromium установлен.";
-            _logBus.Info("[Playwright] Chromium installed successfully.");
+            var installed = await PlaywrightFactory.InstallChromiumAsync(CancellationToken.None, line => _logBus.Info($"[Playwright] {line}"));
+            if (installed)
+            {
+                PlaywrightInstallMessage = "Chromium установлен.";
+                _logBus.Info("[Playwright] Chromium installed successfully.");
+            }
+            else
+            {
+                PlaywrightInstallMessage = "Установка завершилась, но Chromium не обнаружен.";
+                _logBus.Warn("[Playwright] Install finished, but Chromium was not detected in browsers path.");
+            }
         }
         catch (Exception ex)
         {
             PlaywrightInstallMessage = $"Не удалось установить Chromium: {ex.Message}";
-            _logBus.Error($"[Playwright] Install failed: {ex.Message}");
+            _logBus.Error($"[Playwright] Install failed: {ex}");
         }
         finally
         {
             IsInstallingPlaywright = false;
             OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+            OnPropertyChanged(nameof(CanInstallPlaywright));
         }
     }
 
