@@ -284,6 +284,16 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (IsRunning)
+        {
+            OnPropertyChanged(nameof(SelectedModule));
+            OnPropertyChanged(nameof(ShowPlaywrightInstallBanner));
+            UpdateRunProfileModuleFamily();
+            ReevaluateStartAvailability();
+            _lastConfirmedTabIndex = value;
+            return;
+        }
+
         var currentModuleConfig = GetModuleConfigByTab(_lastConfirmedTabIndex);
         if (value != _lastConfirmedTabIndex && currentModuleConfig != null)
         {
