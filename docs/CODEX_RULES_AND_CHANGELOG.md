@@ -1,4 +1,4 @@
-v3.39 23.02.2026
+v3.40 24.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,13 @@ v3.39 23.02.2026
 ---
 
 # Changelog
+
+## v3.40 24.02.2026
+- Эпик #4: унифицирован путь браузеров Playwright на канон `{DataDirectory}/browsers` через `AppSettings.BrowsersDirectory`.
+- `Program.cs` больше не навязывает путь браузеров рядом с бинарником; конфигурация пути выполняется после загрузки настроек в `MainWindowViewModel`.
+- `PlaywrightFactory` переведён на канонический default path в LocalAppData/data/browsers; установка Chromium и проверки наличия браузера используют один и тот же `BrowsersPath`.
+- Добавлена мягкая диагностика legacy-установок (`AppContext.BaseDirectory/playwright-browsers`) без автопереноса.
+- README/AGENTS/INDEX синхронизированы по канону Playwright path.
 
 ## v3.39 23.02.2026 (docs anchors sync)
 - Восстановлены якорные документы: `docs/02_ARCHITECTURE_AND_DATA.md`, `docs/03_UI_CANON.md`, `docs/05_TEST_PLAN_AND_TRACEABILITY.md`.

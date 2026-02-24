@@ -1,4 +1,4 @@
-v3.39 23.02.2026
+v3.40 24.02.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -62,7 +62,7 @@ WebLoadTester — кроссплатформенное настольное пр
 - **Профили**: профили запусков хранятся в SQLite (`RunProfiles`), отдельный каталог profiles для MVP не используется.
 
 ## Playwright / browsers
-- Приложение ожидает браузеры в `AppContext.BaseDirectory/browsers` (то есть рядом с бинарником).
+- Приложение использует браузеры из `AppSettings.BrowsersDirectory` (канон: `{DataDirectory}/browsers`).
 - Установка браузеров Playwright выполняется скриптом в папке сборки (генерируется пакетом Microsoft.Playwright).
 
 **Windows (PowerShell):**
@@ -81,7 +81,7 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 
 > Если используете Release или publish, замените путь на соответствующий `bin/Release/net8.0` или папку публикации.
 
-> Канон TO-BE в `docs/INDEX.md` требует `{DataDirectory}/browsers`; если текущая реализация отличается, это считается известной дельтой AS-IS и исправляется отдельным эпиком (Playwright contract).
+> Реализация выровнена с каноном TO-BE: Playwright использует `{DataDirectory}/browsers`; legacy-установки рядом с бинарником не мигрируются автоматически.
 
 
 ## Tests & verification

@@ -13,7 +13,7 @@ namespace WebLoadTester.Infrastructure.Playwright;
 /// </summary>
 public static class PlaywrightFactory
 {
-    private static string _browsersPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
+    private static string _browsersPath = GetDefaultBrowsersPath();
     private static int _isInstalling;
 
     public static string BrowsersPath => _browsersPath;
@@ -44,34 +44,7 @@ public static class PlaywrightFactory
     /// </summary>
     public static bool HasBrowsersInstalled()
     {
-        if (!Directory.Exists(BrowsersPath))
-        {
-            return false;
-        }
-
-        foreach (var directory in Directory.GetDirectories(BrowsersPath))
-        {
-            var name = Path.GetFileName(directory).ToLowerInvariant();
-            if (!name.StartsWith("chromium-", StringComparison.Ordinal) &&
-                !name.Contains("chromium", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (File.Exists(Path.Combine(directory, "chrome-linux", "chrome")) ||
-                File.Exists(Path.Combine(directory, "chrome-win", "chrome.exe")) ||
-                File.Exists(Path.Combine(directory, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium")))
-            {
-                return true;
-            }
-
-            if (Directory.EnumerateFiles(directory, "*chrome*", SearchOption.AllDirectories).Any())
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return HasChromiumInPath(BrowsersPath);
     }
 
     public static string GetBrowsersPath() => BrowsersPath;
@@ -88,8 +61,7 @@ public static class PlaywrightFactory
 
         try
         {
-            var browsersPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
-            ConfigureBrowsersPath(browsersPath);
+            ConfigureBrowsersPath(BrowsersPath);
 
             onOutput?.Invoke($"PLAYWRIGHT_BROWSERS_PATH={BrowsersPath}");
             onOutput?.Invoke("Starting Playwright chromium install...");
@@ -127,6 +99,55 @@ public static class PlaywrightFactory
         {
             Interlocked.Exchange(ref _isInstalling, 0);
         }
+    }
+
+    public static bool HasLegacyBaseDirectoryBrowsersInstall()
+    {
+        var legacyPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
+        if (Path.GetFullPath(legacyPath).Equals(Path.GetFullPath(BrowsersPath), StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return HasChromiumInPath(legacyPath);
+    }
+
+    private static string GetDefaultBrowsersPath()
+    {
+        var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WebLoadTester", "data");
+        return Path.Combine(dataDirectory, "browsers");
+    }
+
+    private static bool HasChromiumInPath(string browsersPath)
+    {
+        if (!Directory.Exists(browsersPath))
+        {
+            return false;
+        }
+
+        foreach (var directory in Directory.GetDirectories(browsersPath))
+        {
+            var name = Path.GetFileName(directory).ToLowerInvariant();
+            if (!name.StartsWith("chromium-", StringComparison.Ordinal) &&
+                !name.Contains("chromium", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (File.Exists(Path.Combine(directory, "chrome-linux", "chrome")) ||
+                File.Exists(Path.Combine(directory, "chrome-win", "chrome.exe")) ||
+                File.Exists(Path.Combine(directory, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium")))
+            {
+                return true;
+            }
+
+            if (Directory.EnumerateFiles(directory, "*chrome*", SearchOption.AllDirectories).Any())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static async Task RunInstallFallbackProcessAsync(CancellationToken ct, Action<string>? onOutput)

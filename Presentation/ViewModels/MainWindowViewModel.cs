@@ -100,6 +100,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _settingsService = new AppSettingsService();
         PlaywrightFactory.ConfigureBrowsersPath(_settingsService.Settings.BrowsersDirectory);
+        _logBus.Info($"[Playwright] Browsers path configured: {PlaywrightFactory.GetBrowsersPath()}");
+        if (!PlaywrightFactory.HasBrowsersInstalled() && PlaywrightFactory.HasLegacyBaseDirectoryBrowsersInstall())
+        {
+            _logBus.Warn("[Playwright] Обнаружена legacy-установка браузеров рядом с бинарником. Используется канонический путь DataDirectory/browsers.");
+        }
         _runStore = new SqliteRunStore(_settingsService.Settings.DatabasePath);
         _testCaseRepository = (ITestCaseRepository)_runStore;
         _moduleConfigService = new ModuleConfigService(_testCaseRepository);

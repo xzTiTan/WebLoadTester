@@ -1,7 +1,4 @@
 ﻿using Avalonia;
-using System;
-using System.IO;
-using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester;
 
@@ -19,11 +16,6 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var browsersPath = Path.Combine(AppContext.BaseDirectory, "playwright-browsers");
-        Directory.CreateDirectory(browsersPath);
-        Environment.SetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH", browsersPath);
-        PlaywrightFactory.ConfigureBrowsersPath(browsersPath);
-
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
