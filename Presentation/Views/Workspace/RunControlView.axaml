@@ -12,7 +12,7 @@
             </WrapPanel>
 
             <TextBlock Text="{Binding StatusText}" />
-            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsIndeterminate}" />
 
             <ItemsControl ItemsSource="{Binding ValidationErrors}" IsVisible="{Binding HasValidationErrors}">
                 <ItemsControl.ItemTemplate>

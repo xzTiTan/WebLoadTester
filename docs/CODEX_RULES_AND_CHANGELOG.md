@@ -1,4 +1,4 @@
-v3.42 24.02.2026
+v3.43 24.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,12 @@ v3.42 24.02.2026
 ---
 
 # Changelog
+
+## v3.43 24.02.2026
+- Эпик #8: устранён ложный хоткей в UI — из `DetailsPaneView` удалена подсказка `Ctrl+S Сохранить`, т.к. глобального KeyBinding/команды сохранения нет.
+- В `RunControlViewModel` добавлен прокси-флаг `IsIndeterminate` из backend (`MainWindowViewModel.IsProgressIndeterminate`).
+- В `RunControlView.axaml` `ProgressBar.IsIndeterminate` привязан к `IsIndeterminate`: для Duration-режима индикатор неопределённый, для Iterations — обычный.
+- Обновлены версии `README.md` и `AGENTS.md`.
 
 ## v3.42 24.02.2026
 - Эпик #7: UTC-консистентность timestamp-полей в оркестраторе/репорте/SQLite-записях без изменения структуры контрактов.

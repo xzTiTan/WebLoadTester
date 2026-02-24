@@ -43,7 +43,6 @@
                 <TextBlock Text="F5 Старт" />
                 <TextBlock Text="Shift+F5 Стоп" />
                 <TextBlock Text="Ctrl+L Лог" />
-                <TextBlock Text="Ctrl+S Сохранить" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

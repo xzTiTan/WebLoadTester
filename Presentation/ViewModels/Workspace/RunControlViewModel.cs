@@ -35,6 +35,7 @@ public partial class RunControlViewModel : ObservableObject
 
     public string StatusText => _backend.StatusText;
     public double ProgressValue => _backend.ProgressPercent;
+    public bool IsIndeterminate => _backend.IsProgressIndeterminate;
     public bool CanStart => StartCommand.CanExecute(null);
     public bool CanStop => _backend.StopCommand.CanExecute(null);
 
@@ -111,6 +112,7 @@ public partial class RunControlViewModel : ObservableObject
         InstallChromiumCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(ProgressValue));
+        OnPropertyChanged(nameof(IsIndeterminate));
         OnPropertyChanged(nameof(CanStart));
         OnPropertyChanged(nameof(CanStop));
         OnPropertyChanged(nameof(HasRunFolder));
