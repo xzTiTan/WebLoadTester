@@ -126,6 +126,12 @@ public partial class LogDrawerViewModel : ObservableObject
         return line.Length > 220 ? line[..220] + "…" : line;
     }
 
+    public void ResetLines()
+    {
+        _allLines.Clear();
+        VisibleLines.Clear();
+    }
+
     [RelayCommand]
     private async System.Threading.Tasks.Task CopyAsync()
     {

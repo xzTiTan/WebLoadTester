@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,7 +18,8 @@ public partial class AppShellViewModel : ViewModelBase
     private readonly MainWindowViewModel _backend;
     private readonly UiLayoutState _layoutState;
     private readonly DispatcherTimer _layoutSaveDebounce;
-    private int _processedBackendLogCount;
+    private long _backendLogReceivedCount;
+    private long _logDrawerAppendedCount;
 
     public AppShellViewModel()
         : this(new MainWindowViewModel())
@@ -52,7 +55,7 @@ public partial class AppShellViewModel : ViewModelBase
         StartHotkeyCommand = new AsyncRelayCommand(StartFromHotkeyAsync);
         StopHotkeyCommand = new RelayCommand(StopFromHotkey);
 
-        AppendPendingLogs();
+        SyncExistingLogs();
         _backend.LogEntries.CollectionChanged += OnBackendLogEntriesChanged;
         _backend.PropertyChanged += OnBackendPropertyChanged;
         _backend.RepeatRunPrepared += OnRepeatRunPrepared;
@@ -184,7 +187,40 @@ public partial class AppShellViewModel : ViewModelBase
 
     private void OnBackendLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        AppendPendingLogs();
+        if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+        {
+            foreach (var item in e.NewItems.OfType<string>())
+            {
+                _backendLogReceivedCount++;
+                LogDrawer.Append(ToLogLine(item));
+                _logDrawerAppendedCount++;
+            }
+
+            if (_logDrawerAppendedCount > 0 && _logDrawerAppendedCount % 200 == 0)
+            {
+                Debug.WriteLine($"[LogPipeline] backend={_backendLogReceivedCount}, drawer={_logDrawerAppendedCount}");
+            }
+
+            return;
+        }
+
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            LogDrawer.ResetLines();
+            _backendLogReceivedCount = 0;
+            _logDrawerAppendedCount = 0;
+            SyncExistingLogs();
+            Debug.WriteLine($"[LogPipeline] reset handled, backend={_backendLogReceivedCount}, drawer={_logDrawerAppendedCount}");
+            return;
+        }
+
+        if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace or NotifyCollectionChangedAction.Move)
+        {
+            LogDrawer.ResetLines();
+            _backendLogReceivedCount = 0;
+            _logDrawerAppendedCount = 0;
+            SyncExistingLogs();
+        }
     }
 
     partial void OnIsRunningChanged(bool value)
@@ -193,12 +229,18 @@ public partial class AppShellViewModel : ViewModelBase
         OnPropertyChanged(nameof(StatusText));
     }
 
-    private void AppendPendingLogs()
+    private void SyncExistingLogs()
     {
-        while (_processedBackendLogCount < _backend.LogEntries.Count)
+        foreach (var raw in _backend.LogEntries)
         {
-            var raw = _backend.LogEntries[_processedBackendLogCount++];
+            _backendLogReceivedCount++;
             LogDrawer.Append(ToLogLine(raw));
+            _logDrawerAppendedCount++;
+        }
+
+        if (_logDrawerAppendedCount > 0)
+        {
+            Debug.WriteLine($"[LogPipeline] sync backend={_backendLogReceivedCount}, drawer={_logDrawerAppendedCount}");
         }
     }
 

@@ -612,12 +612,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void AppendLogLine(ObservableCollection<string> target, string line)
     {
-        const int maxLines = 500;
         target.Add(line);
-        while (target.Count > maxLines)
-        {
-            target.RemoveAt(0);
-        }
     }
 
     private bool ShouldShowLogLine(string line)
