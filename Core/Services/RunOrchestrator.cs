@@ -608,10 +608,10 @@ public class RunOrchestrator
             return stopRequested ? TestStatus.Stopped : TestStatus.Success;
         }
 
-        var failed = list.Count(r => !r.Success);
-        if (failed > 0)
+        var failed = list.Any(r => !r.Success);
+        if (failed)
         {
-            return failed == list.Count ? TestStatus.Failed : TestStatus.Partial;
+            return TestStatus.Failed;
         }
 
         return stopRequested ? TestStatus.Stopped : TestStatus.Success;

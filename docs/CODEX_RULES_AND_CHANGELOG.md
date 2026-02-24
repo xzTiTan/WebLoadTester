@@ -1,4 +1,4 @@
-v3.40 24.02.2026
+v3.41 24.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,12 @@ v3.40 24.02.2026
 ---
 
 # Changelog
+
+## v3.41 24.02.2026
+- Эпик #6: финализация статуса прогона в `RunOrchestrator` приведена к канону INDEX: при наличии хотя бы одного failure (и не cancel) итоговый статус `Failed`.
+- Устранено формирование `Partial` для смешанных результатов в `ResolveStatus` (обратная совместимость enum сохранена).
+- Добавлены unit-тесты на mixed results и на приоритет `Failed` при `Stop` после ошибки.
+- Обновлены версии `README.md` и `AGENTS.md`.
 
 ## v3.40 24.02.2026
 - Эпик #4: унифицирован путь браузеров Playwright на канон `{DataDirectory}/browsers` через `AppSettings.BrowsersDirectory`.

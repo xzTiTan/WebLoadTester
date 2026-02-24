@@ -121,6 +121,75 @@ public class OrchestratorSemanticsTests
         Assert.Equal(TestStatus.Canceled, report.Status);
     }
 
+
+    [Fact]
+    public async Task MixedResults_ReturnsFailed_NotPartial()
+    {
+        var harness = await CreateHarnessAsync(new RunProfile
+        {
+            Mode = RunMode.Iterations,
+            Iterations = 2,
+            Parallelism = 1,
+            TimeoutSeconds = 5
+        });
+
+        var module = new FakeSemanticsModule((ctx, _) => Task.FromResult(new ModuleResult
+        {
+            Status = TestStatus.Success,
+            Results = new List<ResultBase>
+            {
+                new CheckResult($"iter-{ctx.Iteration}")
+                {
+                    Success = ctx.Iteration == 1,
+                    DurationMs = 1,
+                    ErrorMessage = ctx.Iteration == 1 ? null : "boom"
+                }
+            }
+        }));
+
+        var report = await harness.Orchestrator.StartAsync(module, new FakeSettings(), harness.Context, CancellationToken.None);
+        Assert.Equal(TestStatus.Failed, report.Status);
+    }
+
+    [Fact]
+    public async Task StopRequested_WithAnyFailure_ReturnsFailed()
+    {
+        var stopRequested = 0;
+        var harness = await CreateHarnessAsync(new RunProfile
+        {
+            Mode = RunMode.Iterations,
+            Iterations = 10,
+            Parallelism = 1,
+            TimeoutSeconds = 5
+        }, () => Volatile.Read(ref stopRequested) == 1);
+
+        var module = new FakeSemanticsModule(async (ctx, ct) =>
+        {
+            if (ctx.Iteration == 1)
+            {
+                Interlocked.Exchange(ref stopRequested, 1);
+                return new ModuleResult
+                {
+                    Status = TestStatus.Failed,
+                    Results = new List<ResultBase>
+                    {
+                        new CheckResult("failed-first")
+                        {
+                            Success = false,
+                            DurationMs = 1,
+                            ErrorMessage = "stop-after-fail"
+                        }
+                    }
+                };
+            }
+
+            await Task.Delay(20, ct);
+            return SuccessResult($"iter-{ctx.Iteration}");
+        });
+
+        var report = await harness.Orchestrator.StartAsync(module, new FakeSettings(), harness.Context, CancellationToken.None);
+        Assert.Equal(TestStatus.Failed, report.Status);
+    }
     [Fact]
     public async Task FailedIteration_ReturnsFailedStatus()
     {
