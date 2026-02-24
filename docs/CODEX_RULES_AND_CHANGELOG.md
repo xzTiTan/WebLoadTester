@@ -1,4 +1,4 @@
-v3.31 18.02.2026
+v3.39 23.02.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,12 @@ v3.31 18.02.2026
 ---
 
 # Changelog
+
+## v3.39 23.02.2026 (docs anchors sync)
+- Восстановлены якорные документы: `docs/02_ARCHITECTURE_AND_DATA.md`, `docs/03_UI_CANON.md`, `docs/05_TEST_PLAN_AND_TRACEABILITY.md`.
+- Устранены битые ссылки на якорные документы в README/INDEX; обновлены ссылки на changelog до фактического `docs/CODEX_RULES_AND_CHANGELOG.md`.
+- `docs/INDEX.md` синхронизирован по метаданным версии/даты (без изменения продуктовых контрактов) и дополнен списком якорных документов.
+- В README/AGENTS добавлена явная ремарка о TO-BE каноне Playwright path (`{DataDirectory}/browsers`) и текущей AS-IS дельте, исправляемой отдельным эпиком.
 
 ## v3.39 23.02.2026
 - Усилена установка Chromium из UI-кнопки: `PlaywrightFactory.InstallChromiumAsync` теперь гарантирует локальный путь `AppContext.BaseDirectory/playwright-browsers`, выставляет `PLAYWRIGHT_BROWSERS_PATH`, логирует этапы и защищена от повторного параллельного запуска (`IsInstalling`, interlocked).

@@ -81,6 +81,9 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 
 > Если используете Release или publish, замените путь на соответствующий `bin/Release/net8.0` или папку публикации.
 
+> Канон TO-BE в `docs/INDEX.md` требует `{DataDirectory}/browsers`; если текущая реализация отличается, это считается известной дельтой AS-IS и исправляется отдельным эпиком (Playwright contract).
+
+
 ## Tests & verification
 - Минимум: `dotnet restore`, `dotnet build`.
 - `dotnet test` — только если добавлены тестовые проекты (в репозитории их нет).
@@ -88,7 +91,7 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 ## Document/versioning rule
 - При любом изменении файлов проекта **обновляйте версию и дату** в формате `vX.Y 24.01.2026`.
 - Минимум это относится к `README.md` и `AGENTS.md`.
-- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/06_CODEX_RULES_AND_CHANGELOG.md`.
+- При изменении README/AGENTS/якорных документов — обновляйте версию и добавляйте запись в `docs/CODEX_RULES_AND_CHANGELOG.md`.
 
 ## Safety / ethics
 Использовать приложение только с разрешения владельца системы и для легитимных целей. Не применять для атакующих сценариев.
