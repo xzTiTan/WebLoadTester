@@ -12,16 +12,16 @@ public static class ModuleCatalog
     private static readonly IReadOnlyDictionary<string, ModuleDescriptor> DescriptorsById =
         new ReadOnlyDictionary<string, ModuleDescriptor>(new Dictionary<string, ModuleDescriptor>(StringComparer.OrdinalIgnoreCase)
         {
-            ["ui.scenario"] = new("ui.scenario", "A1 UI сценарий", "Сценарные UI шаги с измерениями и скриншотами.", TestFamily.UiTesting, "UIСценарий"),
-            ["ui.snapshot"] = new("ui.snapshot", "A2 UI снимки", "Массовые скриншоты списка URL.", TestFamily.UiTesting, "UISнимки"),
-            ["ui.timing"] = new("ui.timing", "A3 UI тайминги", "Замеры времени загрузки страниц.", TestFamily.UiTesting, "UITайминги"),
-            ["http.functional"] = new("http.functional", "B1 HTTP функциональные", "Функциональные HTTP проверки с ассерциями.", TestFamily.HttpTesting, "HTTPФункциональные"),
-            ["http.performance"] = new("http.performance", "B2 HTTP производительность", "Управляемая HTTP-нагрузка (iterations/duration).", TestFamily.HttpTesting, "HTTPПроизводительность"),
-            ["http.assets"] = new("http.assets", "B3 HTTP ассеты", "Проверки статических HTTP-ассетов.", TestFamily.HttpTesting, "HTTPАссеты"),
-            ["net.diagnostics"] = new("net.diagnostics", "C1 DNS/TCP/TLS диагностика", "Диагностика DNS, TCP и TLS.", TestFamily.NetSec, "СетьДиагностика"),
-            ["net.availability"] = new("net.availability", "C2 монитор доступности", "Проверка доступности сервиса по интервалу.", TestFamily.NetSec, "СетьДоступность"),
-            ["net.security"] = new("net.security", "C3 security baseline", "Базовые security-проверки без атак.", TestFamily.NetSec, "SecurityBaseline"),
-            ["net.preflight"] = new("net.preflight", "C4 preflight", "Быстрый preflight DNS/TCP/TLS/HTTP.", TestFamily.NetSec, "Preflight")
+            ["ui.scenario"] = new("ui.scenario", "3. Регрессионное тестирование", "Повторный запуск пользовательского сценария с фиксацией результатов и сравнением шагов.", TestFamily.UiTesting, "UIСценарий"),
+            ["ui.snapshot"] = new("ui.snapshot", "4. Интерфейсное тестирование", "Проверка визуального состояния страниц и элементов через скриншоты.", TestFamily.UiTesting, "UISнимки"),
+            ["ui.timing"] = new("ui.timing", "5. Тестирование совместимости", "Проверка прохождения теста на наборах профилей браузера и viewport.", TestFamily.UiTesting, "UITайминги"),
+            ["http.functional"] = new("http.functional", "2. Функциональное тестирование", "Функциональные HTTP-проверки с ассерциями ожидаемого поведения.", TestFamily.HttpTesting, "HTTPФункциональные"),
+            ["http.performance"] = new("http.performance", "6. Тестирование производительности", "Измерение отклика Web-сайта под управляемой нагрузкой.", TestFamily.HttpTesting, "HTTPПроизводительность"),
+            ["http.assets"] = new("http.assets", "10. Тестирование ресурсов Web-сайта", "Проверка доступности и характеристик статических ресурсов сайта.", TestFamily.HttpTesting, "HTTPАссеты"),
+            ["net.diagnostics"] = new("net.diagnostics", "9. Диагностическое тестирование", "Диагностика DNS, TCP и TLS для локализации сетевых проблем.", TestFamily.NetSec, "СетьДиагностика"),
+            ["net.availability"] = new("net.availability", "8. Тестирование доступности", "Контроль доступности сервиса по интервалу в рамках прогона.", TestFamily.NetSec, "СетьДоступность"),
+            ["net.security"] = new("net.security", "7. Тестирование безопасности", "Базовые проверки конфигурации безопасности без атакующих действий.", TestFamily.NetSec, "SecurityBaseline"),
+            ["net.preflight"] = new("net.preflight", "1. Дымовое тестирование", "Быстрая предварительная проверка DNS/TCP/TLS/HTTP перед основными тестами.", TestFamily.NetSec, "Preflight")
         });
 
     public static bool TryGetByModuleId(string moduleId, out ModuleDescriptor descriptor)

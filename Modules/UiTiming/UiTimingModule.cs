@@ -20,8 +20,8 @@ namespace WebLoadTester.Modules.UiTiming;
 public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
-    public string DisplayName => "UI тайминги";
-    public string Description => "Измеряет время загрузки целевых URL и сохраняет навигационные метрики в DetailsJson.";
+    public string DisplayName => "Тестирование совместимости";
+    public string Description => "Проверяет прохождение теста по профилям совместимости браузера, viewport и user-agent.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 
@@ -43,20 +43,25 @@ public class UiTimingModule : ITestModule
         var errors = new List<string>();
         if (settings is not UiTimingSettings s)
         {
-            errors.Add("Некорректный тип настроек UI таймингов.");
+            errors.Add("Некорректный тип настроек тестирования совместимости.");
             return errors;
         }
 
         if (s.Targets.Count == 0)
         {
-            errors.Add("Добавьте хотя бы один URL для замеров.");
+            errors.Add("Добавьте хотя бы один профиль совместимости.");
         }
 
         for (var i = 0; i < s.Targets.Count; i++)
         {
             if (!Uri.TryCreate(s.Targets[i].Url, UriKind.Absolute, out _))
             {
-                errors.Add($"Цель {i + 1}: укажите абсолютный URL.");
+                errors.Add($"Профиль {i + 1}: укажите абсолютный URL.");
+            }
+
+            if (s.Targets[i].ViewportWidth < 320 || s.Targets[i].ViewportHeight < 240)
+            {
+                errors.Add($"Профиль {i + 1}: viewport должен быть не менее 320x240.");
             }
         }
 
@@ -120,7 +125,15 @@ public class UiTimingModule : ITestModule
 
             try
             {
-                var page = await browser.NewPageAsync();
+                var page = await browser.NewPageAsync(new BrowserNewPageOptions
+                {
+                    ViewportSize = new ViewportSize
+                    {
+                        Width = target.ViewportWidth > 0 ? target.ViewportWidth : 1366,
+                        Height = target.ViewportHeight > 0 ? target.ViewportHeight : 768
+                    },
+                    UserAgent = string.IsNullOrWhiteSpace(target.UserAgent) ? null : target.UserAgent
+                });
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
                     WaitUntil = waitUntilState,
@@ -135,13 +148,13 @@ public class UiTimingModule : ITestModule
                 }
 
                 var metrics = BuildTimingMetrics(sw.Elapsed.TotalMilliseconds, nav);
-                results.Add(new TimingResult($"Target: {GetDisplayName(target.Url)}")
+                results.Add(new TimingResult($"Профиль: {GetCompatibilityProfileName(target)}")
                 {
                     Url = target.Url,
                     Iteration = index,
                     Success = true,
                     DurationMs = sw.Elapsed.TotalMilliseconds,
-                    DetailsJson = JsonSerializer.Serialize(new { url = target.Url, metrics, screenshot = screenshotPath })
+                    DetailsJson = JsonSerializer.Serialize(new { url = target.Url, profile = BuildProfile(target, ctx.Profile.Headless), metrics, screenshot = screenshotPath })
                 });
             }
             catch (Exception ex)
@@ -163,8 +176,8 @@ public class UiTimingModule : ITestModule
                     }
                 }
 
-                ctx.Log.Error($"[UiTiming] Цель {index} failed: {ex.GetType().Name}: {ex.Message}");
-                results.Add(new TimingResult($"Target: {GetDisplayName(target.Url)}")
+                ctx.Log.Error($"[UiTiming] Профиль {index} failed: {ex.GetType().Name}: {ex.Message}");
+                results.Add(new TimingResult($"Профиль: {GetCompatibilityProfileName(target)}")
                 {
                     Url = target.Url,
                     Iteration = index,
@@ -175,6 +188,7 @@ public class UiTimingModule : ITestModule
                     DetailsJson = JsonSerializer.Serialize(new
                     {
                         url = target.Url,
+                        profile = BuildProfile(target, ctx.Profile.Headless),
                         metrics = new { navigationMs = sw.Elapsed.TotalMilliseconds },
                         screenshot = screenshotPath
                     })
@@ -183,7 +197,7 @@ public class UiTimingModule : ITestModule
             finally
             {
                 var done = Interlocked.Increment(ref completed);
-                ctx.Progress.Report(new ProgressUpdate(done, total, $"UI тайминги: {done}/{total}"));
+                ctx.Progress.Report(new ProgressUpdate(done, total, $"Совместимость: {done}/{total}"));
             }
         }
 
@@ -267,6 +281,25 @@ public class UiTimingModule : ITestModule
 
         var path = string.IsNullOrWhiteSpace(uri.AbsolutePath) || uri.AbsolutePath == "/" ? string.Empty : uri.AbsolutePath;
         return $"{uri.Host}{path}";
+    }
+
+    private static object BuildProfile(TimingTarget target, bool profileHeadless)
+    {
+        return new
+        {
+            browser = string.IsNullOrWhiteSpace(target.BrowserChannel) ? "chromium" : target.BrowserChannel,
+            viewport = $"{(target.ViewportWidth <= 0 ? 1366 : target.ViewportWidth)}x{(target.ViewportHeight <= 0 ? 768 : target.ViewportHeight)}",
+            userAgent = string.IsNullOrWhiteSpace(target.UserAgent) ? null : target.UserAgent,
+            headless = target.Headless ?? profileHeadless
+        };
+    }
+
+    private static string GetCompatibilityProfileName(TimingTarget target)
+    {
+        var name = string.IsNullOrWhiteSpace(target.Name) ? GetDisplayName(target.Url) : target.Name.Trim();
+        var browser = string.IsNullOrWhiteSpace(target.BrowserChannel) ? "chromium" : target.BrowserChannel.Trim();
+        var viewport = $"{(target.ViewportWidth <= 0 ? 1366 : target.ViewportWidth)}x{(target.ViewportHeight <= 0 ? 768 : target.ViewportHeight)}";
+        return $"{name} [{browser}; {viewport}]";
     }
 
     private static WaitUntilState ToWaitUntilState(UiWaitUntil value)

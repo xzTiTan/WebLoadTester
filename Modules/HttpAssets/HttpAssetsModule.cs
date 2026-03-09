@@ -17,7 +17,7 @@ namespace WebLoadTester.Modules.HttpAssets;
 public class HttpAssetsModule : ITestModule
 {
     public string Id => "http.assets";
-    public string DisplayName => "HTTP ассеты";
+    public string DisplayName => "Тестирование ресурсов Web-сайта";
     public string Description => "Проверяет статические ресурсы на доступность, тип, размер и задержку.";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpAssetsSettings);

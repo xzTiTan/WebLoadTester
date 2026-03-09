@@ -24,7 +24,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
         TargetRows = new ObservableCollection<TimingTargetRowViewModel>(_settings.Targets.Select(CreateRow));
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://www.google.com/" }));
+            TargetRows.Add(CreateRow(new TimingTarget { Name = "Базовый Chromium", Url = "https://www.google.com/" }));
         }
         TargetsEditor = new RowListEditorViewModel();
         TargetsEditor.Configure(AddTargetInternal, RemoveTargetInternal, MoveTargetUpInternal, MoveTargetDownInternal, DuplicateTargetInternal, GetTargetErrors,
@@ -35,7 +35,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI тайминги";
+    public override string Title => "Тестирование совместимости";
 
     public ObservableCollection<TimingTargetRowViewModel> TargetRows { get; }
     public RowListEditorViewModel TargetsEditor { get; }
@@ -67,7 +67,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
         if (TargetRows.Count == 0)
         {
-            TargetRows.Add(CreateRow(new TimingTarget { Url = "https://www.google.com/" }));
+            TargetRows.Add(CreateRow(new TimingTarget { Name = "Базовый Chromium", Url = "https://www.google.com/" }));
         }
 
         TargetsEditor.SetItems(TargetRows.Cast<object>());
@@ -83,7 +83,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
     private object? AddTargetInternal()
     {
-        var row = CreateRow(new TimingTarget { Url = "https://www.google.com/" });
+        var row = CreateRow(new TimingTarget { Name = "Новый профиль", Url = "https://www.google.com/" });
         var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
         if (insertIndex < 0 || insertIndex > TargetRows.Count)
         {
@@ -175,6 +175,11 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
         if (TimeoutSeconds < 1)
         {
             errors.Add("Таймаут в секундах должен быть >= 1.");
+        }
+
+        if (TargetRows.Any(r => r.ViewportWidth < 320 || r.ViewportHeight < 240))
+        {
+            errors.Add("Viewport профиля совместимости должен быть не менее 320x240.");
         }
 
         errors.AddRange(GetTargetErrors());

@@ -18,7 +18,7 @@ namespace WebLoadTester.Modules.HttpFunctional;
 public class HttpFunctionalModule : ITestModule
 {
     public string Id => "http.functional";
-    public string DisplayName => "HTTP функциональные проверки";
+    public string DisplayName => "Функциональное тестирование";
     public string Description => "Проверяет HTTP-эндпоинты на ожидаемые статусы и assert-условия MVP.";
     public TestFamily Family => TestFamily.HttpTesting;
     public Type SettingsType => typeof(HttpFunctionalSettings);

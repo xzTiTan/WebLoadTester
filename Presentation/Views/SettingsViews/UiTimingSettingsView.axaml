@@ -8,10 +8,17 @@
              x:DataType="vm:UiTimingSettingsViewModel">
     <UserControl.DataTemplates>
         <DataTemplate x:DataType="rows:TimingTargetRowViewModel">
-            <StackPanel Spacing="2" Margin="0,0,0,6">
+            <StackPanel Spacing="6" Margin="0,0,0,6">
                 <Grid ColumnDefinitions="160,4*" ColumnSpacing="6">
-                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя" />
+                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Профиль совместимости" />
                     <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://пример.рф" />
+                </Grid>
+                <Grid ColumnDefinitions="160,120,120,120,*" ColumnSpacing="6">
+                    <TextBox Grid.Column="0" Text="{Binding BrowserChannel, Mode=TwoWay}" Watermark="chromium" />
+                    <NumericUpDown Grid.Column="1" Minimum="320" Maximum="3840" Value="{Binding ViewportWidth, Mode=TwoWay}" />
+                    <NumericUpDown Grid.Column="2" Minimum="240" Maximum="2160" Value="{Binding ViewportHeight, Mode=TwoWay}" />
+                    <CheckBox Grid.Column="3" IsThreeState="True" IsChecked="{Binding Headless, Mode=TwoWay}" Content="Headless (пусто = из профиля)"/>
+                    <TextBox Grid.Column="4" Text="{Binding UserAgent, Mode=TwoWay}" Watermark="User-Agent (опционально)" />
                 </Grid>
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
@@ -21,14 +28,15 @@
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <TextBlock Text="Цели" Classes="section-title" />
+                <TextBlock Text="Профили совместимости" Classes="section-title" />
+                <TextBlock Text="Каждая строка запускается отдельно и формирует запись в матрице совместимости отчёта." Classes="field-hint" />
                 <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
             </StackPanel>
         </Border>
 
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <TextBlock Text="Параметры тайминга" Classes="section-title" />
+                <TextBlock Text="Общие параметры" Classes="section-title" />
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Событие загрузки" Classes="field-label" />

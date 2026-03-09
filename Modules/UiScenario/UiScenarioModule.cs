@@ -21,8 +21,8 @@ namespace WebLoadTester.Modules.UiScenario;
 public class UiScenarioModule : ITestModule
 {
     public string Id => "ui.scenario";
-    public string DisplayName => "UI сценарий";
-    public string Description => "Выполняет UI-сценарии с шагами Action/Selector/Value/Delay, фиксируя результаты и скриншоты.";
+    public string DisplayName => "Регрессионное тестирование";
+    public string Description => "Повторно выполняет сценарий шагов (Action/Selector/Value/DelayMs) для регрессионной проверки сайта.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiScenarioSettings);
 

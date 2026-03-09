@@ -18,7 +18,7 @@ namespace WebLoadTester.Modules.Availability;
 public class AvailabilityModule : ITestModule
 {
     public string Id => "net.availability";
-    public string DisplayName => "Доступность";
+    public string DisplayName => "Тестирование доступности";
     public string Description => "Проверяет доступность HTTP/TCP цели. Одна итерация = одна проверка.";
     public TestFamily Family => TestFamily.NetSec;
     public Type SettingsType => typeof(AvailabilitySettings);

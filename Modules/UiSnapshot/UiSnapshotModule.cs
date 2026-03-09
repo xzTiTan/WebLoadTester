@@ -21,8 +21,8 @@ namespace WebLoadTester.Modules.UiSnapshot;
 public class UiSnapshotModule : ITestModule
 {
     public string Id => "ui.snapshot";
-    public string DisplayName => "UI снимки";
-    public string Description => "Снимает скриншоты целевых URL/селекторов и сохраняет артефакты в runs/<RunId>/screenshots.";
+    public string DisplayName => "Интерфейсное тестирование";
+    public string Description => "Проверяет интерфейсные состояния страниц через скриншоты и артефакты запуска.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiSnapshotSettings);
 
