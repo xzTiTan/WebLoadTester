@@ -73,7 +73,7 @@
                         x:DataType="root:MainWindowViewModel"
                         IsVisible="{Binding ShowPlaywrightInstallBanner}">
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                        <TextBlock Text="Chromium (Playwright) не установлен. UI сценарий завершится ошибкой, пока браузер не установлен."
+                        <TextBlock Text="Chromium (Playwright) не установлен. UI-модули завершатся ошибкой, пока браузер не установлен."
                                    TextWrapping="Wrap" />
                         <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Right">
                             <Button Content="Установить Chromium (Playwright)"

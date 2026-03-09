@@ -56,7 +56,7 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase, IV
     }
 
     public override object Settings => _settings;
-    public override string Title => "HTTP функциональные проверки";
+    public override string Title => "Функциональное тестирование";
 
     public ObservableCollection<HttpFunctionalEndpointRowViewModel> EndpointRows { get; }
     public ObservableCollection<HttpHeaderRowViewModel> HeaderRows { get; }

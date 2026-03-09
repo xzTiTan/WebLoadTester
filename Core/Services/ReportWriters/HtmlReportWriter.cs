@@ -74,6 +74,16 @@ public class HtmlReportWriter
         }
         sb.AppendLine("</ul>");
 
+
+        var regressionComparison = ExtractRegressionComparison(report);
+        if (regressionComparison != null)
+        {
+            sb.AppendLine("<h3>Регрессионное сравнение</h3>");
+            sb.AppendLine("<table><tr><th>Baseline RunId</th><th>Сравнено шагов</th><th>Изменено шагов</th><th>Новые ошибки</th><th>Исправлено ошибок</th><th>Комментарий</th></tr>");
+            sb.AppendLine($"<tr><td>{Escape(regressionComparison.BaselineRunId ?? "—")}</td><td>{regressionComparison.ComparedSteps}</td><td>{regressionComparison.ChangedSteps}</td><td>{regressionComparison.NewErrors}</td><td>{regressionComparison.ResolvedErrors}</td><td>{Escape(regressionComparison.Message)}</td></tr>");
+            sb.AppendLine("</table>");
+        }
+
         sb.AppendLine("<h3>Матрица результатов</h3>");
         sb.AppendLine("<table><tr><th>Тип</th><th>Название</th><th>Успех</th><th>Длительность (мс)</th><th>Детали</th></tr>");
         foreach (var result in report.Results)
@@ -110,6 +120,34 @@ public class HtmlReportWriter
         }
         catch { }
         return detailsJson.Length > 220 ? detailsJson[..220] + "..." : detailsJson;
+    }
+
+    private static RegressionComparisonView? ExtractRegressionComparison(TestReport report)
+    {
+        var compareResult = report.Results
+            .OfType<RunResult>()
+            .FirstOrDefault(r => string.Equals(r.Name, "Регрессионное сравнение", StringComparison.OrdinalIgnoreCase));
+        if (compareResult == null || string.IsNullOrWhiteSpace(compareResult.DetailsJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(compareResult.DetailsJson);
+            var root = doc.RootElement;
+            return new RegressionComparisonView(
+                root.TryGetProperty("baselineRunId", out var baseline) ? baseline.GetString() : null,
+                root.TryGetProperty("comparedSteps", out var compared) && compared.TryGetInt32(out var c) ? c : 0,
+                root.TryGetProperty("changedSteps", out var changed) && changed.TryGetInt32(out var ch) ? ch : 0,
+                root.TryGetProperty("newErrors", out var ne) && ne.TryGetInt32(out var n) ? n : 0,
+                root.TryGetProperty("resolvedErrors", out var re) && re.TryGetInt32(out var r) ? r : 0,
+                root.TryGetProperty("message", out var msg) ? msg.GetString() ?? string.Empty : string.Empty);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static (string Label, string CssClass) GetSeverity(int failed, int total)
@@ -165,4 +203,6 @@ public class HtmlReportWriter
     };
 
     private static string Escape(string? value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+
+    private sealed record RegressionComparisonView(string? BaselineRunId, int ComparedSteps, int ChangedSteps, int NewErrors, int ResolvedErrors, string Message);
 }

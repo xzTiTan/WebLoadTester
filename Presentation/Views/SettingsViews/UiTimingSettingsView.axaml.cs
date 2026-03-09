@@ -3,7 +3,7 @@ using Avalonia.Controls;
 namespace WebLoadTester.Presentation.Views.SettingsViews;
 
 /// <summary>
-/// Представление настроек UI-таймингов.
+/// Представление настроек тестирования совместимости.
 /// </summary>
 public partial class UiTimingSettingsView : UserControl
 {

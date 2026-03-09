@@ -7,7 +7,7 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBlock Text="Базовая безопасность" Classes="section-title" />
+                    <TextBlock Text="Тестирование безопасности" Classes="section-title" />
                     <WrapPanel Grid.Column="1" Classes="wrap-gap">
                         <Button Content="Выбрать рекомендуемые" Command="{Binding SelectRecommendedCommand}" />
                     </WrapPanel>

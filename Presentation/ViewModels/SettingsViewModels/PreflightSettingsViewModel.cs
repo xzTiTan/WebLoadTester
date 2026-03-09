@@ -24,7 +24,7 @@ public partial class PreflightSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Предварительные проверки";
+    public override string Title => "Дымовое тестирование";
     public override void UpdateFrom(object settings)
     {
         if (settings is not PreflightSettings s)

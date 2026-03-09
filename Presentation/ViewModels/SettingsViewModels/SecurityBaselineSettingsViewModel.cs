@@ -23,7 +23,7 @@ public partial class SecurityBaselineSettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Базовая безопасность";
+    public override string Title => "Тестирование безопасности";
 
     public override void UpdateFrom(object settings)
     {

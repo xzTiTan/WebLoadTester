@@ -67,12 +67,12 @@ public class PreflightModule : ITestModule
         }
 
         var (runsWritable, runsDuration, runsMessage) = CheckWritableDirectory(ctx.Artifacts.RunsRoot);
-        results.Add(ToResult("Preflight runs directory", runsWritable, runsDuration, runsMessage, "Environment", JsonSerializer.SerializeToElement(new { path = ctx.Artifacts.RunsRoot }), ctx.WorkerId, ctx.Iteration));
-        ReportProgress("Preflight runs directory");
+        results.Add(ToResult("Дымовое: доступ к каталогу прогонов", runsWritable, runsDuration, runsMessage, "Environment", JsonSerializer.SerializeToElement(new { path = ctx.Artifacts.RunsRoot }), ctx.WorkerId, ctx.Iteration));
+        ReportProgress("Дымовое: каталог прогонов");
 
         var (sqliteOk, sqliteDuration, sqliteMessage) = await CheckSqliteAsync(ctx.Artifacts.RunsRoot, ct);
-        results.Add(ToResult("Preflight SQLite", sqliteOk, sqliteDuration, sqliteMessage, sqliteOk ? null : "Environment", JsonSerializer.SerializeToElement(new { database = "webloadtester.db" }), ctx.WorkerId, ctx.Iteration));
-        ReportProgress("Preflight SQLite");
+        results.Add(ToResult("Дымовое: доступ к SQLite", sqliteOk, sqliteDuration, sqliteMessage, sqliteOk ? null : "Environment", JsonSerializer.SerializeToElement(new { database = "webloadtester.db" }), ctx.WorkerId, ctx.Iteration));
+        ReportProgress("Дымовое: SQLite");
 
         var chromiumAvailable = PlaywrightFactory.HasBrowsersInstalled();
         var chromiumMessage = chromiumAvailable
@@ -87,24 +87,24 @@ public class PreflightModule : ITestModule
             if (s.CheckDns)
             {
                 var (success, duration, details) = await NetworkProbes.DnsProbeAsync(targetUri.Host, ct);
-                results.Add(ToResult("Preflight DNS", success, duration, success ? "DNS-проверка успешна." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, details }), ctx.WorkerId, ctx.Iteration));
-                ReportProgress("Preflight DNS");
+                results.Add(ToResult("Дымовое: DNS", success, duration, success ? "DNS-проверка успешна." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, details }), ctx.WorkerId, ctx.Iteration));
+                ReportProgress("Дымовое: DNS");
             }
 
             if (s.CheckTcp)
             {
                 var port = targetUri.Port == -1 ? (targetUri.Scheme == "https" ? 443 : 80) : targetUri.Port;
                 var (success, duration, details) = await NetworkProbes.TcpProbeAsync(targetUri.Host, port, ct);
-                results.Add(ToResult($"Preflight TCP :{port}", success, duration, success ? "TCP-подключение успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
-                ReportProgress("Preflight TCP");
+                results.Add(ToResult($"Дымовое: TCP :{port}", success, duration, success ? "TCP-подключение успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
+                ReportProgress("Дымовое: TCP");
             }
 
             if (s.CheckTls && targetUri.Scheme == "https")
             {
                 var port = targetUri.Port == -1 ? 443 : targetUri.Port;
                 var (success, duration, details, _) = await NetworkProbes.TlsProbeAsync(targetUri.Host, port, ct);
-                results.Add(ToResult($"Preflight TLS :{port}", success, duration, success ? "TLS-рукопожатие успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, details, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
-                ReportProgress("Preflight TLS");
+                results.Add(ToResult($"Дымовое: TLS :{port}", success, duration, success ? "TLS-рукопожатие успешно." : details, success ? null : "Network", JsonSerializer.SerializeToElement(new { host = targetUri.Host, port, details, latencyMs = duration }), ctx.WorkerId, ctx.Iteration));
+                ReportProgress("Дымовое: TLS");
             }
 
             if (s.CheckHttp)
@@ -115,7 +115,7 @@ public class PreflightModule : ITestModule
                     using var client = HttpClientProvider.Create(TimeSpan.FromSeconds(5));
                     var response = await client.GetAsync(target, ct);
                     sw.Stop();
-                    results.Add(ToResult("Preflight HTTP", response.IsSuccessStatusCode, sw.Elapsed.TotalMilliseconds,
+                    results.Add(ToResult("Дымовое: HTTP", response.IsSuccessStatusCode, sw.Elapsed.TotalMilliseconds,
                         response.IsSuccessStatusCode ? "HTTP-проверка успешна." : $"HTTP {(int)response.StatusCode}",
                         response.IsSuccessStatusCode ? null : "Http",
                         JsonSerializer.SerializeToElement(new { endpoint = target, statusCode = (int)response.StatusCode, latencyMs = sw.Elapsed.TotalMilliseconds }), ctx.WorkerId, ctx.Iteration));
@@ -123,10 +123,10 @@ public class PreflightModule : ITestModule
                 catch (Exception ex)
                 {
                     sw.Stop();
-                    results.Add(ToResult("Preflight HTTP", false, sw.Elapsed.TotalMilliseconds, ex.Message, "Network", JsonSerializer.SerializeToElement(new { endpoint = target, latencyMs = sw.Elapsed.TotalMilliseconds }), ctx.WorkerId, ctx.Iteration));
+                    results.Add(ToResult("Дымовое: HTTP", false, sw.Elapsed.TotalMilliseconds, ex.Message, "Network", JsonSerializer.SerializeToElement(new { endpoint = target, latencyMs = sw.Elapsed.TotalMilliseconds }), ctx.WorkerId, ctx.Iteration));
                 }
 
-                ReportProgress("Preflight HTTP");
+                ReportProgress("Дымовое: HTTP");
             }
         }
 

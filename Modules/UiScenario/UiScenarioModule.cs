@@ -357,10 +357,227 @@ public class UiScenarioModule : ITestModule
             }
         }
 
+        AppendRegressionComparisonResult(result, scenario, ctx, results);
+
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
     }
+
+    private static void AppendRegressionComparisonResult(ModuleResult result, UiScenarioSettings scenario, IRunContext ctx, List<ResultBase> currentResults)
+    {
+        var comparison = BuildRegressionComparison(scenario, ctx, currentResults);
+        var comparisonStatus = comparison.HasBaseline
+            ? comparison.NewErrors > 0
+                ? TestStatus.Failed
+                : TestStatus.Success
+            : TestStatus.Skipped;
+
+        var message = comparison.HasBaseline
+            ? $"Базовый прогон: {comparison.BaselineRunId}. Изменено шагов: {comparison.ChangedSteps}, новые ошибки: {comparison.NewErrors}, исправлено ошибок: {comparison.ResolvedErrors}."
+            : "Базовый прогон не найден: сравнение не выполнено.";
+
+        currentResults.Add(new RunResult("Регрессионное сравнение")
+        {
+            Success = comparisonStatus != TestStatus.Failed,
+            ErrorType = comparisonStatus == TestStatus.Failed ? "RegressionDiff" : null,
+            ErrorMessage = comparisonStatus == TestStatus.Failed ? message : null,
+            DurationMs = 0,
+            DetailsJson = JsonSerializer.Serialize(new
+            {
+                hasBaseline = comparison.HasBaseline,
+                baselineRunId = comparison.BaselineRunId,
+                baselineMissingReason = comparison.BaselineMissingReason,
+                changedSteps = comparison.ChangedSteps,
+                newErrors = comparison.NewErrors,
+                resolvedErrors = comparison.ResolvedErrors,
+                comparedSteps = comparison.ComparedSteps,
+                message
+            })
+        });
+
+        if (!comparison.HasBaseline)
+        {
+            ctx.Log.Info("[UiScenario] Регрессионное сравнение: базовый успешный прогон не найден.");
+            return;
+        }
+
+        ctx.Log.Info($"[UiScenario] Регрессионное сравнение выполнено. Baseline={comparison.BaselineRunId}, changed={comparison.ChangedSteps}, newErrors={comparison.NewErrors}, resolved={comparison.ResolvedErrors}.");
+    }
+
+    private static RegressionComparison BuildRegressionComparison(UiScenarioSettings scenario, IRunContext ctx, List<ResultBase> currentResults)
+    {
+        var fingerprint = BuildScenarioFingerprint(scenario);
+        var baseline = TryFindBaselineReport(ctx, fingerprint);
+        if (baseline == null)
+        {
+            return new RegressionComparison(false, null, "Нет успешного прогона с такой конфигурацией.", 0, 0, 0, 0);
+        }
+
+        var currentSteps = currentResults.OfType<StepResult>().ToList();
+        var compared = Math.Min(currentSteps.Count, baseline.StepSnapshots.Count);
+        var changed = 0;
+        var newErrors = 0;
+        var resolvedErrors = 0;
+        for (var i = 0; i < compared; i++)
+        {
+            var current = currentSteps[i];
+            var prev = baseline.StepSnapshots[i];
+            if (!string.Equals(current.Action, prev.Action, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(current.Selector ?? string.Empty, prev.Selector ?? string.Empty, StringComparison.Ordinal) ||
+                !string.Equals(current.Success.ToString(), prev.Success.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                changed++;
+            }
+
+            if (!prev.Success && current.Success)
+            {
+                resolvedErrors++;
+            }
+
+            if (prev.Success && !current.Success)
+            {
+                newErrors++;
+            }
+        }
+
+        changed += Math.Abs(currentSteps.Count - baseline.StepSnapshots.Count);
+        return new RegressionComparison(true, baseline.RunId, null, changed, newErrors, resolvedErrors, compared);
+    }
+
+    private static BaselineScenarioSnapshot? TryFindBaselineReport(IRunContext ctx, string fingerprint)
+    {
+        try
+        {
+            var runsRoot = ctx.Artifacts.RunsRoot;
+            if (string.IsNullOrWhiteSpace(runsRoot) || !Directory.Exists(runsRoot))
+            {
+                return null;
+            }
+
+            var candidates = new List<BaselineScenarioSnapshot>();
+            foreach (var runDir in Directory.EnumerateDirectories(runsRoot))
+            {
+                var runId = Path.GetFileName(runDir);
+                if (string.Equals(runId, ctx.RunId, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var reportPath = Path.Combine(runDir, "report.json");
+                if (!File.Exists(reportPath))
+                {
+                    continue;
+                }
+
+                using var doc = JsonDocument.Parse(File.ReadAllText(reportPath));
+                var root = doc.RootElement;
+                if (!root.TryGetProperty("moduleId", out var moduleId) || !string.Equals(moduleId.GetString(), "ui.scenario", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!root.TryGetProperty("status", out var status) || !string.Equals(status.GetString(), "Success", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!root.TryGetProperty("moduleSettings", out var moduleSettings))
+                {
+                    continue;
+                }
+
+                if (!string.Equals(BuildScenarioFingerprint(moduleSettings), fingerprint, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var finishedAt = DateTimeOffset.MinValue;
+                if (root.TryGetProperty("finishedAtUtc", out var finishedElement) && finishedElement.ValueKind == JsonValueKind.String)
+                {
+                    DateTimeOffset.TryParse(finishedElement.GetString(), out finishedAt);
+                }
+
+                var steps = new List<BaselineStepSnapshot>();
+                if (root.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in items.EnumerateArray())
+                    {
+                        if (!item.TryGetProperty("kind", out var kind) || !string.Equals(kind.GetString(), "Step", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        var action = string.Empty;
+                        var selector = string.Empty;
+                        if (item.TryGetProperty("extra", out var extra) && extra.ValueKind == JsonValueKind.Object)
+                        {
+                            if (extra.TryGetProperty("action", out var actionEl) && actionEl.ValueKind == JsonValueKind.String)
+                            {
+                                action = actionEl.GetString() ?? string.Empty;
+                            }
+
+                            if (extra.TryGetProperty("selector", out var selectorEl) && selectorEl.ValueKind == JsonValueKind.String)
+                            {
+                                selector = selectorEl.GetString() ?? string.Empty;
+                            }
+                        }
+
+                        var ok = item.TryGetProperty("ok", out var okEl) && okEl.ValueKind == JsonValueKind.True;
+                        steps.Add(new BaselineStepSnapshot(action, selector, ok));
+                    }
+                }
+
+                candidates.Add(new BaselineScenarioSnapshot(runId, finishedAt, steps));
+            }
+
+            return candidates
+                .OrderByDescending(c => c.FinishedAt)
+                .FirstOrDefault();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string BuildScenarioFingerprint(UiScenarioSettings settings)
+        => BuildScenarioFingerprint(JsonSerializer.SerializeToElement(settings));
+
+    private static string BuildScenarioFingerprint(JsonElement settingsElement)
+    {
+        var targetUrl = settingsElement.TryGetProperty("targetUrl", out var target) ? target.GetString() ?? string.Empty : string.Empty;
+        var timeoutMs = settingsElement.TryGetProperty("timeoutMs", out var timeout) && timeout.TryGetInt32(out var value) ? value : 0;
+
+        var steps = new List<string>();
+        if (settingsElement.TryGetProperty("steps", out var stepsEl) && stepsEl.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var step in stepsEl.EnumerateArray())
+            {
+                var action = step.TryGetProperty("action", out var a) ? a.ToString() : string.Empty;
+                var selector = step.TryGetProperty("selector", out var s) ? s.GetString() ?? string.Empty : string.Empty;
+                var val = step.TryGetProperty("value", out var v) ? v.GetString() ?? string.Empty : string.Empty;
+                var delay = step.TryGetProperty("delayMs", out var d) ? d.ToString() : "0";
+                steps.Add($"{action}|{selector}|{val}|{delay}");
+            }
+        }
+
+        return $"{NormalizeUrlForFingerprint(targetUrl)}||{timeoutMs}||{string.Join("||", steps)}";
+    }
+
+    private static string NormalizeUrlForFingerprint(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return string.Empty;
+        }
+
+        return url.Trim().ToLowerInvariant();
+    }
+
+    private sealed record BaselineScenarioSnapshot(string RunId, DateTimeOffset FinishedAt, IReadOnlyList<BaselineStepSnapshot> StepSnapshots);
+    private sealed record BaselineStepSnapshot(string Action, string Selector, bool Success);
+    private sealed record RegressionComparison(bool HasBaseline, string? BaselineRunId, string? BaselineMissingReason, int ChangedSteps, int NewErrors, int ResolvedErrors, int ComparedSteps);
 
     private static async Task TryWaitForNetworkIdleAsync(IPage page)
     {

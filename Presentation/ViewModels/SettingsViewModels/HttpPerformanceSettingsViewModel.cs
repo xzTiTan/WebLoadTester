@@ -50,7 +50,7 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase, I
     }
 
     public override object Settings => _settings;
-    public override string Title => "HTTP производительность";
+    public override string Title => "Тестирование производительности";
 
     public ObservableCollection<HttpPerformanceEndpointRowViewModel> EndpointRows { get; }
     public ObservableCollection<HttpHeaderRowViewModel> HeaderRows { get; }

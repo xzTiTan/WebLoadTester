@@ -40,7 +40,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI снимки";
+    public override string Title => "Интерфейсное тестирование";
 
     public ObservableCollection<SnapshotTargetRowViewModel> TargetRows { get; }
     public RowListEditorViewModel TargetsEditor { get; }

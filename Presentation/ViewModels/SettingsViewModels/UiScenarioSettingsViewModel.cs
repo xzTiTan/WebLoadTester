@@ -46,7 +46,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
     }
 
     public override object Settings => _settings;
-    public override string Title => "UI сценарий";
+    public override string Title => "Регрессионное тестирование";
 
     public ObservableCollection<UiStep> Steps { get; }
     public ObservableCollection<UiStepRowViewModel> StepRows { get; }

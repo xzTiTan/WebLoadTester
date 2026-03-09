@@ -48,6 +48,7 @@
         <Border Classes="section">
             <StackPanel Spacing="12">
                 <TextBlock Text="Параметры сценария" Classes="section-title" />
+                <TextBlock Text="Для регрессионного сравнения используется последний успешный прогон с той же конфигурацией шагов. Если baseline не найден — это будет явно указано в отчёте." TextWrapping="Wrap" Classes="field-hint" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Стартовый URL" Classes="field-label" />
                     <TextBox Classes="field-control"

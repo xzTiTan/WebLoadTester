@@ -49,7 +49,7 @@ public partial class NetDiagnosticsSettingsViewModel : SettingsViewModelBase, IV
     }
 
     public override object Settings => _settings;
-    public override string Title => "Сетевая диагностика";
+    public override string Title => "Диагностическое тестирование";
 
     public ObservableCollection<PortRowViewModel> PortRows { get; }
     public RowListEditorViewModel PortsEditor { get; }

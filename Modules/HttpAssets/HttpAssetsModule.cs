@@ -181,7 +181,7 @@ public class HttpAssetsModule : ITestModule
                 ContentType = contentType
             });
 
-            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Assets.Count, "HTTP ассеты"));
+            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Assets.Count, "Ресурсы Web-сайта"));
         }
 
         result.Results = results;

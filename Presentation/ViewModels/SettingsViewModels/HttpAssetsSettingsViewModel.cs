@@ -39,7 +39,7 @@ public partial class HttpAssetsSettingsViewModel : SettingsViewModelBase, IValid
     }
 
     public override object Settings => _settings;
-    public override string Title => "HTTP ассеты";
+    public override string Title => "Тестирование ресурсов Web-сайта";
 
     public ObservableCollection<AssetRowViewModel> AssetRows { get; }
     public RowListEditorViewModel AssetsEditor { get; }

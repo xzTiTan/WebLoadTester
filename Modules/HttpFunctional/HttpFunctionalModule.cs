@@ -235,7 +235,7 @@ public class HttpFunctionalModule : ITestModule
                 LatencyMs = sw.Elapsed.TotalMilliseconds
             });
 
-            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Endpoints.Count, "HTTP функциональные проверки"));
+            ctx.Progress.Report(new ProgressUpdate(i + 1, s.Endpoints.Count, "Функциональное тестирование"));
         }
 
         result.Results = results;

@@ -19,7 +19,7 @@ public partial class AvailabilitySettingsViewModel : SettingsViewModelBase
     }
 
     public override object Settings => _settings;
-    public override string Title => "Доступность";
+    public override string Title => "Тестирование доступности";
 
     public override void UpdateFrom(object settings)
     {
