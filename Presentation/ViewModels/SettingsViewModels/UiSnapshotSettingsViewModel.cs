@@ -25,6 +25,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         viewportWidth = _settings.ViewportWidth;
         viewportHeight = _settings.ViewportHeight;
         fullPage = _settings.FullPage;
+        screenshotFormat = NormalizeScreenshotFormat(_settings.ScreenshotFormat);
 
         TargetRows = new ObservableCollection<SnapshotTargetRowViewModel>(_settings.Targets.Select(CreateRow));
         if (TargetRows.Count == 0)
@@ -45,6 +46,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
     public ObservableCollection<SnapshotTargetRowViewModel> TargetRows { get; }
     public RowListEditorViewModel TargetsEditor { get; }
     public Array WaitUntilOptions { get; } = Enum.GetValues(typeof(UiWaitUntil));
+    public IReadOnlyList<string> ScreenshotFormatOptions { get; } = new[] { "png", "jpg" };
 
     [ObservableProperty] private SnapshotTargetRowViewModel? selectedTargetRow;
     [ObservableProperty] private UiWaitUntil waitUntil = UiWaitUntil.DomContentLoaded;
@@ -52,6 +54,7 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
     [ObservableProperty] private int? viewportWidth;
     [ObservableProperty] private int? viewportHeight;
     [ObservableProperty] private bool fullPage = true;
+    [ObservableProperty] private string screenshotFormat = "png";
 
     partial void OnSelectedTargetRowChanged(SnapshotTargetRowViewModel? value)
     {
@@ -87,7 +90,8 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         ViewportWidth = s.ViewportWidth;
         ViewportHeight = s.ViewportHeight;
         FullPage = s.FullPage;
-        _settings.ScreenshotFormat = "png";
+        ScreenshotFormat = NormalizeScreenshotFormat(s.ScreenshotFormat);
+        _settings.ScreenshotFormat = ScreenshotFormat;
         SyncTargets();
     }
 
@@ -101,6 +105,15 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         foreach (var row in TargetRows)
         {
             row.RefreshComputed();
+        }
+    }
+
+    partial void OnScreenshotFormatChanged(string value)
+    {
+        _settings.ScreenshotFormat = NormalizeScreenshotFormat(value);
+        if (!string.Equals(ScreenshotFormat, _settings.ScreenshotFormat, StringComparison.OrdinalIgnoreCase))
+        {
+            ScreenshotFormat = _settings.ScreenshotFormat;
         }
     }
 
@@ -220,11 +233,19 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
     private void SyncTargets()
     {
         _settings.Targets = TargetRows.Select(r => r.Model).ToList();
-        _settings.ScreenshotFormat = "png";
+        _settings.ScreenshotFormat = NormalizeScreenshotFormat(ScreenshotFormat);
         TargetsEditor.SetItems(TargetRows.Cast<object>());
         TargetsEditor.NotifyValidationChanged();
         TargetsEditor.RaiseCommandState();
         OnPropertyChanged(nameof(Settings));
+    }
+
+    private static string NormalizeScreenshotFormat(string? format)
+    {
+        return string.Equals(format, "jpeg", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(format, "jpg", StringComparison.OrdinalIgnoreCase)
+            ? "jpg"
+            : "png";
     }
 
     private static void NormalizeLegacyTargets(UiSnapshotSettings settings)

@@ -92,7 +92,7 @@ public class SecurityBaselineModule : ITestModule
                         : "HSTS отсутствует: пользователь может быть уязвим к downgrade-атакам при первом обращении.")
                     : "Проверка HSTS неприменима для HTTP-цели.",
                 present,
-                JsonSerializer.SerializeToElement(new { header = "Strict-Transport-Security", present })));
+                JsonSerializer.SerializeToElement(new { header = "Strict-Transport-Security", present, recommendation = "Включите HSTS для HTTPS-ответов." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "HSTS"));
         }
@@ -108,7 +108,7 @@ public class SecurityBaselineModule : ITestModule
                     ? "X-Content-Type-Options=nosniff защищает от MIME-sniffing атак."
                     : "Отсутствует nosniff: браузер может интерпретировать контент небезопасно.",
                 ok,
-                JsonSerializer.SerializeToElement(new { header = "X-Content-Type-Options", value })));
+                JsonSerializer.SerializeToElement(new { header = "X-Content-Type-Options", value, recommendation = "Добавьте заголовок X-Content-Type-Options: nosniff." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "X-Content-Type-Options"));
         }
@@ -124,7 +124,7 @@ public class SecurityBaselineModule : ITestModule
                     ? "Защита от встраивания включена (X-Frame-Options)."
                     : "Нет защиты от clickjacking: ресурс можно встроить во фрейм.",
                 ok,
-                JsonSerializer.SerializeToElement(new { header = "X-Frame-Options", value })));
+                JsonSerializer.SerializeToElement(new { header = "X-Frame-Options", value, recommendation = "Установите X-Frame-Options: DENY или SAMEORIGIN." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "Frame protection"));
         }
@@ -140,7 +140,7 @@ public class SecurityBaselineModule : ITestModule
                     ? "CSP задан: снижается риск XSS и загрузки нежелательных источников."
                     : "CSP отсутствует: браузер не ограничивает источники скриптов и контента.",
                 ok,
-                JsonSerializer.SerializeToElement(new { header = "Content-Security-Policy", value })));
+                JsonSerializer.SerializeToElement(new { header = "Content-Security-Policy", value, recommendation = "Настройте Content-Security-Policy с минимально необходимыми источниками." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "CSP"));
         }
@@ -156,7 +156,7 @@ public class SecurityBaselineModule : ITestModule
                     ? "Referrer-Policy задан: контролируется утечка URL в Referer."
                     : "Referrer-Policy отсутствует: возможна избыточная передача данных о переходах.",
                 ok,
-                JsonSerializer.SerializeToElement(new { header = "Referrer-Policy", value })));
+                JsonSerializer.SerializeToElement(new { header = "Referrer-Policy", value, recommendation = "Установите Referrer-Policy (например strict-origin-when-cross-origin)." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "Referrer-Policy"));
         }
@@ -172,7 +172,7 @@ public class SecurityBaselineModule : ITestModule
                     ? "Permissions-Policy ограничивает потенциально опасные браузерные API."
                     : "Permissions-Policy отсутствует: браузерные API не ограничены политикой сервера.",
                 ok,
-                JsonSerializer.SerializeToElement(new { header = "Permissions-Policy", value })));
+                JsonSerializer.SerializeToElement(new { header = "Permissions-Policy", value, recommendation = "Ограничьте доступ к чувствительным API через Permissions-Policy." })));
             current++;
             ctx.Progress.Report(new ProgressUpdate(current, Math.Max(checks, 1), "Permissions-Policy"));
         }
@@ -270,7 +270,7 @@ public class SecurityBaselineModule : ITestModule
                 ErrorType = errorKind,
                 ErrorMessage = message,
                 Severity = "Fail",
-                Metrics = JsonSerializer.SerializeToElement(new { reason = message })
+                Metrics = JsonSerializer.SerializeToElement(new { reason = message, recommendation = GetRecommendation(checkName) })
             });
         }
     }
@@ -285,6 +285,22 @@ public class SecurityBaselineModule : ITestModule
         if (s.CheckPermissionsPolicy) yield return "Permissions-Policy";
         if (s.CheckRedirectHttpToHttps) yield return "HTTP→HTTPS redirect";
         if (s.CheckCookieFlags) yield return "Cookie flags";
+    }
+
+    private static string GetRecommendation(string checkName)
+    {
+        return checkName switch
+        {
+            "HSTS" => "Включите заголовок Strict-Transport-Security для HTTPS-ответов.",
+            "X-Content-Type-Options" => "Добавьте X-Content-Type-Options: nosniff.",
+            "Frame protection" => "Добавьте X-Frame-Options или эквивалентную защиту в CSP.",
+            "Content-Security-Policy" => "Настройте Content-Security-Policy с ограничением источников.",
+            "Referrer-Policy" => "Установите Referrer-Policy с безопасным значением.",
+            "Permissions-Policy" => "Ограничьте доступ к браузерным API через Permissions-Policy.",
+            "HTTP→HTTPS redirect" => "Настройте принудительный редирект с HTTP на HTTPS.",
+            "Cookie flags" => "Установите Secure/HttpOnly/SameSite для критичных cookie.",
+            _ => "Проверьте конфигурацию безопасности и повторите прогон."
+        };
     }
 
     private static CheckResult CreateBaselineResult(string name, string severity, string message, bool ok, JsonElement metrics)

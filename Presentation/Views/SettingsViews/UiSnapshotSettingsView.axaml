@@ -56,6 +56,13 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                    <TextBlock Text="Формат скриншота" Classes="field-label" />
+                    <ComboBox Classes="field-control"
+                              ItemsSource="{Binding ScreenshotFormatOptions}"
+                              SelectedItem="{Binding ScreenshotFormat, Mode=TwoWay}" />
+                </Grid>
+
+                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Ширина области" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="0" Maximum="4096" Value="{Binding ViewportWidth, Mode=TwoWay}" />
                 </Grid>

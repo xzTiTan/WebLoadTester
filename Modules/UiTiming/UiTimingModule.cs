@@ -15,7 +15,7 @@ using WebLoadTester.Infrastructure.Playwright;
 namespace WebLoadTester.Modules.UiTiming;
 
 /// <summary>
-/// Модуль замеров времени загрузки страниц через Playwright.
+/// Модуль проверки совместимости профилей браузера/viewport через Playwright.
 /// </summary>
 public class UiTimingModule : ITestModule
 {

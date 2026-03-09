@@ -84,6 +84,9 @@ public class HtmlReportWriter
             sb.AppendLine("</table>");
         }
 
+        AppendHttpPerformanceSection(report, sb);
+        AppendSecurityChecksSection(report, sb);
+
         sb.AppendLine("<h3>Матрица результатов</h3>");
         sb.AppendLine("<table><tr><th>Тип</th><th>Название</th><th>Успех</th><th>Длительность (мс)</th><th>Детали</th></tr>");
         foreach (var result in report.Results)
@@ -192,6 +195,93 @@ public class HtmlReportWriter
         return list;
     }
 
+    private static void AppendHttpPerformanceSection(TestReport report, StringBuilder sb)
+    {
+        if (!string.Equals(report.ModuleId, "http.performance", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var endpointRows = report.Results.OfType<EndpointResult>().ToList();
+        if (endpointRows.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine("<h3>Производительность по endpoint</h3>");
+        sb.AppendLine("<table><tr><th>Endpoint</th><th>Requests</th><th>Success</th><th>Failures</th><th>Avg (мс)</th><th>Min/Max (мс)</th><th>P95/P99 (мс)</th></tr>");
+
+        foreach (var group in endpointRows.GroupBy(r => string.IsNullOrWhiteSpace(r.Name) ? "(без имени)" : r.Name))
+        {
+            var samples = group.Select(g => g.DurationMs).OrderBy(x => x).ToList();
+            var requests = samples.Count;
+            var success = group.Count(g => g.Success);
+            var failures = requests - success;
+            var avg = requests == 0 ? 0 : samples.Average();
+            var min = requests == 0 ? 0 : samples.First();
+            var max = requests == 0 ? 0 : samples.Last();
+            var p95 = Percentile(samples, 0.95);
+            var p99 = Percentile(samples, 0.99);
+
+            sb.AppendLine($"<tr><td>{Escape(group.Key)}</td><td>{requests}</td><td>{success}</td><td>{failures}</td><td>{avg:F2}</td><td>{min:F2} / {max:F2}</td><td>{p95:F2} / {p99:F2}</td></tr>");
+        }
+
+        sb.AppendLine("</table>");
+    }
+
+    private static void AppendSecurityChecksSection(TestReport report, StringBuilder sb)
+    {
+        if (!string.Equals(report.ModuleId, "net.security", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var checks = report.Results.OfType<CheckResult>().ToList();
+        if (checks.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine("<h3>Детализация проверок безопасности</h3>");
+        sb.AppendLine("<table><tr><th>Проверка</th><th>Результат</th><th>Severity</th><th>Сообщение</th><th>Рекомендация</th></tr>");
+        foreach (var check in checks)
+        {
+            var recommendation = ExtractRecommendation(check.Metrics);
+            sb.AppendLine($"<tr><td>{Escape(check.Name)}</td><td>{(check.Success ? "Pass" : "Fail")}</td><td>{Escape(check.Severity)}</td><td>{Escape(check.ErrorMessage)}</td><td>{Escape(recommendation)}</td></tr>");
+        }
+
+        sb.AppendLine("</table>");
+    }
+
+    private static string ExtractRecommendation(JsonElement? metrics)
+    {
+        if (metrics is not { } element || element.ValueKind != JsonValueKind.Object)
+        {
+            return string.Empty;
+        }
+
+        if (element.TryGetProperty("recommendation", out var recommendation) && recommendation.ValueKind == JsonValueKind.String)
+        {
+            return recommendation.GetString() ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    private static double Percentile(IReadOnlyList<double> sorted, double p)
+    {
+        if (sorted.Count == 0)
+        {
+            return 0;
+        }
+
+        var clamped = Math.Clamp(p, 0, 1);
+        var index = (int)Math.Ceiling(clamped * sorted.Count) - 1;
+        if (index < 0) index = 0;
+        if (index >= sorted.Count) index = sorted.Count - 1;
+        return sorted[index];
+    }
+
     private static string ResolveItemSeverity(string? errorType, string? errorMessage)
     {
         var source = $"{errorType} {errorMessage}";
@@ -205,6 +295,7 @@ public class HtmlReportWriter
         RunResult run => run.Name,
         StepResult step => step.Name,
         CheckResult check => check.Name,
+        EndpointResult endpoint => endpoint.Name,
         PreflightResult preflight => preflight.Name,
         ProbeResult probe => probe.Name,
         TimingResult timing => timing.Name,

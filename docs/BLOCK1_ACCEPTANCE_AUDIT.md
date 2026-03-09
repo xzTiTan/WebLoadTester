@@ -206,3 +206,7 @@
 3. `http.performance`: добавить в HTML отчёт явную таблицу метрик по endpoint (avg/p95/p99/fail-rate).
 4. `net.security`: при global request fail формировать synthetic per-check результаты с одинаковой причиной.
 5. UX/doc pass: унифицировать заголовки верхних вкладок с учебной номенклатурой без архитектурных изменений.
+
+
+## Update after Fix Pack 1 (v3.50 09.03.2026)
+- P1 по `ui.scenario`/`ui.snapshot`/`http.performance`/`net.security` закрываются изменениями Fix Pack 1; требуется runtime-подтверждение на среде с .NET SDK и Playwright.

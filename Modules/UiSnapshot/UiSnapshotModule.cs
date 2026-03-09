@@ -71,9 +71,9 @@ public class UiSnapshotModule : ITestModule
             errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
-        if (!string.Equals(s.ScreenshotFormat, "png", StringComparison.OrdinalIgnoreCase))
+        if (!TryResolveScreenshotFormat(s.ScreenshotFormat, out _, out _))
         {
-            errors.Add("ScreenshotFormat для MVP должен быть png.");
+            errors.Add("ScreenshotFormat должен быть png, jpg или jpeg.");
         }
 
         var hasWidth = s.ViewportWidth.GetValueOrDefault() > 0;
@@ -125,6 +125,7 @@ public class UiSnapshotModule : ITestModule
 
         var results = new List<ResultBase>();
         var waitUntilState = ToWaitUntilState(s.WaitUntil);
+        _ = TryResolveScreenshotFormat(s.ScreenshotFormat, out var screenshotType, out var extension);
         var timeoutMs = Math.Max(1, s.TimeoutSeconds) * 1000;
         var total = s.Targets.Count;
         var completed = 0;
@@ -153,7 +154,7 @@ public class UiSnapshotModule : ITestModule
                     Timeout = timeoutMs
                 });
 
-                var fileName = BuildSnapshotFileName(targetIndex, target.Name, target.Url);
+                var fileName = BuildSnapshotFileName(targetIndex, target.Name, target.Url, extension);
                 var relativePath = BuildScreenshotRelativePath(ctx, fileName);
                 if (!string.IsNullOrWhiteSpace(target.Selector))
                 {
@@ -164,7 +165,7 @@ public class UiSnapshotModule : ITestModule
                         Timeout = timeoutMs
                     });
 
-                    var bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions { Type = ScreenshotType.Png });
+                    var bytes = await locator.ScreenshotAsync(new LocatorScreenshotOptions { Type = screenshotType });
                     selectorFound = true;
                     screenshotPath = await ctx.Artifacts.SaveScreenshotAsync(ctx.RunId, relativePath, bytes);
                 }
@@ -172,7 +173,7 @@ public class UiSnapshotModule : ITestModule
                 {
                     var bytes = await page.ScreenshotAsync(new PageScreenshotOptions
                     {
-                        Type = ScreenshotType.Png,
+                        Type = screenshotType,
                         FullPage = s.FullPage
                     });
 
@@ -258,11 +259,28 @@ public class UiSnapshotModule : ITestModule
         return File.Exists(path) ? new FileInfo(path).Length : null;
     }
 
-    private static string BuildSnapshotFileName(int index, string? name, string url)
+    private static string BuildSnapshotFileName(int index, string? name, string url, string extension)
     {
         var source = string.IsNullOrWhiteSpace(name) ? BuildHostPathToken(url) : name;
         var safe = SanitizeFileToken(source);
-        return $"snap_{index:00}_{safe}_{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}.png";
+        return $"snap_{index:00}_{safe}_{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}.{extension}";
+    }
+
+    private static bool TryResolveScreenshotFormat(string? format, out ScreenshotType type, out string extension)
+    {
+        var normalized = (format ?? "png").Trim().ToLowerInvariant();
+        switch (normalized)
+        {
+            case "jpg":
+            case "jpeg":
+                type = ScreenshotType.Jpeg;
+                extension = "jpg";
+                return true;
+            default:
+                type = ScreenshotType.Png;
+                extension = "png";
+                return normalized == "png" || string.IsNullOrWhiteSpace(normalized);
+        }
     }
 
     private static string GetTargetDisplayName(SnapshotTarget target)

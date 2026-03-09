@@ -375,7 +375,7 @@ public class UiScenarioModule : ITestModule
 
         var message = comparison.HasBaseline
             ? $"Базовый прогон: {comparison.BaselineRunId}. Изменено шагов: {comparison.ChangedSteps}, новые ошибки: {comparison.NewErrors}, исправлено ошибок: {comparison.ResolvedErrors}."
-            : "Базовый прогон не найден: сравнение не выполнено.";
+            : $"{(string.IsNullOrWhiteSpace(comparison.BaselineMissingReason) ? "Базовый прогон не найден: сравнение не выполнено." : comparison.BaselineMissingReason)}";
 
         currentResults.Add(new RunResult("Регрессионное сравнение")
         {
@@ -408,10 +408,11 @@ public class UiScenarioModule : ITestModule
     private static RegressionComparison BuildRegressionComparison(UiScenarioSettings scenario, IRunContext ctx, List<ResultBase> currentResults)
     {
         var fingerprint = BuildScenarioFingerprint(scenario);
-        var baseline = TryFindBaselineReport(ctx, fingerprint);
+        var baselineLookup = TryFindBaselineReport(ctx, fingerprint);
+        var baseline = baselineLookup.Snapshot;
         if (baseline == null)
         {
-            return new RegressionComparison(false, null, "Нет успешного прогона с такой конфигурацией.", 0, 0, 0, 0);
+            return new RegressionComparison(false, null, baselineLookup.MissingReason, 0, 0, 0, 0);
         }
 
         var currentSteps = currentResults.OfType<StepResult>().ToList();
@@ -445,32 +446,34 @@ public class UiScenarioModule : ITestModule
         return new RegressionComparison(true, baseline.RunId, null, changed, newErrors, resolvedErrors, compared);
     }
 
-    private static BaselineScenarioSnapshot? TryFindBaselineReport(IRunContext ctx, string fingerprint)
+    private static BaselineLookupResult TryFindBaselineReport(IRunContext ctx, string fingerprint)
     {
-        try
+        var runsRoot = ctx.Artifacts.RunsRoot;
+        if (string.IsNullOrWhiteSpace(runsRoot) || !Directory.Exists(runsRoot))
         {
-            var runsRoot = ctx.Artifacts.RunsRoot;
-            if (string.IsNullOrWhiteSpace(runsRoot) || !Directory.Exists(runsRoot))
+            return new BaselineLookupResult(null, "Каталог прогонов недоступен: baseline не найден.");
+        }
+
+        var candidates = new List<BaselineScenarioSnapshot>();
+        var brokenReports = 0;
+        foreach (var runDir in Directory.EnumerateDirectories(runsRoot))
+        {
+            var runId = Path.GetFileName(runDir);
+            if (string.Equals(runId, ctx.RunId, StringComparison.OrdinalIgnoreCase))
             {
-                return null;
+                continue;
             }
 
-            var candidates = new List<BaselineScenarioSnapshot>();
-            foreach (var runDir in Directory.EnumerateDirectories(runsRoot))
+            var reportPath = Path.Combine(runDir, "report.json");
+            if (!File.Exists(reportPath))
             {
-                var runId = Path.GetFileName(runDir);
-                if (string.Equals(runId, ctx.RunId, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                var reportPath = Path.Combine(runDir, "report.json");
-                if (!File.Exists(reportPath))
-                {
-                    continue;
-                }
-
-                using var doc = JsonDocument.Parse(File.ReadAllText(reportPath));
+            JsonDocument? doc = null;
+            try
+            {
+                doc = JsonDocument.Parse(File.ReadAllText(reportPath));
                 var root = doc.RootElement;
                 if (!root.TryGetProperty("moduleId", out var moduleId) || !string.Equals(moduleId.GetString(), "ui.scenario", StringComparison.OrdinalIgnoreCase))
                 {
@@ -530,15 +533,29 @@ public class UiScenarioModule : ITestModule
 
                 candidates.Add(new BaselineScenarioSnapshot(runId, finishedAt, steps));
             }
+            catch
+            {
+                brokenReports++;
+            }
+            finally
+            {
+                doc?.Dispose();
+            }
+        }
 
-            return candidates
-                .OrderByDescending(c => c.FinishedAt)
-                .FirstOrDefault();
-        }
-        catch
+        var baseline = candidates
+            .OrderByDescending(c => c.FinishedAt)
+            .FirstOrDefault();
+
+        if (baseline != null)
         {
-            return null;
+            return new BaselineLookupResult(baseline, null);
         }
+
+        var reason = brokenReports > 0
+            ? "Эталонный успешный прогон не найден: часть исторических report.json повреждена или неполна."
+            : "Эталонный успешный прогон не найден для текущей конфигурации.";
+        return new BaselineLookupResult(null, reason);
     }
 
     private static string BuildScenarioFingerprint(UiScenarioSettings settings)
@@ -577,6 +594,7 @@ public class UiScenarioModule : ITestModule
 
     private sealed record BaselineScenarioSnapshot(string RunId, DateTimeOffset FinishedAt, IReadOnlyList<BaselineStepSnapshot> StepSnapshots);
     private sealed record BaselineStepSnapshot(string Action, string Selector, bool Success);
+    private sealed record BaselineLookupResult(BaselineScenarioSnapshot? Snapshot, string? MissingReason);
     private sealed record RegressionComparison(bool HasBaseline, string? BaselineRunId, string? BaselineMissingReason, int ChangedSteps, int NewErrors, int ResolvedErrors, int ComparedSteps);
 
     private static async Task TryWaitForNetworkIdleAsync(IPage page)

@@ -1,4 +1,4 @@
-v3.49 09.03.2026
+v3.50 09.03.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,13 @@ v3.49 09.03.2026
 ---
 
 # Changelog
+
+## v3.50 09.03.2026
+- Fix Pack 1: `ui.scenario` — усилен fallback baseline compare: повреждённые/неполные historical `report.json` больше не ломают регрессионное сравнение; в отчёт выводится явная причина отсутствия baseline.
+- Fix Pack 1: `ui.snapshot` — `ScreenshotFormat` реально применяется (png/jpg): формат скриншота влияет на encoder Playwright, расширение файла и сохраняемые артефакты; в UI добавлен выбор формата.
+- Fix Pack 1: `http.performance` — в `report.html` добавлена per-endpoint performance секция (requests/success/failures/avg/min/max/p95/p99) без изменения JSON-контракта.
+- Fix Pack 1: `net.security` — добавлена человекочитаемая детализация security-checks в `report.html`; при global fail сохраняется разложение по checks с рекомендациями.
+- Небольшой P2 polish: в `ui.timing` обновлено summary-описание модуля на совместимость-семантику.
 
 ## v3.49 09.03.2026
 - Block 1: выполнен приемочный статический аудит 10 модулей по цепочке UI→VM→Settings→Run→Report→Runs→Repeat-run без изменения модульной логики и оркестрации.
