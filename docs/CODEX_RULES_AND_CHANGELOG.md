@@ -1,4 +1,4 @@
-v3.44 24.02.2026
+v3.48 09.03.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,12 @@ v3.44 24.02.2026
 ---
 
 # Changelog
+
+## v3.48 09.03.2026
+- Block 0: выполнен repo hygiene и аудит solution/project ссылок; `WebLoadTester.Tests` подтверждён как существующий и оставлен в `WebLoadTester.sln`, битых project references не обнаружено.
+- Синхронизированы версии/даты в `README.md`, `AGENTS.md`, `docs/INDEX.md`, якорных документах `docs/02`, `docs/03`, `docs/05` и `WebLoadTester.csproj` (`InformationalVersion`).
+- `docs/Каркас.md` переведён в явный legacy/archive-статус: добавлен крупный дисклеймер, документ выведен из роли активного source of truth; в `docs/INDEX.md` ссылка помечена как архивная.
+- Устранено противоречие в `AGENTS.md` по тестам: зафиксировано, что `dotnet test` применим при наличии `WebLoadTester.Tests` (текущий случай).
 
 ## v3.44 24.02.2026
 - Эпик #9: синхронизирован канон Tab navigation во время Running — верхние вкладки остаются доступными для просмотра, блокируются только смена модуля и редактирование/сохранение конфигурации.

@@ -1,4 +1,4 @@
-v3.47 09.03.2026
+v3.48 09.03.2026
 
 # WebLoadTester — инструкция для код-агента
 
@@ -86,7 +86,7 @@ PLAYWRIGHT_BROWSERS_PATH=bin/Debug/net8.0/browsers \
 
 ## Tests & verification
 - Минимум: `dotnet restore`, `dotnet build`.
-- `dotnet test` — только если добавлены тестовые проекты (в репозитории их нет).
+- `dotnet test` — запускать, если тестовый проект `WebLoadTester.Tests` присутствует в solution (сейчас присутствует).
 
 ## Document/versioning rule
 - При любом изменении файлов проекта **обновляйте версию и дату** в формате `vX.Y 24.01.2026`.
