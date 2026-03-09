@@ -89,7 +89,7 @@ public class HtmlReportWriter
         foreach (var result in report.Results)
         {
             var css = result.Success ? string.Empty : " class='fail'";
-            sb.AppendLine($"<tr{css}><td>{Escape(result.Kind)}</td><td>{Escape(GetResultName(result))}</td><td>{(result.Success ? "Да" : "Нет")}</td><td>{result.DurationMs:F2}</td><td>{Escape(RenderDetails(result.DetailsJson))}</td></tr>");
+            sb.AppendLine($"<tr{css}><td>{Escape(result.Kind)}</td><td>{Escape(GetResultName(result))}</td><td>{(result.Success ? "Да" : "Нет")}</td><td>{result.DurationMs:F2}</td><td>{Escape(RenderDetails(GetDetailsJson(result)))}</td></tr>");
         }
         sb.AppendLine("</table>");
 
@@ -121,6 +121,15 @@ public class HtmlReportWriter
         catch { }
         return detailsJson.Length > 220 ? detailsJson[..220] + "..." : detailsJson;
     }
+
+
+    private static string? GetDetailsJson(ResultBase result) => result switch
+    {
+        RunResult run => run.DetailsJson,
+        StepResult step => step.DetailsJson,
+        TimingResult timing => timing.DetailsJson,
+        _ => null
+    };
 
     private static RegressionComparisonView? ExtractRegressionComparison(TestReport report)
     {

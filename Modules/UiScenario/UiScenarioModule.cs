@@ -371,7 +371,7 @@ public class UiScenarioModule : ITestModule
             ? comparison.NewErrors > 0
                 ? TestStatus.Failed
                 : TestStatus.Success
-            : TestStatus.Skipped;
+            : TestStatus.Partial;
 
         var message = comparison.HasBaseline
             ? $"Базовый прогон: {comparison.BaselineRunId}. Изменено шагов: {comparison.ChangedSteps}, новые ошибки: {comparison.NewErrors}, исправлено ошибок: {comparison.ResolvedErrors}."

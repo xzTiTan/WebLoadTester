@@ -125,15 +125,10 @@ public class UiTimingModule : ITestModule
 
             try
             {
-                var page = await browser.NewPageAsync(new BrowserNewPageOptions
-                {
-                    ViewportSize = new ViewportSize
-                    {
-                        Width = target.ViewportWidth > 0 ? target.ViewportWidth : 1366,
-                        Height = target.ViewportHeight > 0 ? target.ViewportHeight : 768
-                    },
-                    UserAgent = string.IsNullOrWhiteSpace(target.UserAgent) ? null : target.UserAgent
-                });
+                var page = await browser.NewPageAsync();
+                await page.SetViewportSizeAsync(
+                    target.ViewportWidth > 0 ? target.ViewportWidth : 1366,
+                    target.ViewportHeight > 0 ? target.ViewportHeight : 768);
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
                     WaitUntil = waitUntilState,
