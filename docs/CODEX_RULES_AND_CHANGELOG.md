@@ -1,4 +1,4 @@
-v3.48 09.03.2026
+v3.49 09.03.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,12 @@ v3.48 09.03.2026
 ---
 
 # Changelog
+
+## v3.49 09.03.2026
+- Block 1: выполнен приемочный статический аудит 10 модулей по цепочке UI→VM→Settings→Run→Report→Runs→Repeat-run без изменения модульной логики и оркестрации.
+- Добавлен единый отчет `docs/BLOCK1_ACCEPTANCE_AUDIT.md` с помодульными статусами (OK/PARTIAL/FAIL), дефектами P0/P1/P2 и планом следующего fix-pack.
+- Зафиксированы ограничения среды: runtime-верификация (`dotnet restore/build/test`) недоступна из-за отсутствия .NET SDK в контейнере.
+- Обновлены версии `README.md` и `AGENTS.md`.
 
 ## v3.48 09.03.2026
 - Block 0: выполнен repo hygiene и аудит solution/project ссылок; `WebLoadTester.Tests` подтверждён как существующий и оставлен в `WebLoadTester.sln`, битых project references не обнаружено.
