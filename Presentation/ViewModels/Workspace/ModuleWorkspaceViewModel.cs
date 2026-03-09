@@ -67,6 +67,12 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private string moduleDisplayName = string.Empty;
 
     [ObservableProperty]
+    private string moduleDescription = string.Empty;
+
+    [ObservableProperty]
+    private string moduleSettingsTitle = "Настройки модуля";
+
+    [ObservableProperty]
     private string moduleId = string.Empty;
 
     [ObservableProperty]
@@ -100,6 +106,10 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         _currentModule = descriptor?.Backend.Module;
         ModuleSettingsVm = descriptor?.ModuleSettingsVm;
         ModuleDisplayName = descriptor?.DisplayName ?? string.Empty;
+        ModuleDescription = descriptor?.Description ?? string.Empty;
+        ModuleSettingsTitle = string.IsNullOrWhiteSpace(descriptor?.DisplayName)
+            ? "Настройки модуля"
+            : $"Настройки {descriptor!.DisplayName.ToLowerInvariant()}";
         ModuleId = descriptor?.ModuleId ?? string.Empty;
         TestCase.SetModuleConfig(descriptor?.ModuleConfig);
         RunProfile.IsUiFamily = descriptor?.ModuleId.StartsWith("ui.") == true;

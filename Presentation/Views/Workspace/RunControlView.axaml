@@ -11,7 +11,10 @@
                 <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" />
             </WrapPanel>
 
-            <TextBlock Text="{Binding StatusText}" />
+            <TextBlock Text="{Binding RunStateLabel, StringFormat=Состояние: {0}}" FontSize="15" />
+            <TextBlock Text="{Binding StatusText}" Classes="muted" />
+            <TextBlock Text="{Binding ProgressDetails}" Classes="muted" />
+            <TextBlock Text="{Binding LastRunInfo}" Classes="muted" />
             <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsIndeterminate}" />
 
             <ItemsControl ItemsSource="{Binding ValidationErrors}" IsVisible="{Binding HasValidationErrors}">

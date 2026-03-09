@@ -307,11 +307,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
-                _logBus.Info($"[NavGuard] Tab change blocked: module={SelectedModule?.Module.Id}, dirty={currentModuleConfig.IsDirty}");
-                _isApplyingGuardedSelection = true;
-                SelectedTabIndex = _lastConfirmedTabIndex;
-                _isApplyingGuardedSelection = false;
-                return;
+                _logBus.Warn($"[NavGuard] Несохранённые изменения отменены при смене вкладки: module={SelectedModule?.Module.Id}");
             }
         }
 
@@ -367,6 +363,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Interlocked.Exchange(ref _stopRequested, 0);
         var runId = Guid.NewGuid().ToString("N");
         var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
+        _logBus.Info($"[Run] Старт прогона: runId={runId}, module={moduleItem.Module.Id}, mode={profile.Mode}, parallelism={profile.Parallelism}");
         var notifier = CreateTelegramNotifier();
         var logSink = new CompositeLogSink(new ILogSink[]
         {
@@ -406,6 +403,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 _ => "Статус: завершено с ошибками"
             };
             await SendTelegramResultAsync(runId, () => _telegramRunNotifier.NotifyCompletionAsync(report, profile.TelegramEnabled, _runCts.Token));
+            _logBus.Info($"[Run] Завершение прогона: runId={runId}, status={report.Status}, finishedAt={report.FinishedAt:O}");
         }
         catch (OperationCanceledException)
         {
@@ -436,6 +434,10 @@ public partial class MainWindowViewModel : ViewModelBase
             ProgressPercent = 0;
             ProgressText = finalProgressText;
             StatusText = finalStatusText;
+            if (!IsRunning && !finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal))
+            {
+                _logBus.Info($"[Run] Результаты доступны: runs/{runId}/report.json, runs/{runId}/report.html");
+            }
             RunStage = finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal) ? "Ошибка" : "Готово";
             _runCts?.Dispose();
             _runCts = null;
@@ -568,7 +570,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Проверяет, можно ли запускать модуль.
     /// </summary>
-    private bool CanStart() => !IsRunning && !HasStartValidationErrors && GetSelectedModule() != null;
+    private bool CanStart() => !IsRunning && GetSelectedModule() != null;
     /// <summary>
     /// Проверяет, можно ли остановить выполнение.
     /// </summary>
@@ -722,8 +724,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
-                _logBus.Info($"[NavGuard] Settings blocked: module={selected.Module.Id}, dirty={selected.ModuleConfig.IsDirty}");
-                return;
+                _logBus.Warn($"[NavGuard] Несохранённые изменения отменены перед открытием настроек: module={selected.Module.Id}");
             }
 
             return;
@@ -895,11 +896,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!allowed)
             {
-                _logBus.Info($"[NavGuard] Module change blocked: from={previous.Module.Id}, to={requested.Module.Id}, dirty={previous.ModuleConfig.IsDirty}");
-                _isApplyingGuardedSelection = true;
-                family.SelectedModule = previous;
-                _isApplyingGuardedSelection = false;
-                return;
+                _logBus.Warn($"[NavGuard] Несохранённые изменения отменены при смене модуля: from={previous.Module.Id}, to={requested.Module.Id}");
             }
         }
 

@@ -35,6 +35,11 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     private bool _suppressDirtyTracking;
     private bool _suppressSelectionGuard;
+    private bool _hasRestoreSnapshot;
+    private object? _lastSavedModuleSettings;
+    private RunParametersDto _lastSavedRunParameters = new();
+    private string _lastSavedUserName = string.Empty;
+    private string _lastSavedDescription = string.Empty;
     private ModuleConfigSummary? _lastSelectedConfig;
     private Func<Task>? _pendingGuardAction;
 
@@ -231,6 +236,7 @@ public partial class ModuleConfigViewModel : ObservableObject
             _suppressSelectionGuard = false;
             _lastSelectedConfig = SelectedConfig;
             IsDirty = false;
+            CaptureRestoreSnapshot();
             StatusMessage = $"Конфигурация сохранена: {finalName}.";
         }
         catch (Exception ex)
@@ -316,14 +322,14 @@ public partial class ModuleConfigViewModel : ObservableObject
 
     public bool TryRequestLeave(Func<Task> continueAction)
     {
-        if (!IsDirty)
+        if (IsDirty)
         {
-            _ = continueAction();
-            return true;
+            RestoreLastSavedOrDefault();
+            StatusMessage = "Несохранённые изменения отменены.";
         }
 
-        RequestDirtyGuard(continueAction);
-        return false;
+        _ = continueAction();
+        return true;
     }
 
     public async Task<TestCase?> EnsureConfigForRunAsync()
@@ -353,6 +359,7 @@ public partial class ModuleConfigViewModel : ObservableObject
         ConfigValidation.ResetVisibility();
         ModuleValidation.ResetVisibility();
         RevalidateConfigAndModule();
+        CaptureRestoreSnapshot();
     }
 
     private async Task LoadSelectedCoreAsync()
@@ -396,7 +403,57 @@ public partial class ModuleConfigViewModel : ObservableObject
         RevalidateConfigAndModule();
         IsDirty = false;
         _lastSelectedConfig = SelectedConfig;
+        CaptureRestoreSnapshot();
         StatusMessage = "Конфигурация загружена.";
+    }
+
+
+    private void RestoreLastSavedOrDefault()
+    {
+        _suppressDirtyTracking = true;
+        try
+        {
+            if (_hasRestoreSnapshot && _lastSavedModuleSettings != null)
+            {
+                _settings.UpdateFrom(_lastSavedModuleSettings);
+                _runProfile.UpdateFrom(_lastSavedRunParameters);
+                UserName = _lastSavedUserName;
+                Description = _lastSavedDescription;
+            }
+            else
+            {
+                var defaults = _module.CreateDefaultSettings();
+                _settings.UpdateFrom(defaults);
+                _runProfile.UpdateFrom(new RunParametersDto());
+                UserName = string.Empty;
+                Description = string.Empty;
+            }
+        }
+        finally
+        {
+            _suppressDirtyTracking = false;
+        }
+
+        ConfigValidation.ResetVisibility();
+        ModuleValidation.ResetVisibility();
+        RevalidateConfigAndModule();
+        IsDirty = false;
+        IsDirtyPromptVisible = false;
+    }
+
+    private void CaptureRestoreSnapshot()
+    {
+        _lastSavedModuleSettings = CloneSettings(_settings.Settings);
+        _lastSavedRunParameters = _runProfile.BuildRunParameters();
+        _lastSavedUserName = UserName;
+        _lastSavedDescription = Description;
+        _hasRestoreSnapshot = true;
+    }
+
+    private object? CloneSettings(object settings)
+    {
+        var json = JsonSerializer.Serialize(settings, _jsonOptions);
+        return JsonSerializer.Deserialize(json, _module.SettingsType, _jsonOptions);
     }
 
     private void RequestDirtyGuard(Func<Task> continueAction)

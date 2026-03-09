@@ -34,6 +34,11 @@ public partial class RunControlViewModel : ObservableObject
     public IAsyncRelayCommand InstallChromiumCommand { get; }
 
     public string StatusText => _backend.StatusText;
+    public string RunStateLabel => BuildRunStateLabel();
+    public string ProgressDetails => $"{_backend.ProgressText} · Этап: {_backend.RunStage}";
+    public string LastRunInfo => _backend.SelectedModule?.LastReport is { } report
+        ? $"RunId: {report.RunId} · Завершён: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
+        : "RunId: —";
     public double ProgressValue => _backend.ProgressPercent;
     public bool IsIndeterminate => _backend.IsProgressIndeterminate;
     public bool CanStart => StartCommand.CanExecute(null);
@@ -87,7 +92,6 @@ public partial class RunControlViewModel : ObservableObject
     private bool CanStartRun()
     {
         return _workspace.IsIdle
-               && _workspace.WorkspaceValidationErrors.Count == 0
                && _backend.StartCommand.CanExecute(null);
     }
 
@@ -106,11 +110,28 @@ public partial class RunControlViewModel : ObservableObject
         }
     }
 
+    private string BuildRunStateLabel()
+    {
+        if (_backend.IsRunning)
+        {
+            return "Выполняется";
+        }
+
+        if (_backend.StatusText.Contains("успешно", StringComparison.OrdinalIgnoreCase)) return "Завершён успешно";
+        if (_backend.StatusText.Contains("ошиб", StringComparison.OrdinalIgnoreCase)) return "Завершён с ошибками";
+        if (_backend.StatusText.Contains("останов", StringComparison.OrdinalIgnoreCase)) return "Остановлен";
+        if (_backend.StatusText.Contains("отмен", StringComparison.OrdinalIgnoreCase)) return "Остановлен";
+        return "Готов к запуску";
+    }
+
     private void RaiseState()
     {
         StartCommand.NotifyCanExecuteChanged();
         InstallChromiumCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(RunStateLabel));
+        OnPropertyChanged(nameof(ProgressDetails));
+        OnPropertyChanged(nameof(LastRunInfo));
         OnPropertyChanged(nameof(ProgressValue));
         OnPropertyChanged(nameof(IsIndeterminate));
         OnPropertyChanged(nameof(CanStart));

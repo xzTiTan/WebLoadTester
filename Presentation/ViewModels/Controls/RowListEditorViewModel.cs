@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -59,10 +60,27 @@ public partial class RowListEditorViewModel : ObservableObject
 
     public void SetItems(IEnumerable<object> items)
     {
-        Items.Clear();
-        foreach (var item in items)
+        var next = items as IList<object> ?? items.ToList();
+        var same = next.Count == Items.Count;
+        if (same)
         {
-            Items.Add(item);
+            for (var i = 0; i < next.Count; i++)
+            {
+                if (!ReferenceEquals(next[i], Items[i]))
+                {
+                    same = false;
+                    break;
+                }
+            }
+        }
+
+        if (!same)
+        {
+            Items.Clear();
+            foreach (var item in next)
+            {
+                Items.Add(item);
+            }
         }
 
         if (SelectedItem != null && !Items.Contains(SelectedItem))

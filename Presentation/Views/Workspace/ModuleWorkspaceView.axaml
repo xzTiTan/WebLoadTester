@@ -33,22 +33,41 @@
                     <TextBlock Text="Выберите модуль слева"
                                IsVisible="{Binding Workspace.HasModuleSelected, Converter={StaticResource BooleanNotConverter}}" />
 
-                    <StackPanel IsVisible="{Binding Workspace.HasModuleSelected}" Spacing="4">
-                        <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
-
-                        <TextBlock Text="Тест-кейс" />
-                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
-                            <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                    <StackPanel IsVisible="{Binding Workspace.HasModuleSelected}" Spacing="8">
+                        <Border Classes="section">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Что это за тест" Classes="section-title" />
+                                <TextBlock Text="{Binding Workspace.ModuleDisplayName}" FontSize="16" />
+                                <TextBlock Text="{Binding Workspace.ModuleDescription}" TextWrapping="Wrap" Classes="muted" />
+                            </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Профиль запуска" />
-                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
-                            <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                        <Border Classes="section" IsEnabled="{Binding Workspace.IsIdle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding Workspace.ModuleSettingsTitle}" Classes="section-title" />
+                                <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                            </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Настройки модуля" />
-                        <Border IsEnabled="{Binding Workspace.IsIdle}" Padding="0,2,0,0">
-                            <ContentControl Content="{Binding Workspace.ModuleSettingsVm}" />
+                        <Border Classes="section" IsEnabled="{Binding Workspace.IsIdle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Параметры запуска" Classes="section-title" />
+                                <views:RunProfileView DataContext="{Binding Workspace.RunProfile}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="section" IsEnabled="{Binding Workspace.IsIdle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Конфигурация (сохранение/загрузка)" Classes="section-title" />
+                                <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="section">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Старт / Стоп / Статус / Результаты" Classes="section-title" />
+                                <views:RunControlView DataContext="{Binding Workspace.RunControl}" />
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </StackPanel>
