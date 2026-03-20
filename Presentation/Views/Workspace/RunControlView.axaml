@@ -8,8 +8,8 @@
         <TextBlock Text="Запустите тест, наблюдайте статус и сразу откройте результаты после завершения." Classes="field-hint" TextWrapping="Wrap" />
         <StackPanel Spacing="6">
             <WrapPanel Orientation="Horizontal">
-                <Button x:Name="StartButton" Content="Start" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,6,0" />
-                <Button Content="Stop" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" Margin="0,0,6,0" />
+                <Button x:Name="StartButton" Content="Старт" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,6,0" />
+                <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" Margin="0,0,6,0" />
                 <Button Content="Перейти в прогоны" Command="{Binding OpenRunsTabCommand}" TabIndex="2" />
             </WrapPanel>
 

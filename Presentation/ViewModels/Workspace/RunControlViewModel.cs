@@ -38,9 +38,11 @@ public partial class RunControlViewModel : ObservableObject
     public string RunStateLabel => BuildRunStateLabel();
     public string ProgressDetails => _backend.ProgressText;
     public string StageDetails => $"Этап: {_backend.RunStage}";
-    public string RunIdLine => !string.IsNullOrWhiteSpace(_backend.CurrentRunId) && _backend.CurrentRunId != "—"
+    public string RunIdLine => _backend.IsRunning && !string.IsNullOrWhiteSpace(_backend.CurrentRunId) && _backend.CurrentRunId != "—"
         ? $"RunId: {_backend.CurrentRunId}"
-        : "RunId: —";
+        : _backend.SelectedModule?.LastReport is { } report
+            ? $"RunId: {report.RunId}"
+            : "RunId: —";
     public string FinishedAtLine => _backend.SelectedModule?.LastReport is { } report
         ? $"Завершён: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
         : "Завершён: —";
