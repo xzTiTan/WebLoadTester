@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
+using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels;
 
@@ -108,6 +109,13 @@ public partial class RunProfileViewModel : ObservableObject
 
     partial void OnParallelismChanged(int value)
     {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 1);
+        if (normalized != value)
+        {
+            Parallelism = normalized;
+            return;
+        }
+
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
         Revalidate();
@@ -115,6 +123,13 @@ public partial class RunProfileViewModel : ObservableObject
 
     partial void OnDurationSecondsChanged(int value)
     {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 60);
+        if (normalized != value)
+        {
+            DurationSeconds = normalized;
+            return;
+        }
+
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
         Revalidate();
@@ -122,19 +137,54 @@ public partial class RunProfileViewModel : ObservableObject
 
     partial void OnIterationsChanged(int value)
     {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 10);
+        if (normalized != value)
+        {
+            Iterations = normalized;
+            return;
+        }
+
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
         Revalidate();
     }
     partial void OnModeChanged(RunMode value)
     {
+        var normalized = InputValueGuard.NormalizeEnum(value, RunMode.Iterations);
+        if (!Equals(normalized, value))
+        {
+            Mode = normalized;
+            return;
+        }
+
         OnPropertyChanged(nameof(IsIterationsMode));
         OnPropertyChanged(nameof(IsDurationMode));
         Revalidate();
     }
 
-    partial void OnTimeoutSecondsChanged(int value) => Revalidate();
-    partial void OnPauseBetweenIterationsMsChanged(int value) => Revalidate();
+    partial void OnTimeoutSecondsChanged(int value)
+    {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 30);
+        if (normalized != value)
+        {
+            TimeoutSeconds = normalized;
+            return;
+        }
+
+        Revalidate();
+    }
+
+    partial void OnPauseBetweenIterationsMsChanged(int value)
+    {
+        var normalized = InputValueGuard.NormalizeInt(value, 0, 0);
+        if (normalized != value)
+        {
+            PauseBetweenIterationsMs = normalized;
+            return;
+        }
+
+        Revalidate();
+    }
 
     partial void OnSelectedProfileChanged(RunProfile? value)
     {

@@ -4,16 +4,21 @@
              x:Class="WebLoadTester.Presentation.Views.Workspace.RunControlView"
              x:DataType="vm:RunControlViewModel">
     <StackPanel Spacing="6">
-        <TextBlock Text="Управление запуском" />
+        <TextBlock Text="Управление запуском" Classes="section-title" />
+        <TextBlock Text="Запустите тест, наблюдайте статус и сразу откройте результаты после завершения." Classes="field-hint" TextWrapping="Wrap" />
         <StackPanel Spacing="6">
             <WrapPanel Orientation="Horizontal">
-                <Button x:Name="StartButton" Content="Старт" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,6,0" />
-                <Button Content="Стоп" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" />
+                <Button x:Name="StartButton" Content="Start" TabIndex="0" Command="{Binding StartCommand}" IsEnabled="{Binding CanStart}" Margin="0,0,6,0" />
+                <Button Content="Stop" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}" TabIndex="1" Margin="0,0,6,0" />
+                <Button Content="Перейти в прогоны" Command="{Binding OpenRunsTabCommand}" TabIndex="2" />
             </WrapPanel>
 
             <TextBlock Text="{Binding RunStateLabel, StringFormat=Состояние: {0}}" FontSize="15" />
             <TextBlock Text="{Binding StatusText}" Classes="muted" />
             <TextBlock Text="{Binding ProgressDetails}" Classes="muted" />
+            <TextBlock Text="{Binding StageDetails}" Classes="muted" />
+            <TextBlock Text="{Binding RunIdLine}" Classes="muted" />
+            <TextBlock Text="{Binding FinishedAtLine}" Classes="muted" />
             <TextBlock Text="{Binding LastRunInfo}" Classes="muted" />
             <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsIndeterminate}" />
 
@@ -31,11 +36,11 @@
                     IsVisible="{Binding HasChromiumValidationError}" />
 
             <WrapPanel Orientation="Horizontal">
-                <Button Content="Папка" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,6,0" TabIndex="10" />
+                <Button Content="Открыть папку прогона" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,6,0" TabIndex="10" />
                 <Button Content="Открыть HTML" Command="{Binding OpenHtmlReportCommand}" IsEnabled="{Binding HasHtmlReport}" Margin="0,0,6,0" TabIndex="11" />
                 <Button Content="Открыть JSON" Command="{Binding OpenJsonReportCommand}" IsEnabled="{Binding HasJsonReport}" TabIndex="12" />
             </WrapPanel>
-            <TextBlock Text="Артефактов нет" IsVisible="{Binding HasRunFolder, Converter={StaticResource BooleanNotConverter}}" />
+            <TextBlock Text="После завершения здесь появятся быстрые действия для открытия результатов." IsVisible="{Binding HasRunFolder, Converter={StaticResource BooleanNotConverter}}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

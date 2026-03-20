@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.UiTiming;
+using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiTiming;
 
@@ -34,30 +35,61 @@ public partial class TimingTargetRowViewModel : ObservableObject
             ? "Профиль: viewport должен быть не менее 320x240"
             : string.Empty;
 
-    partial void OnNameChanged(string value) => Model.Name = value;
+    partial void OnNameChanged(string value) => Model.Name = InputValueGuard.NormalizeOptionalText(value);
     partial void OnUrlChanged(string value)
     {
-        Model.Url = value;
+        var normalized = InputValueGuard.NormalizeOptionalText(value);
+        if (normalized != value)
+        {
+            Url = normalized;
+            return;
+        }
+
+        Model.Url = normalized;
         OnPropertyChanged(nameof(RowErrorText));
         OnPropertyChanged(nameof(HasRowError));
     }
 
-    partial void OnBrowserChannelChanged(string value) => Model.BrowserChannel = value;
+    partial void OnBrowserChannelChanged(string value)
+    {
+        var normalized = InputValueGuard.NormalizeRequiredText(value, "chromium");
+        if (normalized != value)
+        {
+            BrowserChannel = normalized;
+            return;
+        }
+
+        Model.BrowserChannel = normalized;
+    }
     partial void OnViewportWidthChanged(int value)
     {
-        Model.ViewportWidth = value;
+        var normalized = InputValueGuard.NormalizeInt(value, 320, 1366);
+        if (normalized != value)
+        {
+            ViewportWidth = normalized;
+            return;
+        }
+
+        Model.ViewportWidth = normalized;
         OnPropertyChanged(nameof(RowErrorText));
         OnPropertyChanged(nameof(HasRowError));
     }
 
     partial void OnViewportHeightChanged(int value)
     {
-        Model.ViewportHeight = value;
+        var normalized = InputValueGuard.NormalizeInt(value, 240, 768);
+        if (normalized != value)
+        {
+            ViewportHeight = normalized;
+            return;
+        }
+
+        Model.ViewportHeight = normalized;
         OnPropertyChanged(nameof(RowErrorText));
         OnPropertyChanged(nameof(HasRowError));
     }
 
-    partial void OnUserAgentChanged(string value) => Model.UserAgent = value;
+    partial void OnUserAgentChanged(string value) => Model.UserAgent = InputValueGuard.NormalizeOptionalText(value);
     partial void OnHeadlessChanged(bool? value) => Model.Headless = value;
 
     public TimingTargetRowViewModel Clone() => new(new TimingTarget

@@ -31,14 +31,22 @@ public partial class RunControlViewModel : ObservableObject
     public IRelayCommand OpenRunFolderCommand => _backend.OpenLatestRunFolderCommand;
     public IRelayCommand OpenHtmlReportCommand => _backend.OpenLatestHtmlCommand;
     public IRelayCommand OpenJsonReportCommand => _backend.OpenLatestJsonCommand;
+    public IRelayCommand OpenRunsTabCommand => _backend.OpenRunsTabCommand;
     public IAsyncRelayCommand InstallChromiumCommand { get; }
 
     public string StatusText => _backend.StatusText;
     public string RunStateLabel => BuildRunStateLabel();
-    public string ProgressDetails => $"{_backend.ProgressText} · Этап: {_backend.RunStage}";
-    public string LastRunInfo => _backend.SelectedModule?.LastReport is { } report
-        ? $"RunId: {report.RunId} · Завершён: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
+    public string ProgressDetails => _backend.ProgressText;
+    public string StageDetails => $"Этап: {_backend.RunStage}";
+    public string RunIdLine => !string.IsNullOrWhiteSpace(_backend.CurrentRunId) && _backend.CurrentRunId != "—"
+        ? $"RunId: {_backend.CurrentRunId}"
         : "RunId: —";
+    public string FinishedAtLine => _backend.SelectedModule?.LastReport is { } report
+        ? $"Завершён: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
+        : "Завершён: —";
+    public string LastRunInfo => _backend.SelectedModule?.LastReport is { } report
+        ? $"Последний прогон: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
+        : "Последний прогон: —";
     public double ProgressValue => _backend.ProgressPercent;
     public bool IsIndeterminate => _backend.IsProgressIndeterminate;
     public bool CanStart => StartCommand.CanExecute(null);
@@ -131,6 +139,9 @@ public partial class RunControlViewModel : ObservableObject
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(RunStateLabel));
         OnPropertyChanged(nameof(ProgressDetails));
+        OnPropertyChanged(nameof(StageDetails));
+        OnPropertyChanged(nameof(RunIdLine));
+        OnPropertyChanged(nameof(FinishedAtLine));
         OnPropertyChanged(nameof(LastRunInfo));
         OnPropertyChanged(nameof(ProgressValue));
         OnPropertyChanged(nameof(IsIndeterminate));

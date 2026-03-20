@@ -90,6 +90,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private TaskCompletionSource<bool>? _runFinishedTcs;
     private Task CurrentRunFinishedTask => _runFinishedTcs?.Task ?? Task.CompletedTask;
+    private string _lastLoggedStageMessage = string.Empty;
 
     public event Action? RepeatRunPrepared;
 
@@ -205,6 +206,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private string runStage = "Ожидание";
+
+    [ObservableProperty]
+    private string currentRunId = "—";
 
     [ObservableProperty]
     private bool isRunning;
@@ -362,6 +366,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _runCts = new CancellationTokenSource();
         Interlocked.Exchange(ref _stopRequested, 0);
         var runId = Guid.NewGuid().ToString("N");
+        CurrentRunId = runId;
         var profile = RunProfile.BuildProfileSnapshot(RunProfile.SelectedProfile?.Id ?? Guid.Empty);
         _logBus.Info($"[Run] Старт прогона: runId={runId}, module={moduleItem.Module.Id}, mode={profile.Mode}, parallelism={profile.Parallelism}");
         var notifier = CreateTelegramNotifier();
@@ -678,9 +683,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnStageChanged(object? sender, RunStageChangedEventArgs e)
     {
+        var stageMessage = e.Message ?? e.Stage.ToString();
+        if (!string.IsNullOrWhiteSpace(stageMessage) &&
+            !string.Equals(stageMessage, _lastLoggedStageMessage, StringComparison.Ordinal))
+        {
+            _lastLoggedStageMessage = stageMessage;
+            _logBus.Info($"[Run] Этап: {stageMessage}");
+        }
+
         Dispatcher.UIThread.Post(() =>
         {
-            RunStage = e.Message ?? e.Stage.ToString();
+            RunStage = stageMessage;
         });
     }
 
@@ -756,6 +769,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OpenRunsFolder()
     {
         OpenPath(_artifactStore.RunsRoot);
+    }
+
+    [RelayCommand]
+    private void OpenRunsTab()
+    {
+        SelectedTabIndex = 3;
     }
 
     [RelayCommand]

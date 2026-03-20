@@ -70,6 +70,15 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private string moduleDescription = string.Empty;
 
     [ObservableProperty]
+    private string moduleWhatText = string.Empty;
+
+    [ObservableProperty]
+    private string moduleChecksText = string.Empty;
+
+    [ObservableProperty]
+    private string moduleResultText = string.Empty;
+
+    [ObservableProperty]
     private string moduleSettingsTitle = "Настройки модуля";
 
     [ObservableProperty]
@@ -107,10 +116,9 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
         ModuleSettingsVm = descriptor?.ModuleSettingsVm;
         ModuleDisplayName = descriptor?.DisplayName ?? string.Empty;
         ModuleDescription = descriptor?.Description ?? string.Empty;
-        ModuleSettingsTitle = string.IsNullOrWhiteSpace(descriptor?.DisplayName)
-            ? "Настройки модуля"
-            : $"Настройки {descriptor!.DisplayName.ToLowerInvariant()}";
         ModuleId = descriptor?.ModuleId ?? string.Empty;
+        ModuleSettingsTitle = BuildModuleSettingsTitle(ModuleId);
+        (ModuleWhatText, ModuleChecksText, ModuleResultText) = BuildModuleIntro(ModuleId);
         TestCase.SetModuleConfig(descriptor?.ModuleConfig);
         RunProfile.IsUiFamily = descriptor?.ModuleId.StartsWith("ui.") == true;
         RunProfile.RefreshAll();
@@ -290,5 +298,85 @@ public partial class ModuleWorkspaceViewModel : ObservableObject
     private static double ClampDetailsWidth(double value)
     {
         return Math.Clamp(value, MinDetailsWidth, MaxDetailsWidth);
+    }
+
+    private static string BuildModuleSettingsTitle(string moduleId)
+    {
+        return moduleId switch
+        {
+            "net.preflight" => "Настройки дымового тестирования",
+            "http.functional" => "Настройки функционального тестирования",
+            "ui.scenario" => "Настройки регрессионного тестирования",
+            "ui.snapshot" => "Настройки интерфейсного тестирования",
+            "ui.timing" => "Настройки тестирования совместимости",
+            "http.performance" => "Настройки тестирования производительности",
+            "net.security" => "Настройки тестирования безопасности",
+            "net.availability" => "Настройки тестирования доступности",
+            "net.diagnostics" => "Настройки диагностического тестирования",
+            "http.assets" => "Настройки тестирования ресурсов Web-сайта",
+            _ => "Настройки модуля"
+        };
+    }
+
+    private static (string What, string Checks, string Result) BuildModuleIntro(string moduleId)
+    {
+        return moduleId switch
+        {
+            "ui.snapshot" => (
+                "Делает снимки страниц и важных элементов интерфейса.",
+                "Проверяет, что нужные страницы открываются и элементы доступны для фиксации.",
+                "Вы получаете набор скриншотов и отчёт по каждой цели."
+            ),
+            "ui.scenario" => (
+                "Повторяет пользовательский сценарий шаг за шагом.",
+                "Проверяет, что ключевые шаги выполняются без ошибок и регрессий.",
+                "Вы получаете результат по шагам, ошибки и артефакты итерации."
+            ),
+            "ui.timing" => (
+                "Прогоняет сайт на разных профилях совместимости.",
+                "Проверяет загрузку и прохождение сценария для browser/viewport профилей.",
+                "Вы получаете матрицу совместимости и проблемные профили."
+            ),
+            "http.functional" => (
+                "Выполняет HTTP-проверки бизнес-эндпоинтов.",
+                "Проверяет коды ответов, обязательные заголовки и базовые условия ответа.",
+                "Вы получаете список успешных и проблемных endpoint-проверок."
+            ),
+            "http.performance" => (
+                "Измеряет скорость ответов Web-сайта под управляемой нагрузкой.",
+                "Проверяет время отклика и стабильность ответов на выбранных endpoint-ах.",
+                "Вы получаете метрики производительности и сводку по деградациям."
+            ),
+            "net.security" => (
+                "Проводит безопасную baseline-проверку конфигурации безопасности.",
+                "Проверяет TLS/заголовки/базовые настройки без атакующих действий.",
+                "Вы получаете список рисков и рекомендации по исправлению."
+            ),
+            "net.availability" => (
+                "Проверяет доступность целевого сервиса в рамках прогона.",
+                "Контролирует наличие ответа и отклонения по времени/ошибкам.",
+                "Вы получаете понятную сводку доступности за период теста."
+            ),
+            "net.diagnostics" => (
+                "Диагностирует сетевой путь до сервиса.",
+                "Проверяет DNS, TCP и TLS для локализации проблем.",
+                "Вы получаете техническую карту, где именно возникает сбой."
+            ),
+            "http.assets" => (
+                "Проверяет статические ресурсы сайта.",
+                "Контролирует доступность, тип контента и ограничения по размеру/латентности.",
+                "Вы получаете перечень проблемных ресурсов с деталями."
+            ),
+            "net.preflight" => (
+                "Выполняет быстрый предстартовый дымовой контроль.",
+                "Проверяет, что базовая инфраструктура цели готова к основным тестам.",
+                "Вы получаете ранний сигнал готовности или причину блокировки."
+            ),
+            _ => (
+                "Проверяет выбранный аспект Web-сайта.",
+                "Контролирует корректность прохождения тестового сценария.",
+                "Вы получаете отчёт с результатами и артефактами прогона."
+            )
+        };
     }
 }

@@ -95,8 +95,18 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         SyncSteps();
     }
 
-    partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = value;
-    partial void OnTimeoutMsChanged(int value) => _settings.TimeoutMs = value;
+    partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = InputValueGuard.NormalizeOptionalText(value);
+    partial void OnTimeoutMsChanged(int value)
+    {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 10000);
+        if (normalized != value)
+        {
+            TimeoutMs = normalized;
+            return;
+        }
+
+        _settings.TimeoutMs = normalized;
+    }
 
     private object? AddStepInternal()
     {

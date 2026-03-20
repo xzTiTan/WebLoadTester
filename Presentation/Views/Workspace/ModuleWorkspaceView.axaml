@@ -38,7 +38,9 @@
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Что это за тест" Classes="section-title" />
                                 <TextBlock Text="{Binding Workspace.ModuleDisplayName}" FontSize="16" />
-                                <TextBlock Text="{Binding Workspace.ModuleDescription}" TextWrapping="Wrap" Classes="muted" />
+                                <TextBlock Text="{Binding Workspace.ModuleWhatText, StringFormat='• Что делает: {0}'}" TextWrapping="Wrap" Classes="muted" />
+                                <TextBlock Text="{Binding Workspace.ModuleChecksText, StringFormat='• Что проверяет: {0}'}" TextWrapping="Wrap" Classes="muted" />
+                                <TextBlock Text="{Binding Workspace.ModuleResultText, StringFormat='• Что получаете: {0}'}" TextWrapping="Wrap" Classes="muted" />
                             </StackPanel>
                         </Border>
 
@@ -58,7 +60,8 @@
 
                         <Border Classes="section" IsEnabled="{Binding Workspace.IsIdle}">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="Конфигурация (сохранение/загрузка)" Classes="section-title" />
+                                <TextBlock Text="Конфигурация / быстрые действия / история" Classes="section-title" />
+                                <TextBlock Text="Сохраните шаблон настроек, загрузите предыдущий вариант или перейдите к истории прогонов." Classes="field-hint" TextWrapping="Wrap" />
                                 <views:TestCaseView DataContext="{Binding Workspace.TestCase}" />
                             </StackPanel>
                         </Border>

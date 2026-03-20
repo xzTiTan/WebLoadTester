@@ -19,11 +19,6 @@ public partial class RowListEditorView : UserControl
     {
         InitializeComponent();
         _itemsList = this.FindControl<ListBox>("ItemsList");
-        if (_itemsList != null)
-        {
-            _itemsList.SelectionChanged += OnSelectionChanged;
-        }
-
         DataContextChanged += OnDataContextChanged;
         AttachViewModel(DataContext as RowListEditorViewModel);
     }
@@ -54,16 +49,6 @@ public partial class RowListEditorView : UserControl
         {
             RequestFocusForSelectedItem();
         }
-    }
-
-    private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_itemsList?.SelectedItem == null)
-        {
-            return;
-        }
-
-        Dispatcher.UIThread.Post(() => _itemsList.ScrollIntoView(_itemsList.SelectedItem));
     }
 
     private void RequestFocusForSelectedItem()

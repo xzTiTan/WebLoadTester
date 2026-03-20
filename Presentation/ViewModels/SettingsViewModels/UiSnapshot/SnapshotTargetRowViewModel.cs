@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.UiSnapshot;
+using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiSnapshot;
 
@@ -24,19 +25,28 @@ public partial class SnapshotTargetRowViewModel : ObservableObject
 
     partial void OnNameChanged(string value)
     {
-        Model.Name = string.IsNullOrWhiteSpace(value) ? null : value;
+        var normalized = InputValueGuard.NormalizeOptionalText(value);
+        Model.Name = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
     partial void OnUrlChanged(string value)
     {
-        Model.Url = value;
+        var normalized = InputValueGuard.NormalizeOptionalText(value);
+        if (normalized != value)
+        {
+            Url = normalized;
+            return;
+        }
+
+        Model.Url = normalized;
         OnPropertyChanged(nameof(RowErrorText));
         OnPropertyChanged(nameof(HasRowError));
     }
 
     partial void OnSelectorChanged(string value)
     {
-        Model.Selector = string.IsNullOrWhiteSpace(value) ? null : value;
+        var normalized = InputValueGuard.NormalizeOptionalText(value);
+        Model.Selector = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
     public void RefreshComputed()

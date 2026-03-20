@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.HttpFunctional;
+using WebLoadTester.Presentation.Common;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels.HttpFunctional;
 
@@ -33,14 +34,28 @@ public partial class HttpFunctionalEndpointRowViewModel : ObservableObject
 
     partial void OnUrlChanged(string value)
     {
-        Model.Path = value;
+        var normalized = InputValueGuard.NormalizeOptionalText(value);
+        if (!string.Equals(normalized, value, StringComparison.Ordinal))
+        {
+            Url = normalized;
+            return;
+        }
+
+        Model.Path = normalized;
         OnPropertyChanged(nameof(RowErrorText));
         OnPropertyChanged(nameof(HasRowError));
     }
 
     partial void OnExpectedStatusChanged(int value)
     {
-        Model.ExpectedStatusCode = Math.Clamp(value, 100, 599);
+        var normalized = InputValueGuard.NormalizeIntInRange(value, 100, 599, 200);
+        if (normalized != value)
+        {
+            ExpectedStatus = normalized;
+            return;
+        }
+
+        Model.ExpectedStatusCode = normalized;
     }
 
     public HttpFunctionalEndpointRowViewModel Clone()

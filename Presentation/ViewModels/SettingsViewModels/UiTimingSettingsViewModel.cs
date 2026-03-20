@@ -78,8 +78,29 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
         SyncTargets();
     }
 
-    partial void OnWaitUntilChanged(UiWaitUntil value) => _settings.WaitUntil = value;
-    partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
+    partial void OnWaitUntilChanged(UiWaitUntil value)
+    {
+        var normalized = InputValueGuard.NormalizeEnum(value, UiWaitUntil.DomContentLoaded);
+        if (!Equals(normalized, value))
+        {
+            WaitUntil = normalized;
+            return;
+        }
+
+        _settings.WaitUntil = normalized;
+    }
+
+    partial void OnTimeoutSecondsChanged(int value)
+    {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 30);
+        if (normalized != value)
+        {
+            TimeoutSeconds = normalized;
+            return;
+        }
+
+        _settings.TimeoutSeconds = normalized;
+    }
 
     private object? AddTargetInternal()
     {

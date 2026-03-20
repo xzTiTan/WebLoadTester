@@ -5,6 +5,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiSnapshot;
+using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.Controls;
 using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiSnapshot;
@@ -95,10 +96,53 @@ public partial class UiSnapshotSettingsViewModel : SettingsViewModelBase, IValid
         SyncTargets();
     }
 
-    partial void OnWaitUntilChanged(UiWaitUntil value) => _settings.WaitUntil = value;
-    partial void OnTimeoutSecondsChanged(int value) => _settings.TimeoutSeconds = value;
-    partial void OnViewportWidthChanged(int? value) => _settings.ViewportWidth = value;
-    partial void OnViewportHeightChanged(int? value) => _settings.ViewportHeight = value;
+    partial void OnWaitUntilChanged(UiWaitUntil value)
+    {
+        var normalized = InputValueGuard.NormalizeEnum(value, UiWaitUntil.DomContentLoaded);
+        if (!Equals(normalized, value))
+        {
+            WaitUntil = normalized;
+            return;
+        }
+
+        _settings.WaitUntil = normalized;
+    }
+
+    partial void OnTimeoutSecondsChanged(int value)
+    {
+        var normalized = InputValueGuard.NormalizeInt(value, 1, 30);
+        if (normalized != value)
+        {
+            TimeoutSeconds = normalized;
+            return;
+        }
+
+        _settings.TimeoutSeconds = normalized;
+    }
+
+    partial void OnViewportWidthChanged(int? value)
+    {
+        var normalized = InputValueGuard.NormalizeNullableInt(value, 0);
+        if (normalized != value)
+        {
+            ViewportWidth = normalized;
+            return;
+        }
+
+        _settings.ViewportWidth = normalized;
+    }
+
+    partial void OnViewportHeightChanged(int? value)
+    {
+        var normalized = InputValueGuard.NormalizeNullableInt(value, 0);
+        if (normalized != value)
+        {
+            ViewportHeight = normalized;
+            return;
+        }
+
+        _settings.ViewportHeight = normalized;
+    }
     partial void OnFullPageChanged(bool value)
     {
         _settings.FullPage = value;

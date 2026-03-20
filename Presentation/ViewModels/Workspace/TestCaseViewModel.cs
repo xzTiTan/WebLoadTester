@@ -133,7 +133,43 @@ public partial class TestCaseViewModel : ObservableObject, IValidatable
 
     private void OnModuleConfigPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        RaiseAll();
+        var propertyName = e.PropertyName;
+        switch (propertyName)
+        {
+            case nameof(ModuleConfigViewModel.SelectedConfig):
+                OnPropertyChanged(nameof(SelectedConfig));
+                break;
+            case nameof(ModuleConfigViewModel.UserName):
+                OnPropertyChanged(nameof(Name));
+                OnPropertyChanged(nameof(FinalNamePreview));
+                break;
+            case nameof(ModuleConfigViewModel.Description):
+                OnPropertyChanged(nameof(Description));
+                break;
+            case nameof(ModuleConfigViewModel.IsDirty):
+            case nameof(ModuleConfigViewModel.DirtyStateText):
+                OnPropertyChanged(nameof(DirtyMark));
+                OnPropertyChanged(nameof(IsDirty));
+                break;
+            case nameof(ModuleConfigViewModel.NameValidationMessage):
+            case nameof(ModuleConfigViewModel.ModuleSummaryMessage):
+            case nameof(ModuleConfigViewModel.ConfigSummaryMessage):
+                OnPropertyChanged(nameof(ValidationErrors));
+                break;
+            case nameof(ModuleConfigViewModel.StatusMessage):
+                OnPropertyChanged(nameof(StatusMessage));
+                break;
+            case nameof(ModuleConfigViewModel.IsDeleteConfirmVisible):
+                OnPropertyChanged(nameof(IsDeleteConfirmVisible));
+                break;
+            case nameof(ModuleConfigViewModel.IsDirtyPromptVisible):
+            case nameof(ModuleConfigViewModel.DirtyPromptText):
+                OnPropertyChanged(nameof(IsDirtyPromptVisible));
+                OnPropertyChanged(nameof(DirtyPromptText));
+                break;
+            default:
+                break;
+        }
     }
 
     private void RaiseAll()

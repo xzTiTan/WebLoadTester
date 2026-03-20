@@ -17,7 +17,7 @@
         </StackPanel>
 
         <StackPanel Spacing="6">
-            <TextBlock Text="Артефакты" />
+            <TextBlock Text="Быстрый доступ к результатам" />
             <StackPanel Spacing="6">
                 <TextBlock Text="{Binding RunFolderPath}" TextWrapping="Wrap" />
                 <WrapPanel>
