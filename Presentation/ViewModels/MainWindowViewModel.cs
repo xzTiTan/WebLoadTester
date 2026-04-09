@@ -441,7 +441,27 @@ public partial class MainWindowViewModel : ViewModelBase
             StatusText = finalStatusText;
             if (!IsRunning && !finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal))
             {
-                _logBus.Info($"[Run] Результаты доступны: runs/{runId}/report.json, runs/{runId}/report.html");
+                var availableReports = new List<string>();
+                var jsonPath = Path.Combine(_artifactStore.RunsRoot, runId, "report.json");
+                var htmlPath = Path.Combine(_artifactStore.RunsRoot, runId, "report.html");
+                if (File.Exists(jsonPath))
+                {
+                    availableReports.Add($"runs/{runId}/report.json");
+                }
+
+                if (File.Exists(htmlPath))
+                {
+                    availableReports.Add($"runs/{runId}/report.html");
+                }
+
+                if (availableReports.Count > 0)
+                {
+                    _logBus.Info($"[Run] Результаты доступны: {string.Join(", ", availableReports)}");
+                }
+                else
+                {
+                    _logBus.Warn($"[Run] Прогон завершён, но файлы отчёта не найдены в runs/{runId}.");
+                }
             }
             RunStage = finalStatusText.StartsWith("Ошибка", StringComparison.Ordinal) ? "Ошибка" : "Готово";
             _runCts?.Dispose();
@@ -768,7 +788,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenRunsFolder()
     {
-        OpenPath(_artifactStore.RunsRoot);
+        if (!OpenPath(_artifactStore.RunsRoot, out var error))
+        {
+            StatusText = $"Статус: {error}";
+        }
     }
 
     [RelayCommand]
@@ -783,22 +806,54 @@ public partial class MainWindowViewModel : ViewModelBase
         var report = GetSelectedModule()?.LastReport;
         if (report == null || string.IsNullOrWhiteSpace(report.Artifacts.JsonPath))
         {
+            StatusText = "Статус: report.json недоступен.";
             return;
         }
 
-        OpenPath(Path.Combine(_artifactStore.RunsRoot, report.RunId, report.Artifacts.JsonPath));
+        var jsonPath = Path.Combine(_artifactStore.RunsRoot, report.RunId, report.Artifacts.JsonPath);
+        if (!OpenPath(jsonPath, out var error))
+        {
+            StatusText = $"Статус: {error}";
+        }
     }
 
     [RelayCommand]
     private void OpenLatestHtml()
     {
         var report = GetSelectedModule()?.LastReport;
-        if (report == null || string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        if (report == null)
         {
+            StatusText = "Статус: отчёт недоступен.";
             return;
         }
 
-        OpenPath(Path.Combine(_artifactStore.RunsRoot, report.RunId, report.Artifacts.HtmlPath));
+        var runFolder = Path.Combine(_artifactStore.RunsRoot, report.RunId);
+        var jsonPath = string.IsNullOrWhiteSpace(report.Artifacts.JsonPath)
+            ? Path.Combine(runFolder, "report.json")
+            : Path.Combine(runFolder, report.Artifacts.JsonPath);
+
+        if (!string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        {
+            var htmlPath = Path.Combine(runFolder, report.Artifacts.HtmlPath);
+            if (OpenPath(htmlPath, out _))
+            {
+                return;
+            }
+        }
+
+        if (OpenPath(jsonPath, out _))
+        {
+            StatusText = "Статус: HTML-отчёт недоступен, открыт report.json.";
+            return;
+        }
+
+        if (OpenPath(runFolder, out _))
+        {
+            StatusText = "Статус: отчёты недоступны, открыта папка прогона.";
+            return;
+        }
+
+        StatusText = "Статус: не удалось открыть HTML, JSON и папку прогона.";
     }
 
     [RelayCommand]
@@ -807,11 +862,15 @@ public partial class MainWindowViewModel : ViewModelBase
         var report = GetSelectedModule()?.LastReport;
         if (report == null)
         {
+            StatusText = "Статус: папка прогона недоступна.";
             return;
         }
 
         var path = Path.Combine(_artifactStore.RunsRoot, report.RunId);
-        OpenPath(path);
+        if (!OpenPath(path, out var error))
+        {
+            StatusText = $"Статус: {error}";
+        }
     }
 
     [RelayCommand]
@@ -823,7 +882,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var path = Path.Combine(_artifactStore.RunsRoot, artifact.RunId, artifact.RelativePath);
-        OpenPath(path);
+        if (!OpenPath(path, out var error))
+        {
+            StatusText = $"Статус: {error}";
+        }
     }
 
     private async Task InitializeAsync()
@@ -1096,10 +1158,17 @@ public partial class MainWindowViewModel : ViewModelBase
                 var moduleItemFromReport = FindModuleItem(snapshot.ModuleId);
                 if (moduleItemFromReport != null)
                 {
-                    var moduleSettings = System.Text.Json.JsonSerializer.Deserialize(snapshot.ModuleSettings.GetRawText(), moduleItemFromReport.Module.SettingsType);
-                    if (moduleSettings != null)
+                    try
                     {
-                        moduleItemFromReport.SettingsViewModel.UpdateFrom(moduleSettings);
+                        var moduleSettings = System.Text.Json.JsonSerializer.Deserialize(snapshot.ModuleSettings.GetRawText(), moduleItemFromReport.Module.SettingsType);
+                        if (moduleSettings != null)
+                        {
+                            moduleItemFromReport.SettingsViewModel.UpdateFrom(moduleSettings);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logBus.Warn($"[Runs] Не удалось применить moduleSettings из report.json прогона {runId}: {ex.Message}");
                     }
 
                     RunProfile.UpdateFrom(new RunParametersDto
@@ -1160,23 +1229,30 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var profile = System.Text.Json.JsonSerializer.Deserialize<RunProfile>(detail.Run.ProfileSnapshotJson);
-        if (profile != null)
+        try
         {
-            RunProfile.UpdateFrom(new RunParametersDto
+            var profile = System.Text.Json.JsonSerializer.Deserialize<RunProfile>(detail.Run.ProfileSnapshotJson);
+            if (profile != null)
             {
-                Mode = profile.Mode,
-                Iterations = profile.Iterations,
-                DurationSeconds = profile.DurationSeconds,
-                Parallelism = profile.Parallelism,
-                TimeoutSeconds = profile.TimeoutSeconds,
-                PauseBetweenIterationsMs = profile.PauseBetweenIterationsMs,
-                HtmlReportEnabled = profile.HtmlReportEnabled,
-                TelegramEnabled = profile.TelegramEnabled,
-                PreflightEnabled = profile.PreflightEnabled,
-                Headless = profile.Headless,
-                ScreenshotsPolicy = profile.ScreenshotsPolicy
-            });
+                RunProfile.UpdateFrom(new RunParametersDto
+                {
+                    Mode = profile.Mode,
+                    Iterations = profile.Iterations,
+                    DurationSeconds = profile.DurationSeconds,
+                    Parallelism = profile.Parallelism,
+                    TimeoutSeconds = profile.TimeoutSeconds,
+                    PauseBetweenIterationsMs = profile.PauseBetweenIterationsMs,
+                    HtmlReportEnabled = profile.HtmlReportEnabled,
+                    TelegramEnabled = profile.TelegramEnabled,
+                    PreflightEnabled = profile.PreflightEnabled,
+                    Headless = profile.Headless,
+                    ScreenshotsPolicy = profile.ScreenshotsPolicy
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logBus.Warn($"[Runs] Не удалось разобрать snapshot профиля из БД для прогона {runId}: {ex.Message}");
         }
 
         ApplyModuleSelection(moduleItem);
@@ -1299,19 +1375,32 @@ public partial class MainWindowViewModel : ViewModelBase
         };
     }
 
-    private static void OpenPath(string path)
+    private bool OpenPath(string path, out string errorMessage)
     {
+        errorMessage = string.Empty;
         if (!Directory.Exists(path) && !File.Exists(path))
         {
-            return;
+            errorMessage = $"Путь не найден: {path}";
+            _logBus.Warn($"[Open] {errorMessage}");
+            return false;
         }
 
-        var psi = new ProcessStartInfo
+        try
         {
-            FileName = path,
-            UseShellExecute = true
-        };
-        Process.Start(psi);
+            var psi = new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Не удалось открыть путь: {path}. {ex.Message}";
+            _logBus.Warn($"[Open] {errorMessage}");
+            return false;
+        }
     }
 
     /// <summary>

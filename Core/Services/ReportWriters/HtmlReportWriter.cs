@@ -96,15 +96,10 @@ public class HtmlReportWriter
         }
         sb.AppendLine("</table>");
 
-        sb.AppendLine("<h3>Артефакты</h3><ul><li>report.json</li>");
-        if (!string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        sb.AppendLine("<h3>Артефакты</h3><ul>");
+        foreach (var artifactPath in BuildArtifactPaths(report))
         {
-            sb.AppendLine("<li>report.html</li>");
-        }
-        sb.AppendLine("<li>logs/run.log</li>");
-        foreach (var artifact in report.ModuleArtifacts)
-        {
-            sb.AppendLine($"<li>{Escape(artifact.RelativePath)}</li>");
+            sb.AppendLine($"<li>{Escape(artifactPath)}</li>");
         }
         sb.AppendLine("</ul></body></html>");
         return sb.ToString();
@@ -301,6 +296,62 @@ public class HtmlReportWriter
         TimingResult timing => timing.Name,
         _ => string.Empty
     };
+
+    private static IReadOnlyList<string> BuildArtifactPaths(TestReport report)
+    {
+        var paths = new List<string>();
+
+        var jsonPath = ResolveArtifactPath(report.Artifacts.JsonPath, "report.json");
+        if (!string.IsNullOrWhiteSpace(jsonPath))
+        {
+            paths.Add(jsonPath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
+        {
+            paths.Add(ResolveArtifactPath(report.Artifacts.HtmlPath, "report.html"));
+        }
+
+        var logPath = ResolveArtifactPath(report.Artifacts.LogPath, "logs/run.log");
+        if (!string.IsNullOrWhiteSpace(logPath))
+        {
+            paths.Add(logPath);
+        }
+
+        foreach (var screenshotPath in report.Results
+                     .Select(result => result switch
+                     {
+                         RunResult run => run.ScreenshotPath,
+                         StepResult step => step.ScreenshotPath,
+                         _ => null
+                     })
+                     .Where(path => !string.IsNullOrWhiteSpace(path))
+                     .Distinct())
+        {
+            paths.Add(screenshotPath!);
+        }
+
+        foreach (var artifact in report.ModuleArtifacts.Where(a => !string.IsNullOrWhiteSpace(a.RelativePath)))
+        {
+            paths.Add(artifact.RelativePath);
+        }
+
+        return paths.Distinct().ToList();
+    }
+
+    private static string ResolveArtifactPath(string? path, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallback;
+        }
+
+        var normalizedPath = path.Replace('\\', '/');
+        var normalizedFallback = fallback.Replace('\\', '/');
+        return normalizedPath.EndsWith(normalizedFallback, StringComparison.OrdinalIgnoreCase)
+            ? normalizedFallback
+            : path;
+    }
 
     private static string Escape(string? value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
 

@@ -23,6 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="obj\**\*.cs;buildobj\**\*.cs;buildbin\**\*.cs" />
+    <EmbeddedResource Remove="obj\**\*;buildobj\**\*;buildbin\**\*" />
+    <None Remove="obj\**\*;buildobj\**\*;buildbin\**\*" />
+    <AvaloniaResource Remove="obj\**\*;buildobj\**\*;buildbin\**\*" />
+    <AvaloniaXaml Remove="obj\**\*.axaml;buildobj\**\*.axaml;buildbin\**\*.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />

@@ -185,17 +185,24 @@ public class JsonReportWriter
 
     private static List<object> BuildArtifacts(TestReport report)
     {
-        var artifacts = new List<object>
+        var artifacts = new List<object>();
+
+        var jsonPath = ResolveArtifactPath(report.Artifacts.JsonPath, "report.json");
+        if (!string.IsNullOrWhiteSpace(jsonPath))
         {
-            new { type = "JsonReport", relativePath = "report.json" }
-        };
+            artifacts.Add(new { type = "JsonReport", relativePath = jsonPath });
+        }
 
         if (!string.IsNullOrWhiteSpace(report.Artifacts.HtmlPath))
         {
-            artifacts.Add(new { type = "HtmlReport", relativePath = "report.html" });
+            artifacts.Add(new { type = "HtmlReport", relativePath = ResolveArtifactPath(report.Artifacts.HtmlPath, "report.html") });
         }
 
-        artifacts.Add(new { type = "Log", relativePath = "logs/run.log" });
+        var logPath = ResolveArtifactPath(report.Artifacts.LogPath, "logs/run.log");
+        if (!string.IsNullOrWhiteSpace(logPath))
+        {
+            artifacts.Add(new { type = "Log", relativePath = logPath });
+        }
 
         var screenshotPaths = report.Results
             .Select(result => result switch
@@ -215,11 +222,25 @@ public class JsonReportWriter
             });
         }
 
-        foreach (var artifact in report.ModuleArtifacts)
+        foreach (var artifact in report.ModuleArtifacts.Where(a => !string.IsNullOrWhiteSpace(a.RelativePath)))
         {
             artifacts.Add(new { type = artifact.Type, relativePath = artifact.RelativePath });
         }
 
         return artifacts;
+    }
+
+    private static string ResolveArtifactPath(string? path, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallback;
+        }
+
+        var normalizedPath = path.Replace('\\', '/');
+        var normalizedFallback = fallback.Replace('\\', '/');
+        return normalizedPath.EndsWith(normalizedFallback, System.StringComparison.OrdinalIgnoreCase)
+            ? normalizedFallback
+            : path;
     }
 }

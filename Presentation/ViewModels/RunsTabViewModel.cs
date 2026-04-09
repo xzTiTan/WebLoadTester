@@ -188,10 +188,46 @@ public partial class RunsTabViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenJson() => OpenPath(GetJsonPath(), "Файл report.json не найден.");
+    private void OpenJson()
+    {
+        if (OpenPath(GetJsonPath(), "Файл report.json не найден.", out var error))
+        {
+            UserMessage = string.Empty;
+            return;
+        }
+
+        UserMessage = error;
+    }
 
     [RelayCommand]
-    private void OpenHtml() => OpenPath(GetHtmlPath(), "Файл report.html не найден.");
+    private void OpenHtml()
+    {
+        var htmlPath = GetHtmlPath();
+        if (OpenPath(htmlPath, "Файл report.html не найден.", out _))
+        {
+            UserMessage = string.Empty;
+            return;
+        }
+
+        var jsonPath = GetJsonPath();
+        if (OpenPath(jsonPath, "Файл report.json не найден.", out _))
+        {
+            UserMessage = "HTML-отчёт недоступен, открыт report.json.";
+            return;
+        }
+
+        if (SelectedRun != null)
+        {
+            var runFolder = Path.Combine(_runsRoot, SelectedRun.RunId);
+            if (OpenPath(runFolder, "Папка прогона не найдена.", out _))
+            {
+                UserMessage = "HTML и JSON недоступны, открыта папка прогона.";
+                return;
+            }
+        }
+
+        UserMessage = "Не удалось открыть HTML, JSON и папку прогона.";
+    }
 
     [RelayCommand]
     private void OpenRunFolder()
@@ -201,7 +237,13 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "Папка прогона не найдена.");
+        if (OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "Папка прогона не найдена.", out var error))
+        {
+            UserMessage = string.Empty;
+            return;
+        }
+
+        UserMessage = error;
     }
 
     [RelayCommand]
@@ -321,7 +363,13 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        OpenPath(item.FullPath, "Артефакт не найден.");
+        if (OpenPath(item.FullPath, "Артефакт не найден.", out var error))
+        {
+            UserMessage = string.Empty;
+            return;
+        }
+
+        UserMessage = error;
     }
 
 
@@ -448,29 +496,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · Модуль: {detail.Run.ModuleType}";
 
-        try
-        {
-            using var profileDoc = JsonDocument.Parse(detail.Run.ProfileSnapshotJson);
-            var profile = profileDoc.RootElement;
-            var timeoutSeconds = 30;
-            if (profile.TryGetProperty("timeouts", out var timeouts)
-                && timeouts.TryGetProperty("operationSeconds", out var operationSeconds)
-                && operationSeconds.TryGetInt32(out var timeoutFromNested))
-            {
-                timeoutSeconds = timeoutFromNested;
-            }
-            else if (profile.TryGetProperty("timeoutSeconds", out var timeoutLegacy)
-                     && timeoutLegacy.TryGetInt32(out var timeoutFromLegacy))
-            {
-                timeoutSeconds = timeoutFromLegacy;
-            }
-
-            DetailsProfile = $"Режим={profile.GetProperty("mode").GetString()} · Параллелизм={profile.GetProperty("parallelism").GetInt32()} · Таймаут={timeoutSeconds} · Пауза={(profile.TryGetProperty("pauseBetweenIterationsMs", out var pause) ? pause.GetInt32() : 0)}";
-        }
-        catch
-        {
-            DetailsProfile = "Профиль запуска недоступен.";
-        }
+        DetailsProfile = BuildDetailsProfile(detail.Run.ProfileSnapshotJson);
 
         AddArtifactLink("report.json", GetJsonPath());
         AddArtifactLink("report.html", GetHtmlPath());
@@ -508,20 +534,29 @@ public partial class RunsTabViewModel : ObservableObject
         return SelectedRun == null ? string.Empty : Path.Combine(_runsRoot, SelectedRun.RunId, "report.html");
     }
 
-    private void OpenPath(string path, string notFoundMessage)
+    private bool OpenPath(string path, string notFoundMessage, out string errorMessage)
     {
+        errorMessage = string.Empty;
         if (string.IsNullOrWhiteSpace(path) || (!File.Exists(path) && !Directory.Exists(path)))
         {
-            UserMessage = notFoundMessage;
-            return;
+            errorMessage = notFoundMessage;
+            return false;
         }
 
-        Process.Start(new ProcessStartInfo
+        try
         {
-            FileName = path,
-            UseShellExecute = true
-        });
-        UserMessage = string.Empty;
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+            return true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Не удалось открыть путь: {ex.Message}";
+            return false;
+        }
     }
 
     public string GetSelectedRunJsonPath() => GetJsonPath();
@@ -604,6 +639,114 @@ public partial class RunsTabViewModel : ObservableObject
             TelegramEnabled = profile.TryGetProperty("telegramEnabled", out var tg) && tg.GetBoolean(),
             PreflightEnabled = profile.TryGetProperty("preflightEnabled", out var pf) && pf.GetBoolean()
         };
+    }
+
+    private static string BuildDetailsProfile(string profileSnapshotJson)
+    {
+        if (TryDeserializeProfile(profileSnapshotJson, out var profile) && profile != null)
+        {
+            return FormatProfile(profile);
+        }
+
+        try
+        {
+            using var profileDoc = JsonDocument.Parse(profileSnapshotJson);
+            var root = profileDoc.RootElement;
+            var mode = GetString(root, "Mode", "mode") ?? RunMode.Iterations.ToString();
+            var parallelism = GetInt32(root, "Parallelism", "parallelism") ?? 1;
+            var timeoutSeconds =
+                GetInt32(root, "TimeoutSeconds", "timeoutSeconds")
+                ?? GetNestedInt32(root, new[] { "timeouts", "Timeouts" }, new[] { "operationSeconds", "OperationSeconds" })
+                ?? 30;
+            var pause = GetInt32(root, "PauseBetweenIterationsMs", "pauseBetweenIterationsMs") ?? 0;
+            var htmlEnabled = GetBool(root, "HtmlReportEnabled", "htmlReportEnabled");
+            var telegramEnabled = GetBool(root, "TelegramEnabled", "telegramEnabled");
+            var preflightEnabled = GetBool(root, "PreflightEnabled", "preflightEnabled");
+
+            return $"Режим={mode} · Параллелизм={parallelism} · Таймаут={timeoutSeconds} · Пауза={pause} · HTML={(htmlEnabled ? "Вкл" : "Выкл")} · Telegram={(telegramEnabled ? "Вкл" : "Выкл")} · Preflight={(preflightEnabled ? "Вкл" : "Выкл")}";
+        }
+        catch
+        {
+            return "Профиль запуска недоступен.";
+        }
+    }
+
+    private static bool TryDeserializeProfile(string profileSnapshotJson, out RunProfile? profile)
+    {
+        try
+        {
+            profile = JsonSerializer.Deserialize<RunProfile>(profileSnapshotJson);
+            return profile != null;
+        }
+        catch
+        {
+            profile = null;
+            return false;
+        }
+    }
+
+    private static string FormatProfile(RunProfile profile)
+    {
+        return $"Режим={profile.Mode} · Параллелизм={profile.Parallelism} · Таймаут={profile.TimeoutSeconds} · Пауза={profile.PauseBetweenIterationsMs} · HTML={(profile.HtmlReportEnabled ? "Вкл" : "Выкл")} · Telegram={(profile.TelegramEnabled ? "Вкл" : "Выкл")} · Preflight={(profile.PreflightEnabled ? "Вкл" : "Выкл")}";
+    }
+
+    private static string? GetString(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String)
+            {
+                return value.GetString();
+            }
+        }
+
+        return null;
+    }
+
+    private static int? GetInt32(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) && value.TryGetInt32(out var result))
+            {
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool GetBool(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) &&
+                (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False))
+            {
+                return value.GetBoolean();
+            }
+        }
+
+        return false;
+    }
+
+    private static int? GetNestedInt32(JsonElement element, string[] parentNames, string[] childNames)
+    {
+        foreach (var parentName in parentNames)
+        {
+            if (!element.TryGetProperty(parentName, out var parent) || parent.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            var value = GetInt32(parent, childNames);
+            if (value.HasValue)
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
 

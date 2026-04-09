@@ -376,12 +376,27 @@ public class RunOrchestrator
             report.FinishedAt = DateTimeOffset.UtcNow;
         }
 
-        report.Artifacts.LogPath = context.Artifacts.GetLogPath(report.RunId);
-        report.Artifacts.JsonPath = await _jsonWriter.WriteAsync(report, report.RunId);
+        report.Artifacts.LogPath = "logs/run.log";
+        report.Artifacts.JsonPath = "report.json";
         if (context.Profile.HtmlReportEnabled)
         {
-            report.Artifacts.HtmlPath = await _htmlWriter.WriteAsync(report, report.RunId);
+            try
+            {
+                report.Artifacts.HtmlPath = "report.html";
+                report.Artifacts.HtmlPath = await _htmlWriter.WriteAsync(report, report.RunId);
+            }
+            catch (Exception ex)
+            {
+                report.Artifacts.HtmlPath = string.Empty;
+                context.Log.Warn($"HTML report generation failed: {ex.Message}");
+            }
         }
+        else
+        {
+            report.Artifacts.HtmlPath = string.Empty;
+        }
+
+        report.Artifacts.JsonPath = await _jsonWriter.WriteAsync(report, report.RunId);
 
         context.Log.Info($"Report saved: {report.Artifacts.JsonPath}");
         var persistenceToken = ct.IsCancellationRequested ? CancellationToken.None : ct;
