@@ -85,6 +85,11 @@ public class TestRun
     public DateTimeOffset? FinishedAt { get; set; }
     public string Status { get; set; } = "Running";
     public string SummaryJson { get; set; } = string.Empty;
+    public bool IsOrphan { get; set; }
+    public bool IsReadOnly { get; set; }
+    public bool RunFolderExists { get; set; }
+    public bool HasJsonReport { get; set; }
+    public bool HasHtmlReport { get; set; }
 }
 
 /// <summary>
@@ -152,4 +157,9 @@ public class TestRunSummary
     public int FailedItems { get; set; }
     public string KeyMetrics { get; set; } = string.Empty;
     public string ModuleType { get; set; } = string.Empty;
+    public bool IsOrphan { get; set; }
+    public bool IsReadOnly { get; set; }
+    public bool RunFolderExists { get; set; }
+    public bool HasJsonReport { get; set; }
+    public bool HasHtmlReport { get; set; }
 }

@@ -532,13 +532,33 @@ public class SqliteRunStore : IRunStore, ITestCaseRepository, IRunProfileReposit
         await using var connection = CreateConnection();
         await using var command = connection.CreateCommand();
         command.CommandText = @"UPDATE TestRuns
-                                SET FinishedAt = $finishedAt, Status = $status, SummaryJson = $summaryJson
+                                SET TestCaseId = $testCaseId,
+                                    TestCaseVersion = $testCaseVersion,
+                                    TestName = $testName,
+                                    ModuleType = $moduleType,
+                                    ModuleName = $moduleName,
+                                    ProfileSnapshotJson = $profileSnapshot,
+                                    StartedAt = $startedAt,
+                                    FinishedAt = $finishedAt,
+                                    Status = $status,
+                                    SummaryJson = $summaryJson
                                 WHERE RunId = $runId";
+        command.Parameters.AddWithValue("$testCaseId", run.TestCaseId.ToString());
+        command.Parameters.AddWithValue("$testCaseVersion", run.TestCaseVersion);
+        command.Parameters.AddWithValue("$testName", DbValue(run.TestName));
+        command.Parameters.AddWithValue("$moduleType", DbValue(run.ModuleType));
+        command.Parameters.AddWithValue("$moduleName", DbValue(run.ModuleName));
+        command.Parameters.AddWithValue("$profileSnapshot", DbValue(run.ProfileSnapshotJson));
+        command.Parameters.AddWithValue("$startedAt", run.StartedAt.ToString("O"));
         command.Parameters.AddWithValue("$finishedAt", run.FinishedAt?.ToString("O"));
         command.Parameters.AddWithValue("$status", run.Status);
         command.Parameters.AddWithValue("$summaryJson", string.IsNullOrWhiteSpace(run.SummaryJson) ? DBNull.Value : run.SummaryJson);
         command.Parameters.AddWithValue("$runId", run.RunId);
-        await command.ExecuteNonQueryAsync(ct);
+        var affectedRows = await command.ExecuteNonQueryAsync(ct);
+        if (affectedRows == 0)
+        {
+            await CreateRunAsync(run, ct);
+        }
     }
 
     public async Task UpdateStatusAsync(string runId, string status, DateTimeOffset? finishedAt, CancellationToken ct)

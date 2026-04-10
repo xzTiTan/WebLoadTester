@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebLoadTester.Core.Contracts;
@@ -26,6 +27,7 @@ public partial class RunsTabViewModel : ObservableObject
     private Func<bool>? _isRunningProvider;
     private CancellationTokenSource? _searchDebounceCts;
     private string? _pendingDeleteRunId;
+    private int _selectionStateVersion;
 
     public RunsTabViewModel(IRunStore runStore, string runsRoot, Func<string, Task> repeatRun)
     {
@@ -117,8 +119,9 @@ public partial class RunsTabViewModel : ObservableObject
         RepeatRunCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanRepeatRun));
         OnPropertyChanged(nameof(HasRepeatRunHint));
-        _ = Task.Run(LoadDetailsAsync);
-        _ = Task.Run(UpdateRepeatRunAvailabilityAsync);
+
+        var version = Interlocked.Increment(ref _selectionStateVersion);
+        _ = RefreshSelectionStateAsync(value, version);
     }
 
     partial void OnIsRunningChanged(bool value)
@@ -132,30 +135,16 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        _ = Task.Run(UpdateRepeatRunAvailabilityAsync);
+        var version = Volatile.Read(ref _selectionStateVersion);
+        _ = UpdateRepeatRunAvailabilityAsync(SelectedRun, version);
     }
 
     partial void OnSearchTextChanged(string? value)
     {
         _searchDebounceCts?.Cancel();
         _searchDebounceCts = new CancellationTokenSource();
-        var token = _searchDebounceCts.Token;
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(350, token);
-                if (!token.IsCancellationRequested)
-                {
-                    ApplyFilters();
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                // ignore debounce cancellation
-            }
-        }, token);
+        _ = DebouncedApplyFiltersAsync(_searchDebounceCts.Token);
     }
 
     [RelayCommand]
@@ -165,26 +154,28 @@ public partial class RunsTabViewModel : ObservableObject
         IsDeleteConfirmVisible = false;
         _pendingDeleteRunId = null;
 
+        var dbRuns = await _runStore.QueryRunsAsync(new RunQuery(), CancellationToken.None);
+        var mergedRuns = await BuildMergedRunListAsync(dbRuns, CancellationToken.None);
+
         AllRuns.Clear();
-        var items = await _runStore.QueryRunsAsync(new RunQuery(), CancellationToken.None);
-        foreach (var item in items)
+        foreach (var item in mergedRuns)
         {
             AllRuns.Add(item);
         }
 
         ApplyFilters();
 
-        if (!string.IsNullOrWhiteSpace(previousRunId))
-        {
-            SelectedRun = Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault();
-        }
-        else
-        {
-            SelectedRun = Runs.FirstOrDefault();
-        }
+        SelectedRun = !string.IsNullOrWhiteSpace(previousRunId)
+            ? Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault()
+            : Runs.FirstOrDefault();
 
         UserMessage = string.Empty;
-        await UpdateRepeatRunAvailabilityAsync();
+        string hint;
+        if (run == null)
+        {
+            var version = Interlocked.Increment(ref _selectionStateVersion);
+            await RefreshSelectionStateAsync(null, version);
+        }
     }
 
     [RelayCommand]
@@ -232,7 +223,7 @@ public partial class RunsTabViewModel : ObservableObject
     [RelayCommand]
     private void OpenRunFolder()
     {
-        if (SelectedRun == null)
+        if (run == null)
         {
             return;
         }
@@ -295,7 +286,8 @@ public partial class RunsTabViewModel : ObservableObject
 
         await _repeatRun(SelectedRun.RunId);
         UserMessage = $"Конфигурация загружена из прогона {SelectedRun.RunId}. Запуск не выполнялся.";
-        await UpdateRepeatRunAvailabilityAsync();
+        var version = Volatile.Read(ref _selectionStateVersion);
+        await UpdateRepeatRunAvailabilityAsync(SelectedRun, version);
     }
 
     private bool CanExecuteRepeatRun()
@@ -373,13 +365,590 @@ public partial class RunsTabViewModel : ObservableObject
     }
 
 
-    private async Task UpdateRepeatRunAvailabilityAsync()
+    private async Task DebouncedApplyFiltersAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(350, token);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(ApplyFilters);
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore debounce cancellation.
+        }
+    }
+
+    private Task RefreshSelectionStateAsync(TestRunSummary? run, int version)
+    {
+        return Task.WhenAll(
+            LoadDetailsForRunAsync(run, version),
+            UpdateRepeatRunAvailabilityAsync(run, version));
+    }
+
+    private async Task LoadDetailsForRunAsync(TestRunSummary? run, int version)
+    {
+        if (run == null)
+        {
+            if (!IsSelectionCurrent(null, version))
+            {
+                return;
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ArtifactLinks.Clear();
+                TopErrors.Clear();
+                DetailsSummary = string.Empty;
+                DetailsProfile = string.Empty;
+            });
+            return;
+        }
+
+        var detail = await LoadRunDetailAsync(run);
+        var summary = detail == null ? string.Empty : BuildDetailsSummary(detail, run);
+        var profile = detail == null ? string.Empty : BuildDetailsProfile(detail.Run.ProfileSnapshotJson);
+        var artifactLinks = detail == null ? Array.Empty<ArtifactLinkItem>() : BuildArtifactLinks(detail);
+        var topErrors = detail == null
+            ? Array.Empty<TopErrorItem>()
+            : detail.Items
+                .Where(i => !string.Equals(i.Status, "Success", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(i.ErrorMessage))
+                .GroupBy(i => i.ErrorMessage!)
+                .OrderByDescending(g => g.Count())
+                .Take(3)
+                .Select(g => new TopErrorItem(g.Key, g.Count()))
+                .ToArray();
+
+        if (!IsSelectionCurrent(run, version))
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ArtifactLinks.Clear();
+            foreach (var artifactLink in artifactLinks)
+            {
+                ArtifactLinks.Add(artifactLink);
+            }
+
+            TopErrors.Clear();
+            foreach (var error in topErrors)
+            {
+                TopErrors.Add(error);
+            }
+
+            DetailsSummary = summary;
+            DetailsProfile = profile;
+        });
+    }
+
+    private async Task<string> BuildRepeatRunHintAsync(TestRunSummary? run)
     {
         RefreshRunningState();
+        if (run == null)
+        {
+            return string.Empty;
+        }
+
+        if (IsRunning)
+        {
+            return "Остановите запуск, чтобы повторить.";
+        }
+
+        var reportPath = Path.Combine(_runsRoot, run.RunId, "report.json");
+        if (!File.Exists(reportPath))
+        {
+            return "report.json не найден для выбранного прогона.";
+        }
+
+        try
+        {
+            var reportJson = await File.ReadAllTextAsync(reportPath);
+            return TryParseRepeatSnapshot(reportJson, out _, out var parseError)
+                ? string.Empty
+                : $"report.json повреждён: {parseError}";
+        }
+        catch (Exception ex)
+        {
+            return $"Не удалось прочитать report.json: {ex.Message}";
+        }
+    }
+
+    private async Task<IReadOnlyList<TestRunSummary>> BuildMergedRunListAsync(IReadOnlyList<TestRunSummary> dbRuns, CancellationToken ct)
+    {
+        var merged = dbRuns.Select(CloneSummary).ToList();
+        foreach (var run in merged)
+        {
+            ApplyFilesystemFlags(run);
+        }
+
+        var knownRunIds = new HashSet<string>(merged.Select(r => r.RunId), StringComparer.OrdinalIgnoreCase);
+        var orphanRuns = await LoadOrphanRunsAsync(knownRunIds, ct);
+        merged.AddRange(orphanRuns);
+
+        return merged
+            .OrderByDescending(r => r.StartedAt)
+            .ThenByDescending(r => r.RunId, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private Task<List<TestRunSummary>> LoadOrphanRunsAsync(HashSet<string> knownRunIds, CancellationToken ct)
+    {
+        return Task.Run(() =>
+        {
+            var result = new List<TestRunSummary>();
+            if (!Directory.Exists(_runsRoot))
+            {
+                return result;
+            }
+
+            foreach (var runFolder in Directory.EnumerateDirectories(_runsRoot))
+            {
+                if (ct.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var runId = Path.GetFileName(runFolder);
+                if (string.IsNullOrWhiteSpace(runId) || knownRunIds.Contains(runId))
+                {
+                    continue;
+                }
+
+                var jsonPath = Path.Combine(runFolder, "report.json");
+                if (!File.Exists(jsonPath))
+                {
+                    continue;
+                }
+
+                result.Add(BuildOrphanSummary(runId, runFolder, jsonPath));
+            }
+
+            return result;
+        }, ct);
+    }
+
+    private TestRunSummary BuildOrphanSummary(string runId, string runFolder, string jsonPath)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(jsonPath));
+            var root = document.RootElement;
+            return new TestRunSummary
+            {
+                RunId = GetString(root, "runId") ?? runId,
+                StartedAt = ParseDateTimeOffset(root, "startedAtUtc") ?? new DateTimeOffset(File.GetLastWriteTimeUtc(jsonPath)),
+                TestName = GetString(root, "finalName", "testName") ?? runId,
+                ModuleName = GetString(root, "moduleId") ?? "orphan",
+                ModuleType = GetString(root, "moduleId") ?? "orphan",
+                Status = GetString(root, "status") ?? "Unknown",
+                DurationMs = GetNestedDouble(root, "summary", "durationMs") ?? 0,
+                FailedItems = GetNestedInt32(root, "summary", "failedItems") ?? CountFailedItems(root),
+                KeyMetrics = BuildKeyMetrics(GetNestedDouble(root, "summary", "averageMs"), GetNestedDouble(root, "summary", "p95Ms")),
+                IsOrphan = true,
+                IsReadOnly = true,
+                RunFolderExists = Directory.Exists(runFolder),
+                HasJsonReport = true,
+                HasHtmlReport = File.Exists(Path.Combine(runFolder, "report.html"))
+            };
+        }
+        catch
+        {
+            return new TestRunSummary
+            {
+                RunId = runId,
+                StartedAt = new DateTimeOffset(File.GetLastWriteTimeUtc(jsonPath)),
+                TestName = $"[orphan] {runId}",
+                ModuleName = "orphan",
+                ModuleType = "orphan",
+                Status = "Unknown",
+                DurationMs = 0,
+                FailedItems = 0,
+                KeyMetrics = string.Empty,
+                IsOrphan = true,
+                IsReadOnly = true,
+                RunFolderExists = Directory.Exists(runFolder),
+                HasJsonReport = true,
+                HasHtmlReport = File.Exists(Path.Combine(runFolder, "report.html"))
+            };
+        }
+    }
+
+    private async Task<TestRunDetail?> LoadRunDetailAsync(TestRunSummary run)
+    {
+        var detail = await _runStore.GetRunDetailAsync(run.RunId, CancellationToken.None);
+        if (detail != null)
+        {
+            detail.Run.IsOrphan = run.IsOrphan;
+            detail.Run.IsReadOnly = run.IsReadOnly;
+            detail.Run.RunFolderExists = run.RunFolderExists;
+            detail.Run.HasJsonReport = run.HasJsonReport;
+            detail.Run.HasHtmlReport = run.HasHtmlReport;
+            detail.Artifacts = await BuildEffectiveArtifactsAsync(run.RunId, detail.Artifacts);
+            return detail;
+        }
+
+        return await BuildOrphanDetailAsync(run);
+    }
+
+    private async Task<TestRunDetail> BuildOrphanDetailAsync(TestRunSummary run)
+    {
+        var runFolder = Path.Combine(_runsRoot, run.RunId);
+        var reportPath = Path.Combine(runFolder, "report.json");
+        var detail = new TestRunDetail
+        {
+            Run = new TestRun
+            {
+                RunId = run.RunId,
+                TestCaseId = Guid.Empty,
+                TestCaseVersion = 0,
+                TestName = run.TestName,
+                ModuleType = run.ModuleType,
+                ModuleName = run.ModuleName,
+                StartedAt = run.StartedAt,
+                FinishedAt = null,
+                Status = run.Status,
+                SummaryJson = string.Empty,
+                ProfileSnapshotJson = string.Empty,
+                IsOrphan = true,
+                IsReadOnly = true,
+                RunFolderExists = run.RunFolderExists,
+                HasJsonReport = run.HasJsonReport,
+                HasHtmlReport = run.HasHtmlReport
+            },
+            Items = Array.Empty<RunItem>(),
+            Artifacts = Array.Empty<ArtifactRecord>()
+        };
+
+        if (File.Exists(reportPath))
+        {
+            try
+            {
+                var reportJson = await File.ReadAllTextAsync(reportPath);
+                using var document = JsonDocument.Parse(reportJson);
+                var root = document.RootElement;
+
+                detail.Run.RunId = GetString(root, "runId") ?? run.RunId;
+                detail.Run.TestName = GetString(root, "finalName", "testName") ?? run.TestName;
+                detail.Run.ModuleType = GetString(root, "moduleId") ?? run.ModuleType;
+                detail.Run.ModuleName = detail.Run.ModuleType;
+                detail.Run.StartedAt = ParseDateTimeOffset(root, "startedAtUtc") ?? run.StartedAt;
+                detail.Run.FinishedAt = ParseDateTimeOffset(root, "finishedAtUtc");
+                detail.Run.Status = GetString(root, "status") ?? run.Status;
+                detail.Run.SummaryJson = root.TryGetProperty("summary", out var summaryElement) ? summaryElement.GetRawText() : string.Empty;
+                detail.Run.ProfileSnapshotJson = root.TryGetProperty("profile", out var profileElement) ? profileElement.GetRawText() : string.Empty;
+                detail.Items = ParseRunItems(root, run.RunId);
+                detail.Artifacts = ParseArtifacts(root, run.RunId);
+            }
+            catch
+            {
+                // Keep minimal orphan detail for malformed report.json.
+            }
+        }
+
+        detail.Artifacts = await BuildEffectiveArtifactsAsync(run.RunId, detail.Artifacts);
+        return detail;
+    }
+
+    private async Task<IReadOnlyList<ArtifactRecord>> BuildEffectiveArtifactsAsync(string runId, IReadOnlyList<ArtifactRecord> seedArtifacts)
+    {
+        var runFolder = Path.Combine(_runsRoot, runId);
+        var result = new Dictionary<string, ArtifactRecord>(StringComparer.OrdinalIgnoreCase);
+
+        void AddArtifact(ArtifactRecord artifact)
+        {
+            if (string.IsNullOrWhiteSpace(artifact.RelativePath))
+            {
+                return;
+            }
+
+            var normalizedPath = artifact.RelativePath.Replace('\\', '/');
+            result[normalizedPath] = new ArtifactRecord
+            {
+                Id = artifact.Id == Guid.Empty ? Guid.NewGuid() : artifact.Id,
+                RunId = runId,
+                ArtifactType = string.IsNullOrWhiteSpace(artifact.ArtifactType) ? GuessArtifactType(normalizedPath) : artifact.ArtifactType,
+                RelativePath = artifact.RelativePath,
+                CreatedAt = artifact.CreatedAt == default ? DateTimeOffset.UtcNow : artifact.CreatedAt
+            };
+        }
+
+        foreach (var artifact in seedArtifacts)
+        {
+            AddArtifact(artifact);
+        }
+
+        var reportPath = Path.Combine(runFolder, "report.json");
+        if (File.Exists(reportPath))
+        {
+            try
+            {
+                var reportJson = await File.ReadAllTextAsync(reportPath);
+                using var document = JsonDocument.Parse(reportJson);
+                foreach (var artifact in ParseArtifacts(document.RootElement, runId))
+                {
+                    AddArtifact(artifact);
+                }
+            }
+            catch
+            {
+                // Ignore malformed report.json when collecting artifact links.
+            }
+        }
+
+        if (Directory.Exists(runFolder))
+        {
+            foreach (var filePath in Directory.EnumerateFiles(runFolder, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = Path.GetRelativePath(runFolder, filePath);
+                AddArtifact(new ArtifactRecord
+                {
+                    Id = Guid.NewGuid(),
+                    RunId = runId,
+                    ArtifactType = GuessArtifactType(relativePath),
+                    RelativePath = relativePath,
+                    CreatedAt = new DateTimeOffset(File.GetLastWriteTimeUtc(filePath))
+                });
+            }
+        }
+
+        return result.Values
+            .OrderBy(artifact => ArtifactSortKey(artifact.RelativePath))
+            .ThenBy(artifact => artifact.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private IReadOnlyList<ArtifactLinkItem> BuildArtifactLinks(TestRunDetail detail)
+    {
+        var result = new List<ArtifactLinkItem>();
+        var knownPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var runFolder = Path.Combine(_runsRoot, detail.Run.RunId);
+
+        foreach (var artifact in detail.Artifacts)
+        {
+            var fullPath = Path.Combine(runFolder, artifact.RelativePath);
+            AddArtifactLink(result, knownPaths, BuildArtifactLabel(artifact), fullPath);
+        }
+
+        AddArtifactLink(result, knownPaths, "папка прогона", runFolder);
+        AddArtifactLink(result, knownPaths, "скриншоты", Path.Combine(runFolder, "screenshots"));
+        return result;
+    }
+
+    private static string BuildArtifactLabel(ArtifactRecord artifact)
+    {
+        var normalizedPath = artifact.RelativePath.Replace('\\', '/');
+        return normalizedPath switch
+        {
+            "report.json" => "report.json",
+            "report.html" => "report.html",
+            "logs/run.log" => "logs/run.log",
+            _ => normalizedPath
+        };
+    }
+
+    private static string GuessArtifactType(string relativePath)
+    {
+        var normalizedPath = relativePath.Replace('\\', '/');
+        if (normalizedPath.Equals("report.json", StringComparison.OrdinalIgnoreCase))
+        {
+            return "JsonReport";
+        }
+
+        if (normalizedPath.Equals("report.html", StringComparison.OrdinalIgnoreCase))
+        {
+            return "HtmlReport";
+        }
+
+        if (normalizedPath.Equals("logs/run.log", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Log";
+        }
+
+        if (normalizedPath.StartsWith("screenshots/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Screenshot";
+        }
+
+        return "File";
+    }
+
+    private static int ArtifactSortKey(string relativePath)
+    {
+        var normalizedPath = relativePath.Replace('\\', '/');
+        return normalizedPath switch
+        {
+            "report.json" => 0,
+            "report.html" => 1,
+            "logs/run.log" => 2,
+            _ when normalizedPath.StartsWith("screenshots/", StringComparison.OrdinalIgnoreCase) => 3,
+            _ => 4
+        };
+    }
+
+    private static void AddArtifactLink(ICollection<ArtifactLinkItem> items, ISet<string> knownPaths, string name, string fullPath)
+    {
+        if (string.IsNullOrWhiteSpace(fullPath) || (!File.Exists(fullPath) && !Directory.Exists(fullPath)))
+        {
+            return;
+        }
+
+        var normalizedPath = fullPath.Replace('\\', '/');
+        if (!knownPaths.Add(normalizedPath))
+        {
+            return;
+        }
+
+        items.Add(new ArtifactLinkItem(name, fullPath));
+    }
+
+    private static IReadOnlyList<RunItem> ParseRunItems(JsonElement root, string runId)
+    {
+        if (!root.TryGetProperty("items", out var itemsElement) || itemsElement.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<RunItem>();
+        }
+
+        var items = new List<RunItem>();
+        foreach (var item in itemsElement.EnumerateArray())
+        {
+            items.Add(new RunItem
+            {
+                Id = Guid.NewGuid(),
+                RunId = runId,
+                ItemType = GetString(item, "kind") ?? string.Empty,
+                ItemKey = GetString(item, "name") ?? string.Empty,
+                Status = item.TryGetProperty("ok", out var okElement) && okElement.ValueKind is JsonValueKind.True or JsonValueKind.False && okElement.GetBoolean()
+                    ? "Success"
+                    : "Failed",
+                DurationMs = GetDouble(item, "durationMs") ?? 0,
+                WorkerId = GetInt32(item, "workerId") ?? 0,
+                Iteration = GetInt32(item, "iteration") ?? 0,
+                ErrorMessage = GetString(item, "message"),
+                ExtraJson = item.TryGetProperty("extra", out var extraElement) ? extraElement.GetRawText() : null
+            });
+        }
+
+        return items;
+    }
+
+    private static IReadOnlyList<ArtifactRecord> ParseArtifacts(JsonElement root, string runId)
+    {
+        if (!root.TryGetProperty("artifacts", out var artifactsElement) || artifactsElement.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<ArtifactRecord>();
+        }
+
+        var artifacts = new List<ArtifactRecord>();
+        foreach (var artifact in artifactsElement.EnumerateArray())
+        {
+            var relativePath = GetString(artifact, "relativePath");
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                continue;
+            }
+
+            artifacts.Add(new ArtifactRecord
+            {
+                Id = Guid.NewGuid(),
+                RunId = runId,
+                ArtifactType = GetString(artifact, "type") ?? GuessArtifactType(relativePath),
+                RelativePath = relativePath,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        return artifacts;
+    }
+
+    private static string BuildDetailsSummary(TestRunDetail detail, TestRunSummary run)
+    {
+        var durationMs = run.DurationMs > 0 ? run.DurationMs : ParseSummaryDuration(detail.Run.SummaryJson);
+        var source = detail.Run.IsOrphan ? "Источник: runs/ (read-only)" : "Источник: SQLite";
+        return $"Статус: {detail.Run.Status} · Длительность: {durationMs:F0} мс · Модуль: {detail.Run.ModuleType} · {source}";
+    }
+
+    private static double ParseSummaryDuration(string summaryJson)
+    {
+        if (string.IsNullOrWhiteSpace(summaryJson))
+        {
+            return 0;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(summaryJson);
+            return GetDouble(document.RootElement, "durationMs", "totalDurationMs") ?? 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static TestRunSummary CloneSummary(TestRunSummary run)
+    {
+        return new TestRunSummary
+        {
+            RunId = run.RunId,
+            StartedAt = run.StartedAt,
+            TestName = run.TestName,
+            ModuleName = run.ModuleName,
+            Status = run.Status,
+            DurationMs = run.DurationMs,
+            FailedItems = run.FailedItems,
+            KeyMetrics = run.KeyMetrics,
+            ModuleType = run.ModuleType,
+            IsOrphan = run.IsOrphan,
+            IsReadOnly = run.IsReadOnly,
+            RunFolderExists = run.RunFolderExists,
+            HasJsonReport = run.HasJsonReport,
+            HasHtmlReport = run.HasHtmlReport
+        };
+    }
+
+    private void ApplyFilesystemFlags(TestRunSummary run)
+    {
+        var runFolder = Path.Combine(_runsRoot, run.RunId);
+        run.RunFolderExists = Directory.Exists(runFolder);
+        run.HasJsonReport = File.Exists(Path.Combine(runFolder, "report.json"));
+        run.HasHtmlReport = File.Exists(Path.Combine(runFolder, "report.html"));
+    }
+
+    private bool IsSelectionCurrent(TestRunSummary? run, int version)
+    {
+        return version == Volatile.Read(ref _selectionStateVersion)
+               && string.Equals(SelectedRun?.RunId, run?.RunId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task UpdateRepeatRunAvailabilityAsync(TestRunSummary? run, int version)
+    {
+        RefreshRunningState();
+        string hint = string.Empty;
+
+        var computedHint = await BuildRepeatRunHintAsync(run);
+        if (!IsSelectionCurrent(run, version))
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            RepeatRunHint = computedHint;
+            RepeatRunCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(CanRepeatRun));
+            OnPropertyChanged(nameof(HasRepeatRunHint));
+        });
+        return;
 
         if (SelectedRun == null)
         {
-            RepeatRunHint = string.Empty;
+            hint = string.Empty;
         }
         else if (IsRunning)
         {
@@ -427,7 +996,9 @@ public partial class RunsTabViewModel : ObservableObject
             query = query.Where(r => string.Equals(r.Status, MapStatusFilterToRunStatus(SelectedStatus), StringComparison.OrdinalIgnoreCase));
         }
 
-        var utcNow = DateTimeOffset.UtcNow;
+        var localNow = DateTimeOffset.Now;
+        var utcNow = localNow;
+        var queryBeforePeriod = query;
         query = SelectedPeriod switch
         {
             "Сегодня" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
@@ -435,6 +1006,16 @@ public partial class RunsTabViewModel : ObservableObject
             "30 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
             _ => query
         };
+
+        if (string.Equals(SelectedPeriod, "РЎРµРіРѕРґРЅСЏ", StringComparison.Ordinal))
+        {
+            query = queryBeforePeriod.Where(r => r.StartedAt.ToLocalTime().Date == localNow.Date);
+        }
+
+        if (PeriodOptions.Count > 0 && string.Equals(SelectedPeriod, PeriodOptions[0], StringComparison.Ordinal))
+        {
+            query = queryBeforePeriod.Where(r => r.StartedAt.ToLocalTime().Date == localNow.Date);
+        }
 
         if (OnlyWithErrors)
         {
@@ -447,6 +1028,8 @@ public partial class RunsTabViewModel : ObservableObject
             query = query.Where(r =>
                 r.RunId.Contains(needle, StringComparison.OrdinalIgnoreCase)
                 || r.ModuleType.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || r.ModuleName.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || r.Status.Contains(needle, StringComparison.OrdinalIgnoreCase)
                 || r.TestName.Contains(needle, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -456,6 +1039,8 @@ public partial class RunsTabViewModel : ObservableObject
         {
             Runs.Add(run);
         }
+
+        OnPropertyChanged(nameof(HasRuns));
 
         if (SelectedRun != null && Runs.All(r => r.RunId != SelectedRun.RunId))
         {
@@ -714,6 +1299,79 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         return null;
+    }
+
+    private static double? GetDouble(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) && value.TryGetDouble(out var result))
+            {
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    private static DateTimeOffset? ParseDateTimeOffset(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var value) || value.ValueKind != JsonValueKind.String)
+        {
+            return null;
+        }
+
+        return DateTimeOffset.TryParse(value.GetString(), out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static double? GetNestedDouble(JsonElement element, string parentName, string childName)
+    {
+        if (!element.TryGetProperty(parentName, out var parent) || parent.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return GetDouble(parent, childName);
+    }
+
+    private static int? GetNestedInt32(JsonElement element, string parentName, string childName)
+    {
+        if (!element.TryGetProperty(parentName, out var parent) || parent.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return GetInt32(parent, childName);
+    }
+
+    private static string BuildKeyMetrics(double? averageMs, double? p95Ms)
+    {
+        return averageMs.GetValueOrDefault() > 0
+            ? $"avg {averageMs.GetValueOrDefault():F1} ms, p95 {p95Ms.GetValueOrDefault():F1} ms"
+            : string.Empty;
+    }
+
+    private static int CountFailedItems(JsonElement root)
+    {
+        if (!root.TryGetProperty("items", out var itemsElement) || itemsElement.ValueKind != JsonValueKind.Array)
+        {
+            return 0;
+        }
+
+        var failed = 0;
+        foreach (var item in itemsElement.EnumerateArray())
+        {
+            if (item.TryGetProperty("ok", out var okElement) &&
+                okElement.ValueKind is JsonValueKind.True or JsonValueKind.False &&
+                !okElement.GetBoolean())
+            {
+                failed++;
+            }
+        }
+
+        return failed;
     }
 
     private static bool GetBool(JsonElement element, params string[] names)

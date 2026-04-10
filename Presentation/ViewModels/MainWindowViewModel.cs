@@ -467,7 +467,14 @@ public partial class MainWindowViewModel : ViewModelBase
             _runCts?.Dispose();
             _runCts = null;
             Interlocked.Exchange(ref _stopRequested, 0);
-            RunsTab.RefreshCommand.Execute(null);
+            try
+            {
+                await RunsTab.RefreshCommand.ExecuteAsync(null);
+            }
+            catch (Exception ex)
+            {
+                _logBus.Warn($"[Runs] Не удалось обновить вкладку прогонов: {ex.Message}");
+            }
             _activeTelegramContext = null;
             _activeTelegramEnabled = false;
             _runFinishedTcs?.TrySetResult(true);

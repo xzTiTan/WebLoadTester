@@ -89,6 +89,8 @@ public class RunOrchestrator
         ITestModule? preflightModule = null,
         object? preflightSettings = null)
     {
+        await CreateRunRecordAsync(module, context, ct);
+
         var validation = Validate(module, settings, context.Profile);
         if (validation.Count > 0)
         {
@@ -105,7 +107,6 @@ public class RunOrchestrator
             return await FinalizeReportAsync(invalidReport, context, ct);
         }
 
-        await CreateRunRecordAsync(module, context, ct);
         EnsureRunFolder(context);
 
         var startTime = context.Now;
