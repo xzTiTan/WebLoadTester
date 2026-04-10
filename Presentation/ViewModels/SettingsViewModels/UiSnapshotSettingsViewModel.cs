@@ -7,7 +7,6 @@ using WebLoadTester.Core.Domain;
 using WebLoadTester.Modules.UiSnapshot;
 using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.Controls;
-using WebLoadTester.Presentation.Common;
 using WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiSnapshot;
 
 namespace WebLoadTester.Presentation.ViewModels.SettingsViewModels;

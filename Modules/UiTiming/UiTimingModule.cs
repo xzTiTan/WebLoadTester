@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -101,12 +100,6 @@ public class UiTimingModule : ITestModule
         result.Artifacts.AddRange(await WorkerArtifactPathBuilder.EnsureWorkerProfileSnapshotsAsync(ctx, s, ct));
 
         using var playwright = await PlaywrightFactory.CreateAsync();
-        var runProfileDir = WorkerArtifactPathBuilder.GetWorkerProfilesDir(ctx.RunFolder, ctx.WorkerId);
-        Directory.CreateDirectory(runProfileDir);
-
-        await using var browser = await playwright.Chromium.LaunchPersistentContextAsync(
-            runProfileDir,
-            new BrowserTypeLaunchPersistentContextOptions { Headless = ctx.Profile.Headless });
 
         var waitUntilState = ToWaitUntilState(s.WaitUntil);
         var timeoutMs = Math.Max(1, s.TimeoutSeconds) * 1000;
@@ -122,13 +115,30 @@ public class UiTimingModule : ITestModule
             var index = i + 1;
             var sw = Stopwatch.StartNew();
             string? screenshotPath = null;
+            IBrowser? browser = null;
+            IBrowserContext? browserContext = null;
+            IPage? page = null;
+            var effectiveHeadless = target.Headless ?? ctx.Profile.Headless;
 
             try
             {
-                var page = await browser.NewPageAsync();
-                await page.SetViewportSizeAsync(
-                    target.ViewportWidth > 0 ? target.ViewportWidth : 1366,
-                    target.ViewportHeight > 0 ? target.ViewportHeight : 768);
+                browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = effectiveHeadless,
+                    Channel = NormalizeBrowserChannel(target.BrowserChannel)
+                });
+
+                browserContext = await browser.NewContextAsync(new BrowserNewContextOptions
+                {
+                    UserAgent = string.IsNullOrWhiteSpace(target.UserAgent) ? null : target.UserAgent.Trim(),
+                    ViewportSize = new ViewportSize
+                    {
+                        Width = target.ViewportWidth > 0 ? target.ViewportWidth : 1366,
+                        Height = target.ViewportHeight > 0 ? target.ViewportHeight : 768
+                    }
+                });
+
+                page = await browserContext.NewPageAsync();
                 await page.GotoAsync(target.Url, new PageGotoOptions
                 {
                     WaitUntil = waitUntilState,
@@ -159,10 +169,10 @@ public class UiTimingModule : ITestModule
                 {
                     try
                     {
-                        var page = browser.Pages.LastOrDefault();
-                        if (page != null)
+                        var failurePage = page ?? browserContext?.Pages.LastOrDefault();
+                        if (failurePage != null)
                         {
-                            screenshotPath = await SaveTimingScreenshotAsync(ctx, page, $"target_{index:00}_error.png", ct);
+                            screenshotPath = await SaveTimingScreenshotAsync(ctx, failurePage, $"target_{index:00}_error.png", CancellationToken.None);
                         }
                     }
                     catch
@@ -191,6 +201,16 @@ public class UiTimingModule : ITestModule
             }
             finally
             {
+                if (browserContext != null)
+                {
+                    await browserContext.CloseAsync();
+                }
+
+                if (browser != null)
+                {
+                    await browser.CloseAsync();
+                }
+
                 var done = Interlocked.Increment(ref completed);
                 ctx.Progress.Report(new ProgressUpdate(done, total, $"Совместимость: {done}/{total}"));
             }
@@ -295,6 +315,16 @@ public class UiTimingModule : ITestModule
         var browser = string.IsNullOrWhiteSpace(target.BrowserChannel) ? "chromium" : target.BrowserChannel.Trim();
         var viewport = $"{(target.ViewportWidth <= 0 ? 1366 : target.ViewportWidth)}x{(target.ViewportHeight <= 0 ? 768 : target.ViewportHeight)}";
         return $"{name} [{browser}; {viewport}]";
+    }
+
+    private static string? NormalizeBrowserChannel(string? channel)
+    {
+        if (string.IsNullOrWhiteSpace(channel))
+        {
+            return null;
+        }
+
+        return channel.Trim();
     }
 
     private static WaitUntilState ToWaitUntilState(UiWaitUntil value)

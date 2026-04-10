@@ -10,6 +10,7 @@ public class HttpPerformanceSettings
 {
     public string BaseUrl { get; set; } = "https://www.google.com/";
     public List<HttpPerformanceEndpoint> Endpoints { get; set; } = new();
+    public List<string> Headers { get; set; } = new();
     public int TimeoutSeconds { get; set; } = 10;
 }
 

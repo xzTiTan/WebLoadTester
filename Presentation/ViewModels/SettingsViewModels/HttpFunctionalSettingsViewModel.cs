@@ -335,7 +335,11 @@ public partial class HttpFunctionalSettingsViewModel : SettingsViewModelBase, IV
     }
 
     private IEnumerable<string> GetEndpointErrors() => EndpointRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
-    private IEnumerable<string> GetHeaderErrors() => HeaderRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+    private IEnumerable<string> GetHeaderErrors() => HeaderRows
+        .Where(r => !string.IsNullOrWhiteSpace(r.Key) || !string.IsNullOrWhiteSpace(r.Value))
+        .Select(r => r.RowErrorText)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct();
 
     private HttpFunctionalEndpointRowViewModel CreateEndpointRow(HttpFunctionalEndpoint endpoint)
     {

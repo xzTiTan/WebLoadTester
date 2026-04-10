@@ -139,21 +139,21 @@ public class UiScenarioModule : ITestModule
         if (!PlaywrightFactory.HasBrowsersInstalled())
         {
             var browsersPath = PlaywrightFactory.GetBrowsersPath();
-            ctx.Log.Error($"[UiScenario] Chromium не найден. Установите браузеры в: {browsersPath}");
+            ctx.Log.Error($"[UiScenario] Chromium not found. Install browsers in: {browsersPath}");
             result.Status = TestStatus.Failed;
             result.Results.Add(new RunResult("Playwright")
             {
                 Success = false,
                 DurationMs = 0,
                 ErrorType = "Playwright",
-                ErrorMessage = $"Chromium не установлен. Выполните playwright install chromium (path: {browsersPath})."
+                ErrorMessage = $"Chromium is not installed. Run playwright install chromium (path: {browsersPath})."
             });
             return result;
         }
 
         var results = new List<ResultBase>();
         var totalUnits = stepCount + 1;
-        ctx.Progress.Report(new ProgressUpdate(0, totalUnits, "Запуск браузера"));
+        ctx.Progress.Report(new ProgressUpdate(0, totalUnits, "Launching browser"));
         ctx.Log.Info($"[UiScenario] Launching browser (Headless={ctx.Profile.Headless})");
 
         result.Artifacts.AddRange(await WorkerArtifactPathBuilder.EnsureWorkerProfileSnapshotsAsync(ctx, scenario, ct));
@@ -175,32 +175,68 @@ public class UiScenarioModule : ITestModule
         {
             var target = NormalizeUrl(scenario.TargetUrl);
             ctx.Log.Info($"[UiScenario] TargetUrl: {target}");
-            await page.GotoAsync(target, new PageGotoOptions
+            try
             {
-                WaitUntil = WaitUntilState.DOMContentLoaded,
-                Timeout = effectiveTimeoutMs
-            });
-            ctx.Progress.Report(new ProgressUpdate(1, totalUnits, "Стартовая страница загружена"));
+                await page.GotoAsync(target, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = effectiveTimeoutMs
+                });
+                ctx.Progress.Report(new ProgressUpdate(1, totalUnits, "Target page loaded"));
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"[UiScenario] startup navigation failed: {ex.GetType().Name}: {ex.Message}");
+                var screenshotPath = ctx.Profile.ScreenshotsPolicy is ScreenshotsPolicy.OnError or ScreenshotsPolicy.Always
+                    ? await TrySaveFailureScreenshotAsync(ctx, page, null, 0, UiStepAction.Navigate, "startup_error")
+                    : null;
+
+                results.Add(new RunResult("Scenario: startup navigation")
+                {
+                    Success = false,
+                    DurationMs = 0,
+                    ErrorType = ex is OperationCanceledException ? "Timeout" : ex.GetType().Name,
+                    ErrorMessage = ex.Message,
+                    ScreenshotPath = screenshotPath,
+                    DetailsJson = JsonSerializer.Serialize(new
+                    {
+                        stage = "startup-navigation",
+                        targetUrl = target,
+                        interrupted = ex is OperationCanceledException
+                    })
+                });
+
+                AppendRegressionComparisonResult(result, scenario, ctx, results);
+                result.Results = results;
+                result.Status = TestStatus.Failed;
+                return result;
+            }
         }
         else
         {
-            ctx.Progress.Report(new ProgressUpdate(1, totalUnits, "Старт без TargetUrl"));
+            ctx.Progress.Report(new ProgressUpdate(1, totalUnits, "Started without TargetUrl"));
         }
+
+        var interrupted = false;
+        string? interruptionErrorType = null;
+        string? interruptionMessage = null;
 
         for (var i = 0; i < stepCount; i++)
         {
-            ct.ThrowIfCancellationRequested();
+            if (ct.IsCancellationRequested)
+            {
+                interrupted = true;
+                interruptionErrorType = "Timeout";
+                interruptionMessage = $"Scenario interrupted before step {i + 1}.";
+                break;
+            }
+
             var stepIndex = i + 1;
             var step = scenario.Steps[i];
-            var stepName = $"Шаг {stepIndex}";
+            var stepName = $"Step {stepIndex}";
             var stepActionRu = GetActionRu(step.Action);
             var selector = (step.Selector ?? string.Empty).Trim();
             var value = (step.Value ?? string.Empty).Trim();
-
-            if (step.DelayMs > 0)
-            {
-                await Task.Delay(step.DelayMs, ct);
-            }
 
             var stopwatch = Stopwatch.StartNew();
             var success = true;
@@ -208,9 +244,15 @@ public class UiScenarioModule : ITestModule
             string? errorMessage = null;
             string? screenshotPath = null;
             string currentUrl = page.Url;
+            var stepInterrupted = false;
 
             try
             {
+                if (step.DelayMs > 0)
+                {
+                    await Task.Delay(step.DelayMs, ct);
+                }
+
                 ctx.Log.Info($"[UiScenario] {stepName}: {stepActionRu}");
 
                 switch (step.Action)
@@ -283,7 +325,7 @@ public class UiScenarioModule : ITestModule
                         var text = await locator.InnerTextAsync(new LocatorInnerTextOptions { Timeout = effectiveTimeoutMs });
                         if (text?.Contains(value, StringComparison.OrdinalIgnoreCase) != true)
                         {
-                            throw new InvalidOperationException($"Ожидался текст «{value}», фактически: «{text}».");
+                            throw new InvalidOperationException($"Expected text '{value}', actual: '{text}'.");
                         }
                         break;
 
@@ -295,7 +337,22 @@ public class UiScenarioModule : ITestModule
                         await Task.Delay(Math.Max(1, step.DelayMs), ct);
                         break;
                 }
+            }
+            catch (OperationCanceledException ex)
+            {
+                success = false;
+                stepInterrupted = true;
+                interrupted = true;
+                errorType = "Timeout";
+                errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Operation timed out." : ex.Message;
+                interruptionErrorType = errorType;
+                interruptionMessage = $"Scenario interrupted at step {stepIndex}: {stepActionRu}.";
+                ctx.Log.Error($"[UiScenario] {stepName} interrupted: {errorType}: {errorMessage}");
 
+                if (ctx.Profile.ScreenshotsPolicy is ScreenshotsPolicy.OnError or ScreenshotsPolicy.Always)
+                {
+                    screenshotPath = await TrySaveFailureScreenshotAsync(ctx, page, selector, stepIndex, step.Action, "timeout");
+                }
             }
             catch (Exception ex)
             {
@@ -306,7 +363,7 @@ public class UiScenarioModule : ITestModule
 
                 if (ctx.Profile.ScreenshotsPolicy is ScreenshotsPolicy.OnError or ScreenshotsPolicy.Always)
                 {
-                    screenshotPath = await SaveStepScreenshotAsync(ctx, page, selector, stepIndex, step.Action, "error", ct);
+                    screenshotPath = await TrySaveFailureScreenshotAsync(ctx, page, selector, stepIndex, step.Action, "error");
                 }
             }
             finally
@@ -334,16 +391,38 @@ public class UiScenarioModule : ITestModule
                     DetailsJson = JsonSerializer.Serialize(details)
                 });
 
-                ctx.Progress.Report(new ProgressUpdate(stepIndex + 1, totalUnits, $"Шаг {stepIndex}/{stepCount}"));
+                ctx.Progress.Report(new ProgressUpdate(stepIndex + 1, totalUnits, $"Step {stepIndex}/{stepCount}"));
+            }
+
+            if (stepInterrupted)
+            {
+                break;
             }
         }
 
-        if (ctx.Profile.ScreenshotsPolicy == ScreenshotsPolicy.Always)
+        if (interrupted)
+        {
+            results.Add(new RunResult("Scenario: execution interrupted")
+            {
+                Success = false,
+                DurationMs = 0,
+                ErrorType = interruptionErrorType,
+                ErrorMessage = interruptionMessage,
+                DetailsJson = JsonSerializer.Serialize(new
+                {
+                    stage = "interrupted",
+                    errorType = interruptionErrorType,
+                    message = interruptionMessage
+                })
+            });
+        }
+
+        if (ctx.Profile.ScreenshotsPolicy == ScreenshotsPolicy.Always && !ct.IsCancellationRequested)
         {
             try
             {
                 var finalScreenshot = await SaveStepScreenshotAsync(ctx, page, null, stepCount + 1, UiStepAction.Screenshot, "final", ct);
-                results.Add(new RunResult("Scenario: итоговый скриншот")
+                results.Add(new RunResult("Scenario: final screenshot")
                 {
                     Success = true,
                     DurationMs = 0,
@@ -353,7 +432,7 @@ public class UiScenarioModule : ITestModule
             }
             catch (Exception ex)
             {
-                ctx.Log.Warn($"[UiScenario] Не удалось сохранить итоговый скриншот: {ex.Message}");
+                ctx.Log.Warn($"[UiScenario] Could not save final screenshot: {ex.Message}");
             }
         }
 
@@ -362,6 +441,24 @@ public class UiScenarioModule : ITestModule
         result.Results = results;
         result.Status = results.Any(r => !r.Success) ? TestStatus.Failed : TestStatus.Success;
         return result;
+    }
+
+    private static async Task<string?> TrySaveFailureScreenshotAsync(
+        IRunContext ctx,
+        IPage page,
+        string? selector,
+        int stepIndex,
+        UiStepAction action,
+        string? customName)
+    {
+        try
+        {
+            return await SaveStepScreenshotAsync(ctx, page, selector, stepIndex, action, customName, CancellationToken.None);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static void AppendRegressionComparisonResult(ModuleResult result, UiScenarioSettings scenario, IRunContext ctx, List<ResultBase> currentResults)
@@ -691,3 +788,4 @@ public class UiScenarioModule : ITestModule
         }
     }
 }
+

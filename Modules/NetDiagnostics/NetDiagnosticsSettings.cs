@@ -52,7 +52,7 @@ public class NetDiagnosticsSettings
             Ports = legacyPorts.EnumerateArray()
                 .Select(e => e.TryGetInt32(out var p) ? p : 0)
                 .Where(p => p is >= 1 and <= 65535)
-                .Select(p => new DiagnosticPort { Port = p, Protocol = "Tcp" })
+                .Select(p => new DiagnosticPort { Port = p })
                 .ToList();
         }
     }

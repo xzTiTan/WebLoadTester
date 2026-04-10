@@ -316,7 +316,11 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase, I
     }
 
     private IEnumerable<string> GetEndpointErrors() => EndpointRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
-    private IEnumerable<string> GetHeaderErrors() => HeaderRows.Select(r => r.RowErrorText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+    private IEnumerable<string> GetHeaderErrors() => HeaderRows
+        .Where(r => !string.IsNullOrWhiteSpace(r.Key) || !string.IsNullOrWhiteSpace(r.Value))
+        .Select(r => r.RowErrorText)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct();
 
     private HttpPerformanceEndpointRowViewModel CreateEndpointRow(HttpPerformanceEndpoint endpoint)
     {
@@ -333,13 +337,18 @@ public partial class HttpPerformanceSettingsViewModel : SettingsViewModelBase, I
 
     private static IEnumerable<HttpHeaderRowViewModel> BuildHeaders(HttpPerformanceSettings settings)
     {
-        _ = settings;
-        return [new HttpHeaderRowViewModel()];
+        return settings.Headers.Count == 0
+            ? [new HttpHeaderRowViewModel()]
+            : settings.Headers.Select(HttpHeaderRowViewModel.FromHeader);
     }
 
     private void SyncAll()
     {
         _settings.Endpoints = EndpointRows.Select(r => r.Model).ToList();
+        _settings.Headers = HeaderRows
+            .Where(h => !string.IsNullOrWhiteSpace(h.Key) && !string.IsNullOrWhiteSpace(h.Value))
+            .Select(h => h.ToHeader())
+            .ToList();
 
         EndpointsEditor.SetItems(EndpointRows.Cast<object>());
         EndpointsEditor.NotifyValidationChanged();

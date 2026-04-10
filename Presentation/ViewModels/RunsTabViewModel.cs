@@ -170,8 +170,7 @@ public partial class RunsTabViewModel : ObservableObject
             : Runs.FirstOrDefault();
 
         UserMessage = string.Empty;
-        string hint;
-        if (run == null)
+        if (SelectedRun == null)
         {
             var version = Interlocked.Increment(ref _selectionStateVersion);
             await RefreshSelectionStateAsync(null, version);
@@ -223,7 +222,7 @@ public partial class RunsTabViewModel : ObservableObject
     [RelayCommand]
     private void OpenRunFolder()
     {
-        if (run == null)
+        if (SelectedRun == null)
         {
             return;
         }
@@ -929,8 +928,6 @@ public partial class RunsTabViewModel : ObservableObject
     private async Task UpdateRepeatRunAvailabilityAsync(TestRunSummary? run, int version)
     {
         RefreshRunningState();
-        string hint = string.Empty;
-
         var computedHint = await BuildRepeatRunHintAsync(run);
         if (!IsSelectionCurrent(run, version))
         {
@@ -946,6 +943,7 @@ public partial class RunsTabViewModel : ObservableObject
         });
         return;
 
+#if false
         if (SelectedRun == null)
         {
             hint = string.Empty;
@@ -980,6 +978,7 @@ public partial class RunsTabViewModel : ObservableObject
         RepeatRunCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanRepeatRun));
         OnPropertyChanged(nameof(HasRepeatRunHint));
+#endif
     }
 
     private void ApplyFilters()

@@ -52,6 +52,16 @@ public class HttpPerformanceModule : ITestModule
             errors.Add("TimeoutSeconds должен быть больше 0.");
         }
 
+        foreach (var headerRule in s.Headers.Where(v => !string.IsNullOrWhiteSpace(v)))
+        {
+            var header = headerRule.Trim();
+            var colonIndex = header.IndexOf(':');
+            if (colonIndex <= 0)
+            {
+                errors.Add($"Headers contains invalid value '{headerRule}'.");
+            }
+        }
+
         if (s.Endpoints.Count == 0)
         {
             errors.Add("Список Endpoints должен содержать хотя бы один элемент.");
@@ -121,6 +131,7 @@ public class HttpPerformanceModule : ITestModule
             try
             {
                 using var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), ResolveUrl(s.BaseUrl, endpoint.Path));
+                ApplyHeaders(request, s.Headers);
                 var response = await client.SendAsync(request, ct);
                 sw.Stop();
 
@@ -194,5 +205,35 @@ public class HttpPerformanceModule : ITestModule
 
         var root = new Uri(baseUrl, UriKind.Absolute);
         return new Uri(root, path).ToString();
+    }
+
+    private static void ApplyHeaders(HttpRequestMessage request, IEnumerable<string> headers)
+    {
+        foreach (var raw in headers.Where(v => !string.IsNullOrWhiteSpace(v)))
+        {
+            var splitIndex = raw.IndexOf(':');
+            if (splitIndex <= 0)
+            {
+                continue;
+            }
+
+            var name = raw[..splitIndex].Trim();
+            var value = raw[(splitIndex + 1)..].Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            if (request.Headers.TryAddWithoutValidation(name, value))
+            {
+                continue;
+            }
+
+            if (name.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Content ??= new ByteArrayContent(Array.Empty<byte>());
+                request.Content.Headers.TryAddWithoutValidation(name, value);
+            }
+        }
     }
 }
