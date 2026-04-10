@@ -13,6 +13,13 @@
         <Setter Property="Margin" Value="0,2,0,0" />
     </Style>
 
+    <Style Selector="TextBlock.field-hint">
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
+        <Setter Property="Margin" Value="0,0,0,2" />
+    </Style>
+
     <Style Selector="Control.field-control">
         <Setter Property="Grid.Column" Value="1" />
         <Setter Property="VerticalAlignment" Value="Top" />
@@ -44,7 +51,30 @@
     </Style>
 
     <Style Selector="TextBlock.section-title">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+
+    <Style Selector="Border.row-editor-header">
+        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="BorderThickness" Value="{DynamicResource BorderThicknessThin}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushNeutral}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource InputCornerRadius}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryBgBrush}" />
+        <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+    <Style Selector="Grid.row-editor-header">
+        <Setter Property="ColumnSpacing" Value="6" />
+    </Style>
+
+    <Style Selector="TextBlock.row-editor-label">
+        <Setter Property="FontSize" Value="{DynamicResource LabelFontSize}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="TextBlock.status-line">

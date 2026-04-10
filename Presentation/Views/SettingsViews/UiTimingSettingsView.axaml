@@ -30,6 +30,21 @@
             <StackPanel Spacing="12">
                 <TextBlock Text="Профили совместимости" Classes="section-title" />
                 <TextBlock Text="Каждая строка запускается отдельно и формирует запись в матрице совместимости отчёта." Classes="field-hint" />
+                <Border Classes="row-editor-header">
+                    <StackPanel Spacing="6">
+                        <Grid ColumnDefinitions="160,4*" Classes="row-editor-header">
+                            <TextBlock Grid.Column="0" Text="Профиль" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="1" Text="URL страницы" Classes="row-editor-label" />
+                        </Grid>
+                        <Grid ColumnDefinitions="160,120,120,120,*" Classes="row-editor-header">
+                            <TextBlock Grid.Column="0" Text="Браузер" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="1" Text="Ширина" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="2" Text="Высота" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="3" Text="Headless" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="4" Text="User-Agent" Classes="row-editor-label" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
                 <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
             </StackPanel>
         </Border>
@@ -53,6 +68,8 @@
                     <TextBlock Text="Таймаут, сек" Classes="field-label" />
                     <NumericUpDown Classes="field-control" Minimum="1" Maximum="300" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
+
+                <TextBlock Text="Ширина и высота задаются в пикселях. Пустой User-Agent использует значение по умолчанию браузера." Classes="field-hint" />
             </StackPanel>
         </Border>
     </StackPanel>

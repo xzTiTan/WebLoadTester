@@ -34,6 +34,16 @@
         <Border Classes="section">
             <StackPanel Spacing="8">
                 <TextBlock Text="Ассеты" Classes="section-title" />
+                <TextBlock Text="Проверьте ключевые ресурсы сайта: адрес, ожидаемый тип контента и ограничения по размеру и задержке." Classes="field-hint" />
+                <Border Classes="row-editor-header">
+                    <Grid ColumnDefinitions="160,3*,180,96,110" Classes="row-editor-header">
+                        <TextBlock Grid.Column="0" Text="Имя" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="1" Text="URL ресурса" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="2" Text="Content-Type" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="3" Text="Макс. KB" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="4" Text="Макс. мс" Classes="row-editor-label" />
+                    </Grid>
+                </Border>
                 <controls:RowListEditorView DataContext="{Binding AssetsEditor}" />
             </StackPanel>
         </Border>

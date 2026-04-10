@@ -33,7 +33,16 @@
         </Border>
 
         <Border Grid.Row="1" Classes="section">
-            <StackPanel Spacing="8">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Действия с выбранным прогоном" Classes="section-title" />
+                <TextBlock Text="Выберите прогон в таблице ниже. Кнопки открытия отчётов, папки и повторного запуска применяются к выделенной строке."
+                           Classes="muted" />
+                <TextBlock Text="{Binding SelectedRun.RunId, StringFormat='Выбранный прогон: {0}'}"
+                           Classes="muted"
+                           IsVisible="{Binding HasSelectedRun}" />
+                <TextBlock Text="Прогон пока не выбран. Сначала выделите строку в журнале запусков."
+                           Classes="muted"
+                           IsVisible="{Binding HasSelectedRun, Converter={StaticResource BooleanNotConverter}}" />
                 <WrapPanel Classes="wrap-gap">
                     <Button Content="Обновить" Classes="primary toolbar-button" Command="{Binding RefreshCommand}" />
                     <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
@@ -43,13 +52,19 @@
                     <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
                     <Button Content="Копировать идентификатор запуска" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
                 </WrapPanel>
-                <TextBlock Text="{Binding RepeatRunHint}" IsVisible="{Binding HasRepeatRunHint}" />
+                <TextBlock Text="{Binding RepeatRunHint}" Classes="status-line" IsVisible="{Binding HasRepeatRunHint}" />
             </StackPanel>
         </Border>
 
         <Grid Grid.Row="2" RowDefinitions="*,Auto,*" RowSpacing="8">
-            <Border Grid.Row="0" Classes="section" Padding="0">
-                <Grid>
+            <Border Grid.Row="0" Classes="section">
+                <StackPanel Spacing="10">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Список прогонов" Classes="section-title" />
+                        <TextBlock Text="Журнал запусков с учётом выбранных фильтров. Выделите строку, чтобы открыть детали и артефакты ниже."
+                                   Classes="muted" />
+                    </StackPanel>
+                    <Grid>
                     <DataGrid x:Name="RunsGrid"
                               ItemsSource="{Binding Runs}"
                               SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
@@ -67,6 +82,7 @@
                     </DataGrid>
                     <TextBlock Text="Нет запусков" IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}" Margin="8" />
                 </Grid>
+                </StackPanel>
             </Border>
 
             <GridSplitter Grid.Row="1"
@@ -79,6 +95,13 @@
             <Border Grid.Row="2" Classes="section">
                 <Expander Header="Детали" IsExpanded="True">
                     <StackPanel Margin="0,8,0,0" Spacing="10">
+                        <TextBlock Text="Детали выбранного прогона" Classes="section-title" />
+                        <TextBlock Text="Ниже отображаются сводка, профиль запуска, артефакты и частые ошибки по выделенному прогону."
+                                   Classes="muted" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      MaxHeight="340">
+                            <StackPanel Spacing="10">
                         <WrapPanel Classes="wrap-gap" IsVisible="{Binding HasSelectedRun}">
                             <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.ModuleType, StringFormat='Модуль: {0}'}" FontSize="12" /></Border>
                             <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.Status, StringFormat='Статус: {0}'}" FontSize="12" /></Border>
@@ -91,7 +114,9 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding HasSelectedRun}" Spacing="6">
+                            <TextBlock Text="Сводка" Classes="section-title" FontSize="16" />
                             <TextBlock Text="{Binding DetailsSummary}" TextWrapping="Wrap" />
+                            <TextBlock Text="Профиль запуска" Classes="section-title" FontSize="16" />
                             <TextBlock Text="{Binding DetailsProfile}" Classes="muted" TextWrapping="Wrap" />
                         </StackPanel>
 
@@ -132,6 +157,8 @@
                         </StackPanel>
 
                         <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
+                            </StackPanel>
+                        </ScrollViewer>
                     </StackPanel>
                 </Expander>
             </Border>

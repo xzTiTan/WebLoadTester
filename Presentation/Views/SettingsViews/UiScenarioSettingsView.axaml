@@ -10,34 +10,46 @@
     <UserControl.DataTemplates>
         <DataTemplate DataType="{x:Type rowVm:UiStepRowViewModel}">
             <StackPanel Spacing="2" Margin="0,0,0,6">
-                <Grid ColumnDefinitions="140,2*,2*,96" ColumnSpacing="6">
-                    <ComboBox Grid.Column="0"
-                              ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
-                              SelectedItem="{Binding Action, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="domain:UiStepAction">
-                                <TextBlock Text="{Binding ., Converter={StaticResource UiScenarioActionDisplayConverter}}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                <Border Classes="step-card">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,170" ColumnSpacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Действие" Classes="muted" />
+                                <ComboBox ItemsSource="{Binding DataContext.ActionOptions, ElementName=Root}"
+                                          SelectedItem="{Binding Action, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="domain:UiStepAction">
+                                            <TextBlock Text="{Binding ., Converter={StaticResource UiScenarioActionDisplayConverter}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
 
-                    <TextBox Grid.Column="1"
-                             Text="{Binding Selector, Mode=TwoWay}"
-                             IsEnabled="{Binding IsSelectorEnabled}"
-                             Watermark="{Binding SelectorWatermark}" />
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock Text="{Binding DelayLabel}" Classes="muted" />
+                                <NumericUpDown Minimum="0"
+                                               Maximum="600000"
+                                               Increment="100"
+                                               Value="{Binding DelayMs, Mode=TwoWay}"
+                                               IsEnabled="{Binding IsDelayMsEnabled}" />
+                            </StackPanel>
+                        </Grid>
 
-                    <TextBox Grid.Column="2"
-                             Text="{Binding Value, Mode=TwoWay}"
-                             IsEnabled="{Binding IsValueEnabled}"
-                             Watermark="{Binding ValueWatermark}" />
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding SelectorLabel}" Classes="muted" />
+                            <TextBox Text="{Binding Selector, Mode=TwoWay}"
+                                     IsEnabled="{Binding IsSelectorEnabled}"
+                                     Watermark="{Binding SelectorWatermark}" />
+                        </StackPanel>
 
-                    <NumericUpDown Grid.Column="3"
-                                   Minimum="0"
-                                   Maximum="600000"
-                                   Increment="100"
-                                   Value="{Binding DelayMs, Mode=TwoWay}"
-                                   IsEnabled="{Binding IsDelayMsEnabled}" />
-                </Grid>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding ValueLabel}" Classes="muted" />
+                            <TextBox Text="{Binding Value, Mode=TwoWay}"
+                                     IsEnabled="{Binding IsValueEnabled}"
+                                     Watermark="{Binding ValueWatermark}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" TextWrapping="Wrap" Classes="error" />
             </StackPanel>
@@ -69,6 +81,9 @@
         <Border Classes="section">
             <StackPanel Spacing="12">
                 <TextBlock Text="Шаги" Classes="section-title" />
+                <TextBlock Text="Каждый шаг состоит из действия, паузы после шага и полей Selector / Value, которые становятся активными в зависимости от выбранного действия."
+                           TextWrapping="Wrap"
+                           Classes="muted" />
                 <controls:RowListEditorView DataContext="{Binding StepsEditor}" />
             </StackPanel>
         </Border>

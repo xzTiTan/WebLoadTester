@@ -78,6 +78,26 @@ public partial class UiStepRowViewModel : ObservableObject
     public bool IsSelectorEnabled => Action is UiStepAction.WaitForSelector or UiStepAction.Click or UiStepAction.Fill or UiStepAction.AssertText or UiStepAction.Screenshot;
     public bool IsValueEnabled => Action is UiStepAction.Navigate or UiStepAction.Fill or UiStepAction.AssertText or UiStepAction.Screenshot;
     public bool IsDelayMsEnabled => true;
+    public string SelectorLabel => Action switch
+    {
+        UiStepAction.WaitForSelector => "Селектор ожидания",
+        UiStepAction.Click => "Селектор элемента",
+        UiStepAction.Fill => "Селектор поля",
+        UiStepAction.AssertText => "Селектор элемента",
+        UiStepAction.Screenshot => "Селектор области",
+        _ => "Селектор"
+    };
+
+    public string ValueLabel => Action switch
+    {
+        UiStepAction.Navigate => "URL перехода",
+        UiStepAction.Fill => "Значение для ввода",
+        UiStepAction.AssertText => "Ожидаемый текст",
+        UiStepAction.Screenshot => "Имя снимка",
+        _ => "Значение"
+    };
+
+    public string DelayLabel => "Пауза после шага, мс";
 
     public string SelectorWatermark => Action switch
     {
@@ -183,6 +203,9 @@ public partial class UiStepRowViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSelectorEnabled));
         OnPropertyChanged(nameof(IsValueEnabled));
         OnPropertyChanged(nameof(IsDelayMsEnabled));
+        OnPropertyChanged(nameof(SelectorLabel));
+        OnPropertyChanged(nameof(ValueLabel));
+        OnPropertyChanged(nameof(DelayLabel));
         OnPropertyChanged(nameof(SelectorWatermark));
         OnPropertyChanged(nameof(ValueWatermark));
         OnPropertyChanged(nameof(RowErrorText));

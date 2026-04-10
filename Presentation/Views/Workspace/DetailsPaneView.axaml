@@ -3,47 +3,53 @@
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
              x:Class="WebLoadTester.Presentation.Views.Workspace.DetailsPaneView"
              x:DataType="vm:DetailsPaneViewModel">
-    <StackPanel Spacing="8">
-        <StackPanel Spacing="6">
-            <TextBlock Text="Сводка прогона" />
-            <StackPanel Spacing="4">
-                <TextBlock Text="{Binding IdentityLine}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding StateLine}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding MetricLine1}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding MetricLine2}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding LastErrorShort}" IsVisible="{Binding HasError}" TextWrapping="Wrap" />
-                <Button Content="Показать в логе" Command="{Binding ShowInLogCommand}" />
-            </StackPanel>
-        </StackPanel>
-
-        <StackPanel Spacing="6">
-            <TextBlock Text="Быстрый доступ к результатам" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16">
             <StackPanel Spacing="6">
-                <TextBlock Text="{Binding RunFolderPath}" TextWrapping="Wrap" />
-                <WrapPanel>
-                    <Button Content="Открыть папку" Command="{Binding OpenFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />
-                    <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasHtml}" Margin="0,0,8,0" />
-                    <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasJson}" />
-                </WrapPanel>
+                <TextBlock Text="Сводка прогона" Classes="section-title" />
+                <TextBlock Text="Ключевые метрики и быстрый переход к логу по выбранному запуску." Classes="field-hint" />
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding IdentityLine}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding StateLine}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding MetricLine1}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding MetricLine2}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding LastErrorShort}" IsVisible="{Binding HasError}" TextWrapping="Wrap" />
+                    <Button Content="Показать в логе" Command="{Binding ShowInLogCommand}" />
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
 
-        <StackPanel Spacing="6" IsEnabled="{Binding CanEditTelegram}">
-            <TextBlock Text="Телеграм" />
             <StackPanel Spacing="6">
-                <CheckBox Content="Включено" IsChecked="{Binding TelegramEnabled, Mode=OneWay}" IsEnabled="False" />
-                <CheckBox Content="Уведомлять об ошибках" IsChecked="{Binding NotifyOnError, Mode=TwoWay}" />
-                <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding NotifyOnFinish, Mode=TwoWay}" />
+                <TextBlock Text="Быстрый доступ к результатам" Classes="section-title" />
+                <TextBlock Text="Откройте папку прогона, HTML-отчёт или JSON-снимок настроек." Classes="field-hint" />
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding RunFolderPath}" TextWrapping="Wrap" />
+                    <WrapPanel>
+                        <Button Content="Открыть папку" Command="{Binding OpenFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,8,0" />
+                        <Button Content="Открыть HTML" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasHtml}" Margin="0,0,8,0" />
+                        <Button Content="Открыть JSON" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasJson}" />
+                    </WrapPanel>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
 
-        <StackPanel Spacing="6">
-            <TextBlock Text="Горячие клавиши" />
-            <StackPanel Spacing="2">
-                <TextBlock Text="F5 Старт" />
-                <TextBlock Text="Shift+F5 Стоп" />
-                <TextBlock Text="Ctrl+L Лог" />
+            <StackPanel Spacing="6" IsEnabled="{Binding CanEditTelegram}">
+                <TextBlock Text="Телеграм" Classes="section-title" />
+                <TextBlock Text="Параметры уведомлений для текущего workspace." Classes="field-hint" />
+                <StackPanel Spacing="6">
+                    <CheckBox Content="Включено" IsChecked="{Binding TelegramEnabled, Mode=OneWay}" IsEnabled="False" />
+                    <CheckBox Content="Уведомлять об ошибках" IsChecked="{Binding NotifyOnError, Mode=TwoWay}" />
+                    <CheckBox Content="Уведомлять о завершении" IsChecked="{Binding NotifyOnFinish, Mode=TwoWay}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Горячие клавиши" Classes="section-title" />
+                <TextBlock Text="Быстрые действия для управления запуском и логом." Classes="field-hint" />
+                <StackPanel Spacing="2">
+                    <TextBlock Text="F5 Старт" />
+                    <TextBlock Text="Shift+F5 Стоп" />
+                    <TextBlock Text="Ctrl+L Лог" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
-    </StackPanel>
+    </ScrollViewer>
 </UserControl>

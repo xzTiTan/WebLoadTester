@@ -26,6 +26,14 @@
         <Border Classes="section">
             <StackPanel Spacing="12">
                 <TextBlock Text="Цели" Classes="section-title" />
+                <TextBlock Text="Для каждой цели задайте имя, страницу и CSS-селектор. При режиме «Полная страница» селектор можно оставить пустым." Classes="field-hint" />
+                <Border Classes="row-editor-header">
+                    <Grid ColumnDefinitions="160,3*,2*" Classes="row-editor-header">
+                        <TextBlock Grid.Column="0" Text="Имя цели" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="1" Text="URL страницы" Classes="row-editor-label" />
+                        <TextBlock Grid.Column="2" Text="CSS-селектор" Classes="row-editor-label" />
+                    </Grid>
+                </Border>
                 <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
             </StackPanel>
         </Border>

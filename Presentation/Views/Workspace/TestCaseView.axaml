@@ -4,22 +4,33 @@
              xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.Workspace.TestCaseView"
              x:DataType="vm:TestCaseViewModel">
-    <StackPanel Spacing="6">
-        <TextBlock Text="Тест-кейс" />
-        <StackPanel Spacing="6">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="domain:ModuleConfigSummary">
-                            <TextBlock Text="{Binding FinalName}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button Grid.Column="1" Content="Загрузить" TabIndex="21" Command="{Binding LoadCommand}" />
+    <StackPanel Spacing="10">
+        <TextBlock Text="Тест-кейс" Classes="section-title" />
+        <TextBlock Text="Выберите конфигурацию из библиотеки или сохраните текущие настройки как новый тест-кейс." Classes="field-hint" />
+        <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                <TextBlock Text="Конфигурация" Classes="field-label" />
+                <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <ComboBox TabIndex="20" ItemsSource="{Binding Configs}" SelectedItem="{Binding SelectedConfig, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:ModuleConfigSummary">
+                                <TextBlock Text="{Binding FinalName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Column="1" Content="Загрузить" TabIndex="21" Command="{Binding LoadCommand}" />
+                </Grid>
             </Grid>
 
-            <TextBox TabIndex="22" Watermark="Имя (обяз.)" Text="{Binding Name, Mode=TwoWay}" />
-            <TextBox TabIndex="23" Watermark="Описание" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
+            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                <TextBlock Text="Имя" Classes="field-label" />
+                <TextBox Grid.Column="1" TabIndex="22" Text="{Binding Name, Mode=TwoWay}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                <TextBlock Text="Описание" Classes="field-label" />
+                <TextBox Grid.Column="1" TabIndex="23" AcceptsReturn="True" MinHeight="80" Text="{Binding Description, Mode=TwoWay}" />
+            </Grid>
 
             <WrapPanel Orientation="Horizontal">
                 <Button Content="Сохранить" TabIndex="24" Command="{Binding SaveCommand}" Margin="0,0,6,0" />

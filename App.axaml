@@ -18,7 +18,7 @@
         <conv:ScreenshotsPolicyDisplayConverter x:Key="ScreenshotsPolicyDisplayConverter" />
         <conv:UiWaitUntilDisplayConverter x:Key="UiWaitUntilDisplayConverter" />
         <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="{DynamicResource LabelColumnWidth}" />
             <ColumnDefinition Width="*" />
         </ColumnDefinitions>
     </Application.Resources>

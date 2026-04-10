@@ -1,4 +1,4 @@
-v3.52 20.03.2026
+v3.53 11.04.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,10 @@ v3.52 20.03.2026
 ---
 
 # Changelog
+
+## v3.53 11.04.2026
+- Исправлен runtime-crash Avalonia `InvalidCastException` при открытии workspace: design token `LabelColumnWidth` переведён из `x:Double` в `GridLength`, чтобы `ColumnDefinition.Width` в `App.axaml` получал корректный тип через `DynamicResource`.
+- Обновлены версии `README.md` и `AGENTS.md`, запись добавлена в `docs/CODEX_RULES_AND_CHANGELOG.md`.
 
 ## v3.52 20.03.2026
 - Stage 1 foundation: усилена устойчивость ввода и нормализация значений в форме без изменения архитектуры, `moduleId`, repeat-run flow и контракта `report.json`.
