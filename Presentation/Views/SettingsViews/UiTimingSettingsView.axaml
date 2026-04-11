@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.UiTiming"
@@ -8,18 +8,53 @@
              x:DataType="vm:UiTimingSettingsViewModel">
     <UserControl.DataTemplates>
         <DataTemplate x:DataType="rows:TimingTargetRowViewModel">
-            <StackPanel Spacing="6" Margin="0,0,0,6">
-                <Grid ColumnDefinitions="160,4*" ColumnSpacing="6">
-                    <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Профиль совместимости" />
-                    <TextBox Grid.Column="1" Text="{Binding Url, Mode=TwoWay}" Watermark="https://пример.рф" />
+            <StackPanel Spacing="8" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="180,*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Сценарий" Classes="field-label" />
+                        <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="Например: Базовый Chromium" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Spacing="4">
+                        <TextBlock Text="Адрес страницы" Classes="field-label" />
+                        <TextBox Text="{Binding Url, Mode=TwoWay}" Watermark="https://пример.рф" />
+                    </StackPanel>
                 </Grid>
-                <Grid ColumnDefinitions="160,120,120,120,*" ColumnSpacing="6">
-                    <TextBox Grid.Column="0" Text="{Binding BrowserChannel, Mode=TwoWay}" Watermark="chromium" />
-                    <NumericUpDown Grid.Column="1" Minimum="320" Maximum="3840" Value="{Binding ViewportWidth, Mode=TwoWay}" />
-                    <NumericUpDown Grid.Column="2" Minimum="240" Maximum="2160" Value="{Binding ViewportHeight, Mode=TwoWay}" />
-                    <CheckBox Grid.Column="3" IsThreeState="True" IsChecked="{Binding Headless, Mode=TwoWay}" Content="Headless (пусто = из профиля)"/>
-                    <TextBox Grid.Column="4" Text="{Binding UserAgent, Mode=TwoWay}" Watermark="User-Agent (опционально)" />
+
+                <Grid ColumnDefinitions="180,120,120,150,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Браузер" Classes="field-label" />
+                        <ComboBox ItemsSource="{Binding BrowserOptions}" SelectedItem="{Binding SelectedBrowserOption, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="rows:BrowserChoice">
+                                    <TextBlock Text="{Binding Label}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Ширина" Classes="field-label" />
+                        <NumericUpDown Minimum="320" Maximum="3840" Value="{Binding ViewportWidth, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Высота" Classes="field-label" />
+                        <NumericUpDown Minimum="240" Maximum="2160" Value="{Binding ViewportHeight, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" Spacing="4">
+                        <TextBlock Text="Режим окна" Classes="field-label" />
+                        <CheckBox IsThreeState="True"
+                                  IsChecked="{Binding Headless, Mode=TwoWay}"
+                                  Content="Headless" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4" Spacing="4">
+                        <TextBlock Text="User-Agent (дополнительно)" Classes="field-label" />
+                        <TextBox Text="{Binding UserAgent, Mode=TwoWay}"
+                                 Watermark="Например: Mozilla/5.0 ..." />
+                    </StackPanel>
                 </Grid>
+
+                <TextBlock Text="Браузер выбирается из доступного списка. User-Agent можно оставить пустым, чтобы использовать стандартное значение Chromium."
+                           Classes="field-hint"
+                           TextWrapping="Wrap" />
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
             </StackPanel>
         </DataTemplate>
@@ -28,15 +63,17 @@
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <TextBlock Text="Профили совместимости" Classes="section-title" />
-                <TextBlock Text="Каждая строка запускается отдельно и формирует запись в матрице совместимости отчёта." Classes="field-hint" />
+                <TextBlock Text="Проверка совместимости" Classes="section-title" />
+                <TextBlock Text="Каждая строка запускает страницу в отдельном браузерном сценарии и показывает, как меняется загрузка для выбранного viewport и настроек браузера."
+                           Classes="field-hint"
+                           TextWrapping="Wrap" />
                 <Border Classes="row-editor-header">
                     <StackPanel Spacing="6">
-                        <Grid ColumnDefinitions="160,4*" Classes="row-editor-header">
-                            <TextBlock Grid.Column="0" Text="Профиль" Classes="row-editor-label" />
-                            <TextBlock Grid.Column="1" Text="URL страницы" Classes="row-editor-label" />
+                        <Grid ColumnDefinitions="180,*,*" Classes="row-editor-header">
+                            <TextBlock Grid.Column="0" Text="Сценарий" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="Страница" Classes="row-editor-label" />
                         </Grid>
-                        <Grid ColumnDefinitions="160,120,120,120,*" Classes="row-editor-header">
+                        <Grid ColumnDefinitions="180,120,120,150,*" Classes="row-editor-header">
                             <TextBlock Grid.Column="0" Text="Браузер" Classes="row-editor-label" />
                             <TextBlock Grid.Column="1" Text="Ширина" Classes="row-editor-label" />
                             <TextBlock Grid.Column="2" Text="Высота" Classes="row-editor-label" />
@@ -45,6 +82,9 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+                <TextBlock Text="Это бывший список профилей совместимости: теперь каждая строка описывает понятный сценарий проверки для конкретной страницы и viewport."
+                           Classes="field-hint"
+                           TextWrapping="Wrap" />
                 <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
             </StackPanel>
         </Border>
@@ -69,7 +109,9 @@
                     <NumericUpDown Classes="field-control" Minimum="1" Maximum="300" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
 
-                <TextBlock Text="Ширина и высота задаются в пикселях. Пустой User-Agent использует значение по умолчанию браузера." Classes="field-hint" />
+                <TextBlock Text="Ширина и высота задаются в пикселях. Inline-пояснения рядом со строкой заменяют tooltip, чтобы текст не прятался под controls."
+                           Classes="field-hint"
+                           TextWrapping="Wrap" />
             </StackPanel>
         </Border>
     </StackPanel>

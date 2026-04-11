@@ -1,3 +1,4 @@
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace WebLoadTester.Presentation.ViewModels;
 public partial class SettingsWindowViewModel : ObservableObject
 {
     private readonly AppSettingsService _settingsService;
+    private SettingsSnapshot _initialSnapshot;
 
     public SettingsWindowViewModel(AppSettingsService settingsService, TelegramSettingsViewModel telegramSettings)
     {
@@ -26,9 +28,12 @@ public partial class SettingsWindowViewModel : ObservableObject
         TelegramSettings = telegramSettings;
         dataDirectory = settingsService.Settings.DataDirectory;
         runsDirectory = settingsService.Settings.RunsDirectory;
+        _initialSnapshot = CaptureSnapshot();
     }
 
     public TelegramSettingsViewModel TelegramSettings { get; }
+
+    public event Action? CloseRequested;
 
     [ObservableProperty]
     private string dataDirectory = string.Empty;
@@ -36,27 +41,72 @@ public partial class SettingsWindowViewModel : ObservableObject
     [ObservableProperty]
     private string runsDirectory = string.Empty;
 
-
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
-    public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
+    public string ValidationMessage => BuildValidationMessage();
+
+    public bool HasValidationMessage => !string.IsNullOrWhiteSpace(ValidationMessage);
+
+    public bool CanSave => !HasValidationMessage;
+
+    public string DatabasePath =>
+        string.IsNullOrWhiteSpace(DataDirectory)
+            ? string.Empty
+            : Path.Combine(DataDirectory, "webloadtester.db");
 
     partial void OnDataDirectoryChanged(string value)
     {
         OnPropertyChanged(nameof(DatabasePath));
+        NotifyPathStateChanged();
+    }
+
+    partial void OnRunsDirectoryChanged(string value)
+    {
+        NotifyPathStateChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private async Task SaveAsync()
+    {
+        var dataPath = DataDirectory.Trim();
+        var runsPath = RunsDirectory.Trim();
+
+        if (!CanSave)
+        {
+            StatusMessage = ValidationMessage;
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(dataPath);
+            Directory.CreateDirectory(runsPath);
+
+            _settingsService.Settings.DataDirectory = dataPath;
+            _settingsService.Settings.RunsDirectory = runsPath;
+            _settingsService.Settings.BrowsersDirectory = Path.Combine(dataPath, "browsers");
+            _settingsService.Settings.Telegram = TelegramSettings.Settings;
+
+            await _settingsService.SaveAsync();
+
+            DataDirectory = dataPath;
+            RunsDirectory = runsPath;
+            _initialSnapshot = CaptureSnapshot();
+            StatusMessage = "Настройки сохранены.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Не удалось сохранить настройки: {ex.Message}";
+        }
     }
 
     [RelayCommand]
-    private async Task SaveAsync()
+    private void Cancel()
     {
-        _settingsService.Settings.DataDirectory = DataDirectory;
-        _settingsService.Settings.RunsDirectory = RunsDirectory;
-        _settingsService.Settings.Telegram = TelegramSettings.Settings;
-        Directory.CreateDirectory(DataDirectory);
-        Directory.CreateDirectory(RunsDirectory);
-        await _settingsService.SaveAsync();
-        StatusMessage = "Настройки сохранены.";
+        RestoreSnapshot(_initialSnapshot);
+        StatusMessage = string.Empty;
+        CloseRequested?.Invoke();
     }
 
     [RelayCommand]
@@ -137,6 +187,12 @@ public partial class SettingsWindowViewModel : ObservableObject
 
     private async Task CopyToClipboardAsync(string path)
     {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            StatusMessage = "Пустой путь, копировать нечего.";
+            return;
+        }
+
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
@@ -160,4 +216,47 @@ public partial class SettingsWindowViewModel : ObservableObject
         };
         Process.Start(psi);
     }
+
+    private void NotifyPathStateChanged()
+    {
+        OnPropertyChanged(nameof(ValidationMessage));
+        OnPropertyChanged(nameof(HasValidationMessage));
+        OnPropertyChanged(nameof(CanSave));
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
+    private string BuildValidationMessage()
+    {
+        if (string.IsNullOrWhiteSpace(DataDirectory))
+        {
+            return "Укажите каталог данных.";
+        }
+
+        if (string.IsNullOrWhiteSpace(RunsDirectory))
+        {
+            return "Укажите каталог прогонов.";
+        }
+
+        return string.Empty;
+    }
+
+    private SettingsSnapshot CaptureSnapshot()
+    {
+        return new SettingsSnapshot(
+            DataDirectory,
+            RunsDirectory,
+            TelegramSettings.CaptureSnapshot());
+    }
+
+    private void RestoreSnapshot(SettingsSnapshot snapshot)
+    {
+        DataDirectory = snapshot.DataDirectory;
+        RunsDirectory = snapshot.RunsDirectory;
+        TelegramSettings.RestoreSnapshot(snapshot.Telegram);
+    }
 }
+
+public readonly record struct SettingsSnapshot(
+    string DataDirectory,
+    string RunsDirectory,
+    TelegramSettingsSnapshot Telegram);

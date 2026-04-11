@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -23,11 +23,16 @@ public partial class RunsTabViewModel : ObservableObject
 {
     private readonly IRunStore _runStore;
     private readonly string _runsRoot;
+    private readonly SemaphoreSlim _refreshSync = new(1, 1);
     private Func<string, Task> _repeatRun;
     private Func<bool>? _isRunningProvider;
     private CancellationTokenSource? _searchDebounceCts;
     private string? _pendingDeleteRunId;
     private int _selectionStateVersion;
+    private bool _hasValidSelection;
+    private string? _validSelectedRunId;
+    private readonly Dictionary<string, string> _moduleFilterToType = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _moduleTypeToFilter = new(StringComparer.OrdinalIgnoreCase);
 
     public RunsTabViewModel(IRunStore runStore, string runsRoot, Func<string, Task> repeatRun)
     {
@@ -35,20 +40,20 @@ public partial class RunsTabViewModel : ObservableObject
         _runsRoot = runsRoot;
         _repeatRun = repeatRun;
 
-        StatusFilterOptions.Add("Все");
-        StatusFilterOptions.Add("Успешно");
-        StatusFilterOptions.Add("С ошибкой");
-        StatusFilterOptions.Add("Остановлено");
-        StatusFilterOptions.Add("Отменено");
-        StatusFilterOptions.Add("Выполняется");
+        StatusFilterOptions.Add("Р’СЃРµ");
+        StatusFilterOptions.Add("РЈСЃРїРµС€РЅРѕ");
+        StatusFilterOptions.Add("РЎ РѕС€РёР±РєРѕР№");
+        StatusFilterOptions.Add("РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ");
+        StatusFilterOptions.Add("РћС‚РјРµРЅРµРЅРѕ");
+        StatusFilterOptions.Add("Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ");
 
-        PeriodOptions.Add("Сегодня");
-        PeriodOptions.Add("7 дней");
-        PeriodOptions.Add("30 дней");
-        PeriodOptions.Add("Все");
+        PeriodOptions.Add("РЎРµРіРѕРґРЅСЏ");
+        PeriodOptions.Add("7 РґРЅРµР№");
+        PeriodOptions.Add("30 РґРЅРµР№");
+        PeriodOptions.Add("Р’СЃРµ");
 
-        SelectedStatus = "Все";
-        SelectedPeriod = "Все";
+        SelectedStatus = "Р’СЃРµ";
+        SelectedPeriod = "Р’СЃРµ";
     }
 
     public ObservableCollection<TestRunSummary> AllRuns { get; } = new();
@@ -61,8 +66,8 @@ public partial class RunsTabViewModel : ObservableObject
 
     [ObservableProperty] private TestRunSummary? selectedRun;
     [ObservableProperty] private string? selectedModuleType;
-    [ObservableProperty] private string selectedStatus = "Все";
-    [ObservableProperty] private string selectedPeriod = "Все";
+    [ObservableProperty] private string selectedStatus = "Р’СЃРµ";
+    [ObservableProperty] private string selectedPeriod = "Р’СЃРµ";
     [ObservableProperty] private bool onlyWithErrors;
     [ObservableProperty] private string? searchText;
     [ObservableProperty] private string userMessage = string.Empty;
@@ -73,20 +78,28 @@ public partial class RunsTabViewModel : ObservableObject
     [ObservableProperty] private string repeatRunHint = string.Empty;
 
     public bool HasSelectedRun => SelectedRun != null;
+    public bool HasValidSelection => _hasValidSelection;
     public bool HasRuns => Runs.Count > 0;
     public bool CanRepeatRun => RepeatRunCommand.CanExecute(null);
     public bool HasRepeatRunHint => !string.IsNullOrWhiteSpace(RepeatRunHint);
+    public string SelectedRunDisplayId => SelectedRun == null ? string.Empty : FormatRunId(SelectedRun.RunId);
+    public string SelectedRunDisplayModule => SelectedRun == null ? string.Empty : ResolveModuleDisplayName(SelectedRun.ModuleType, SelectedRun.ModuleName);
 
     public void SetModuleOptions(IEnumerable<string> moduleTypes)
     {
+        _moduleFilterToType.Clear();
+        _moduleTypeToFilter.Clear();
         ModuleFilterOptions.Clear();
-        ModuleFilterOptions.Add("Все");
+        ModuleFilterOptions.Add("Р’СЃРµ");
         foreach (var moduleType in moduleTypes.OrderBy(m => m))
         {
-            ModuleFilterOptions.Add(moduleType);
+            var displayName = ResolveModuleDisplayName(moduleType, string.Empty);
+            ModuleFilterOptions.Add(displayName);
+            _moduleFilterToType[displayName] = moduleType;
+            _moduleTypeToFilter[moduleType] = displayName;
         }
 
-        SelectedModuleType ??= "Все";
+        SelectedModuleType ??= "Р’СЃРµ";
     }
 
 
@@ -115,13 +128,11 @@ public partial class RunsTabViewModel : ObservableObject
     partial void OnOnlyWithErrorsChanged(bool value) => ApplyFilters();
     partial void OnSelectedRunChanged(TestRunSummary? value)
     {
-        OnPropertyChanged(nameof(HasSelectedRun));
-        RepeatRunCommand.NotifyCanExecuteChanged();
-        OnPropertyChanged(nameof(CanRepeatRun));
-        OnPropertyChanged(nameof(HasRepeatRunHint));
+        var validRun = UpdateValidSelectionState();
+        NotifySelectionBindingsChanged();
 
         var version = Interlocked.Increment(ref _selectionStateVersion);
-        _ = RefreshSelectionStateAsync(value, version);
+        _ = RefreshSelectionStateAsync(validRun, version);
     }
 
     partial void OnIsRunningChanged(bool value)
@@ -131,7 +142,7 @@ public partial class RunsTabViewModel : ObservableObject
         OnPropertyChanged(nameof(HasRepeatRunHint));
         if (value)
         {
-            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
             return;
         }
 
@@ -150,37 +161,49 @@ public partial class RunsTabViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
-        var previousRunId = SelectedRun?.RunId;
-        IsDeleteConfirmVisible = false;
-        _pendingDeleteRunId = null;
-
-        var dbRuns = await _runStore.QueryRunsAsync(new RunQuery(), CancellationToken.None);
-        var mergedRuns = await BuildMergedRunListAsync(dbRuns, CancellationToken.None);
-
-        AllRuns.Clear();
-        foreach (var item in mergedRuns)
+        await _refreshSync.WaitAsync();
+        try
         {
-            AllRuns.Add(item);
+            var previousRunId = await Dispatcher.UIThread.InvokeAsync(() => SelectedRun?.RunId);
+            var dbRuns = await _runStore.QueryRunsAsync(new RunQuery(), CancellationToken.None);
+            var mergedRuns = await BuildMergedRunListAsync(dbRuns, CancellationToken.None);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsDeleteConfirmVisible = false;
+                _pendingDeleteRunId = null;
+
+                AllRuns.Clear();
+                foreach (var item in mergedRuns)
+                {
+                    AllRuns.Add(item);
+                }
+
+                ApplyFilters();
+
+                SelectedRun = !string.IsNullOrWhiteSpace(previousRunId)
+                    ? Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault()
+                    : Runs.FirstOrDefault();
+
+                UserMessage = string.Empty;
+            });
+
+            var version = Volatile.Read(ref _selectionStateVersion);
+            if (!HasValidSelection)
+            {
+                await RefreshSelectionStateAsync(null, version);
+            }
         }
-
-        ApplyFilters();
-
-        SelectedRun = !string.IsNullOrWhiteSpace(previousRunId)
-            ? Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault()
-            : Runs.FirstOrDefault();
-
-        UserMessage = string.Empty;
-        if (SelectedRun == null)
+        finally
         {
-            var version = Interlocked.Increment(ref _selectionStateVersion);
-            await RefreshSelectionStateAsync(null, version);
+            _refreshSync.Release();
         }
     }
 
     [RelayCommand]
     private void OpenJson()
     {
-        if (OpenPath(GetJsonPath(), "Файл report.json не найден.", out var error))
+        if (OpenPath(GetJsonPath(), "Р¤Р°Р№Р» report.json РЅРµ РЅР°Р№РґРµРЅ.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -193,30 +216,30 @@ public partial class RunsTabViewModel : ObservableObject
     private void OpenHtml()
     {
         var htmlPath = GetHtmlPath();
-        if (OpenPath(htmlPath, "Файл report.html не найден.", out _))
+        if (OpenPath(htmlPath, "Р¤Р°Р№Р» report.html РЅРµ РЅР°Р№РґРµРЅ.", out _))
         {
             UserMessage = string.Empty;
             return;
         }
 
         var jsonPath = GetJsonPath();
-        if (OpenPath(jsonPath, "Файл report.json не найден.", out _))
+        if (OpenPath(jsonPath, "Р¤Р°Р№Р» report.json РЅРµ РЅР°Р№РґРµРЅ.", out _))
         {
-            UserMessage = "HTML-отчёт недоступен, открыт report.json.";
+            UserMessage = "HTML-РѕС‚С‡С‘С‚ РЅРµРґРѕСЃС‚СѓРїРµРЅ, РѕС‚РєСЂС‹С‚ report.json.";
             return;
         }
 
         if (SelectedRun != null)
         {
             var runFolder = Path.Combine(_runsRoot, SelectedRun.RunId);
-            if (OpenPath(runFolder, "Папка прогона не найдена.", out _))
+            if (OpenPath(runFolder, "РџР°РїРєР° РїСЂРѕРіРѕРЅР° РЅРµ РЅР°Р№РґРµРЅР°.", out _))
             {
-                UserMessage = "HTML и JSON недоступны, открыта папка прогона.";
+                UserMessage = "HTML Рё JSON РЅРµРґРѕСЃС‚СѓРїРЅС‹, РѕС‚РєСЂС‹С‚Р° РїР°РїРєР° РїСЂРѕРіРѕРЅР°.";
                 return;
             }
         }
 
-        UserMessage = "Не удалось открыть HTML, JSON и папку прогона.";
+        UserMessage = "РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ HTML, JSON Рё РїР°РїРєСѓ РїСЂРѕРіРѕРЅР°.";
     }
 
     [RelayCommand]
@@ -227,7 +250,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        if (OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "Папка прогона не найдена.", out var error))
+        if (OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "РџР°РїРєР° РїСЂРѕРіРѕРЅР° РЅРµ РЅР°Р№РґРµРЅР°.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -248,7 +271,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
-            UserMessage = "Идентификатор запуска скопирован в буфер обмена.";
+            UserMessage = "РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р·Р°РїСѓСЃРєР° СЃРєРѕРїРёСЂРѕРІР°РЅ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР°.";
         }
     }
 
@@ -264,7 +287,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(Path.Combine(_runsRoot, SelectedRun.RunId));
-            UserMessage = "Путь прогона скопирован в буфер обмена.";
+            UserMessage = "РџСѓС‚СЊ РїСЂРѕРіРѕРЅР° СЃРєРѕРїРёСЂРѕРІР°РЅ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР°.";
         }
     }
 
@@ -279,19 +302,19 @@ public partial class RunsTabViewModel : ObservableObject
         RefreshRunningState();
         if (IsRunning)
         {
-            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
             return;
         }
 
         await _repeatRun(SelectedRun.RunId);
-        UserMessage = $"Конфигурация загружена из прогона {SelectedRun.RunId}. Запуск не выполнялся.";
+        UserMessage = $"РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ Р·Р°РіСЂСѓР¶РµРЅР° РёР· РїСЂРѕРіРѕРЅР° {SelectedRun.RunId}. Р—Р°РїСѓСЃРє РЅРµ РІС‹РїРѕР»РЅСЏР»СЃСЏ.";
         var version = Volatile.Read(ref _selectionStateVersion);
         await UpdateRepeatRunAvailabilityAsync(SelectedRun, version);
     }
 
     private bool CanExecuteRepeatRun()
     {
-        return HasSelectedRun && !IsRunning && string.IsNullOrWhiteSpace(RepeatRunHint);
+        return HasValidSelection && !IsRunning && string.IsNullOrWhiteSpace(RepeatRunHint);
     }
 
     [RelayCommand]
@@ -304,7 +327,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         _pendingDeleteRunId = SelectedRun.RunId;
         IsDeleteConfirmVisible = true;
-        UserMessage = $"Удалить прогон {SelectedRun.RunId}? Будут удалены запись из БД и папка runs/{SelectedRun.RunId}.";
+        UserMessage = $"РЈРґР°Р»РёС‚СЊ РїСЂРѕРіРѕРЅ {SelectedRun.RunId}? Р‘СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹ Р·Р°РїРёСЃСЊ РёР· Р‘Р” Рё РїР°РїРєР° runs/{SelectedRun.RunId}.";
     }
 
     [RelayCommand]
@@ -326,11 +349,11 @@ public partial class RunsTabViewModel : ObservableObject
                 Directory.Delete(runFolder, recursive: true);
             }
 
-            UserMessage = "Прогон удалён.";
+            UserMessage = "РџСЂРѕРіРѕРЅ СѓРґР°Р»С‘РЅ.";
         }
         catch (Exception ex)
         {
-            UserMessage = $"Запись БД удалена, но не удалось удалить папку: {ex.Message}";
+            UserMessage = $"Р—Р°РїРёСЃСЊ Р‘Р” СѓРґР°Р»РµРЅР°, РЅРѕ РЅРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РїР°РїРєСѓ: {ex.Message}";
         }
 
         IsDeleteConfirmVisible = false;
@@ -354,7 +377,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        if (OpenPath(item.FullPath, "Артефакт не найден.", out var error))
+        if (OpenPath(item.FullPath, "РђСЂС‚РµС„Р°РєС‚ РЅРµ РЅР°Р№РґРµРЅ.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -456,13 +479,13 @@ public partial class RunsTabViewModel : ObservableObject
 
         if (IsRunning)
         {
-            return "Остановите запуск, чтобы повторить.";
+            return "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
         }
 
         var reportPath = Path.Combine(_runsRoot, run.RunId, "report.json");
         if (!File.Exists(reportPath))
         {
-            return "report.json не найден для выбранного прогона.";
+            return "report.json РЅРµ РЅР°Р№РґРµРЅ РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїСЂРѕРіРѕРЅР°.";
         }
 
         try
@@ -470,11 +493,11 @@ public partial class RunsTabViewModel : ObservableObject
             var reportJson = await File.ReadAllTextAsync(reportPath);
             return TryParseRepeatSnapshot(reportJson, out _, out var parseError)
                 ? string.Empty
-                : $"report.json повреждён: {parseError}";
+                : $"report.json РїРѕРІСЂРµР¶РґС‘РЅ: {parseError}";
         }
         catch (Exception ex)
         {
-            return $"Не удалось прочитать report.json: {ex.Message}";
+            return $"РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ report.json: {ex.Message}";
         }
     }
 
@@ -543,8 +566,8 @@ public partial class RunsTabViewModel : ObservableObject
                 RunId = GetString(root, "runId") ?? runId,
                 StartedAt = ParseDateTimeOffset(root, "startedAtUtc") ?? new DateTimeOffset(File.GetLastWriteTimeUtc(jsonPath)),
                 TestName = GetString(root, "finalName", "testName") ?? runId,
-                ModuleName = GetString(root, "moduleId") ?? "orphan",
                 ModuleType = GetString(root, "moduleId") ?? "orphan",
+                ModuleName = ResolveModuleDisplayName(GetString(root, "moduleId") ?? "orphan", GetString(root, "moduleName")),
                 Status = GetString(root, "status") ?? "Unknown",
                 DurationMs = GetNestedDouble(root, "summary", "durationMs") ?? 0,
                 FailedItems = GetNestedInt32(root, "summary", "failedItems") ?? CountFailedItems(root),
@@ -562,8 +585,8 @@ public partial class RunsTabViewModel : ObservableObject
             {
                 RunId = runId,
                 StartedAt = new DateTimeOffset(File.GetLastWriteTimeUtc(jsonPath)),
-                TestName = $"[orphan] {runId}",
-                ModuleName = "orphan",
+                TestName = $"РРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№ Р·Р°РїСѓСЃРє {FormatRunId(runId)}",
+                ModuleName = "РќРµРёР·РІРµСЃС‚РЅС‹Р№ РјРѕРґСѓР»СЊ",
                 ModuleType = "orphan",
                 Status = "Unknown",
                 DurationMs = 0,
@@ -635,7 +658,7 @@ public partial class RunsTabViewModel : ObservableObject
                 detail.Run.RunId = GetString(root, "runId") ?? run.RunId;
                 detail.Run.TestName = GetString(root, "finalName", "testName") ?? run.TestName;
                 detail.Run.ModuleType = GetString(root, "moduleId") ?? run.ModuleType;
-                detail.Run.ModuleName = detail.Run.ModuleType;
+                detail.Run.ModuleName = ResolveModuleDisplayName(detail.Run.ModuleType, GetString(root, "moduleName"));
                 detail.Run.StartedAt = ParseDateTimeOffset(root, "startedAtUtc") ?? run.StartedAt;
                 detail.Run.FinishedAt = ParseDateTimeOffset(root, "finishedAtUtc");
                 detail.Run.Status = GetString(root, "status") ?? run.Status;
@@ -728,27 +751,12 @@ public partial class RunsTabViewModel : ObservableObject
         var knownPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var runFolder = Path.Combine(_runsRoot, detail.Run.RunId);
 
-        foreach (var artifact in detail.Artifacts)
-        {
-            var fullPath = Path.Combine(runFolder, artifact.RelativePath);
-            AddArtifactLink(result, knownPaths, BuildArtifactLabel(artifact), fullPath);
-        }
-
-        AddArtifactLink(result, knownPaths, "папка прогона", runFolder);
-        AddArtifactLink(result, knownPaths, "скриншоты", Path.Combine(runFolder, "screenshots"));
+        AddArtifactLink(result, knownPaths, "report.json", Path.Combine(runFolder, "report.json"));
+        AddArtifactLink(result, knownPaths, "report.html", Path.Combine(runFolder, "report.html"));
+        AddArtifactLink(result, knownPaths, "logs/run.log", Path.Combine(runFolder, "logs", "run.log"));
+        AddArtifactLink(result, knownPaths, "СЃРєСЂРёРЅС€РѕС‚С‹", Path.Combine(runFolder, "screenshots"));
+        AddArtifactLink(result, knownPaths, "РћС‚РєСЂС‹С‚СЊ РїР°РїРєСѓ РїСЂРѕРіРѕРЅР°", runFolder);
         return result;
-    }
-
-    private static string BuildArtifactLabel(ArtifactRecord artifact)
-    {
-        var normalizedPath = artifact.RelativePath.Replace('\\', '/');
-        return normalizedPath switch
-        {
-            "report.json" => "report.json",
-            "report.html" => "report.html",
-            "logs/run.log" => "logs/run.log",
-            _ => normalizedPath
-        };
     }
 
     private static string GuessArtifactType(string relativePath)
@@ -868,8 +876,8 @@ public partial class RunsTabViewModel : ObservableObject
     private static string BuildDetailsSummary(TestRunDetail detail, TestRunSummary run)
     {
         var durationMs = run.DurationMs > 0 ? run.DurationMs : ParseSummaryDuration(detail.Run.SummaryJson);
-        var source = detail.Run.IsOrphan ? "Источник: runs/ (read-only)" : "Источник: SQLite";
-        return $"Статус: {detail.Run.Status} · Длительность: {durationMs:F0} мс · Модуль: {detail.Run.ModuleType} · {source}";
+        var source = detail.Run.IsOrphan ? "Источник: импорт из папки запусков" : "Источник: журнал запусков";
+        return $"Статус: {MapStatus(detail.Run.Status)} · Длительность: {FormatDuration(durationMs)} · Модуль: {ResolveModuleDisplayName(detail.Run.ModuleType, detail.Run.ModuleName)} · {source}";
     }
 
     private static double ParseSummaryDuration(string summaryJson)
@@ -897,7 +905,7 @@ public partial class RunsTabViewModel : ObservableObject
             RunId = run.RunId,
             StartedAt = run.StartedAt,
             TestName = run.TestName,
-            ModuleName = run.ModuleName,
+            ModuleName = ResolveModuleDisplayName(run.ModuleType, run.ModuleName),
             Status = run.Status,
             DurationMs = run.DurationMs,
             FailedItems = run.FailedItems,
@@ -922,7 +930,7 @@ public partial class RunsTabViewModel : ObservableObject
     private bool IsSelectionCurrent(TestRunSummary? run, int version)
     {
         return version == Volatile.Read(ref _selectionStateVersion)
-               && string.Equals(SelectedRun?.RunId, run?.RunId, StringComparison.OrdinalIgnoreCase);
+               && string.Equals(_validSelectedRunId, run?.RunId, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task UpdateRepeatRunAvailabilityAsync(TestRunSummary? run, int version)
@@ -950,14 +958,14 @@ public partial class RunsTabViewModel : ObservableObject
         }
         else if (IsRunning)
         {
-            RepeatRunHint = "Остановите запуск, чтобы повторить.";
+            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
         }
         else
         {
             var reportPath = Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
             if (!File.Exists(reportPath))
             {
-                RepeatRunHint = "report.json не найден для выбранного прогона.";
+                RepeatRunHint = "report.json РЅРµ РЅР°Р№РґРµРЅ РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїСЂРѕРіРѕРЅР°.";
             }
             else
             {
@@ -966,11 +974,11 @@ public partial class RunsTabViewModel : ObservableObject
                     var reportJson = await File.ReadAllTextAsync(reportPath);
                     RepeatRunHint = TryParseRepeatSnapshot(reportJson, out _, out var parseError)
                         ? string.Empty
-                        : $"report.json повреждён: {parseError}";
+                        : $"report.json РїРѕРІСЂРµР¶РґС‘РЅ: {parseError}";
                 }
                 catch (Exception ex)
                 {
-                    RepeatRunHint = $"Не удалось прочитать report.json: {ex.Message}";
+                    RepeatRunHint = $"РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ report.json: {ex.Message}";
                 }
             }
         }
@@ -983,14 +991,23 @@ public partial class RunsTabViewModel : ObservableObject
 
     private void ApplyFilters()
     {
-        var query = AllRuns.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Все", StringComparison.OrdinalIgnoreCase))
+        if (!Dispatcher.UIThread.CheckAccess())
         {
-            query = query.Where(r => string.Equals(r.ModuleType, SelectedModuleType, StringComparison.OrdinalIgnoreCase));
+            Dispatcher.UIThread.Post(ApplyFilters);
+            return;
         }
 
-        if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase))
+        var query = AllRuns.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Р’СЃРµ", StringComparison.OrdinalIgnoreCase))
+        {
+            var selectedModuleTypeValue = _moduleFilterToType.TryGetValue(SelectedModuleType, out var mappedModuleType)
+                ? mappedModuleType
+                : SelectedModuleType;
+            query = query.Where(r => string.Equals(r.ModuleType, selectedModuleTypeValue, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Р’СЃРµ", StringComparison.OrdinalIgnoreCase))
         {
             query = query.Where(r => string.Equals(r.Status, MapStatusFilterToRunStatus(SelectedStatus), StringComparison.OrdinalIgnoreCase));
         }
@@ -1000,13 +1017,13 @@ public partial class RunsTabViewModel : ObservableObject
         var queryBeforePeriod = query;
         query = SelectedPeriod switch
         {
-            "Сегодня" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
-            "7 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-7)),
-            "30 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
+            "РЎРµРіРѕРґРЅСЏ" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
+            "7 РґРЅРµР№" => query.Where(r => r.StartedAt >= utcNow.AddDays(-7)),
+            "30 РґРЅРµР№" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
             _ => query
         };
 
-        if (string.Equals(SelectedPeriod, "РЎРµРіРѕРґРЅСЏ", StringComparison.Ordinal))
+        if (string.Equals(SelectedPeriod, "Р РЋР ВµР С–Р С•Р Т‘Р Р…РЎРЏ", StringComparison.Ordinal))
         {
             query = queryBeforePeriod.Where(r => r.StartedAt.ToLocalTime().Date == localNow.Date);
         }
@@ -1045,17 +1062,50 @@ public partial class RunsTabViewModel : ObservableObject
         {
             SelectedRun = Runs.FirstOrDefault();
         }
+
+        UpdateValidSelectionState();
+        NotifySelectionBindingsChanged();
+    }
+
+    private TestRunSummary? GetValidSelectedRun(TestRunSummary? candidate = null)
+    {
+        candidate ??= SelectedRun;
+        if (candidate == null)
+        {
+            return null;
+        }
+
+        return Runs.FirstOrDefault(r => string.Equals(r.RunId, candidate.RunId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private TestRunSummary? UpdateValidSelectionState()
+    {
+        var validRun = GetValidSelectedRun();
+        _validSelectedRunId = validRun?.RunId;
+        _hasValidSelection = validRun != null;
+        return validRun;
+    }
+
+    private void NotifySelectionBindingsChanged()
+    {
+        OnPropertyChanged(nameof(HasSelectedRun));
+        OnPropertyChanged(nameof(HasValidSelection));
+        OnPropertyChanged(nameof(SelectedRunDisplayId));
+        OnPropertyChanged(nameof(SelectedRunDisplayModule));
+        RepeatRunCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanRepeatRun));
+        OnPropertyChanged(nameof(HasRepeatRunHint));
     }
 
     private static string MapStatusFilterToRunStatus(string selectedStatus)
     {
         return selectedStatus switch
         {
-            "Успешно" => "Success",
-            "С ошибкой" => "Failed",
-            "Остановлено" => "Stopped",
-            "Отменено" => "Canceled",
-            "Выполняется" => "Running",
+            "РЈСЃРїРµС€РЅРѕ" => "Success",
+            "РЎ РѕС€РёР±РєРѕР№" => "Failed",
+            "РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ" => "Stopped",
+            "РћС‚РјРµРЅРµРЅРѕ" => "Canceled",
+            "Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ" => "Running",
             _ => selectedStatus
         };
     }
@@ -1078,14 +1128,14 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        DetailsSummary = $"Статус: {detail.Run.Status} · Длительность: {SelectedRun.DurationMs:F0} мс · Модуль: {detail.Run.ModuleType}";
+        DetailsSummary = $"РЎС‚Р°С‚СѓСЃ: {detail.Run.Status} В· Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ: {SelectedRun.DurationMs:F0} РјСЃ В· РњРѕРґСѓР»СЊ: {detail.Run.ModuleType}";
 
         DetailsProfile = BuildDetailsProfile(detail.Run.ProfileSnapshotJson);
 
         AddArtifactLink("report.json", GetJsonPath());
         AddArtifactLink("report.html", GetHtmlPath());
-        AddArtifactLink("папка прогона", Path.Combine(_runsRoot, SelectedRun.RunId));
-        AddArtifactLink("скриншоты", Path.Combine(_runsRoot, SelectedRun.RunId, "screenshots"));
+        AddArtifactLink("РїР°РїРєР° РїСЂРѕРіРѕРЅР°", Path.Combine(_runsRoot, SelectedRun.RunId));
+        AddArtifactLink("СЃРєСЂРёРЅС€РѕС‚С‹", Path.Combine(_runsRoot, SelectedRun.RunId, "screenshots"));
 
         var topErrors = detail.Items
             .Where(i => !string.Equals(i.Status, "Success", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(i.ErrorMessage))
@@ -1138,7 +1188,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            errorMessage = $"Не удалось открыть путь: {ex.Message}";
+            errorMessage = $"РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РїСѓС‚СЊ: {ex.Message}";
             return false;
         }
     }
@@ -1156,13 +1206,13 @@ public partial class RunsTabViewModel : ObservableObject
             var moduleId = root.GetProperty("moduleId").GetString();
             if (string.IsNullOrWhiteSpace(moduleId))
             {
-                error = "В report.json отсутствует moduleId.";
+                error = "Р’ report.json РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ moduleId.";
                 return false;
             }
 
             if (!root.TryGetProperty("profile", out var profileElement))
             {
-                error = "В report.json отсутствует profile.";
+                error = "Р’ report.json РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ profile.";
                 return false;
             }
 
@@ -1247,11 +1297,11 @@ public partial class RunsTabViewModel : ObservableObject
             var telegramEnabled = GetBool(root, "TelegramEnabled", "telegramEnabled");
             var preflightEnabled = GetBool(root, "PreflightEnabled", "preflightEnabled");
 
-            return $"Режим={mode} · Параллелизм={parallelism} · Таймаут={timeoutSeconds} · Пауза={pause} · HTML={(htmlEnabled ? "Вкл" : "Выкл")} · Telegram={(telegramEnabled ? "Вкл" : "Выкл")} · Preflight={(preflightEnabled ? "Вкл" : "Выкл")}";
+            return $"Режим: {(string.Equals(mode, nameof(RunMode.Duration), StringComparison.OrdinalIgnoreCase) ? "По длительности" : "По числу итераций")} · Параллелизм: {parallelism} · Таймаут: {timeoutSeconds} с · Пауза: {pause} мс · HTML: {(htmlEnabled ? "вкл" : "выкл")} · Telegram: {(telegramEnabled ? "вкл" : "выкл")} · Дымовой тест: {(preflightEnabled ? "вкл" : "выкл")}";
         }
         catch
         {
-            return "Профиль запуска недоступен.";
+            return "РџСЂРѕС„РёР»СЊ Р·Р°РїСѓСЃРєР° РЅРµРґРѕСЃС‚СѓРїРµРЅ.";
         }
     }
 
@@ -1271,7 +1321,7 @@ public partial class RunsTabViewModel : ObservableObject
 
     private static string FormatProfile(RunProfile profile)
     {
-        return $"Режим={profile.Mode} · Параллелизм={profile.Parallelism} · Таймаут={profile.TimeoutSeconds} · Пауза={profile.PauseBetweenIterationsMs} · HTML={(profile.HtmlReportEnabled ? "Вкл" : "Выкл")} · Telegram={(profile.TelegramEnabled ? "Вкл" : "Выкл")} · Preflight={(profile.PreflightEnabled ? "Вкл" : "Выкл")}";
+        return $"Режим: {(profile.Mode == RunMode.Duration ? "По длительности" : "По числу итераций")} · Параллелизм: {profile.Parallelism} · Таймаут: {profile.TimeoutSeconds} с · Пауза: {profile.PauseBetweenIterationsMs} мс · HTML: {(profile.HtmlReportEnabled ? "вкл" : "выкл")} · Telegram: {(profile.TelegramEnabled ? "вкл" : "выкл")} · Дымовой тест: {(profile.PreflightEnabled ? "вкл" : "выкл")}";
     }
 
     private static string? GetString(JsonElement element, params string[] names)
@@ -1404,6 +1454,68 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         return null;
+    }
+
+    private static string ResolveModuleDisplayName(string? moduleType, string? fallbackName)
+    {
+        if (!string.IsNullOrWhiteSpace(moduleType) && ModuleCatalog.TryGetByModuleId(moduleType, out var descriptor))
+        {
+            return descriptor.DisplayName;
+        }
+
+        return string.IsNullOrWhiteSpace(fallbackName)
+            ? "Неизвестный модуль"
+            : fallbackName.Trim();
+    }
+
+    public static string FormatRunId(string? runId)
+    {
+        if (string.IsNullOrWhiteSpace(runId))
+        {
+            return "—";
+        }
+
+        var normalized = runId.Trim();
+        return normalized.Length <= 8 ? normalized : normalized[..8].ToUpperInvariant();
+    }
+
+    public static string FormatStartedAt(DateTimeOffset startedAt)
+    {
+        return startedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+    }
+
+    public static string FormatDuration(double durationMs)
+    {
+        if (durationMs <= 0)
+        {
+            return "—";
+        }
+
+        if (durationMs < 1000)
+        {
+            return $"{durationMs:F0} мс";
+        }
+
+        var duration = TimeSpan.FromMilliseconds(durationMs);
+        if (duration.TotalMinutes >= 1)
+        {
+            return $"{(int)duration.TotalMinutes} мин {duration.Seconds} с";
+        }
+
+        return $"{duration.TotalSeconds:F1} с";
+    }
+
+    public static string MapStatus(string? status)
+    {
+        return status switch
+        {
+            "Success" => "Успешно",
+            "Failed" => "С ошибкой",
+            "Stopped" => "Остановлено",
+            "Canceled" => "Отменено",
+            "Running" => "Выполняется",
+            _ => string.IsNullOrWhiteSpace(status) ? "Неизвестно" : status
+        };
     }
 }
 

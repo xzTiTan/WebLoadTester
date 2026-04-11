@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Shell"
         xmlns:workspace="clr-namespace:WebLoadTester.Presentation.Views.Workspace"
@@ -23,7 +23,7 @@
                            Text="{Binding StatusText}"
                            VerticalAlignment="Center" />
                 <Button Grid.Column="2" Padding="10,4" Content="Настройки" Command="{Binding OpenSettingsCommand}" />
-                <Button Grid.Column="3" Padding="10,4" Content="Папка прогонов" Command="{Binding OpenRunsFolderCommand}" />
+                <Button Grid.Column="3" Padding="10,4" Content="Папка запусков" Command="{Binding OpenRunsFolderCommand}" />
             </Grid>
         </Border>
 
@@ -31,10 +31,10 @@
                     Margin="0"
                     ZIndex="10"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-            <TabItem Header="UI" />
-            <TabItem Header="HTTP" />
-            <TabItem Header="Сеть" />
-            <TabItem Header="Прогоны" />
+            <TabItem Header="Интерфейс" />
+            <TabItem Header="Web/API" />
+            <TabItem Header="Сеть и безопасность" />
+            <TabItem Header="Журнал запусков" />
         </TabControl>
 
         <Border Grid.Row="2"

@@ -1,16 +1,23 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.Workspace"
              xmlns:domain="clr-namespace:WebLoadTester.Core.Domain"
              x:Class="WebLoadTester.Presentation.Views.Workspace.RunProfileView"
              x:DataType="vm:RunProfileViewModel">
-    <StackPanel Spacing="6">
+    <StackPanel Spacing="10">
         <TextBlock Text="Профиль запуска" />
-        <StackPanel Spacing="6">
+        <StackPanel Spacing="8">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                <TextBlock Text="Режим" VerticalAlignment="Center" />
-                <ComboBox Grid.Column="1" TabIndex="30" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}" />
+                <TextBlock Text="Режим запуска" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" TabIndex="30" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding Mode, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="domain:RunMode">
+                            <TextBlock Text="{Binding ., Converter={StaticResource RunModeDisplayConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Grid>
+            <TextBlock Text="{Binding ModeDescription}" Classes="field-hint" TextWrapping="Wrap" />
 
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" IsVisible="{Binding IsIterationsMode}">
                 <TextBlock Text="Итерации" VerticalAlignment="Center" />

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -39,16 +39,16 @@ public partial class RunControlViewModel : ObservableObject
     public string ProgressDetails => _backend.ProgressText;
     public string StageDetails => $"Этап: {_backend.RunStage}";
     public string RunIdLine => _backend.IsRunning && !string.IsNullOrWhiteSpace(_backend.CurrentRunId) && _backend.CurrentRunId != "—"
-        ? $"RunId: {_backend.CurrentRunId}"
+        ? $"Текущий запуск: {RunsTabViewModel.FormatRunId(_backend.CurrentRunId)}"
         : _backend.SelectedModule?.LastReport is { } report
-            ? $"RunId: {report.RunId}"
-            : "RunId: —";
+            ? $"Последний запуск: {RunsTabViewModel.FormatRunId(report.RunId)}"
+            : "Последний запуск: —";
     public string FinishedAtLine => _backend.SelectedModule?.LastReport is { } report
         ? $"Завершён: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
         : "Завершён: —";
     public string LastRunInfo => _backend.SelectedModule?.LastReport is { } report
-        ? $"Последний прогон: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
-        : "Последний прогон: —";
+        ? $"Последняя запись в журнале: {report.FinishedAt:dd.MM.yyyy HH:mm:ss}"
+        : "Последняя запись в журнале: —";
     public double ProgressValue => _backend.ProgressPercent;
     public bool IsIndeterminate => _backend.IsProgressIndeterminate;
     public bool CanStart => StartCommand.CanExecute(null);
@@ -71,7 +71,6 @@ public partial class RunControlViewModel : ObservableObject
         FocusRequestToken++;
     }
 
-
     private async Task InstallChromiumAsync()
     {
         if (!CanInstallChromiumNow())
@@ -89,6 +88,7 @@ public partial class RunControlViewModel : ObservableObject
                && _backend.InstallPlaywrightBrowsersCommand.CanExecute(null)
                && _backend.CanInstallPlaywright;
     }
+
     private async Task StartAsync()
     {
         if (!CanStartRun())

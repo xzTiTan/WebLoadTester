@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,7 +23,7 @@ public partial class DetailsPaneViewModel : ObservableObject
         _logDrawer.VisibleLines.CollectionChanged += OnVisibleLinesChanged;
     }
 
-    public string IdentityLine => $"{_workspace.ModuleDisplayName} ({_workspace.ModuleId})";
+    public string IdentityLine => _workspace.ModuleDisplayName;
     public string StateLine => _backend.StatusText;
     public string MetricLine1 => _backend.ProgressText;
     public string MetricLine2 => _backend.RunStage;
@@ -31,7 +31,7 @@ public partial class DetailsPaneViewModel : ObservableObject
     public bool HasError => !string.IsNullOrWhiteSpace(LastErrorShort);
 
     public string RunFolderPath => _backend.SelectedModule?.LastReport != null
-        ? $"runs/{_backend.SelectedModule.LastReport.RunId}"
+        ? $"runs/{RunsTabViewModel.FormatRunId(_backend.SelectedModule.LastReport.RunId)}"
         : string.Empty;
 
     public bool HasRunFolder => _backend.SelectedModule?.LastReport != null;

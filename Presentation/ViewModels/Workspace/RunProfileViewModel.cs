@@ -75,6 +75,7 @@ public partial class RunProfileViewModel : ObservableObject, IValidatable
 
     public bool IsIterationsMode => _legacy.IsIterationsMode;
     public bool IsDurationMode => _legacy.IsDurationMode;
+    public string ModeDescription => _legacy.ModeDescription;
 
     public IReadOnlyList<string> Validate()
     {
@@ -125,6 +126,7 @@ public partial class RunProfileViewModel : ObservableObject, IValidatable
         OnPropertyChanged(nameof(ScreenshotsPolicy));
         OnPropertyChanged(nameof(IsIterationsMode));
         OnPropertyChanged(nameof(IsDurationMode));
+        OnPropertyChanged(nameof(ModeDescription));
         OnPropertyChanged(nameof(IsUiFamily));
     }
 }

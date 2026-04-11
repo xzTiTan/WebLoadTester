@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              xmlns:rows="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels.NetDiagnostics"
@@ -16,30 +16,64 @@
 
     <StackPanel Spacing="16">
         <Border Classes="section">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Опции" Classes="section-title" />
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+            <StackPanel Spacing="14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Диагностическое тестирование" Classes="section-title" />
+                    <TextBlock Text="Помогает быстро проверить разрешение DNS, доступность TCP-портов и состояние TLS для указанного хоста."
+                               Classes="status-line"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="6">
                     <TextBlock Text="Имя хоста" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding Hostname, Mode=TwoWay}" />
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Проверки" Classes="field-label" />
-                    <WrapPanel Classes="field-control wrap-gap">
-                        <CheckBox Content="DNS" IsChecked="{Binding CheckDns, Mode=TwoWay}" />
-                        <CheckBox Content="TCP" IsChecked="{Binding CheckTcp, Mode=TwoWay}" />
-                        <CheckBox Content="TLS" IsChecked="{Binding CheckTls, Mode=TwoWay}" />
-                    </WrapPanel>
-                </Grid>
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Автоподбор портов" Classes="field-label" />
-                    <CheckBox Classes="field-control" Content="Автоматически использовать :443" IsChecked="{Binding UseAutoPorts, Mode=TwoWay}" />
-                </Grid>
+                    <TextBox Classes="field-control"
+                             Text="{Binding Hostname, Mode=TwoWay}"
+                             Watermark="example.com" />
+                    <TextBlock Text="Результат покажет, на каком этапе возникает проблема: DNS, соединение или TLS-рукопожатие."
+                               Classes="status-line"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Набор проверок" Classes="field-label" />
+                    <Border BorderThickness="{DynamicResource BorderThicknessThin}"
+                            BorderBrush="{DynamicResource BorderBrushNeutral}"
+                            Background="{DynamicResource PrimaryBgBrush}"
+                            CornerRadius="{DynamicResource InputCornerRadius}"
+                            Padding="12">
+                        <WrapPanel Classes="wrap-gap">
+                            <CheckBox Content="DNS" IsChecked="{Binding CheckDns, Mode=TwoWay}" />
+                            <CheckBox Content="TCP" IsChecked="{Binding CheckTcp, Mode=TwoWay}" />
+                            <CheckBox Content="TLS" IsChecked="{Binding CheckTls, Mode=TwoWay}" />
+                        </WrapPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Порты" Classes="field-label" />
+                    <Border BorderThickness="{DynamicResource BorderThicknessThin}"
+                            BorderBrush="{DynamicResource BorderBrushNeutral}"
+                            Background="{DynamicResource PrimaryBgBrush}"
+                            CornerRadius="{DynamicResource InputCornerRadius}"
+                            Padding="12">
+                        <StackPanel Spacing="8">
+                            <CheckBox Content="Автоматически использовать :443"
+                                      IsChecked="{Binding UseAutoPorts, Mode=TwoWay}" />
+                            <TextBlock Text="Отключите автоподбор, если нужно проверить нестандартные порты вручную."
+                                       Classes="status-line"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </StackPanel>
         </Border>
 
         <Border Classes="section">
             <StackPanel Spacing="8" IsEnabled="{Binding UseAutoPorts, Converter={StaticResource BooleanNotConverter}}">
-                <TextBlock Text="Порты" Classes="section-title" />
+                <TextBlock Text="Пользовательские порты" Classes="section-title" />
+                <TextBlock Text="Список используется только когда автоподбор отключён."
+                           Classes="status-line"
+                           TextWrapping="Wrap" />
                 <controls:RowListEditorView DataContext="{Binding PortsEditor}" />
             </StackPanel>
         </Border>

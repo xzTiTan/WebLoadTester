@@ -106,6 +106,12 @@ public partial class RunProfileViewModel : ObservableObject
     public bool HasPauseError => !string.IsNullOrWhiteSpace(PauseError);
     public bool IsIterationsMode => Mode == RunMode.Iterations;
     public bool IsDurationMode => Mode == RunMode.Duration;
+    public string ModeDescription => Mode switch
+    {
+        RunMode.Iterations => "Тест выполнит заданное число прогонов и завершится после последней итерации.",
+        RunMode.Duration => "Тест будет повторяться до истечения указанной длительности, даже если успеет сделать разное число итераций.",
+        _ => string.Empty
+    };
 
     partial void OnParallelismChanged(int value)
     {
@@ -159,6 +165,7 @@ public partial class RunProfileViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsIterationsMode));
         OnPropertyChanged(nameof(IsDurationMode));
+        OnPropertyChanged(nameof(ModeDescription));
         Revalidate();
     }
 

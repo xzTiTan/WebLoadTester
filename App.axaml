@@ -16,7 +16,12 @@
         <conv:ResultDisplayNameConverter x:Key="ResultDisplayNameConverter" />
         <conv:UiScenarioActionDisplayConverter x:Key="UiScenarioActionDisplayConverter" />
         <conv:ScreenshotsPolicyDisplayConverter x:Key="ScreenshotsPolicyDisplayConverter" />
+        <conv:RunModeDisplayConverter x:Key="RunModeDisplayConverter" />
         <conv:UiWaitUntilDisplayConverter x:Key="UiWaitUntilDisplayConverter" />
+        <conv:RunIdShortDisplayConverter x:Key="RunIdShortDisplayConverter" />
+        <conv:RunStartedAtDisplayConverter x:Key="RunStartedAtDisplayConverter" />
+        <conv:RunDurationDisplayConverter x:Key="RunDurationDisplayConverter" />
+        <conv:RunStatusDisplayConverter x:Key="RunStatusDisplayConverter" />
         <ColumnDefinitions x:Key="FieldRowColumns" x:Shared="False">
             <ColumnDefinition Width="{DynamicResource LabelColumnWidth}" />
             <ColumnDefinition Width="*" />

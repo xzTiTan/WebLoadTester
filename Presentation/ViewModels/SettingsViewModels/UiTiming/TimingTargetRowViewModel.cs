@@ -1,3 +1,5 @@
+﻿using System.Collections.Generic;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.UiTiming;
 using WebLoadTester.Presentation.Common;
@@ -20,6 +22,11 @@ public partial class TimingTargetRowViewModel : ObservableObject
 
     public TimingTarget Model { get; }
 
+    public IReadOnlyList<BrowserChoice> BrowserOptions { get; } =
+    [
+        new BrowserChoice("chromium", "Chromium")
+    ];
+
     [ObservableProperty] private string name = string.Empty;
     [ObservableProperty] private string url = string.Empty;
     [ObservableProperty] private string browserChannel = "chromium";
@@ -27,6 +34,16 @@ public partial class TimingTargetRowViewModel : ObservableObject
     [ObservableProperty] private int viewportHeight = 768;
     [ObservableProperty] private string userAgent = string.Empty;
     [ObservableProperty] private bool? headless;
+
+    public BrowserChoice SelectedBrowserOption
+    {
+        get
+        {
+            var match = BrowserOptions.FirstOrDefault(x => x.Value == BrowserChannel);
+            return string.IsNullOrWhiteSpace(match.Value) ? BrowserOptions[0] : match;
+        }
+        set => BrowserChannel = value.Value;
+    }
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
     public string RowErrorText => string.IsNullOrWhiteSpace(Url)
@@ -60,7 +77,9 @@ public partial class TimingTargetRowViewModel : ObservableObject
         }
 
         Model.BrowserChannel = normalized;
+        OnPropertyChanged(nameof(SelectedBrowserOption));
     }
+
     partial void OnViewportWidthChanged(int value)
     {
         var normalized = InputValueGuard.NormalizeInt(value, 320, 1366);
@@ -114,3 +133,5 @@ public partial class TimingTargetRowViewModel : ObservableObject
         Headless = null;
     }
 }
+
+public readonly record struct BrowserChoice(string Value, string Label);

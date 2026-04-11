@@ -89,6 +89,34 @@ public partial class TelegramSettingsViewModel : ObservableObject
 
     public bool CanSendTestMessage => Enabled && !IsSendingTestMessage;
 
+    public TelegramSettingsSnapshot CaptureSnapshot()
+    {
+        return new TelegramSettingsSnapshot(
+            Enabled,
+            BotToken,
+            ChatId,
+            NotifyOnStart,
+            NotifyOnFinish,
+            NotifyOnError,
+            ProgressMode,
+            ProgressEveryN,
+            RateLimitSeconds);
+    }
+
+    public void RestoreSnapshot(TelegramSettingsSnapshot snapshot)
+    {
+        Enabled = snapshot.Enabled;
+        BotToken = snapshot.BotToken;
+        ChatId = snapshot.ChatId;
+        NotifyOnStart = snapshot.NotifyOnStart;
+        NotifyOnFinish = snapshot.NotifyOnFinish;
+        NotifyOnError = snapshot.NotifyOnError;
+        ProgressMode = snapshot.ProgressMode;
+        ProgressEveryN = snapshot.ProgressEveryN;
+        RateLimitSeconds = snapshot.RateLimitSeconds;
+        TestMessageStatus = string.Empty;
+    }
+
     /// <summary>
     /// Синхронизирует флаг включения с моделью настроек.
     /// </summary>
@@ -181,3 +209,14 @@ public partial class TelegramSettingsViewModel : ObservableObject
         }
     }
 }
+
+public readonly record struct TelegramSettingsSnapshot(
+    bool Enabled,
+    string BotToken,
+    string ChatId,
+    bool NotifyOnStart,
+    bool NotifyOnFinish,
+    bool NotifyOnError,
+    ProgressNotifyMode ProgressMode,
+    int ProgressEveryN,
+    int RateLimitSeconds);

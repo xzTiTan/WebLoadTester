@@ -1,36 +1,57 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels.SettingsViewModels"
              x:Class="WebLoadTester.Presentation.Views.SettingsViews.SecurityBaselineSettingsView"
              x:DataType="vm:SecurityBaselineSettingsViewModel">
     <StackPanel Spacing="16">
         <Border Classes="section">
-            <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBlock Text="Тестирование безопасности" Classes="section-title" />
-                    <WrapPanel Grid.Column="1" Classes="wrap-gap">
-                        <Button Content="Выбрать рекомендуемые" Command="{Binding SelectRecommendedCommand}" />
-                    </WrapPanel>
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Тестирование безопасности" Classes="section-title" />
+                        <TextBlock Text="Проверяет базовые защитные заголовки, cookie-флаги и наличие безопасного перехода на HTTPS."
+                                   Classes="status-line"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            VerticalAlignment="Top"
+                            Content="Выбрать рекомендуемые"
+                            Command="{Binding SelectRecommendedCommand}" />
                 </Grid>
 
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
+                <StackPanel Spacing="6">
                     <TextBlock Text="Адрес" Classes="field-label" />
-                    <TextBox Classes="field-control" Text="{Binding Url, Mode=TwoWay}" />
-                </Grid>
+                    <TextBox Classes="field-control"
+                             Text="{Binding Url, Mode=TwoWay}"
+                             Watermark="https://example.com" />
+                    <TextBlock Text="В отчёте вы получите список найденных заголовков и пропущенных защитных настроек."
+                               Classes="status-line"
+                               TextWrapping="Wrap" />
+                </StackPanel>
 
-                <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
-                    <TextBlock Text="Проверки" Classes="field-label" />
-                    <WrapPanel Classes="field-control wrap-gap">
-                        <CheckBox Content="HSTS" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
-                        <CheckBox Content="X-Content-Type-Options" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
-                        <CheckBox Content="Защита фреймов" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
-                        <CheckBox Content="CSP" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
-                        <CheckBox Content="Referrer-Policy" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
-                        <CheckBox Content="Permissions-Policy" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
-                        <CheckBox Content="Перенаправление HTTP → HTTPS" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
-                        <CheckBox Content="Флаги куки" IsChecked="{Binding CheckCookieFlags, Mode=TwoWay}" />
-                    </WrapPanel>
-                </Grid>
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Проверки безопасности" Classes="field-label" />
+                    <Border BorderThickness="{DynamicResource BorderThicknessThin}"
+                            BorderBrush="{DynamicResource BorderBrushNeutral}"
+                            Background="{DynamicResource PrimaryBgBrush}"
+                            CornerRadius="{DynamicResource InputCornerRadius}"
+                            Padding="12">
+                        <WrapPanel Classes="wrap-gap">
+                            <CheckBox Content="HSTS" IsChecked="{Binding CheckHsts, Mode=TwoWay}" />
+                            <CheckBox Content="X-Content-Type-Options" IsChecked="{Binding CheckContentTypeOptions, Mode=TwoWay}" />
+                            <CheckBox Content="Защита фреймов" IsChecked="{Binding CheckFrameOptions, Mode=TwoWay}" />
+                            <CheckBox Content="CSP" IsChecked="{Binding CheckContentSecurityPolicy, Mode=TwoWay}" />
+                            <CheckBox Content="Referrer-Policy" IsChecked="{Binding CheckReferrerPolicy, Mode=TwoWay}" />
+                            <CheckBox Content="Permissions-Policy" IsChecked="{Binding CheckPermissionsPolicy, Mode=TwoWay}" />
+                            <CheckBox Content="Перенаправление HTTP → HTTPS" IsChecked="{Binding CheckRedirectHttpToHttps, Mode=TwoWay}" />
+                            <CheckBox Content="Флаги cookie" IsChecked="{Binding CheckCookieFlags, Mode=TwoWay}" />
+                        </WrapPanel>
+                    </Border>
+                    <TextBlock Text="Оставьте только нужные проверки, если хотите сузить baseline под конкретный ресурс."
+                               Classes="status-line"
+                               TextWrapping="Wrap" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </StackPanel>

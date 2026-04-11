@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WebLoadTester.Presentation.ViewModels"
              x:Class="WebLoadTester.Presentation.Views.Tabs.RunsTab"
@@ -6,14 +6,14 @@
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="{DynamicResource CardSpacing}">
         <Border Grid.Row="0" Classes="section">
             <StackPanel Spacing="{DynamicResource FieldSpacing}">
-                <TextBlock Text="Фильтры" Classes="section-title" />
+                <TextBlock Text="Фильтры журнала запусков" Classes="section-title" />
                 <WrapPanel Classes="wrap-gap">
                     <StackPanel Spacing="4" MinWidth="260">
                         <TextBlock Text="Поиск" Classes="muted" />
-                        <TextBox Watermark="Идентификатор запуска / код модуля / имя теста" Text="{Binding SearchText, Mode=TwoWay}" />
+                        <TextBox Watermark="Короткий ID, название теста или модуль" Text="{Binding SearchText, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Spacing="4" MinWidth="220">
-                        <TextBlock Text="Модуль" Classes="muted" />
+                        <TextBlock Text="Тип проверки" Classes="muted" />
                         <ComboBox ItemsSource="{Binding ModuleFilterOptions}" SelectedItem="{Binding SelectedModuleType, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Spacing="4" MinWidth="180">
@@ -26,7 +26,7 @@
                     </StackPanel>
                     <StackPanel Spacing="4" MinWidth="180">
                         <TextBlock Text="Ошибки" Classes="muted" />
-                        <CheckBox Content="Только с ошибками" IsChecked="{Binding OnlyWithErrors, Mode=TwoWay}" />
+                        <CheckBox Content="Показывать только с ошибками" IsChecked="{Binding OnlyWithErrors, Mode=TwoWay}" />
                     </StackPanel>
                 </WrapPanel>
             </StackPanel>
@@ -34,23 +34,23 @@
 
         <Border Grid.Row="1" Classes="section">
             <StackPanel Spacing="10">
-                <TextBlock Text="Действия с выбранным прогоном" Classes="section-title" />
-                <TextBlock Text="Выберите прогон в таблице ниже. Кнопки открытия отчётов, папки и повторного запуска применяются к выделенной строке."
+                <TextBlock Text="Действия с выбранным запуском" Classes="section-title" />
+                <TextBlock Text="Выделите запуск в журнале ниже, чтобы открыть отчёты, папку запуска или загрузить конфигурацию для повтора."
                            Classes="muted" />
-                <TextBlock Text="{Binding SelectedRun.RunId, StringFormat='Выбранный прогон: {0}'}"
+                <TextBlock Text="{Binding SelectedRunDisplayId, StringFormat='Выбран запуск: {0}'}"
                            Classes="muted"
-                           IsVisible="{Binding HasSelectedRun}" />
-                <TextBlock Text="Прогон пока не выбран. Сначала выделите строку в журнале запусков."
+                           IsVisible="{Binding HasValidSelection}" />
+                <TextBlock Text="Запуск пока не выбран. Сначала выделите строку в журнале запусков."
                            Classes="muted"
-                           IsVisible="{Binding HasSelectedRun, Converter={StaticResource BooleanNotConverter}}" />
+                           IsVisible="{Binding HasValidSelection, Converter={StaticResource BooleanNotConverter}}" />
                 <WrapPanel Classes="wrap-gap">
                     <Button Content="Обновить" Classes="primary toolbar-button" Command="{Binding RefreshCommand}" />
-                    <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Открыть отчёт JSON" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Открыть отчёт HTML" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Повторить запуск" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
-                    <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasSelectedRun}" />
-                    <Button Content="Копировать идентификатор запуска" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasSelectedRun}" />
+                    <Button Content="Открыть папку" Classes="toolbar-button" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasValidSelection}" />
+                    <Button Content="Открыть JSON-отчёт" Classes="toolbar-button" Command="{Binding OpenJsonCommand}" IsEnabled="{Binding HasValidSelection}" />
+                    <Button Content="Открыть HTML-отчёт" Classes="toolbar-button" Command="{Binding OpenHtmlCommand}" IsEnabled="{Binding HasValidSelection}" />
+                    <Button Content="Загрузить для повтора" Classes="toolbar-button" Command="{Binding RepeatRunCommand}" IsEnabled="{Binding CanRepeatRun}" />
+                    <Button Content="Удалить" Classes="danger toolbar-button" Command="{Binding RequestDeleteRunCommand}" IsEnabled="{Binding HasValidSelection}" />
+                    <Button Content="Скопировать ID запуска" Classes="toolbar-button" Command="{Binding CopyRunIdCommand}" IsEnabled="{Binding HasValidSelection}" />
                 </WrapPanel>
                 <TextBlock Text="{Binding RepeatRunHint}" Classes="status-line" IsVisible="{Binding HasRepeatRunHint}" />
             </StackPanel>
@@ -60,28 +60,54 @@
             <Border Grid.Row="0" Classes="section">
                 <StackPanel Spacing="10">
                     <StackPanel Spacing="2">
-                        <TextBlock Text="Список прогонов" Classes="section-title" />
-                        <TextBlock Text="Журнал запусков с учётом выбранных фильтров. Выделите строку, чтобы открыть детали и артефакты ниже."
+                        <TextBlock Text="Журнал запусков" Classes="section-title" />
+                        <TextBlock Text="Здесь отображаются все запуски с учётом выбранных фильтров. Выделите строку, чтобы открыть сводку и пользовательские артефакты ниже."
                                    Classes="muted" />
                     </StackPanel>
                     <Grid>
-                    <DataGrid x:Name="RunsGrid"
-                              ItemsSource="{Binding Runs}"
-                              SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
-                              AutoGenerateColumns="False"
-                              IsVisible="{Binding HasRuns}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="RunId" Binding="{Binding RunId}" Width="2*" />
-                            <DataGridTextColumn Header="Started" Binding="{Binding StartedAt}" Width="2*" />
-                            <DataGridTextColumn Header="FinalName" Binding="{Binding TestName}" Width="2*" />
-                            <DataGridTextColumn Header="ModuleId" Binding="{Binding ModuleType}" Width="1.5*" />
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
-                            <DataGridTextColumn Header="Duration" Binding="{Binding DurationMs}" Width="*" />
-                            <DataGridTextColumn Header="Errors" Binding="{Binding FailedItems}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <TextBlock Text="Нет запусков" IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}" Margin="8" />
-                </Grid>
+                        <DataGrid x:Name="RunsGrid"
+                                  ItemsSource="{Binding Runs}"
+                                  SelectedItem="{Binding SelectedRun, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  IsVisible="{Binding HasRuns}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="ID запуска" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding RunId, Converter={StaticResource RunIdShortDisplayConverter}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Дата и время" Width="1.5*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding StartedAt, Converter={StaticResource RunStartedAtDisplayConverter}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Сценарий" Binding="{Binding TestName}" Width="2*" />
+                                <DataGridTextColumn Header="Тип проверки" Binding="{Binding ModuleName}" Width="1.8*" />
+                                <DataGridTemplateColumn Header="Статус" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Status, Converter={StaticResource RunStatusDisplayConverter}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Длительность" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DurationMs, Converter={StaticResource RunDurationDisplayConverter}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Ошибки" Binding="{Binding FailedItems}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="Запуски по выбранным фильтрам не найдены."
+                                   IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}"
+                                   Margin="8" />
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -93,70 +119,70 @@
                           ResizeBehavior="PreviousAndNext" />
 
             <Border Grid.Row="2" Classes="section">
-                <Expander Header="Детали" IsExpanded="True">
+                <Expander Header="Сведения о запуске" IsExpanded="True">
                     <StackPanel Margin="0,8,0,0" Spacing="10">
-                        <TextBlock Text="Детали выбранного прогона" Classes="section-title" />
-                        <TextBlock Text="Ниже отображаются сводка, профиль запуска, артефакты и частые ошибки по выделенному прогону."
+                        <TextBlock Text="Детали выбранного запуска" Classes="section-title" />
+                        <TextBlock Text="Ниже показаны сводка, профиль запуска, пользовательские артефакты и частые ошибки по выбранной строке журнала."
                                    Classes="muted" />
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
                                       MaxHeight="340">
                             <StackPanel Spacing="10">
-                        <WrapPanel Classes="wrap-gap" IsVisible="{Binding HasSelectedRun}">
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.ModuleType, StringFormat='Модуль: {0}'}" FontSize="12" /></Border>
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.Status, StringFormat='Статус: {0}'}" FontSize="12" /></Border>
-                            <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.RunId, StringFormat='Идентификатор: {0}'}" FontSize="12" /></Border>
-                        </WrapPanel>
+                                <WrapPanel Classes="wrap-gap" IsVisible="{Binding HasValidSelection}">
+                                    <Border Classes="badge"><TextBlock Text="{Binding SelectedRunDisplayModule, StringFormat='Проверка: {0}'}" FontSize="12" /></Border>
+                                    <Border Classes="badge"><TextBlock Text="{Binding SelectedRun.Status, Converter={StaticResource RunStatusDisplayConverter}, StringFormat='Статус: {0}'}" FontSize="12" /></Border>
+                                    <Border Classes="badge"><TextBlock Text="{Binding SelectedRunDisplayId, StringFormat='ID: {0}'}" FontSize="12" /></Border>
+                                </WrapPanel>
 
-                        <StackPanel Classes="empty-state" IsVisible="{Binding HasSelectedRun, Converter={StaticResource BooleanNotConverter}}">
-                            <TextBlock Text="Нет данных" Classes="empty-title" />
-                            <TextBlock Text="Выполните запуск или выберите прогон" />
-                        </StackPanel>
+                                <StackPanel Classes="empty-state" IsVisible="{Binding HasValidSelection, Converter={StaticResource BooleanNotConverter}}">
+                                    <TextBlock Text="Нет выбранного запуска" Classes="empty-title" />
+                                    <TextBlock Text="Выделите строку в журнале запусков, чтобы увидеть сводку и артефакты." />
+                                </StackPanel>
 
-                        <StackPanel IsVisible="{Binding HasSelectedRun}" Spacing="6">
-                            <TextBlock Text="Сводка" Classes="section-title" FontSize="16" />
-                            <TextBlock Text="{Binding DetailsSummary}" TextWrapping="Wrap" />
-                            <TextBlock Text="Профиль запуска" Classes="section-title" FontSize="16" />
-                            <TextBlock Text="{Binding DetailsProfile}" Classes="muted" TextWrapping="Wrap" />
-                        </StackPanel>
+                                <StackPanel IsVisible="{Binding HasValidSelection}" Spacing="6">
+                                    <TextBlock Text="Сводка" Classes="section-title" FontSize="16" />
+                                    <TextBlock Text="{Binding DetailsSummary}" TextWrapping="Wrap" />
+                                    <TextBlock Text="Параметры запуска" Classes="section-title" FontSize="16" />
+                                    <TextBlock Text="{Binding DetailsProfile}" Classes="muted" TextWrapping="Wrap" />
+                                </StackPanel>
 
-                        <StackPanel IsVisible="{Binding HasSelectedRun}" Spacing="6">
-                            <TextBlock Text="Артефакты" Classes="section-title" FontSize="16" />
-                            <ItemsControl ItemsSource="{Binding ArtifactLinks}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ArtifactLinkItem">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
-                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
-                                            <Button Grid.Column="1" Content="Открыть" Command="{Binding $parent[ItemsControl].DataContext.OpenArtifactCommand}" CommandParameter="{Binding}" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                                <StackPanel IsVisible="{Binding HasValidSelection}" Spacing="6">
+                                    <TextBlock Text="Файлы и материалы" Classes="section-title" FontSize="16" />
+                                    <ItemsControl ItemsSource="{Binding ArtifactLinks}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ArtifactLinkItem">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,6">
+                                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                                                    <Button Grid.Column="1" Content="Открыть" Command="{Binding $parent[ItemsControl].DataContext.OpenArtifactCommand}" CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
 
-                        <StackPanel IsVisible="{Binding HasSelectedRun}" Spacing="6">
-                            <TextBlock Text="Топ ошибок" Classes="section-title" FontSize="16" />
-                            <ItemsControl ItemsSource="{Binding TopErrors}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:TopErrorItem">
-                                        <StackPanel Spacing="2" Margin="0,0,0,6">
-                                            <TextBlock Text="{Binding Message, StringFormat='• {0}'}" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding Count, StringFormat='Количество: {0}'}" Classes="muted" Margin="18,0,0,0" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                                <StackPanel IsVisible="{Binding HasValidSelection}" Spacing="6">
+                                    <TextBlock Text="Частые ошибки" Classes="section-title" FontSize="16" />
+                                    <ItemsControl ItemsSource="{Binding TopErrors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:TopErrorItem">
+                                                <StackPanel Spacing="2" Margin="0,0,0,6">
+                                                    <TextBlock Text="{Binding Message, StringFormat='• {0}'}" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding Count, StringFormat='Повторений: {0}'}" Classes="muted" Margin="18,0,0,0" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
 
-                        <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
-                            <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
-                            <WrapPanel Classes="wrap-gap">
-                                <Button Content="Подтвердить удаление" Command="{Binding ConfirmDeleteRunCommand}" />
-                                <Button Content="Отмена" Command="{Binding CancelDeleteRunCommand}" />
-                            </WrapPanel>
-                        </StackPanel>
+                                <StackPanel IsVisible="{Binding IsDeleteConfirmVisible}" Spacing="8">
+                                    <TextBlock Text="{Binding UserMessage}" Foreground="OrangeRed" TextWrapping="Wrap" />
+                                    <WrapPanel Classes="wrap-gap">
+                                        <Button Content="Подтвердить удаление" Command="{Binding ConfirmDeleteRunCommand}" />
+                                        <Button Content="Отмена" Command="{Binding CancelDeleteRunCommand}" />
+                                    </WrapPanel>
+                                </StackPanel>
 
-                        <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
+                                <TextBlock Text="{Binding UserMessage}" Classes="status-line" />
                             </StackPanel>
                         </ScrollViewer>
                     </StackPanel>
