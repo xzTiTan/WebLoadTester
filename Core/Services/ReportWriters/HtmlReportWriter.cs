@@ -90,6 +90,18 @@ body{
 }
 .hero-grid,.section-head,.hero-facts,.cards,.facts,.artifacts,.gallery,.diag,.summary-grid,.inline-cards,.problem-grid,.timeline{display:grid;gap:14px}
 .hero-grid{grid-template-columns:minmax(0,1.7fr) minmax(300px,.95fr);align-items:start}
+.hero-grid>*,
+.section-head>*,
+.hero-facts>*,
+.cards>*,
+.facts>*,
+.artifacts>*,
+.gallery>*,
+.diag>*,
+.summary-grid>*,
+.inline-cards>*,
+.problem-grid>*,
+.timeline>*{min-width:0}
 .hero h1{margin:14px 0 10px;font-size:40px;line-height:1.05}
 .lead{max-width:820px;font-size:16px;color:#32445d}
 .badge-row,.pill-row,.meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -100,7 +112,11 @@ body{
   border-radius:999px;
   border:1px solid var(--line);
   background:var(--panel-soft);
-  font-weight:700
+  font-weight:700;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word
 }
 .status-chip{padding:5px 10px;font-size:12px}
 .b-ok,.severity-pass{color:var(--ok);background:var(--ok-soft)}
@@ -138,7 +154,7 @@ body{
 .facts,.diag,.problem-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .card,.fact{padding:16px}
 .card{border-radius:18px;background:var(--panel)}
-.card .n{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:6px}
+.card .n{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:6px;overflow-wrap:anywhere;word-break:break-word}
 .card h3{margin:0 0 8px;font-size:17px}
 .fact{border:1px solid var(--line);border-radius:16px;background:var(--panel-soft)}
 .fact strong{display:block;margin-bottom:6px}
@@ -149,8 +165,8 @@ body{
 .tone-danger{background:linear-gradient(180deg,#fff4f3 0%,#ffffff 100%)}
 .tone-neutral{background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%)}
 .tone-accent{background:linear-gradient(180deg,#eef5ff 0%,#ffffff 100%)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left;overflow-wrap:anywhere;word-break:break-word}
 th{background:var(--panel-soft);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
 tr:last-child td{border-bottom:none}
 .ok{color:var(--ok);font-weight:700}
@@ -204,6 +220,7 @@ tr:last-child td{border-bottom:none}
 }
 .callout strong{display:block;margin-bottom:6px}
 .small{font-size:12px;color:var(--muted)}
+.lead,.small,.summary-band p,.summary-note,.callout,.timeline-step,.group-panel,.hero-side,.card,.fact,.empty,h1,h2,h3,p,li,strong,a{overflow-wrap:anywhere;word-break:break-word}
 .empty{
   padding:16px;
   border:1px dashed var(--line);
@@ -211,12 +228,13 @@ tr:last-child td{border-bottom:none}
   background:var(--panel-soft);
   color:var(--muted)
 }
-.mono{font-family:Consolas,'Courier New',monospace}
+.mono{font-family:Consolas,'Courier New',monospace;white-space:normal;overflow-wrap:anywhere;word-break:break-all}
 .list{margin:0;padding-left:20px}
 .footer{margin-top:8px;text-align:right}
 .section-stack{display:grid;gap:14px}
 .divider{height:1px;background:var(--line);margin:14px 0}
 .status-line{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.status-line>*{min-width:0}
 .status-line strong{font-size:15px}
 @media (max-width:900px){
   body{padding:14px}
@@ -337,7 +355,7 @@ tr:last-child td{border-bottom:none}
         sb.AppendLine($"<div class='cap'><span>Успешно: {hero.PassedItems}</span><span>Ошибки: {hero.FailedItems}</span><span>{hero.SuccessPercent:F1}% без ошибок</span></div>");
         sb.AppendLine("<div class='section-stack' style='margin-top:16px'>");
         AppendFact(new HtmlReportFactModel("Статус", hero.StatusBadge), sb);
-        AppendFact(new HtmlReportFactModel("Уровень проблем", hero.RiskBadge), sb);
+        AppendFact(new HtmlReportFactModel("Оценка риска", hero.RiskBadge), sb);
         AppendFact(new HtmlReportFactModel("Элементов результата", (hero.PassedItems + hero.FailedItems).ToString(CultureInfo.InvariantCulture), "Количество записей, попавших в итоговый отчёт."), sb);
         sb.AppendLine("</div>");
         sb.AppendLine("</aside>");
@@ -425,9 +443,20 @@ tr:last-child td{border-bottom:none}
 
     private static void RenderRecommendationsSection(IReadOnlyList<string> recommendations, StringBuilder sb)
     {
-        AppendSectionHeader("Итог и рекомендации", "Короткий вывод по запуску и следующие разумные действия.", sb);
+        var normalized = recommendations
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (normalized.Count == 0)
+        {
+            return;
+        }
+
+        AppendSectionHeader("Рекомендации и следующие шаги", "Куда смотреть дальше и какие действия имеют смысл после этого запуска.", sb);
         sb.AppendLine("<ul class='list'>");
-        foreach (var recommendation in recommendations)
+        foreach (var recommendation in normalized)
         {
             sb.AppendLine($"<li>{Escape(recommendation)}</li>");
         }
@@ -518,7 +547,7 @@ tr:last-child td{border-bottom:none}
             new("Headless", FormatBoolRu(report.ProfileSnapshot.Headless), "Показывались ли окна браузера при UI-проверках."),
             new("Политика скриншотов", FormatScreenshotsPolicy(report.ProfileSnapshot.ScreenshotsPolicy), "Когда программа сохраняла скриншоты."),
             new("JSON-отчёт", "Да", "Обязательный машинно-читаемый отчёт этого запуска."),
-            new("HTML-отчёт", FormatBoolRu(report.ProfileSnapshot.HtmlReportEnabled), "Был ли включён HTML-отчёт для этого запуска."),
+            new("HTML-отчёт", FormatBoolRu(report.ProfileSnapshot.HtmlReportEnabled), "Для новых запусков HTML-отчёт обязателен; значение сохраняется для совместимости с историей."),
             new("Telegram", FormatBoolRu(report.ProfileSnapshot.TelegramEnabled), "Были ли разрешены уведомления для этого запуска."),
             new("Preflight", FormatBoolRu(report.ProfileSnapshot.PreflightEnabled), "Выполнялись ли предварительные проверки окружения.")
         };
@@ -1645,9 +1674,9 @@ tr:last-child td{border-bottom:none}
 
     private static (string Label, string CssClass) GetSeverity(int failed, int total)
     {
-        if (failed <= 0) return ("Низкий", "b-low");
+        if (failed <= 0) return ("Уровень риска: низкий", "b-low");
         var ratio = total <= 0 ? 1d : (double)failed / total;
-        return ratio >= 0.5d ? ("Высокий", "b-high") : ("Средний", "b-mid");
+        return ratio >= 0.5d ? ("Уровень риска: высокий", "b-high") : ("Уровень риска: средний", "b-mid");
     }
 
     private static List<string> BuildRecommendations(TestReport report, IReadOnlyList<ResultBase> failed)
@@ -1655,17 +1684,46 @@ tr:last-child td{border-bottom:none}
         var list = new List<string>();
         if (failed.Count == 0)
         {
-            list.Add("Этот запуск можно использовать как базовую точку для последующих сравнений и повторных прогонов.");
-            if (report.ModuleId == "ui.snapshot") list.Add("Галерею снимков можно использовать как визуальный эталон для последующих UI-проверок.");
+            list.Add("Запуск выглядит стабильным: его можно использовать как базовую точку для следующих сравнений и повторных прогонов.");
+            if (report.ModuleId == "ui.snapshot") list.Add("Сохранённые снимки можно использовать как визуальный ориентир для следующих UI-проверок.");
+            if (report.ModuleId == "http.performance") list.Add("Сохраните этот результат как ориентир по задержкам и сравнивайте с ним следующие прогоны при той же нагрузке.");
             return list;
         }
-        if (failed.Any(x => (x.ErrorType ?? string.Empty).Contains("Timeout", StringComparison.OrdinalIgnoreCase))) list.Add("Перед повторным запуском стоит увеличить таймауты или уменьшить внешнюю нестабильность сети/окружения.");
-        if (failed.Any(x => (x.ErrorMessage ?? string.Empty).Contains("selector", StringComparison.OrdinalIgnoreCase))) list.Add("Для UI-проверок стоит перепроверить устойчивость селекторов и изменения DOM-структуры.");
-        if (report.ModuleId == "ui.timing") list.Add("Сравните самые медленные профили и выровняйте условия рендеринга перед выводами о совместимости.");
-        if (report.ModuleId == "ui.scenario") list.Add("После исправлений повторите сценарий и сопоставьте шаги с последним успешным базовым прогоном.");
-        if (report.ModuleId.StartsWith("http.", StringComparison.OrdinalIgnoreCase)) list.Add("Проверьте контракты endpoint-ов, HTTP-статусы, ограничения по размеру и заголовки ответов.");
-        if (report.ModuleId == "net.security") list.Add("Сначала закройте наиболее серьёзные замечания безопасности и затем подтвердите исправление повторным прогоном.");
-        if (list.Count == 0) list.Add("Изучите приложенные артефакты и повторите запуск после исправления входных данных или окружения.");
+        if (failed.Any(x => (x.ErrorType ?? string.Empty).Contains("Timeout", StringComparison.OrdinalIgnoreCase)))
+        {
+            list.Add("Перед повторным запуском проверьте таймауты и внешнюю стабильность сети или окружения: часть ошибок похожа на истечение времени ожидания.");
+        }
+
+        if (failed.Any(x => (x.ErrorMessage ?? string.Empty).Contains("selector", StringComparison.OrdinalIgnoreCase)))
+        {
+            list.Add("Для UI-проверок перепроверьте селекторы и изменения DOM-структуры: ошибки указывают на нестабильную привязку к элементам страницы.");
+        }
+
+        if (report.ModuleId == "ui.timing")
+        {
+            list.Add("Сравните самые медленные профили и выровняйте условия рендеринга, прежде чем делать выводы о совместимости.");
+        }
+
+        if (report.ModuleId == "ui.scenario")
+        {
+            list.Add("После исправлений повторите сценарий и сопоставьте проблемные шаги с последним успешным базовым прогоном.");
+        }
+
+        if (report.ModuleId.StartsWith("http.", StringComparison.OrdinalIgnoreCase))
+        {
+            list.Add("Сверьте контракт endpoint-ов: HTTP-статусы, обязательные заголовки, ограничения по размеру ответа и ожидаемое содержимое.");
+        }
+
+        if (report.ModuleId == "net.security")
+        {
+            list.Add("Сначала исправьте замечания со статусом «Критично» и «Нужно внимание», затем подтвердите изменения повторным прогоном.");
+        }
+
+        if (list.Count == 0)
+        {
+            list.Add("Откройте проблемные строки и приложенные артефакты, затем повторите запуск после исправления входных данных или окружения.");
+        }
+
         return list;
     }
 

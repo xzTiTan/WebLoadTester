@@ -36,7 +36,7 @@ public sealed class RunParametersDto
     public int Parallelism { get; set; } = 2;
     public int TimeoutSeconds { get; set; } = 30;
     public int PauseBetweenIterationsMs { get; set; }
-    public bool HtmlReportEnabled { get; set; }
+    public bool HtmlReportEnabled { get; set; } = true;
     public bool TelegramEnabled { get; set; }
     public bool PreflightEnabled { get; set; }
     public bool Headless { get; set; } = true;

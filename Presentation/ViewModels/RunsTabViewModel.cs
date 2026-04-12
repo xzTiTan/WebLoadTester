@@ -242,7 +242,7 @@ public partial class RunsTabViewModel : ObservableObject
         var jsonPath = GetJsonPath();
         if (OpenPath(jsonPath, "Файл report.json не найден.", out _))
         {
-            UserMessage = "HTML-отчёт недоступен, открыт report.json.";
+            UserMessage = "HTML-отчёт отсутствует, открыт report.json.";
             return;
         }
 
@@ -251,12 +251,12 @@ public partial class RunsTabViewModel : ObservableObject
             var runFolder = Path.Combine(_runsRoot, SelectedRun.RunId);
             if (OpenPath(runFolder, "Папка запуска не найдена.", out _))
             {
-                UserMessage = "HTML и JSON недоступны, открыта папка запуска.";
+                UserMessage = "HTML-отчёт и report.json отсутствуют, открыта папка запуска.";
                 return;
             }
         }
 
-        UserMessage = "Не удалось открыть HTML, JSON и папку запуска.";
+        UserMessage = "Не удалось открыть HTML-отчёт, report.json и папку запуска.";
     }
 
     [RelayCommand]

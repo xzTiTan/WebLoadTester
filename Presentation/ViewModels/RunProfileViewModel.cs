@@ -69,7 +69,7 @@ public partial class RunProfileViewModel : ObservableObject
     private ScreenshotsPolicy screenshotsPolicy = ScreenshotsPolicy.OnError;
 
     [ObservableProperty]
-    private bool htmlReportEnabled;
+    private bool htmlReportEnabled = true;
 
     [ObservableProperty]
     private bool telegramEnabled;
@@ -193,6 +193,14 @@ public partial class RunProfileViewModel : ObservableObject
         Revalidate();
     }
 
+    partial void OnHtmlReportEnabledChanged(bool value)
+    {
+        if (!value)
+        {
+            HtmlReportEnabled = true;
+        }
+    }
+
     partial void OnSelectedProfileChanged(RunProfile? value)
     {
         if (value == null)
@@ -209,7 +217,7 @@ public partial class RunProfileViewModel : ObservableObject
         PauseBetweenIterationsMs = value.PauseBetweenIterationsMs;
         Headless = value.Headless;
         ScreenshotsPolicy = value.ScreenshotsPolicy;
-        HtmlReportEnabled = value.HtmlReportEnabled;
+        HtmlReportEnabled = NormalizeHtmlReportEnabled(value.HtmlReportEnabled);
         TelegramEnabled = value.TelegramEnabled;
         PreflightEnabled = value.PreflightEnabled;
     }
@@ -303,7 +311,7 @@ public partial class RunProfileViewModel : ObservableObject
             PauseBetweenIterationsMs = Math.Max(0, PauseBetweenIterationsMs),
             Headless = Headless,
             ScreenshotsPolicy = ScreenshotsPolicy,
-            HtmlReportEnabled = HtmlReportEnabled,
+            HtmlReportEnabled = NormalizeHtmlReportEnabled(HtmlReportEnabled),
             TelegramEnabled = TelegramEnabled,
             PreflightEnabled = PreflightEnabled
         };
@@ -319,7 +327,7 @@ public partial class RunProfileViewModel : ObservableObject
             Parallelism = Parallelism,
             TimeoutSeconds = TimeoutSeconds,
             PauseBetweenIterationsMs = Math.Max(0, PauseBetweenIterationsMs),
-            HtmlReportEnabled = HtmlReportEnabled,
+            HtmlReportEnabled = NormalizeHtmlReportEnabled(HtmlReportEnabled),
             TelegramEnabled = TelegramEnabled,
             PreflightEnabled = PreflightEnabled,
             Headless = Headless,
@@ -335,13 +343,18 @@ public partial class RunProfileViewModel : ObservableObject
         Parallelism = parameters.Parallelism;
         TimeoutSeconds = parameters.TimeoutSeconds;
         PauseBetweenIterationsMs = Math.Max(0, parameters.PauseBetweenIterationsMs);
-        HtmlReportEnabled = parameters.HtmlReportEnabled;
+        HtmlReportEnabled = NormalizeHtmlReportEnabled(parameters.HtmlReportEnabled);
         TelegramEnabled = parameters.TelegramEnabled;
         PreflightEnabled = parameters.PreflightEnabled;
         Headless = parameters.Headless;
         ScreenshotsPolicy = parameters.ScreenshotsPolicy;
         Validation.ResetVisibility();
         Revalidate();
+    }
+
+    private static bool NormalizeHtmlReportEnabled(bool _)
+    {
+        return true;
     }
 
     public void MarkFieldTouched(string key)

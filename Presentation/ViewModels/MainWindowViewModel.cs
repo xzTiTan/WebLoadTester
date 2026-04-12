@@ -850,17 +850,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (OpenPath(jsonPath, out _))
         {
-            StatusText = "Статус: HTML-отчёт недоступен, открыт report.json.";
+            StatusText = "Статус: HTML-отчёт отсутствует, открыт report.json.";
             return;
         }
 
         if (OpenPath(runFolder, out _))
         {
-            StatusText = "Статус: отчёты недоступны, открыта папка прогона.";
+            StatusText = "Статус: HTML-отчёт и report.json отсутствуют, открыта папка прогона.";
             return;
         }
 
-        StatusText = "Статус: не удалось открыть HTML, JSON и папку прогона.";
+        StatusText = "Статус: не удалось открыть HTML-отчёт, report.json и папку прогона.";
     }
 
     [RelayCommand]
@@ -1186,7 +1186,7 @@ public partial class MainWindowViewModel : ViewModelBase
                         Parallelism = snapshot.Profile.Parallelism,
                         TimeoutSeconds = snapshot.Profile.TimeoutSeconds,
                         PauseBetweenIterationsMs = snapshot.Profile.PauseBetweenIterationsMs,
-                        HtmlReportEnabled = snapshot.Profile.HtmlReportEnabled,
+                        HtmlReportEnabled = true,
                         TelegramEnabled = snapshot.Profile.TelegramEnabled,
                         PreflightEnabled = snapshot.Profile.PreflightEnabled,
                         Headless = snapshot.Profile.Headless,
@@ -1249,7 +1249,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     Parallelism = profile.Parallelism,
                     TimeoutSeconds = profile.TimeoutSeconds,
                     PauseBetweenIterationsMs = profile.PauseBetweenIterationsMs,
-                    HtmlReportEnabled = profile.HtmlReportEnabled,
+                    HtmlReportEnabled = true,
                     TelegramEnabled = profile.TelegramEnabled,
                     PreflightEnabled = profile.PreflightEnabled,
                     Headless = profile.Headless,

@@ -379,22 +379,15 @@ public class RunOrchestrator
 
         report.Artifacts.LogPath = "logs/run.log";
         report.Artifacts.JsonPath = "report.json";
-        if (context.Profile.HtmlReportEnabled)
+        try
         {
-            try
-            {
-                report.Artifacts.HtmlPath = "report.html";
-                report.Artifacts.HtmlPath = await _htmlWriter.WriteAsync(report, report.RunId);
-            }
-            catch (Exception ex)
-            {
-                report.Artifacts.HtmlPath = string.Empty;
-                context.Log.Warn($"HTML report generation failed: {ex.Message}");
-            }
+            report.Artifacts.HtmlPath = "report.html";
+            report.Artifacts.HtmlPath = await _htmlWriter.WriteAsync(report, report.RunId);
         }
-        else
+        catch (Exception ex)
         {
             report.Artifacts.HtmlPath = string.Empty;
+            context.Log.Warn($"HTML report generation failed: {ex.Message}");
         }
 
         report.Artifacts.JsonPath = await _jsonWriter.WriteAsync(report, report.RunId);
