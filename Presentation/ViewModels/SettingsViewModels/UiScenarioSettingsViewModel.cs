@@ -52,6 +52,11 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
     public ObservableCollection<UiStepRowViewModel> StepRows { get; }
 
     public RowListEditorViewModel StepsEditor { get; }
+    public string StartUrlHint => "Открывается до выполнения шагов сценария.";
+    public string StartUrlUsageHint => "Если сценарий начинается шагом «Переход», верхнее поле обычно оставляют пустым.";
+    public string TimeoutHint => "Ограничение на один переход, ожидание или действие. Общий таймаут запуска задаётся отдельно в параметрах запуска.";
+    public bool HasStartupNavigateWarning => !string.IsNullOrWhiteSpace(TargetUrl) && StepRows.FirstOrDefault()?.Action == UiStepAction.Navigate;
+    public string StartupNavigateWarning => "Заполнен стартовый URL и первый шаг — «Переход». Будут выполнены две навигации подряд.";
 
     public UiStepAction[] ActionOptions { get; } =
     {
@@ -95,7 +100,11 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         SyncSteps();
     }
 
-    partial void OnTargetUrlChanged(string value) => _settings.TargetUrl = InputValueGuard.NormalizeOptionalText(value);
+    partial void OnTargetUrlChanged(string value)
+    {
+        _settings.TargetUrl = InputValueGuard.NormalizeOptionalText(value);
+        RaiseScenarioHints();
+    }
     partial void OnTimeoutMsChanged(int value)
     {
         var normalized = InputValueGuard.NormalizeInt(value, 1, 10000);
@@ -330,6 +339,7 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         StepsEditor.RaiseCommandState();
         OnPropertyChanged(nameof(Settings));
         RefreshEditorItems();
+        RaiseScenarioHints();
     }
 
     private void SuspendSync() => _suspendSync++;
@@ -340,6 +350,15 @@ public partial class UiScenarioSettingsViewModel : SettingsViewModelBase, IValid
         {
             _suspendSync--;
         }
+    }
+
+    private void RaiseScenarioHints()
+    {
+        OnPropertyChanged(nameof(StartUrlHint));
+        OnPropertyChanged(nameof(StartUrlUsageHint));
+        OnPropertyChanged(nameof(TimeoutHint));
+        OnPropertyChanged(nameof(HasStartupNavigateWarning));
+        OnPropertyChanged(nameof(StartupNavigateWarning));
     }
 
     private static void NormalizeLegacySteps(UiScenarioSettings settings)

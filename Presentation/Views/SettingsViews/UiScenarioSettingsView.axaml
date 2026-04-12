@@ -61,20 +61,29 @@
             <StackPanel Spacing="12">
                 <TextBlock Text="Параметры сценария" Classes="section-title" />
                 <TextBlock Text="Для регрессионного сравнения используется последний успешный прогон с той же конфигурацией шагов. Если baseline не найден — это будет явно указано в отчёте." TextWrapping="Wrap" Classes="field-hint" />
+                <TextBlock Text="Стартовый URL (опционально)" Classes="field-label" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Стартовый URL" Classes="field-label" />
                     <TextBox Classes="field-control"
                              Watermark="Можно оставить пустым, если первый шаг — Переход"
                              Text="{Binding TargetUrl, Mode=TwoWay}" />
                 </Grid>
+                <TextBlock Text="{Binding StartUrlHint}" Classes="field-hint" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding StartUrlUsageHint}" Classes="field-hint" TextWrapping="Wrap" />
+                <Border Classes="warning-panel" IsVisible="{Binding HasStartupNavigateWarning}">
+                    <TextBlock Text="{Binding StartupNavigateWarning}" TextWrapping="Wrap" />
+                </Border>
+                <TextBlock Text="Таймаут операций сценария, мс" Classes="field-label" />
                 <Grid ColumnDefinitions="{StaticResource FieldRowColumns}" Classes="field-row">
                     <TextBlock Text="Таймаут ожиданий, мс" Classes="field-label" />
                     <NumericUpDown Classes="field-control"
                                    Minimum="1000"
                                    Maximum="120000"
                                    Increment="500"
+                                   FormatString="F0"
                                    Value="{Binding TimeoutMs, Mode=TwoWay}" />
                 </Grid>
+                <TextBlock Text="{Binding TimeoutHint}" Classes="field-hint" TextWrapping="Wrap" />
             </StackPanel>
         </Border>
 

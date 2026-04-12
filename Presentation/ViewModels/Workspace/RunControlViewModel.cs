@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebLoadTester.Infrastructure.Playwright;
 
 namespace WebLoadTester.Presentation.ViewModels.Workspace;
 
@@ -62,6 +64,27 @@ public partial class RunControlViewModel : ObservableObject
     public bool HasValidationErrors => ValidationErrors.Count > 0;
     public bool HasChromiumValidationError => ValidationErrors.Any(x => x.Contains("Chromium", StringComparison.OrdinalIgnoreCase));
     public bool CanInstallChromium => CanInstallChromiumNow();
+    public bool UsesPlaywrightChromium => _backend.SelectedModule?.Module.Id is "ui.scenario" or "ui.snapshot" or "ui.timing";
+    public string PlaywrightBrowserPathLine => $"Каталог: {PlaywrightFactory.GetBrowsersPath()}";
+    public string PlaywrightBrowserStatusLine => BuildPlaywrightBrowserStatusLine();
+    public bool HasPlaywrightInstallResult => UsesPlaywrightChromium
+                                              && !IsPlaywrightStatusInstalling
+                                              && !string.IsNullOrWhiteSpace(_backend.PlaywrightInstallMessage);
+    public string PlaywrightInstallResultLine => string.IsNullOrWhiteSpace(_backend.PlaywrightInstallMessage)
+        ? string.Empty
+        : $"Результат: {_backend.PlaywrightInstallMessage}";
+    public bool HasPlaywrightLegacyNote => UsesPlaywrightChromium && PlaywrightFactory.HasLegacyBaseDirectoryBrowsersInstall();
+    public string PlaywrightLegacyNote => HasPlaywrightLegacyNote
+        ? $"Legacy-каталог рядом с приложением: {Path.Combine(AppContext.BaseDirectory, "playwright-browsers")}."
+        : string.Empty;
+    public bool ShowInstallPlaywrightButton => UsesPlaywrightChromium && HasChromiumValidationError;
+    public bool IsPlaywrightStatusInstalling => UsesPlaywrightChromium && (_backend.IsInstallingPlaywright || PlaywrightFactory.IsInstalling);
+    public bool IsPlaywrightStatusMissing => UsesPlaywrightChromium && !IsPlaywrightStatusInstalling && HasChromiumValidationError;
+    public bool IsPlaywrightStatusOk => UsesPlaywrightChromium && !IsPlaywrightStatusInstalling && !HasChromiumValidationError;
+    public bool IsPlaywrightInstallResultError => HasPlaywrightInstallResult
+                                                  && (_backend.PlaywrightInstallMessage.Contains("не удалось", StringComparison.OrdinalIgnoreCase)
+                                                      || _backend.PlaywrightInstallMessage.Contains("не обнаружен", StringComparison.OrdinalIgnoreCase));
+    public bool IsPlaywrightInstallResultSuccess => HasPlaywrightInstallResult && !IsPlaywrightInstallResultError;
 
     [ObservableProperty]
     private int focusRequestToken;
@@ -84,7 +107,8 @@ public partial class RunControlViewModel : ObservableObject
 
     private bool CanInstallChromiumNow()
     {
-        return HasChromiumValidationError
+        return UsesPlaywrightChromium
+               && HasChromiumValidationError
                && _backend.InstallPlaywrightBrowsersCommand.CanExecute(null)
                && _backend.CanInstallPlaywright;
     }
@@ -134,6 +158,26 @@ public partial class RunControlViewModel : ObservableObject
         return "Готов к запуску";
     }
 
+    private string BuildPlaywrightBrowserStatusLine()
+    {
+        if (!UsesPlaywrightChromium)
+        {
+            return string.Empty;
+        }
+
+        if (_backend.IsInstallingPlaywright || PlaywrightFactory.IsInstalling)
+        {
+            return "Playwright Chromium: выполняется установка";
+        }
+
+        if (HasChromiumValidationError)
+        {
+            return "Playwright Chromium: не найден";
+        }
+
+        return "Playwright Chromium: найден";
+    }
+
     private void RaiseState()
     {
         StartCommand.NotifyCanExecuteChanged();
@@ -156,5 +200,18 @@ public partial class RunControlViewModel : ObservableObject
         OnPropertyChanged(nameof(HasValidationErrors));
         OnPropertyChanged(nameof(HasChromiumValidationError));
         OnPropertyChanged(nameof(CanInstallChromium));
+        OnPropertyChanged(nameof(UsesPlaywrightChromium));
+        OnPropertyChanged(nameof(PlaywrightBrowserPathLine));
+        OnPropertyChanged(nameof(PlaywrightBrowserStatusLine));
+        OnPropertyChanged(nameof(HasPlaywrightInstallResult));
+        OnPropertyChanged(nameof(PlaywrightInstallResultLine));
+        OnPropertyChanged(nameof(HasPlaywrightLegacyNote));
+        OnPropertyChanged(nameof(PlaywrightLegacyNote));
+        OnPropertyChanged(nameof(ShowInstallPlaywrightButton));
+        OnPropertyChanged(nameof(IsPlaywrightStatusInstalling));
+        OnPropertyChanged(nameof(IsPlaywrightStatusMissing));
+        OnPropertyChanged(nameof(IsPlaywrightStatusOk));
+        OnPropertyChanged(nameof(IsPlaywrightInstallResultError));
+        OnPropertyChanged(nameof(IsPlaywrightInstallResultSuccess));
     }
 }

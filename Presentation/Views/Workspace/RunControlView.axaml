@@ -22,6 +22,58 @@
             <TextBlock Text="{Binding LastRunInfo}" Classes="muted" />
             <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsIndeterminate}" />
 
+            <Border Classes="section" IsVisible="{Binding UsesPlaywrightChromium}">
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Playwright Chromium" Classes="field-label" />
+                            <TextBlock Text="{Binding PlaywrightBrowserPathLine}"
+                                       Classes="muted"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Button Content="Установить Playwright Chromium"
+                                Command="{Binding InstallChromiumCommand}"
+                                IsEnabled="{Binding CanInstallChromium}"
+                                IsVisible="{Binding ShowInstallPlaywrightButton}" />
+                    </Grid>
+                    <TextBlock Text="UI-модули используют Playwright Chromium из активного каталога браузеров, а не системный браузер."
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding PlaywrightBrowserPathLine}"
+                               Classes="muted"
+                               IsVisible="False" />
+                    <TextBlock Text="{Binding PlaywrightBrowserStatusLine}"
+                               Classes="muted"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightStatusOk}" />
+                    <TextBlock Text="{Binding PlaywrightBrowserStatusLine}"
+                               Classes="field-hint"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightStatusInstalling}" />
+                    <TextBlock Text="{Binding PlaywrightBrowserStatusLine}"
+                               Classes="error"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightStatusMissing}" />
+                    <TextBlock Text="{Binding PlaywrightInstallResultLine}"
+                               Classes="muted"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightInstallResultSuccess}" />
+                    <TextBlock Text="{Binding PlaywrightInstallResultLine}"
+                               Classes="error"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightInstallResultError}" />
+                    <TextBlock Text="{Binding PlaywrightLegacyNote}"
+                               Classes="muted"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding HasPlaywrightLegacyNote}" />
+                    <Button Content="Установить Playwright Chromium"
+                            Command="{Binding InstallChromiumCommand}"
+                            IsEnabled="{Binding CanInstallChromium}"
+                            IsVisible="False" />
+                </StackPanel>
+            </Border>
+
             <ItemsControl ItemsSource="{Binding ValidationErrors}" IsVisible="{Binding HasValidationErrors}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -33,7 +85,7 @@
             <Button Content="Установить Chromium"
                     Command="{Binding InstallChromiumCommand}"
                     IsEnabled="{Binding CanInstallChromium}"
-                    IsVisible="{Binding HasChromiumValidationError}" />
+                    IsVisible="False" />
 
             <WrapPanel Orientation="Horizontal">
                 <Button Content="Открыть папку прогона" Command="{Binding OpenRunFolderCommand}" IsEnabled="{Binding HasRunFolder}" Margin="0,0,6,0" TabIndex="10" />
