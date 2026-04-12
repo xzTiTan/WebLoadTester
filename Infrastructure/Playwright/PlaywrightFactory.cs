@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
+using WebLoadTester.Infrastructure.Storage;
 
 namespace WebLoadTester.Infrastructure.Playwright;
 
@@ -114,8 +115,7 @@ public static class PlaywrightFactory
 
     private static string GetDefaultBrowsersPath()
     {
-        var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WebLoadTester", "data");
-        return Path.Combine(dataDirectory, "browsers");
+        return AppStoragePathResolver.Resolve().BrowsersDirectory;
     }
 
     private static bool HasChromiumInPath(string browsersPath)

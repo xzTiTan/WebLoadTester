@@ -9,6 +9,7 @@ using WebLoadTester.Core.Contracts;
 using WebLoadTester.Core.Domain;
 using WebLoadTester.Core.Services;
 using WebLoadTester.Core.Services.ReportWriters;
+using WebLoadTester.Infrastructure.Playwright;
 using WebLoadTester.Infrastructure.Storage;
 using WebLoadTester.Modules.Preflight;
 using WebLoadTester.Presentation.ViewModels;
@@ -23,6 +24,7 @@ internal static class SmokeReportRunner
         try
         {
             var settingsService = new AppSettingsService();
+            PlaywrightFactory.ConfigureBrowsersPath(settingsService.Settings.BrowsersDirectory);
             var artifactStore = new ArtifactStore(
                 settingsService.Settings.RunsDirectory,
                 Path.Combine(settingsService.Settings.DataDirectory, "profiles"));

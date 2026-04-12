@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WebLoadTester.Modules.UiTiming;
 using WebLoadTester.Presentation.Common;
@@ -22,9 +23,14 @@ public partial class TimingTargetRowViewModel : ObservableObject
 
     public TimingTarget Model { get; }
 
-    public IReadOnlyList<BrowserChoice> BrowserOptions { get; } =
+    public string BrowserDisplayName => "Chromium";
+    public string BrowserDisplayHint => "Фиксированный движок модуля. Здесь сравниваются профили загрузки страницы, а не разные браузеры.";
+
+    public IReadOnlyList<HeadlessModeChoice> HeadlessModeOptions { get; } =
     [
-        new BrowserChoice("chromium", "Chromium")
+        new HeadlessModeChoice(null, "Наследовать из профиля запуска"),
+        new HeadlessModeChoice(true, "Всегда headless"),
+        new HeadlessModeChoice(false, "Открывать окно браузера")
     ];
 
     [ObservableProperty] private string name = string.Empty;
@@ -35,14 +41,14 @@ public partial class TimingTargetRowViewModel : ObservableObject
     [ObservableProperty] private string userAgent = string.Empty;
     [ObservableProperty] private bool? headless;
 
-    public BrowserChoice SelectedBrowserOption
+    public HeadlessModeChoice SelectedHeadlessMode
     {
         get
         {
-            var match = BrowserOptions.FirstOrDefault(x => x.Value == BrowserChannel);
-            return string.IsNullOrWhiteSpace(match.Value) ? BrowserOptions[0] : match;
+            var match = HeadlessModeOptions.FirstOrDefault(x => Nullable.Equals(x.Value, Headless));
+            return string.IsNullOrWhiteSpace(match.Label) ? HeadlessModeOptions[0] : match;
         }
-        set => BrowserChannel = value.Value;
+        set => Headless = value.Value;
     }
 
     public bool HasRowError => !string.IsNullOrWhiteSpace(RowErrorText);
@@ -77,7 +83,6 @@ public partial class TimingTargetRowViewModel : ObservableObject
         }
 
         Model.BrowserChannel = normalized;
-        OnPropertyChanged(nameof(SelectedBrowserOption));
     }
 
     partial void OnViewportWidthChanged(int value)
@@ -109,7 +114,11 @@ public partial class TimingTargetRowViewModel : ObservableObject
     }
 
     partial void OnUserAgentChanged(string value) => Model.UserAgent = InputValueGuard.NormalizeOptionalText(value);
-    partial void OnHeadlessChanged(bool? value) => Model.Headless = value;
+    partial void OnHeadlessChanged(bool? value)
+    {
+        Model.Headless = value;
+        OnPropertyChanged(nameof(SelectedHeadlessMode));
+    }
 
     public TimingTargetRowViewModel Clone() => new(new TimingTarget
     {
@@ -134,4 +143,4 @@ public partial class TimingTargetRowViewModel : ObservableObject
     }
 }
 
-public readonly record struct BrowserChoice(string Value, string Label);
+public readonly record struct HeadlessModeChoice(bool? Value, string Label);

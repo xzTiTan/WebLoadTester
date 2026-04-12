@@ -35,7 +35,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
     }
 
     public override object Settings => _settings;
-    public override string Title => "Тестирование совместимости";
+    public override string Title => "Профили загрузки Chromium";
 
     public ObservableCollection<TimingTargetRowViewModel> TargetRows { get; }
     public RowListEditorViewModel TargetsEditor { get; }
@@ -104,7 +104,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
     private object? AddTargetInternal()
     {
-        var row = CreateRow(new TimingTarget { Name = "Новый профиль", Url = "https://www.google.com/" });
+        var row = CreateRow(new TimingTarget { Name = "Новый профиль Chromium", Url = "https://www.google.com/" });
         var insertIndex = SelectedTargetRow != null ? TargetRows.IndexOf(SelectedTargetRow) + 1 : TargetRows.Count;
         if (insertIndex < 0 || insertIndex > TargetRows.Count)
         {
@@ -200,7 +200,7 @@ public partial class UiTimingSettingsViewModel : SettingsViewModelBase, IValidat
 
         if (TargetRows.Any(r => r.ViewportWidth < 320 || r.ViewportHeight < 240))
         {
-            errors.Add("Viewport профиля совместимости должен быть не менее 320x240.");
+            errors.Add("Viewport профиля Chromium должен быть не менее 320x240.");
         }
 
         errors.AddRange(GetTargetErrors());

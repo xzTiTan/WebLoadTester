@@ -11,8 +11,8 @@
             <StackPanel Spacing="8" Margin="0,0,0,6">
                 <Grid ColumnDefinitions="180,*,*" ColumnSpacing="8">
                     <StackPanel Grid.Column="0" Spacing="4">
-                        <TextBlock Text="Сценарий" Classes="field-label" />
-                        <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="Например: Базовый Chromium" />
+                        <TextBlock Text="Метка профиля" Classes="field-label" />
+                        <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="Например: Десктоп 1366x768" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Spacing="4">
                         <TextBlock Text="Адрес страницы" Classes="field-label" />
@@ -20,16 +20,10 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid ColumnDefinitions="180,120,120,150,*" ColumnSpacing="8">
+                <Grid ColumnDefinitions="180,120,120,220,*" ColumnSpacing="8">
                     <StackPanel Grid.Column="0" Spacing="4">
-                        <TextBlock Text="Браузер" Classes="field-label" />
-                        <ComboBox ItemsSource="{Binding BrowserOptions}" SelectedItem="{Binding SelectedBrowserOption, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="rows:BrowserChoice">
-                                    <TextBlock Text="{Binding Label}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        <TextBlock Text="Движок" Classes="field-label" />
+                        <TextBox Text="{Binding BrowserDisplayName}" IsReadOnly="True" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="4">
                         <TextBlock Text="Ширина" Classes="field-label" />
@@ -40,10 +34,14 @@
                         <NumericUpDown Minimum="240" Maximum="2160" Value="{Binding ViewportHeight, Mode=TwoWay}" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Spacing="4">
-                        <TextBlock Text="Режим окна" Classes="field-label" />
-                        <CheckBox IsThreeState="True"
-                                  IsChecked="{Binding Headless, Mode=TwoWay}"
-                                  Content="Headless" />
+                        <TextBlock Text="Режим запуска" Classes="field-label" />
+                        <ComboBox ItemsSource="{Binding HeadlessModeOptions}" SelectedItem="{Binding SelectedHeadlessMode, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="rows:HeadlessModeChoice">
+                                    <TextBlock Text="{Binding Label}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
                     <StackPanel Grid.Column="4" Spacing="4">
                         <TextBlock Text="User-Agent (дополнительно)" Classes="field-label" />
@@ -52,7 +50,10 @@
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Text="Браузер выбирается из доступного списка. User-Agent можно оставить пустым, чтобы использовать стандартное значение Chromium."
+                <TextBlock Text="{Binding BrowserDisplayHint}"
+                           Classes="field-hint"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="User-Agent можно оставить пустым, чтобы использовать стандартное значение Chromium. Headless поддерживает три режима: наследовать из профиля запуска, всегда headless или открывать окно браузера."
                            Classes="field-hint"
                            TextWrapping="Wrap" />
                 <TextBlock Text="{Binding RowErrorText}" IsVisible="{Binding HasRowError}" Classes="error" />
@@ -63,26 +64,26 @@
     <StackPanel Spacing="16">
         <Border Classes="section">
             <StackPanel Spacing="12">
-                <TextBlock Text="Проверка совместимости" Classes="section-title" />
-                <TextBlock Text="Каждая строка запускает страницу в отдельном браузерном сценарии и показывает, как меняется загрузка для выбранного viewport и настроек браузера."
+                <TextBlock Text="Профили загрузки Chromium" Classes="section-title" />
+                <TextBlock Text="Каждая строка запускает страницу в отдельном профиле Chromium и показывает, как меняются тайминги navigation, DOMContentLoaded и load."
                            Classes="field-hint"
                            TextWrapping="Wrap" />
                 <Border Classes="row-editor-header">
                     <StackPanel Spacing="6">
                         <Grid ColumnDefinitions="180,*,*" Classes="row-editor-header">
-                            <TextBlock Grid.Column="0" Text="Сценарий" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="0" Text="Метка профиля" Classes="row-editor-label" />
                             <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="Страница" Classes="row-editor-label" />
                         </Grid>
-                        <Grid ColumnDefinitions="180,120,120,150,*" Classes="row-editor-header">
-                            <TextBlock Grid.Column="0" Text="Браузер" Classes="row-editor-label" />
+                        <Grid ColumnDefinitions="180,120,120,220,*" Classes="row-editor-header">
+                            <TextBlock Grid.Column="0" Text="Движок" Classes="row-editor-label" />
                             <TextBlock Grid.Column="1" Text="Ширина" Classes="row-editor-label" />
                             <TextBlock Grid.Column="2" Text="Высота" Classes="row-editor-label" />
-                            <TextBlock Grid.Column="3" Text="Headless" Classes="row-editor-label" />
+                            <TextBlock Grid.Column="3" Text="Режим запуска" Classes="row-editor-label" />
                             <TextBlock Grid.Column="4" Text="User-Agent" Classes="row-editor-label" />
                         </Grid>
                     </StackPanel>
                 </Border>
-                <TextBlock Text="Это бывший список профилей совместимости: теперь каждая строка описывает понятный сценарий проверки для конкретной страницы и viewport."
+                <TextBlock Text="Это не полноценная проверка совместимости вёрстки и не межбраузерная матрица. Модуль помогает честно сравнить загрузку страницы в разных viewport/user-agent профилях Chromium."
                            Classes="field-hint"
                            TextWrapping="Wrap" />
                 <controls:RowListEditorView DataContext="{Binding TargetsEditor}" />
@@ -109,7 +110,7 @@
                     <NumericUpDown Classes="field-control" Minimum="1" Maximum="300" Value="{Binding TimeoutSeconds, Mode=TwoWay}" />
                 </Grid>
 
-                <TextBlock Text="Ширина и высота задаются в пикселях. Inline-пояснения рядом со строкой заменяют tooltip, чтобы текст не прятался под controls."
+                <TextBlock Text="Ширина и высота задаются в пикселях. Результат показывает тайминги загрузки страницы для выбранного события ожидания, а не автоматическую оценку совместимости интерфейса."
                            Classes="field-hint"
                            TextWrapping="Wrap" />
             </StackPanel>

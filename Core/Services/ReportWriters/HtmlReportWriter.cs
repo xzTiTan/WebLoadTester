@@ -682,7 +682,7 @@ tr:last-child td{border-bottom:none}
             "http.assets" => "Проверялись Web-ресурсы, их тип, размер и задержка загрузки.",
             "net.preflight" => "Проверялась готовность окружения и доступность вспомогательных зависимостей.",
             "net.availability" => "Проверялась базовая доступность HTTP или TCP-цели.",
-            "ui.timing" => "Сравнивались профили совместимости и скорость загрузки страниц.",
+            "ui.timing" => "Сравнивались профили загрузки страницы в Chromium и их тайминги.",
             _ => "Проверялся объект, указанный в настройках этого запуска."
         };
     }
@@ -700,7 +700,7 @@ tr:last-child td{border-bottom:none}
             "http.assets" => "Успех означает, что ресурсы уложились в ограничения по типу, размеру и времени ответа.",
             "net.preflight" => "Успех означает, что окружение и базовые зависимости готовы к основному запуску.",
             "net.availability" => "Успех означает, что цель была доступна в рамках выбранной проверки.",
-            "ui.timing" => "Успех означает, что профили открылись корректно, а измерения удалось собрать.",
+            "ui.timing" => "Успех означает, что страница открылась в выбранных профилях Chromium, а тайминги navigation, DOMContentLoaded и load удалось собрать.",
             _ => "Успех определяется отсутствием проблемных результатов в итоговом отчёте."
         };
     }
@@ -771,7 +771,7 @@ tr:last-child td{border-bottom:none}
             "net.preflight" => "Проверка готовности окружения и базовой сетевой доступности перед основным запуском.",
             "net.security" => "Проверка базовых безопасных настроек без атакующих действий.",
             "ui.snapshot" => "Снятие и фиксация визуальных состояний интерфейса.",
-            "ui.timing" => "Сравнение профилей совместимости и таймингов загрузки.",
+            "ui.timing" => "Сравнение профилей Chromium и таймингов загрузки страницы.",
             "ui.scenario" => "Пошаговое выполнение UI-сценария с фиксацией результатов и артефактов.",
             _ => "Назначение проверки не уточнено."
         };
@@ -1196,7 +1196,7 @@ tr:last-child td{border-bottom:none}
                         dom = ReadDouble(metrics, "domContentLoadedMs") ?? 0;
                         load = ReadDouble(metrics, "loadEventMs") ?? 0;
                     }
-                    if (TryGetProperty(root, "profile", out var profileElement)) profile = $"{ReadString(profileElement, "browser") ?? "browser"} · {(TryGetProperty(profileElement, "viewport", out var viewport) ? $"{ReadInt(viewport, "width")}x{ReadInt(viewport, "height")}" : "n/a")}";
+                    if (TryGetProperty(root, "profile", out var profileElement)) profile = BuildTimingProfileLabel(profileElement);
                     screenshot = NormalizeArtifactPath(ReadString(root, "screenshot")) ?? string.Empty;
                 }
                 catch { }
@@ -1205,9 +1205,9 @@ tr:last-child td{border-bottom:none}
         }).ToList();
         if (rows.Count == 0) return;
         var maxMetric = Math.Max(1d, rows.SelectMany(x => new[] { x.Navigation, x.Dom, x.Load }).Max());
-        AppendSectionHeader("Сравнение профилей совместимости", "Сопоставление таймингов загрузки по целям и профилям.", sb);
+        AppendSectionHeader("Профили загрузки Chromium", "Сопоставление таймингов navigation, DOMContentLoaded и load по целям и профилям Chromium.", sb);
         sb.AppendLine("<div class='inline-cards'>");
-        sb.AppendLine($"<div class='card tone-accent'><div class='n'>{rows.Count}</div><h3>Профилей в отчёте</h3><div class='small'>Сколько профилей/целей реально попало в секцию совместимости.</div></div>");
+        sb.AppendLine($"<div class='card tone-accent'><div class='n'>{rows.Count}</div><h3>Профилей в отчёте</h3><div class='small'>Сколько профилей Chromium реально попало в секцию сравнения загрузки.</div></div>");
         sb.AppendLine($"<div class='card {(rows.All(x => x.Success) ? "tone-success" : "tone-danger")}'><div class='n'>{rows.Count(x => x.Success)}</div><h3>Успешных профилей</h3><div class='small'>Сколько профилей завершились без ошибок загрузки.</div></div>");
         sb.AppendLine($"<div class='card tone-warning'><div class='n'>{Escape(FormatDuration(rows.Max(x => x.Load > 0 ? x.Load : x.Navigation)))}</div><h3>Самый долгий профиль</h3><div class='small'>Худшее измерение по load/navigation среди профилей.</div></div>");
         sb.AppendLine("</div>");
@@ -1215,6 +1215,24 @@ tr:last-child td{border-bottom:none}
         foreach (var row in rows) sb.AppendLine($"<tr><td><strong>{Escape(row.Name)}</strong><div class='small'>{Escape(row.Url)}</div><div class='small'>Воркер {row.WorkerId} / итерация {row.IterationIndex}</div></td><td>{Escape(row.Profile)}</td><td>{RenderBar(row.Navigation, maxMetric, FormatDuration(row.Navigation), row.Success ? "ok" : "warn")}</td><td>{RenderBar(row.Dom, maxMetric, FormatDuration(row.Dom), "warn")}</td><td>{RenderBar(row.Load, maxMetric, FormatDuration(row.Load), "warn")}</td><td class='{(row.Success ? "ok" : "fail")}'>{(row.Success ? "Успешно" : "Ошибка")}{(string.IsNullOrWhiteSpace(row.ErrorMessage) ? string.Empty : $"<div class='small'>{Escape(row.ErrorMessage)}</div>")}</td><td>{(string.IsNullOrWhiteSpace(row.Screenshot) ? "<span class='small'>n/a</span>" : $"<a href='{Escape(row.Screenshot)}'>Скриншот</a>")}</td></tr>");
         sb.AppendLine("</table></section>");
     }
+
+    private static string BuildTimingProfileLabel(JsonElement profileElement)
+    {
+        var browser = ReadString(profileElement, "browser") ?? "chromium";
+        var viewportText = "n/a";
+        if (TryGetProperty(profileElement, "viewport", out var viewport))
+        {
+            viewportText = viewport.ValueKind switch
+            {
+                JsonValueKind.String => viewport.GetString() ?? "n/a",
+                JsonValueKind.Object => $"{ReadInt(viewport, "width")}x{ReadInt(viewport, "height")}",
+                _ => "n/a"
+            };
+        }
+
+        return $"{browser} · {viewportText}";
+    }
+
     private static void AppendScenarioSection(TestReport report, StringBuilder sb)
     {
         if (!string.Equals(report.ModuleId, "ui.scenario", StringComparison.OrdinalIgnoreCase)) return;
@@ -1701,7 +1719,7 @@ tr:last-child td{border-bottom:none}
 
         if (report.ModuleId == "ui.timing")
         {
-            list.Add("Сравните самые медленные профили и выровняйте условия рендеринга, прежде чем делать выводы о совместимости.");
+            list.Add("Сравните самые медленные профили Chromium и выровняйте viewport, user-agent и режим headless, прежде чем делать выводы о поведении загрузки.");
         }
 
         if (report.ModuleId == "ui.scenario")

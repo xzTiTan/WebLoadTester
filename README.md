@@ -1,6 +1,6 @@
 # WebLoadTester
 
-**Версия документации:** v3.53 11.04.2026
+**Версия документации:** v3.54 12.04.2026
 
 ## Что это
 WebLoadTester — программная реализация АИС тестирования и диагностики Web-сайтов для учебных задач (курсовая/ВКР) на .NET 8 + Avalonia. Оно запускает модульные проверки, собирает метрики, сохраняет артефакты и формирует отчёты по каждому прогону с уникальным `RunId`.
@@ -31,6 +31,22 @@ dotnet restore
 dotnet build
 dotnet run
 ```
+
+## Publish For Defense
+Use the dedicated publish profile `Defense-WinX64` when you need a portable Windows build for transfer. This profile does not change the normal `dotnet build` or `Debug` workflow.
+
+```powershell
+dotnet publish -p:PublishProfile=Defense-WinX64
+```
+
+Profile settings:
+- `Release`
+- `win-x64`
+- `SelfContained=true`
+- `PublishSingleFile=true`
+- output: `bin/Release/net8.0/win-x64/publish-defense/`
+
+This mode is intended for handing over a build that runs on another Windows PC without a separate .NET runtime installation.
 
 **Playwright-браузеры:**
 **Канонический путь:** браузеры Playwright используются из `{DataDirectory}/browsers` (через настройку `BrowsersDirectory`).
@@ -73,3 +89,4 @@ dotnet run
 
 ## Ограничения и законность
 Инструмент предназначен только для легитимных проверок на системах, которыми вы владеете или на которые получили явное разрешение. Атакующие функции и сценарии не допускаются.
+

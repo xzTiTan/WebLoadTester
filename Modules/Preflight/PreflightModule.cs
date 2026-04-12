@@ -70,8 +70,9 @@ public class PreflightModule : ITestModule
         results.Add(ToResult("Дымовое: доступ к каталогу прогонов", runsWritable, runsDuration, runsMessage, "Environment", JsonSerializer.SerializeToElement(new { path = ctx.Artifacts.RunsRoot }), ctx.WorkerId, ctx.Iteration));
         ReportProgress("Дымовое: каталог прогонов");
 
-        var (sqliteOk, sqliteDuration, sqliteMessage) = await CheckSqliteAsync(ctx.Artifacts.RunsRoot, ct);
-        results.Add(ToResult("Дымовое: доступ к SQLite", sqliteOk, sqliteDuration, sqliteMessage, sqliteOk ? null : "Environment", JsonSerializer.SerializeToElement(new { database = "webloadtester.db" }), ctx.WorkerId, ctx.Iteration));
+        var sqlitePath = GetDatabasePath(ctx);
+        var (sqliteOk, sqliteDuration, sqliteMessage) = await CheckSqliteAsync(sqlitePath, ct);
+        results.Add(ToResult("Дымовое: доступ к SQLite", sqliteOk, sqliteDuration, sqliteMessage, sqliteOk ? null : "Environment", JsonSerializer.SerializeToElement(new { database = sqlitePath }), ctx.WorkerId, ctx.Iteration));
         ReportProgress("Дымовое: SQLite");
 
         var chromiumAvailable = PlaywrightFactory.HasBrowsersInstalled();
@@ -188,12 +189,11 @@ public class PreflightModule : ITestModule
         }
     }
 
-    private static async Task<(bool success, double durationMs, string message)> CheckSqliteAsync(string runsRoot, CancellationToken ct)
+    private static async Task<(bool success, double durationMs, string message)> CheckSqliteAsync(string dbPath, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
         try
         {
-            var dbPath = Path.Combine(runsRoot, "..", "webloadtester.db");
             await using var connection = new SqliteConnection($"Data Source={dbPath}");
             await connection.OpenAsync(ct);
             await using var command = connection.CreateCommand();
@@ -207,5 +207,17 @@ public class PreflightModule : ITestModule
             sw.Stop();
             return (false, sw.Elapsed.TotalMilliseconds, ex.Message);
         }
+    }
+
+    private static string GetDatabasePath(IRunContext ctx)
+    {
+        var profilesRoot = ctx.Artifacts.ProfilesRoot;
+        var dataDirectory = Path.GetDirectoryName(profilesRoot);
+        if (string.IsNullOrWhiteSpace(dataDirectory))
+        {
+            return Path.Combine(ctx.Artifacts.RunsRoot, "..", "webloadtester.db");
+        }
+
+        return Path.Combine(dataDirectory, "webloadtester.db");
     }
 }

@@ -32,11 +32,7 @@ public class UiScenarioModule : ITestModule
         {
             Steps = new List<UiStep>
             {
-                new() { Action = UiStepAction.Navigate, Value = "https://www.google.com/", DelayMs = 0 },
-                new() { Action = UiStepAction.WaitForSelector, Selector = "input[name=q]", DelayMs = 0 },
-                new() { Action = UiStepAction.Fill, Selector = "input[name=q]", Value = "test", DelayMs = 0 },
-                new() { Action = UiStepAction.Click, Selector = "body > div.L3eUgb > div.o3j99.ikrT4e.om7nvf > form > div:nth-child(1) > div.A8SBwf > div.FPdoLc.lJ9FBc > center > input.RNmpXc", DelayMs = 0 },
-                new() { Action = UiStepAction.WaitForSelector, Selector = "#search", DelayMs = 0 }
+                new() { Action = UiStepAction.Navigate, Value = string.Empty, DelayMs = 0 }
             }
         };
     }

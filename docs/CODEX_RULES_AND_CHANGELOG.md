@@ -1,4 +1,4 @@
-v3.53 11.04.2026
+v3.54 12.04.2026
 
 # CODEX_RULES_AND_CHANGELOG — правила для Codex/агентов и журнал изменений
 
@@ -38,6 +38,11 @@ v3.53 11.04.2026
 ---
 
 # Changelog
+
+## v3.54 12.04.2026
+- Добавлен отдельный publish-профиль `Properties/PublishProfiles/Defense-WinX64.pubxml` для переносимой сборки под защиту: `Release`, `win-x64`, `SelfContained=true`, `PublishSingleFile=true`, публикация в `bin/Release/net8.0/win-x64/publish-defense/`.
+- Обычный цикл разработки не изменён: `dotnet build` и `Debug` по-прежнему не превращаются в self-contained publish.
+- Обновлены версии `README.md`, `AGENTS.md` и `WebLoadTester.csproj` (`InformationalVersion`), в README добавлена команда публикации через новый профиль.
 
 ## v3.53 11.04.2026
 - Исправлен runtime-crash Avalonia `InvalidCastException` при открытии workspace: design token `LabelColumnWidth` переведён из `x:Double` в `GridLength`, чтобы `ColumnDefinition.Width` в `App.axaml` получал корректный тип через `DynamicResource`.

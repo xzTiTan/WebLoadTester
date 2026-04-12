@@ -9,7 +9,7 @@ namespace WebLoadTester.Modules.UiScenario;
 /// </summary>
 public class UiScenarioSettings
 {
-    public string TargetUrl { get; set; } = "https://www.google.com/";
+    public string TargetUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Legacy-поле (больше не используется в MVP, оставлено для обратной совместимости payload).

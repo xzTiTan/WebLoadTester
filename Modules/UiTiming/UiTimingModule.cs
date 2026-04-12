@@ -19,8 +19,8 @@ namespace WebLoadTester.Modules.UiTiming;
 public class UiTimingModule : ITestModule
 {
     public string Id => "ui.timing";
-    public string DisplayName => "Тестирование совместимости";
-    public string Description => "Проверяет прохождение теста по профилям совместимости браузера, viewport и user-agent.";
+    public string DisplayName => "Профили загрузки Chromium";
+    public string Description => "Сравнивает загрузку страницы в разных профилях Chromium и показывает тайминги navigation, DOMContentLoaded и load.";
     public TestFamily Family => TestFamily.UiTesting;
     public Type SettingsType => typeof(UiTimingSettings);
 
@@ -42,13 +42,13 @@ public class UiTimingModule : ITestModule
         var errors = new List<string>();
         if (settings is not UiTimingSettings s)
         {
-            errors.Add("Некорректный тип настроек тестирования совместимости.");
+            errors.Add("Некорректный тип настроек профилей загрузки Chromium.");
             return errors;
         }
 
         if (s.Targets.Count == 0)
         {
-            errors.Add("Добавьте хотя бы один профиль совместимости.");
+            errors.Add("Добавьте хотя бы один профиль загрузки Chromium.");
         }
 
         for (var i = 0; i < s.Targets.Count; i++)
@@ -153,7 +153,7 @@ public class UiTimingModule : ITestModule
                 }
 
                 var metrics = BuildTimingMetrics(sw.Elapsed.TotalMilliseconds, nav);
-                results.Add(new TimingResult($"Профиль: {GetCompatibilityProfileName(target)}")
+                results.Add(new TimingResult($"Профиль Chromium: {GetCompatibilityProfileName(target)}")
                 {
                     Url = target.Url,
                     Iteration = index,
@@ -182,7 +182,7 @@ public class UiTimingModule : ITestModule
                 }
 
                 ctx.Log.Error($"[UiTiming] Профиль {index} failed: {ex.GetType().Name}: {ex.Message}");
-                results.Add(new TimingResult($"Профиль: {GetCompatibilityProfileName(target)}")
+                results.Add(new TimingResult($"Профиль Chromium: {GetCompatibilityProfileName(target)}")
                 {
                     Url = target.Url,
                     Iteration = index,

@@ -12,22 +12,33 @@ namespace WebLoadTester.Infrastructure.Storage;
 public class AppSettingsService
 {
     private readonly string _settingsPath;
+    private readonly AppStorageLayout _storageLayout;
 
     public AppSettingsService()
     {
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WebLoadTester");
-        Directory.CreateDirectory(root);
-        _settingsPath = Path.Combine(root, "settings.json");
+        _storageLayout = AppStoragePathResolver.Resolve();
+        Directory.CreateDirectory(_storageLayout.RootDirectory);
+        _settingsPath = _storageLayout.SettingsPath;
         Settings = Load();
+        NormalizeSettings(Settings, _storageLayout);
         EnsureDirectories(Settings);
     }
 
     public AppSettings Settings { get; private set; }
+    public AppStorageLayout StorageLayout => _storageLayout;
+    public string SettingsPath => _settingsPath;
 
     public Task SaveAsync()
     {
+        NormalizeSettings(Settings, _storageLayout);
         var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions { WriteIndented = true });
         EnsureDirectories(Settings);
+        var settingsDirectory = Path.GetDirectoryName(_settingsPath);
+        if (!string.IsNullOrWhiteSpace(settingsDirectory))
+        {
+            Directory.CreateDirectory(settingsDirectory);
+        }
+
         return File.WriteAllTextAsync(_settingsPath, json);
     }
 
@@ -41,8 +52,6 @@ public class AppSettingsService
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json);
                 if (loaded != null)
                 {
-                    loaded.Telegram ??= new TelegramSettings();
-                    loaded.UiLayout ??= new UiLayoutState();
                     return loaded;
                 }
             }
@@ -52,7 +61,7 @@ public class AppSettingsService
             }
         }
 
-        return AppSettings.CreateDefault();
+        return AppSettings.CreateDefault(_storageLayout);
     }
 
     private static void EnsureDirectories(AppSettings settings)
@@ -60,6 +69,21 @@ public class AppSettingsService
         Directory.CreateDirectory(settings.DataDirectory);
         Directory.CreateDirectory(settings.RunsDirectory);
         Directory.CreateDirectory(settings.BrowsersDirectory);
+    }
+
+    private static void NormalizeSettings(AppSettings settings, AppStorageLayout storageLayout)
+    {
+        settings.Telegram ??= new TelegramSettings();
+        settings.UiLayout ??= new UiLayoutState();
+        settings.DataDirectory = NormalizeOrDefault(settings.DataDirectory, storageLayout.DataDirectory);
+        settings.RunsDirectory = NormalizeOrDefault(settings.RunsDirectory, storageLayout.RunsDirectory);
+        settings.BrowsersDirectory = NormalizeOrDefault(settings.BrowsersDirectory, Path.Combine(settings.DataDirectory, "browsers"));
+    }
+
+    private static string NormalizeOrDefault(string path, string fallback)
+    {
+        var effectivePath = string.IsNullOrWhiteSpace(path) ? fallback : path;
+        return Path.GetFullPath(effectivePath);
     }
 }
 
@@ -75,15 +99,13 @@ public class AppSettings
     public UiLayoutState UiLayout { get; set; } = new();
     public string DatabasePath => Path.Combine(DataDirectory, "webloadtester.db");
 
-    public static AppSettings CreateDefault()
+    public static AppSettings CreateDefault(AppStorageLayout storageLayout)
     {
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WebLoadTester");
-        var dataDirectory = Path.Combine(root, "data");
         return new AppSettings
         {
-            DataDirectory = dataDirectory,
-            RunsDirectory = Path.Combine(root, "runs"),
-            BrowsersDirectory = Path.Combine(dataDirectory, "browsers"),
+            DataDirectory = storageLayout.DataDirectory,
+            RunsDirectory = storageLayout.RunsDirectory,
+            BrowsersDirectory = storageLayout.BrowsersDirectory,
             Telegram = new TelegramSettings(),
             UiLayout = new UiLayoutState()
         };

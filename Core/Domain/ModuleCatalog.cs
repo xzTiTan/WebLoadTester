@@ -14,7 +14,7 @@ public static class ModuleCatalog
         {
             ["ui.scenario"] = new("ui.scenario", "3. Регрессионное тестирование", "Повторный запуск пользовательского сценария с фиксацией результатов и сравнением шагов.", TestFamily.UiTesting, "UIСценарий"),
             ["ui.snapshot"] = new("ui.snapshot", "4. Интерфейсное тестирование", "Проверка визуального состояния страниц и элементов через скриншоты.", TestFamily.UiTesting, "UISнимки"),
-            ["ui.timing"] = new("ui.timing", "5. Тестирование совместимости", "Проверка прохождения теста на наборах профилей браузера и viewport.", TestFamily.UiTesting, "UITайминги"),
+            ["ui.timing"] = new("ui.timing", "5. Профили загрузки Chromium", "Сравнение загрузки страницы в профилях Chromium с разными viewport, user-agent и режимом запуска.", TestFamily.UiTesting, "UITайминги"),
             ["http.functional"] = new("http.functional", "2. Функциональное тестирование", "Функциональные HTTP-проверки с ассерциями ожидаемого поведения.", TestFamily.HttpTesting, "HTTPФункциональные"),
             ["http.performance"] = new("http.performance", "6. Тестирование производительности", "Измерение отклика Web-сайта под управляемой нагрузкой.", TestFamily.HttpTesting, "HTTPПроизводительность"),
             ["http.assets"] = new("http.assets", "10. Тестирование ресурсов Web-сайта", "Проверка доступности и характеристик статических ресурсов сайта.", TestFamily.HttpTesting, "HTTPАссеты"),
