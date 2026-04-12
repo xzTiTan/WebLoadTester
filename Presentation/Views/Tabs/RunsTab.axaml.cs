@@ -16,7 +16,7 @@ public partial class RunsTab : UserControl
     {
         if (DataContext is RunsTabViewModel vm && vm.HasValidSelection && !vm.IsRunning)
         {
-            vm.OpenJsonCommand.Execute(null);
+            vm.OpenHtmlCommand.Execute(null);
             e.Handled = true;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -54,6 +55,9 @@ public partial class RunsTabViewModel : ObservableObject
 
         SelectedStatus = "Все";
         SelectedPeriod = "Все";
+
+        ArtifactLinks.CollectionChanged += OnDetailCollectionChanged;
+        TopErrors.CollectionChanged += OnDetailCollectionChanged;
     }
 
     public ObservableCollection<TestRunSummary> AllRuns { get; } = new();
@@ -80,6 +84,8 @@ public partial class RunsTabViewModel : ObservableObject
     public bool HasSelectedRun => SelectedRun != null;
     public bool HasValidSelection => _hasValidSelection;
     public bool HasRuns => Runs.Count > 0;
+    public bool HasArtifactLinks => ArtifactLinks.Count > 0;
+    public bool HasTopErrors => TopErrors.Count > 0;
     public bool CanRepeatRun => RepeatRunCommand.CanExecute(null);
     public bool HasRepeatRunHint => !string.IsNullOrWhiteSpace(RepeatRunHint);
     public string SelectedRunDisplayId => SelectedRun == null ? string.Empty : FormatRunId(SelectedRun.RunId);
@@ -125,6 +131,12 @@ public partial class RunsTabViewModel : ObservableObject
         {
             IsRunning = _isRunningProvider();
         }
+    }
+
+    private void OnDetailCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasArtifactLinks));
+        OnPropertyChanged(nameof(HasTopErrors));
     }
 
     partial void OnSelectedModuleTypeChanged(string? value) => ApplyFilters();
@@ -187,8 +199,8 @@ public partial class RunsTabViewModel : ObservableObject
                 ApplyFilters();
 
                 SelectedRun = !string.IsNullOrWhiteSpace(previousRunId)
-                    ? Runs.FirstOrDefault(r => r.RunId == previousRunId) ?? Runs.FirstOrDefault()
-                    : Runs.FirstOrDefault();
+                    ? Runs.FirstOrDefault(r => r.RunId == previousRunId)
+                    : null;
 
                 UserMessage = string.Empty;
             });
@@ -1061,7 +1073,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         if (SelectedRun != null && Runs.All(r => r.RunId != SelectedRun.RunId))
         {
-            SelectedRun = Runs.FirstOrDefault();
+            SelectedRun = null;
         }
 
         UpdateValidSelectionState();

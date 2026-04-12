@@ -69,6 +69,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
         <StyleInclude Source="avares://WebLoadTester/Presentation/Styles/DesignTokens.axaml" />
         <StyleInclude Source="avares://WebLoadTester/Presentation/Styles/Controls.axaml" />
         <StyleInclude Source="avares://WebLoadTester/Presentation/Styles/Workspace.axaml" />
