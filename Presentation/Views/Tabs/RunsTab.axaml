@@ -63,6 +63,7 @@
                     <DataGrid x:Name="RunsGrid"
                               MinHeight="320"
                               HeadersVisibility="Column"
+                              IsReadOnly="True"
                               CanUserSortColumns="False"
                               CanUserReorderColumns="False"
                               CanUserResizeColumns="True"
