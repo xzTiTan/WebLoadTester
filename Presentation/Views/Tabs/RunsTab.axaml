@@ -63,6 +63,7 @@
                         <TextBlock Text="Журнал запусков" Classes="section-title" />
                         <TextBlock Text="Здесь отображаются все запуски с учётом выбранных фильтров. Выделите строку, чтобы открыть сводку и пользовательские артефакты ниже."
                                    Classes="muted" />
+                        <TextBlock Text="{Binding RunsSummaryText}" Classes="status-line" />
                     </StackPanel>
                     <Grid>
                         <DataGrid x:Name="RunsGrid"
@@ -104,9 +105,15 @@
                                 <DataGridTextColumn Header="Ошибки" Binding="{Binding FailedItems}" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
-                        <TextBlock Text="Запуски по выбранным фильтрам не найдены."
-                                   IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}"
-                                   Margin="8" />
+                        <StackPanel Classes="empty-state"
+                                    IsVisible="{Binding HasRuns, Converter={StaticResource BooleanNotConverter}}"
+                                    Margin="8">
+                            <TextBlock Text="Журнал запусков пока пуст" Classes="empty-title" />
+                            <TextBlock Text="{Binding RunsSummaryText}" TextWrapping="Wrap" />
+                            <TextBlock Text="После первого запуска здесь появятся дата, тип проверки, статус и быстрый доступ к материалам запуска."
+                                       Classes="muted"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -119,7 +126,7 @@
                           ResizeBehavior="PreviousAndNext" />
 
             <Border Grid.Row="2" Classes="section">
-                <Expander Header="Сведения о запуске" IsExpanded="True">
+                <Expander Header="Сведения о выбранном запуске" IsExpanded="True">
                     <StackPanel Margin="0,8,0,0" Spacing="10">
                         <TextBlock Text="Детали выбранного запуска" Classes="section-title" />
                         <TextBlock Text="Ниже показаны сводка, профиль запуска, пользовательские артефакты и частые ошибки по выбранной строке журнала."

@@ -40,20 +40,20 @@ public partial class RunsTabViewModel : ObservableObject
         _runsRoot = runsRoot;
         _repeatRun = repeatRun;
 
-        StatusFilterOptions.Add("Р’СЃРµ");
-        StatusFilterOptions.Add("РЈСЃРїРµС€РЅРѕ");
-        StatusFilterOptions.Add("РЎ РѕС€РёР±РєРѕР№");
-        StatusFilterOptions.Add("РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ");
-        StatusFilterOptions.Add("РћС‚РјРµРЅРµРЅРѕ");
-        StatusFilterOptions.Add("Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ");
+        StatusFilterOptions.Add("Все");
+        StatusFilterOptions.Add("Успешно");
+        StatusFilterOptions.Add("С ошибкой");
+        StatusFilterOptions.Add("Остановлено");
+        StatusFilterOptions.Add("Отменено");
+        StatusFilterOptions.Add("Выполняется");
 
-        PeriodOptions.Add("РЎРµРіРѕРґРЅСЏ");
-        PeriodOptions.Add("7 РґРЅРµР№");
-        PeriodOptions.Add("30 РґРЅРµР№");
-        PeriodOptions.Add("Р’СЃРµ");
+        PeriodOptions.Add("Сегодня");
+        PeriodOptions.Add("7 дней");
+        PeriodOptions.Add("30 дней");
+        PeriodOptions.Add("Все");
 
-        SelectedStatus = "Р’СЃРµ";
-        SelectedPeriod = "Р’СЃРµ";
+        SelectedStatus = "Все";
+        SelectedPeriod = "Все";
     }
 
     public ObservableCollection<TestRunSummary> AllRuns { get; } = new();
@@ -66,8 +66,8 @@ public partial class RunsTabViewModel : ObservableObject
 
     [ObservableProperty] private TestRunSummary? selectedRun;
     [ObservableProperty] private string? selectedModuleType;
-    [ObservableProperty] private string selectedStatus = "Р’СЃРµ";
-    [ObservableProperty] private string selectedPeriod = "Р’СЃРµ";
+    [ObservableProperty] private string selectedStatus = "Все";
+    [ObservableProperty] private string selectedPeriod = "Все";
     [ObservableProperty] private bool onlyWithErrors;
     [ObservableProperty] private string? searchText;
     [ObservableProperty] private string userMessage = string.Empty;
@@ -84,13 +84,18 @@ public partial class RunsTabViewModel : ObservableObject
     public bool HasRepeatRunHint => !string.IsNullOrWhiteSpace(RepeatRunHint);
     public string SelectedRunDisplayId => SelectedRun == null ? string.Empty : FormatRunId(SelectedRun.RunId);
     public string SelectedRunDisplayModule => SelectedRun == null ? string.Empty : ResolveModuleDisplayName(SelectedRun.ModuleType, SelectedRun.ModuleName);
+    public string RunsSummaryText => HasRuns
+        ? $"Показано запусков: {Runs.Count}"
+        : SearchOrFilterActive()
+            ? "По текущим фильтрам запуски не найдены."
+            : "После первого запуска здесь появится журнал со всеми выполненными проверками.";
 
     public void SetModuleOptions(IEnumerable<string> moduleTypes)
     {
         _moduleFilterToType.Clear();
         _moduleTypeToFilter.Clear();
         ModuleFilterOptions.Clear();
-        ModuleFilterOptions.Add("Р’СЃРµ");
+        ModuleFilterOptions.Add("Все");
         foreach (var moduleType in moduleTypes.OrderBy(m => m))
         {
             var displayName = ResolveModuleDisplayName(moduleType, string.Empty);
@@ -99,7 +104,7 @@ public partial class RunsTabViewModel : ObservableObject
             _moduleTypeToFilter[moduleType] = displayName;
         }
 
-        SelectedModuleType ??= "Р’СЃРµ";
+        SelectedModuleType ??= "Все";
     }
 
 
@@ -142,7 +147,7 @@ public partial class RunsTabViewModel : ObservableObject
         OnPropertyChanged(nameof(HasRepeatRunHint));
         if (value)
         {
-            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
             return;
         }
 
@@ -203,7 +208,7 @@ public partial class RunsTabViewModel : ObservableObject
     [RelayCommand]
     private void OpenJson()
     {
-        if (OpenPath(GetJsonPath(), "Р¤Р°Р№Р» report.json РЅРµ РЅР°Р№РґРµРЅ.", out var error))
+        if (OpenPath(GetJsonPath(), "Файл report.json не найден.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -216,30 +221,30 @@ public partial class RunsTabViewModel : ObservableObject
     private void OpenHtml()
     {
         var htmlPath = GetHtmlPath();
-        if (OpenPath(htmlPath, "Р¤Р°Р№Р» report.html РЅРµ РЅР°Р№РґРµРЅ.", out _))
+        if (OpenPath(htmlPath, "Файл report.html не найден.", out _))
         {
             UserMessage = string.Empty;
             return;
         }
 
         var jsonPath = GetJsonPath();
-        if (OpenPath(jsonPath, "Р¤Р°Р№Р» report.json РЅРµ РЅР°Р№РґРµРЅ.", out _))
+        if (OpenPath(jsonPath, "Файл report.json не найден.", out _))
         {
-            UserMessage = "HTML-РѕС‚С‡С‘С‚ РЅРµРґРѕСЃС‚СѓРїРµРЅ, РѕС‚РєСЂС‹С‚ report.json.";
+            UserMessage = "HTML-отчёт недоступен, открыт report.json.";
             return;
         }
 
         if (SelectedRun != null)
         {
             var runFolder = Path.Combine(_runsRoot, SelectedRun.RunId);
-            if (OpenPath(runFolder, "РџР°РїРєР° РїСЂРѕРіРѕРЅР° РЅРµ РЅР°Р№РґРµРЅР°.", out _))
+            if (OpenPath(runFolder, "Папка запуска не найдена.", out _))
             {
-                UserMessage = "HTML Рё JSON РЅРµРґРѕСЃС‚СѓРїРЅС‹, РѕС‚РєСЂС‹С‚Р° РїР°РїРєР° РїСЂРѕРіРѕРЅР°.";
+                UserMessage = "HTML и JSON недоступны, открыта папка запуска.";
                 return;
             }
         }
 
-        UserMessage = "РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ HTML, JSON Рё РїР°РїРєСѓ РїСЂРѕРіРѕРЅР°.";
+        UserMessage = "Не удалось открыть HTML, JSON и папку запуска.";
     }
 
     [RelayCommand]
@@ -250,7 +255,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        if (OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "РџР°РїРєР° РїСЂРѕРіРѕРЅР° РЅРµ РЅР°Р№РґРµРЅР°.", out var error))
+        if (OpenPath(Path.Combine(_runsRoot, SelectedRun.RunId), "Папка запуска не найдена.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -271,7 +276,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(SelectedRun.RunId);
-            UserMessage = "РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р·Р°РїСѓСЃРєР° СЃРєРѕРїРёСЂРѕРІР°РЅ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР°.";
+            UserMessage = "Идентификатор запуска скопирован в буфер обмена.";
         }
     }
 
@@ -287,7 +292,7 @@ public partial class RunsTabViewModel : ObservableObject
             desktop.MainWindow?.Clipboard is IClipboard clipboard)
         {
             await clipboard.SetTextAsync(Path.Combine(_runsRoot, SelectedRun.RunId));
-            UserMessage = "РџСѓС‚СЊ РїСЂРѕРіРѕРЅР° СЃРєРѕРїРёСЂРѕРІР°РЅ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР°.";
+            UserMessage = "Путь запуска скопирован в буфер обмена.";
         }
     }
 
@@ -302,12 +307,12 @@ public partial class RunsTabViewModel : ObservableObject
         RefreshRunningState();
         if (IsRunning)
         {
-            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
             return;
         }
 
         await _repeatRun(SelectedRun.RunId);
-        UserMessage = $"РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ Р·Р°РіСЂСѓР¶РµРЅР° РёР· РїСЂРѕРіРѕРЅР° {SelectedRun.RunId}. Р—Р°РїСѓСЃРє РЅРµ РІС‹РїРѕР»РЅСЏР»СЃСЏ.";
+        UserMessage = $"Конфигурация загружена из запуска {SelectedRun.RunId}. Запуск не выполнялся.";
         var version = Volatile.Read(ref _selectionStateVersion);
         await UpdateRepeatRunAvailabilityAsync(SelectedRun, version);
     }
@@ -327,7 +332,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         _pendingDeleteRunId = SelectedRun.RunId;
         IsDeleteConfirmVisible = true;
-        UserMessage = $"РЈРґР°Р»РёС‚СЊ РїСЂРѕРіРѕРЅ {SelectedRun.RunId}? Р‘СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹ Р·Р°РїРёСЃСЊ РёР· Р‘Р” Рё РїР°РїРєР° runs/{SelectedRun.RunId}.";
+        UserMessage = $"Удалить запуск {SelectedRun.RunId}? Будут удалены запись из БД и папка runs/{SelectedRun.RunId}.";
     }
 
     [RelayCommand]
@@ -349,11 +354,11 @@ public partial class RunsTabViewModel : ObservableObject
                 Directory.Delete(runFolder, recursive: true);
             }
 
-            UserMessage = "РџСЂРѕРіРѕРЅ СѓРґР°Р»С‘РЅ.";
+            UserMessage = "Запуск удалён.";
         }
         catch (Exception ex)
         {
-            UserMessage = $"Р—Р°РїРёСЃСЊ Р‘Р” СѓРґР°Р»РµРЅР°, РЅРѕ РЅРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РїР°РїРєСѓ: {ex.Message}";
+            UserMessage = $"Запись в БД удалена, но не удалось удалить папку: {ex.Message}";
         }
 
         IsDeleteConfirmVisible = false;
@@ -377,7 +382,7 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        if (OpenPath(item.FullPath, "РђСЂС‚РµС„Р°РєС‚ РЅРµ РЅР°Р№РґРµРЅ.", out var error))
+        if (OpenPath(item.FullPath, "Артефакт не найден.", out var error))
         {
             UserMessage = string.Empty;
             return;
@@ -479,13 +484,13 @@ public partial class RunsTabViewModel : ObservableObject
 
         if (IsRunning)
         {
-            return "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
+            return "Остановите запуск, чтобы повторить.";
         }
 
         var reportPath = Path.Combine(_runsRoot, run.RunId, "report.json");
         if (!File.Exists(reportPath))
         {
-            return "report.json РЅРµ РЅР°Р№РґРµРЅ РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїСЂРѕРіРѕРЅР°.";
+            return "report.json не найден для выбранного запуска.";
         }
 
         try
@@ -493,11 +498,11 @@ public partial class RunsTabViewModel : ObservableObject
             var reportJson = await File.ReadAllTextAsync(reportPath);
             return TryParseRepeatSnapshot(reportJson, out _, out var parseError)
                 ? string.Empty
-                : $"report.json РїРѕРІСЂРµР¶РґС‘РЅ: {parseError}";
+                : $"report.json повреждён: {parseError}";
         }
         catch (Exception ex)
         {
-            return $"РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ report.json: {ex.Message}";
+            return $"Не удалось прочитать report.json: {ex.Message}";
         }
     }
 
@@ -585,8 +590,8 @@ public partial class RunsTabViewModel : ObservableObject
             {
                 RunId = runId,
                 StartedAt = new DateTimeOffset(File.GetLastWriteTimeUtc(jsonPath)),
-                TestName = $"РРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№ Р·Р°РїСѓСЃРє {FormatRunId(runId)}",
-                ModuleName = "РќРµРёР·РІРµСЃС‚РЅС‹Р№ РјРѕРґСѓР»СЊ",
+                TestName = $"Импортированный запуск {FormatRunId(runId)}",
+                ModuleName = "Неизвестный модуль",
                 ModuleType = "orphan",
                 Status = "Unknown",
                 DurationMs = 0,
@@ -754,8 +759,8 @@ public partial class RunsTabViewModel : ObservableObject
         AddArtifactLink(result, knownPaths, "report.json", Path.Combine(runFolder, "report.json"));
         AddArtifactLink(result, knownPaths, "report.html", Path.Combine(runFolder, "report.html"));
         AddArtifactLink(result, knownPaths, "logs/run.log", Path.Combine(runFolder, "logs", "run.log"));
-        AddArtifactLink(result, knownPaths, "СЃРєСЂРёРЅС€РѕС‚С‹", Path.Combine(runFolder, "screenshots"));
-        AddArtifactLink(result, knownPaths, "РћС‚РєСЂС‹С‚СЊ РїР°РїРєСѓ РїСЂРѕРіРѕРЅР°", runFolder);
+        AddArtifactLink(result, knownPaths, "Скриншоты", Path.Combine(runFolder, "screenshots"));
+        AddArtifactLink(result, knownPaths, "Открыть папку запуска", runFolder);
         return result;
     }
 
@@ -958,14 +963,14 @@ public partial class RunsTabViewModel : ObservableObject
         }
         else if (IsRunning)
         {
-            RepeatRunHint = "РћСЃС‚Р°РЅРѕРІРёС‚Рµ Р·Р°РїСѓСЃРє, С‡С‚РѕР±С‹ РїРѕРІС‚РѕСЂРёС‚СЊ.";
+            RepeatRunHint = "Остановите запуск, чтобы повторить.";
         }
         else
         {
             var reportPath = Path.Combine(_runsRoot, SelectedRun.RunId, "report.json");
             if (!File.Exists(reportPath))
             {
-                RepeatRunHint = "report.json РЅРµ РЅР°Р№РґРµРЅ РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РїСЂРѕРіРѕРЅР°.";
+                RepeatRunHint = "report.json не найден для выбранного запуска.";
             }
             else
             {
@@ -974,11 +979,11 @@ public partial class RunsTabViewModel : ObservableObject
                     var reportJson = await File.ReadAllTextAsync(reportPath);
                     RepeatRunHint = TryParseRepeatSnapshot(reportJson, out _, out var parseError)
                         ? string.Empty
-                        : $"report.json РїРѕРІСЂРµР¶РґС‘РЅ: {parseError}";
+                        : $"report.json повреждён: {parseError}";
                 }
                 catch (Exception ex)
                 {
-                    RepeatRunHint = $"РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ report.json: {ex.Message}";
+                    RepeatRunHint = $"Не удалось прочитать report.json: {ex.Message}";
                 }
             }
         }
@@ -999,7 +1004,7 @@ public partial class RunsTabViewModel : ObservableObject
 
         var query = AllRuns.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Р’СЃРµ", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Все", StringComparison.OrdinalIgnoreCase))
         {
             var selectedModuleTypeValue = _moduleFilterToType.TryGetValue(SelectedModuleType, out var mappedModuleType)
                 ? mappedModuleType
@@ -1007,7 +1012,7 @@ public partial class RunsTabViewModel : ObservableObject
             query = query.Where(r => string.Equals(r.ModuleType, selectedModuleTypeValue, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Р’СЃРµ", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase))
         {
             query = query.Where(r => string.Equals(r.Status, MapStatusFilterToRunStatus(SelectedStatus), StringComparison.OrdinalIgnoreCase));
         }
@@ -1017,16 +1022,11 @@ public partial class RunsTabViewModel : ObservableObject
         var queryBeforePeriod = query;
         query = SelectedPeriod switch
         {
-            "РЎРµРіРѕРґРЅСЏ" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
-            "7 РґРЅРµР№" => query.Where(r => r.StartedAt >= utcNow.AddDays(-7)),
-            "30 РґРЅРµР№" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
+            "Сегодня" => query.Where(r => r.StartedAt >= new DateTimeOffset(utcNow.Date, TimeSpan.Zero)),
+            "7 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-7)),
+            "30 дней" => query.Where(r => r.StartedAt >= utcNow.AddDays(-30)),
             _ => query
         };
-
-        if (string.Equals(SelectedPeriod, "Р РЋР ВµР С–Р С•Р Т‘Р Р…РЎРЏ", StringComparison.Ordinal))
-        {
-            query = queryBeforePeriod.Where(r => r.StartedAt.ToLocalTime().Date == localNow.Date);
-        }
 
         if (PeriodOptions.Count > 0 && string.Equals(SelectedPeriod, PeriodOptions[0], StringComparison.Ordinal))
         {
@@ -1057,6 +1057,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(HasRuns));
+        OnPropertyChanged(nameof(RunsSummaryText));
 
         if (SelectedRun != null && Runs.All(r => r.RunId != SelectedRun.RunId))
         {
@@ -1090,6 +1091,7 @@ public partial class RunsTabViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasSelectedRun));
         OnPropertyChanged(nameof(HasValidSelection));
+        OnPropertyChanged(nameof(RunsSummaryText));
         OnPropertyChanged(nameof(SelectedRunDisplayId));
         OnPropertyChanged(nameof(SelectedRunDisplayModule));
         RepeatRunCommand.NotifyCanExecuteChanged();
@@ -1101,11 +1103,11 @@ public partial class RunsTabViewModel : ObservableObject
     {
         return selectedStatus switch
         {
-            "РЈСЃРїРµС€РЅРѕ" => "Success",
-            "РЎ РѕС€РёР±РєРѕР№" => "Failed",
-            "РћСЃС‚Р°РЅРѕРІР»РµРЅРѕ" => "Stopped",
-            "РћС‚РјРµРЅРµРЅРѕ" => "Canceled",
-            "Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ" => "Running",
+            "Успешно" => "Success",
+            "С ошибкой" => "Failed",
+            "Остановлено" => "Stopped",
+            "Отменено" => "Canceled",
+            "Выполняется" => "Running",
             _ => selectedStatus
         };
     }
@@ -1128,14 +1130,14 @@ public partial class RunsTabViewModel : ObservableObject
             return;
         }
 
-        DetailsSummary = $"РЎС‚Р°С‚СѓСЃ: {detail.Run.Status} В· Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ: {SelectedRun.DurationMs:F0} РјСЃ В· РњРѕРґСѓР»СЊ: {detail.Run.ModuleType}";
+        DetailsSummary = $"Статус: {MapStatus(detail.Run.Status)} · Длительность: {FormatDuration(SelectedRun.DurationMs)} · Модуль: {ResolveModuleDisplayName(detail.Run.ModuleType, detail.Run.ModuleName)}";
 
         DetailsProfile = BuildDetailsProfile(detail.Run.ProfileSnapshotJson);
 
         AddArtifactLink("report.json", GetJsonPath());
         AddArtifactLink("report.html", GetHtmlPath());
-        AddArtifactLink("РїР°РїРєР° РїСЂРѕРіРѕРЅР°", Path.Combine(_runsRoot, SelectedRun.RunId));
-        AddArtifactLink("СЃРєСЂРёРЅС€РѕС‚С‹", Path.Combine(_runsRoot, SelectedRun.RunId, "screenshots"));
+        AddArtifactLink("Папка запуска", Path.Combine(_runsRoot, SelectedRun.RunId));
+        AddArtifactLink("Скриншоты", Path.Combine(_runsRoot, SelectedRun.RunId, "screenshots"));
 
         var topErrors = detail.Items
             .Where(i => !string.Equals(i.Status, "Success", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(i.ErrorMessage))
@@ -1188,7 +1190,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            errorMessage = $"РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РїСѓС‚СЊ: {ex.Message}";
+            errorMessage = $"Не удалось открыть путь: {ex.Message}";
             return false;
         }
     }
@@ -1206,13 +1208,13 @@ public partial class RunsTabViewModel : ObservableObject
             var moduleId = root.GetProperty("moduleId").GetString();
             if (string.IsNullOrWhiteSpace(moduleId))
             {
-                error = "Р’ report.json РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ moduleId.";
+                error = "В report.json отсутствует moduleId.";
                 return false;
             }
 
             if (!root.TryGetProperty("profile", out var profileElement))
             {
-                error = "Р’ report.json РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ profile.";
+                error = "В report.json отсутствует profile.";
                 return false;
             }
 
@@ -1301,7 +1303,7 @@ public partial class RunsTabViewModel : ObservableObject
         }
         catch
         {
-            return "РџСЂРѕС„РёР»СЊ Р·Р°РїСѓСЃРєР° РЅРµРґРѕСЃС‚СѓРїРµРЅ.";
+            return "Параметры запуска недоступны.";
         }
     }
 
@@ -1517,8 +1519,18 @@ public partial class RunsTabViewModel : ObservableObject
             _ => string.IsNullOrWhiteSpace(status) ? "Неизвестно" : status
         };
     }
+
+    private bool SearchOrFilterActive()
+    {
+        return !string.IsNullOrWhiteSpace(SearchText)
+               || !string.IsNullOrWhiteSpace(SelectedModuleType) && !string.Equals(SelectedModuleType, "Все", StringComparison.OrdinalIgnoreCase)
+               || !string.IsNullOrWhiteSpace(SelectedStatus) && !string.Equals(SelectedStatus, "Все", StringComparison.OrdinalIgnoreCase)
+               || !string.IsNullOrWhiteSpace(SelectedPeriod) && !string.Equals(SelectedPeriod, "Все", StringComparison.OrdinalIgnoreCase)
+               || OnlyWithErrors;
+    }
 }
 
 public sealed record ArtifactLinkItem(string Name, string FullPath);
 public sealed record TopErrorItem(string Message, int Count);
 public sealed record RepeatRunSnapshot(string ModuleId, RunProfile Profile, JsonElement ModuleSettings, string FinalName);
+
