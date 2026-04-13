@@ -39,7 +39,8 @@
                                 IsVisible="{Binding ShowInstallPlaywrightButton}" />
                     </Grid>
                     <TextBlock Text="UI-модули используют Playwright Chromium из активного каталога браузеров, а не системный браузер."
-                               TextWrapping="Wrap" />
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPlaywrightStatusMissing}" />
                     <TextBlock Text="{Binding PlaywrightBrowserPathLine}"
                                Classes="muted"
                                IsVisible="False" />

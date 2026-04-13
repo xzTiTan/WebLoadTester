@@ -32,7 +32,7 @@ public class UiScenarioModule : ITestModule
         {
             Steps = new List<UiStep>
             {
-                new() { Action = UiStepAction.Navigate, Value = string.Empty, DelayMs = 0 }
+                new() { Action = UiStepAction.Navigate, Value = "https://www.google.com/", DelayMs = 0 }
             }
         };
     }

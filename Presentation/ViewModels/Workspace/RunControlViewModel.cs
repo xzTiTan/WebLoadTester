@@ -167,15 +167,15 @@ public partial class RunControlViewModel : ObservableObject
 
         if (_backend.IsInstallingPlaywright || PlaywrightFactory.IsInstalling)
         {
-            return "Playwright Chromium: выполняется установка";
+            return "Статус: выполняется установка";
         }
 
         if (HasChromiumValidationError)
         {
-            return "Playwright Chromium: не найден";
+            return "Статус: не найден";
         }
 
-        return "Playwright Chromium: найден";
+        return "Статус: найден";
     }
 
     private void RaiseState()
